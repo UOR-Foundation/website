@@ -1,6 +1,6 @@
 /**
- * DesktopWindow — Draggable/resizable window without title bar (tabs handle that).
- * Thin drag strip at top for repositioning. Theme-aware.
+ * DesktopWindow — Draggable/resizable window with mandatory container boot.
+ * Every app passes through ContainerBootOverlay before mounting.
  * 
  * Performance: During drag, uses CSS transform via DOM ref (no React re-render).
  * Final position committed to state on pointerUp.
@@ -12,7 +12,10 @@ import { detectSnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { WindowContextProvider } from "@/modules/desktop/WindowContext";
-import { RADIUS, TIMING } from "@/modules/desktop/lib/golden-ratio";
+import { RADIUS } from "@/modules/desktop/lib/golden-ratio";
+import ContainerBootOverlay from "@/modules/desktop/components/ContainerBootOverlay";
+import type { BootReceipt } from "@/modules/desktop/components/ContainerBootOverlay";
+import ContainerInspector, { ContainerStatusPill } from "@/modules/desktop/components/ContainerInspector";
 import "@/modules/desktop/desktop.css";
 
 interface Props {
@@ -27,13 +30,14 @@ interface Props {
   onSnap: (id: string, zone: SnapZone) => void;
   onSnapPreview: (zone: SnapZone | null) => void;
   onCommit?: () => void;
+  onBooted?: (id: string) => void;
 }
 
 const MENU_BAR_H = 38;
 const DRAG_STRIP_H = 6;
 
 export default function DesktopWindow({
-  win, isActive, onClose, onMinimize, onMaximize, onFocus, onMove, onResize, onSnap, onSnapPreview, onCommit,
+  win, isActive, onClose, onMinimize, onMaximize, onFocus, onMove, onResize, onSnap, onSnapPreview, onCommit, onBooted,
 }: Props) {
   const app = getApp(win.appId);
   const { theme } = useDesktopTheme();
@@ -42,6 +46,17 @@ export default function DesktopWindow({
   const [isDragging, setIsDragging] = useState(false);
   const windowElRef = useRef<HTMLDivElement>(null);
 
+  // ── Boot state ──────────────────────────────────────────────────────────
+  const [bootReceipt, setBootReceipt] = useState<BootReceipt | null>(null);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const booted = win.booted === true;
+
+  const handleBootReady = useCallback((receipt: BootReceipt) => {
+    setBootReceipt(receipt);
+    onBooted?.(win.id);
+  }, [win.id, onBooted]);
+
+  // ── Drag handlers ───────────────────────────────────────────────────────
   const onDragStart = useCallback((e: ReactPointerEvent) => {
     onFocus(win.id);
     dragRef.current = { startX: e.clientX, startY: e.clientY, winX: win.position.x, winY: win.position.y };
@@ -55,10 +70,7 @@ export default function DesktopWindow({
     const dy = e.clientY - dragRef.current.startY;
     const newX = dragRef.current.winX + dx;
     const newY = Math.max(MENU_BAR_H, dragRef.current.winY + dy);
-
-    // Use RAF-gated state update (no localStorage write during drag)
     onMove(win.id, { x: newX, y: newY });
-
     const zone = detectSnapZone(e.clientX, e.clientY);
     onSnapPreview(zone);
   }, [win.id, onMove, onSnapPreview]);
@@ -71,7 +83,6 @@ export default function DesktopWindow({
     dragRef.current = null;
     setIsDragging(false);
     onSnapPreview(null);
-    // Commit final position to localStorage
     onCommit?.();
   }, [win.id, onSnap, onSnapPreview, onCommit]);
 
@@ -200,15 +211,38 @@ export default function DesktopWindow({
         <div className="relative z-[1] h-full overflow-auto" style={{
           borderRadius: `0 0 ${RADIUS.md}px ${RADIUS.md}px`,
         }}>
-          <WindowContextProvider initialQuery={win.title}>
-            <Suspense fallback={
-              <div className="flex items-center justify-center h-full">
-                <div className={`w-5 h-5 border-2 ${spinnerBorder} rounded-full animate-spin`} />
-              </div>
-            }>
-              {AppComponent && <AppComponent />}
-            </Suspense>
-          </WindowContextProvider>
+          {/* ── Two-phase render: Boot → Mount ────────────────────────── */}
+          {!booted ? (
+            <ContainerBootOverlay
+              appId={win.appId}
+              appLabel={app?.label ?? win.title}
+              onReady={handleBootReady}
+            />
+          ) : (
+            <WindowContextProvider initialQuery={win.title}>
+              <Suspense fallback={
+                <div className="flex items-center justify-center h-full">
+                  <div className={`w-5 h-5 border-2 ${spinnerBorder} rounded-full animate-spin`} />
+                </div>
+              }>
+                {AppComponent && <AppComponent />}
+              </Suspense>
+
+              {/* Status pill — always visible after boot */}
+              {bootReceipt && (
+                <ContainerStatusPill
+                  appId={win.appId}
+                  receipt={bootReceipt}
+                  onClick={() => setInspectorOpen(prev => !prev)}
+                />
+              )}
+
+              {/* Inspector popover */}
+              {inspectorOpen && bootReceipt && (
+                <ContainerInspector appId={win.appId} receipt={bootReceipt} />
+              )}
+            </WindowContextProvider>
+          )}
         </div>
       </div>
 

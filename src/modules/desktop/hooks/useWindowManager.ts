@@ -10,6 +10,7 @@ export interface WindowState {
   minimized: boolean;
   maximized: boolean;
   pinned: boolean;
+  booted: boolean;
   mergedChildren?: string[];
   mergedParent?: string;
   preSnap?: { position: { x: number; y: number }; size: { w: number; h: number } } | null;
@@ -42,6 +43,7 @@ function loadWindows(): WindowState[] {
         return parsed.map(w => ({
           ...w,
           pinned: w.pinned ?? false,
+          booted: w.booted ?? false,
           mergedChildren: w.mergedChildren ?? undefined,
           mergedParent: w.mergedParent ?? undefined,
         }));
@@ -153,6 +155,7 @@ export function useWindowManager() {
         minimized: false,
         maximized: shouldMaximize,
         pinned: false,
+        booted: false,
         preSnap: null,
       };
       const next = [...prev, newWin];
@@ -352,6 +355,14 @@ export function useWindowManager() {
     });
   }, []);
 
+  const bootWindow = useCallback((id: string) => {
+    setWindows(prev => {
+      const next = prev.map(w => w.id === id ? { ...w, booted: true } : w);
+      saveWindowsImmediate(next);
+      return next;
+    });
+  }, []);
+
   // Memoize activeWindowId to avoid recomputing on every render
   const activeWindowId = useMemo(() => {
     let maxZ = -1;
@@ -383,5 +394,6 @@ export function useWindowManager() {
     mergeTabs,
     unmergeTabs,
     snapMultiple,
+    bootWindow,
   };
 }
