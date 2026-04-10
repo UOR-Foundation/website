@@ -1,5 +1,6 @@
 /**
- * Sovereign Compose — Static Blueprints.
+ * Scheduling & Orchestration — Static Blueprints.
+ * @ontology uor:Scheduler
  * ═════════════════════════════════════════════════════════════════
  *
  * The 12 existing desktop applications declared as AppBlueprints.

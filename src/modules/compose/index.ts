@@ -1,5 +1,6 @@
 /**
- * Sovereign Compose — Barrel Export.
+ * Scheduling & Orchestration — Barrel Export.
+ * @ontology uor:Scheduler
  * ═════════════════════════════════════════════════════════════════
  *
  * The Application Composition Engine for the UOR Virtual OS.
