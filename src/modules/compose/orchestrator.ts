@@ -11,7 +11,12 @@
  *   - Circuit breaker: auto-stop after N consecutive healthcheck failures
  *   - Exponential backoff restart
  *
- * @version 2.0.0
+ * v3 additions (Sovereign Reconciler — K8s equivalence):
+ *   - Declarative desired-state reconciliation (kernel::recursion)
+ *   - Metric-driven auto-scaling (kernel::stream)
+ *   - Rolling updates with health-gated rollback (kernel::cascade)
+ *
+ * @version 3.0.0
  */
 
 import { AppKernel } from "./app-kernel";
@@ -20,6 +25,9 @@ import {
   allBlueprints,
   getBlueprint,
 } from "./blueprint-registry";
+import { SovereignReconciler } from "./reconciler";
+import { SovereignAutoScaler } from "./auto-scaler";
+import { SovereignRollingUpdate } from "./rolling-update";
 import type {
   AppBlueprint,
   AppInstance,
@@ -27,6 +35,9 @@ import type {
   OrchestratorState,
   ComposeEvent,
   ComposeEventType,
+  Correction,
+  ReconcilerStatus,
+  ScalingConfig,
 } from "./types";
 
 // ── Constants ────────────────────────────────────────────────────────────
@@ -62,6 +73,10 @@ class Orchestrator {
   // ── Circuit Breaker / Restart State ───────────────────────────────────
   private _restartAttempts = new Map<string, number>(); // blueprintName → attempt count
 
+  // ── Sovereign Reconciler (K8s Control Plane) ─────────────────────────
+  private _reconciler = new SovereignReconciler();
+  private _autoScaler = new SovereignAutoScaler();
+
   // ── Initialization ────────────────────────────────────────────────────
 
   /**
@@ -80,6 +95,9 @@ class Orchestrator {
     }
 
     this._ready = true;
+
+    // Start the Sovereign Reconciler (K8s control plane)
+    this.startReconciler();
   }
 
   // ── Instance Lifecycle ────────────────────────────────────────────────
@@ -160,6 +178,182 @@ class Orchestrator {
     }
 
     return true;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // SOVEREIGN RECONCILER — K8s Control Plane
+  // ══════════════════════════════════════════════════════════════════════
+
+  /**
+   * Start the declarative reconciliation loop.
+   * Wires the reconciler's correction callbacks to orchestrator actions.
+   */
+  startReconciler(): void {
+    // Wire correction handler — applies EffectChain to orchestrator state
+    this._reconciler.onCorrection((correction) => {
+      const { action, blueprintName } = correction;
+
+      switch (action) {
+        case "start": {
+          const bp = getBlueprint(blueprintName);
+          if (bp) this._startInstance(bp);
+          break;
+        }
+        case "stop":
+          this.stop(blueprintName);
+          break;
+        case "restart":
+          this.restart(blueprintName);
+          break;
+        case "update": {
+          // Handled by rolling update — reconciler only detects the drift
+          break;
+        }
+        case "scale": {
+          const instanceId = this._byName.get(blueprintName);
+          if (instanceId) {
+            const desired = correction.drift.desired.desiredWorkers ?? 0;
+            this._workerAllocations.set(instanceId, desired);
+            const kernel = this._kernels.get(instanceId);
+            if (kernel) kernel.setWorkersAllocated(desired);
+          }
+          break;
+        }
+      }
+
+      this._emit("reconciler:corrected", undefined, blueprintName, {
+        action,
+        drift: correction.drift.kind,
+      });
+    });
+
+    // Wire epoch handler — emit events for observability
+    this._reconciler.onEpoch((epoch) => {
+      if (epoch.drifts.length > 0) {
+        this._emit("reconciler:drift", undefined, undefined, {
+          epochIndex: epoch.index,
+          driftCount: epoch.drifts.length,
+          correctionCount: epoch.corrections.length,
+          normalized: epoch.normalized,
+          durationMs: epoch.durationMs,
+        });
+      }
+
+      this._emit("reconciler:epoch", undefined, undefined, {
+        epochIndex: epoch.index,
+        normalized: epoch.normalized,
+      });
+    });
+
+    // Start the loop — pass a getActual function that reads orchestrator state
+    this._reconciler.start((name: string) => {
+      const instanceId = this._byName.get(name);
+      if (!instanceId) return null;
+
+      const kernel = this._kernels.get(instanceId);
+      if (!kernel) return null;
+
+      const bp = kernel.blueprint;
+      return {
+        running: kernel.state === "running" || kernel.state === "degraded",
+        version: bp.version,
+        state: kernel.state,
+        workers: this._workerAllocations.get(instanceId) ?? 0,
+        instanceId,
+      };
+    });
+  }
+
+  /** Stop the reconciliation loop. */
+  stopReconciler(): void {
+    this._reconciler.stop();
+  }
+
+  /** Get the reconciler status for UI/hooks. */
+  reconcilerStatus(): ReconcilerStatus {
+    return this._reconciler.status();
+  }
+
+  /** Access the reconciler for direct manipulation (e.g., setDesired). */
+  get reconciler(): SovereignReconciler {
+    return this._reconciler;
+  }
+
+  /** Access the auto-scaler for observability. */
+  get autoScaler(): SovereignAutoScaler {
+    return this._autoScaler;
+  }
+
+  // ── Rolling Update — kernel::cascade::CascadeComposition ─────────────
+
+  /**
+   * Perform a rolling update: replace a running blueprint with a new version.
+   *
+   * 1. Starts a new instance from the updated blueprint
+   * 2. Waits for health check to pass (PhaseGate)
+   * 3. Stops the old instance
+   * 4. If health fails → rolls back (keeps old instance)
+   */
+  async update(name: string, newBlueprint: AppBlueprint): Promise<boolean> {
+    const oldInstanceId = this._byName.get(name);
+    const oldKernel = oldInstanceId ? this._kernels.get(oldInstanceId) : null;
+    if (!oldKernel) return false;
+
+    const oldVersion = oldKernel.blueprint.version;
+
+    const rollingUpdate = new SovereignRollingUpdate(
+      name,
+      oldVersion,
+      newBlueprint.version,
+      oldInstanceId!,
+    );
+
+    const result = await rollingUpdate.execute(
+      // startNew
+      async () => {
+        const stamped = await registerBlueprint(newBlueprint);
+        return this._startInstance(stamped);
+      },
+      // checkHealth
+      async (instanceId: string) => {
+        const kernel = this._kernels.get(instanceId);
+        if (!kernel) return false;
+        return kernel.healthcheck();
+      },
+      // stopOld
+      async () => {
+        this.stop(name);
+      },
+      // stopNew (rollback)
+      async (instanceId: string) => {
+        const kernel = this._kernels.get(instanceId);
+        if (kernel) {
+          kernel.stop();
+          this._clearHealthTimer(instanceId);
+          this._releaseWorkerSlots(instanceId);
+          this._kernels.delete(instanceId);
+        }
+        // Restore old name mapping
+        if (oldInstanceId) {
+          this._byName.set(name, oldInstanceId);
+        }
+      },
+    );
+
+    if (result.phase === "completed") {
+      this._emit("instance:updated", result.newInstanceId, name, {
+        oldVersion,
+        newVersion: newBlueprint.version,
+        durationMs: (result.completedAt ?? Date.now()) - result.startedAt,
+      });
+
+      // Update reconciler desired state
+      this._reconciler.setDesired(name, { version: newBlueprint.version });
+
+      return true;
+    }
+
+    return false;
   }
 
   // ── Queries ───────────────────────────────────────────────────────────
