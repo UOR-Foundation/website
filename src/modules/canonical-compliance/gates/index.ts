@@ -30,6 +30,9 @@ import "./schema-org-conformance-gate";
 // Aesthetics gate
 import "./aesthetics-gate";
 
+// Delta gate — canonical computation substrate
+import "./delta-gate";
+
 // Axioms gate is registered via the axioms module barrel
 import "../../axioms/gate";
 

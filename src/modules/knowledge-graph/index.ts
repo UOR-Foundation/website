@@ -137,6 +137,22 @@ import "./graph-anchor-gate";
 // ── Graph Infrastructure ────────────────────────────────────────────────────
 
 export { adjacencyIndex } from "./lib/adjacency-index";
+export {
+  computeDelta,
+  applyDelta,
+  composeDelta,
+  invertDelta,
+  compressDeltaChain,
+  materializeDelta,
+  createPool,
+  poolAddDelta,
+  poolReach,
+  poolMaterialize,
+  poolStats,
+  getDeltaMetrics,
+  resetDeltaMetrics,
+} from "./lib/delta-engine";
+export type { Delta, DeltaStep, DeltaPool, DeltaMetrics } from "./lib/delta-engine";
 export { beginTransaction } from "./lib/transaction-envelope";
 export type { Transaction } from "./lib/transaction-envelope";
 export {
