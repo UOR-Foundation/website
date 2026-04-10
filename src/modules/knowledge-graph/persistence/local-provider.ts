@@ -10,7 +10,8 @@
  */
 
 import { grafeoStore } from "../grafeo-store";
-import type { PersistenceProvider, ChangeEntry, SovereignBundle } from "./types";
+import { singleProofHash } from "@/lib/uor-canonical";
+import type { PersistenceProvider, AuthContext, ChangeEntry, SovereignBundle } from "./types";
 
 function getDeviceId(): string {
   let id = localStorage.getItem("uor:device-id");
@@ -23,6 +24,10 @@ function getDeviceId(): string {
 
 export const localProvider: PersistenceProvider = {
   name: "local",
+
+  async getAuthContext(): Promise<AuthContext | null> {
+    return { userId: "local", isAuthenticated: false };
+  },
 
   async pushSnapshot(): Promise<void> {
     // No-op: GrafeoDB auto-persists to IndexedDB
@@ -49,10 +54,12 @@ export const localProvider: PersistenceProvider = {
     const nquads = await grafeoStore.dumpNQuads();
     const quadCount = await grafeoStore.quadCount();
 
-    const encoder = new TextEncoder();
-    const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(nquads));
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const sealHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    // Route seal through singleProofHash for UOR-rooted integrity
+    const identity = await singleProofHash({
+      "@type": "uor:SovereignSeal",
+      "uor:payload": nquads,
+    });
+    const sealHash = identity["u:canonicalId"] ?? identity.derivationId;
 
     return {
       version: "1.0.0",

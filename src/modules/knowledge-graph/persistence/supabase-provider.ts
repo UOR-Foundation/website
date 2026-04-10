@@ -9,7 +9,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { grafeoStore } from "../grafeo-store";
-import type { PersistenceProvider, ChangeEntry, SovereignBundle } from "./types";
+import { singleProofHash } from "@/lib/uor-canonical";
+import type { PersistenceProvider, AuthContext, ChangeEntry, SovereignBundle } from "./types";
 
 function getDeviceId(): string {
   let id = localStorage.getItem("uor:device-id");
@@ -23,9 +24,19 @@ function getDeviceId(): string {
 export const supabaseProvider: PersistenceProvider = {
   name: "supabase",
 
+  async getAuthContext(): Promise<AuthContext | null> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      return { userId: session.user.id, isAuthenticated: true };
+    } catch {
+      return null;
+    }
+  },
+
   async pushSnapshot(nquads: string): Promise<void> {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    const auth = await this.getAuthContext();
+    if (!auth?.isAuthenticated) return;
 
     const lines = nquads.split("\n").filter(l => l.trim() && !l.trim().startsWith("#"));
     const triples: Array<{ subject: string; predicate: string; object: string; graph_iri: string }> = [];
@@ -50,14 +61,31 @@ export const supabaseProvider: PersistenceProvider = {
   },
 
   async pullSnapshot(): Promise<string | null> {
-    const { data, error } = await supabase
-      .from("uor_triples")
-      .select("subject, predicate, object, graph_iri")
-      .limit(1000);
+    // Paginated pull — no silent truncation
+    const PAGE_SIZE = 1000;
+    let offset = 0;
+    const allRows: Array<{ subject: string; predicate: string; object: string; graph_iri: string }> = [];
 
-    if (error || !data || data.length === 0) return null;
+    while (true) {
+      const { data, error } = await supabase
+        .from("uor_triples")
+        .select("subject, predicate, object, graph_iri")
+        .range(offset, offset + PAGE_SIZE - 1);
 
-    return data
+      if (error || !data || data.length === 0) break;
+
+      allRows.push(...data);
+
+      // If we got fewer than PAGE_SIZE, we've reached the end
+      if (data.length < PAGE_SIZE) break;
+      offset += PAGE_SIZE;
+    }
+
+    if (allRows.length === 0) return null;
+
+    console.log(`[Provider] Pulled ${allRows.length} triples (${Math.ceil(allRows.length / PAGE_SIZE)} pages)`);
+
+    return allRows
       .map(t => {
         const obj = t.object.startsWith("http") ? `<${t.object}>` : `"${t.object}"`;
         return `<${t.subject}> <${t.predicate}> ${obj} <${t.graph_iri}> .`;
@@ -66,13 +94,13 @@ export const supabaseProvider: PersistenceProvider = {
   },
 
   async pushChanges(changes: ChangeEntry[]): Promise<void> {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    const auth = await this.getAuthContext();
+    if (!auth?.isAuthenticated) return;
 
     for (const change of changes) {
       await (supabase.from("uor_transactions" as any) as any).upsert({
         transaction_cid: change.changeCid,
-        user_id: session.user.id,
+        user_id: auth.userId,
         namespace: change.namespace,
         mutation_count: 1,
         mutations: [{ payload: change.payload, timestamp: change.timestamp }],
@@ -115,10 +143,12 @@ export const supabaseProvider: PersistenceProvider = {
     const nquads = await grafeoStore.dumpNQuads();
     const quadCount = await grafeoStore.quadCount();
 
-    const encoder = new TextEncoder();
-    const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(nquads));
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const sealHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    // Route seal through singleProofHash for UOR-rooted integrity
+    const identity = await singleProofHash({
+      "@type": "uor:SovereignSeal",
+      "uor:payload": nquads,
+    });
+    const sealHash = identity["u:canonicalId"] ?? identity.derivationId;
 
     return {
       version: "1.0.0",
