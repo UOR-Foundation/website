@@ -1,169 +1,130 @@
 
 
-# UOR Application Composition Engine — "Sovereign Compose"
+# Tailslayer Analysis & Knowledge Graph Compression Opportunities
 
-## Vision
+## What Tailslayer Actually Does
 
-Three-layer composition model rooted in the existing UOR primitives:
+Tailslayer is **not** a compression library. It is a **tail-latency elimination** tool for DRAM reads. Its core technique:
 
-```text
-┌─────────────────────────────────────────────────────┐
-│  Layer 3: Applications (AppBlueprint)                │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │
-│  │ Oracle   │  │ Vault    │  │ AI-Generated App │  │
-│  └──────────┘  └──────────┘  └──────────────────┘  │
-├─────────────────────────────────────────────────────┤
-│  Layer 2: Modules (ModuleUnit)                       │
-│  ┌────────┐ ┌─────────┐ ┌──────┐ ┌───────────┐    │
-│  │ graph  │ │ oracle  │ │ cert │ │ resolver  │    │
-│  └────────┘ └─────────┘ └──────┘ └───────────┘    │
-├─────────────────────────────────────────────────────┤
-│  Layer 1: Operations (bus ops — atomic)              │
-│  kernel/derive  graph/query  cert/issue  store/put  │
-│  ring/neg  oracle/ask  vault/encrypt  resolve/name  │
-├─────────────────────────────────────────────────────┤
-│  Layer 0: UOR Kernel (Fano P0-P6)                    │
-│  encode  decode  compose  store  resolve  observe   │
-│  seal                                                │
-└─────────────────────────────────────────────────────┘
-```
+1. **Redundant replication** — every datum is copied N times across independent DRAM channels
+2. **Hedged reads** — N workers (pinned to separate CPU cores) race to read the same logical index from different physical channels
+3. **First-responder wins** — whichever channel is NOT in a DRAM refresh cycle responds first, eliminating the ~300ns stall
 
-## Architecture — Inspired By
+Key implementation insights from the source:
+- Hugepage allocation (1GB `MAP_HUGETLB`) eliminates TLB misses
+- Channel-aware addressing via bit manipulation (`channel_bit`, `chunk_shift`, `chunk_mask`) ensures replicas land on different physical DRAM channels
+- All hot-path functions are `[[gnu::always_inline]]` — zero call overhead
+- Precomputed stride arithmetic avoids any division/modulo in the read path
+- `mlock()` prevents the OS from paging out the data
 
-| Inspiration | What We Take | Our Equivalent |
-|-------------|-------------|----------------|
-| **Docker** | Content-addressed images, Dockerfile, layered builds | Already have: Uorfile, image-builder, registry, wasm-loader |
-| **Unikraft** | Single-purpose kernel per app, only include what's needed | **AppKernel**: each app gets a minimal subset of bus operations, isolated in its own iframe sandbox |
-| **Kubernetes** | Declarative desired-state, pod scheduling, service mesh | **Orchestrator**: declares apps as blueprints, schedules them on the desktop shell, routes inter-app morphisms |
-| **OpenShift** | Templates, S2I (source-to-image), operator pattern | **Blueprint Templates**: static app definitions that declare which modules compose the app |
+## Applicable Insights for Our System
 
-## Core Concepts
+### 1. Hedged Reads for Knowledge Graph (Latency, Not Compression)
 
-### 1. AppBlueprint — The "Pod Spec" for Applications
+**Principle**: When the graph is stored in both GrafeoDB WASM (IndexedDB) and an in-memory cache, issue reads to both and take whichever responds first. This eliminates IndexedDB I/O tail latency (~5-50ms spikes).
 
-A declarative, content-addressed JSON-LD document that defines an application by listing which bus operations it requires, which UI component it renders, and what resources it needs.
+**Implementation**: Add a `hedgedGet` to `grafeo-store.ts` that queries both the WASM engine and a lightweight `Map<string, KGNode>` LRU cache in parallel, resolving with whichever returns first.
 
-```typescript
-interface AppBlueprint {
-  "@type": "uor:AppBlueprint";
-  name: string;
-  version: string;
-  canonicalId: string;               // computed from blueprint content
-  requires: string[];                 // bus operations: ["graph/query", "cert/issue"]
-  ui: { component: string; lazy: true };
-  resources: { memory?: string; workers?: number };
-  permissions: string[];              // namespaces this app can access
-  morphisms: MorphismInterface[];     // public API for other apps to call
-  healthcheck?: { op: string; interval: number };
-}
-```
+### 2. Hot-Path Inlining (Already Designed)
 
-### 2. AppKernel — Unikraft-Inspired Isolation
+The `callDirect()` fast-path in AppKernel (from the previous plan) is the exact browser analog of Tailslayer's `always_inline` pattern — bypass middleware overhead for performance-critical operations.
 
-Each running app gets a **minimal kernel** — a filtered view of the bus containing only the operations declared in `requires`. This provides:
-- **Least-privilege**: app can only call operations it declared
-- **Audit trail**: every call is traced through the bus middleware
-- **Hot-swappable**: replace a module's implementation without affecting other apps
+### 3. Precomputed Address Tables
 
-```typescript
-class AppKernel {
-  private allowedOps: Set<string>;
-  
-  async call(method: string, params: unknown) {
-    if (!this.allowedOps.has(method)) throw new PermissionError(method);
-    return bus.call(method, params);
-  }
-}
-```
+Tailslayer precomputes `chunk_shift_`, `chunk_mask_`, and `stride_in_elements_` at construction time. We should do the same for UOR addresses: maintain a precomputed `Map<string, number>` index of node addresses to internal IDs, avoiding repeated string hashing during graph traversals.
 
-### 3. Orchestrator — Kubernetes-Inspired Scheduling
+---
 
-A singleton that manages the lifecycle of all running AppBlueprints:
-- **Desired state reconciliation**: compare declared blueprints vs running instances
-- **Dependency resolution**: ensure required modules are loaded before app starts
-- **Health monitoring**: periodic healthcheck calls, auto-restart on failure
-- **Resource accounting**: track memory/worker usage per app
+## Compression Opportunities (Lossless, Zero Fidelity Loss)
 
-### 4. AI Composer — Future Intent-Driven Assembly
+These are the significant space-saving opportunities identified from analyzing the knowledge graph storage layer:
 
-An edge function that takes user intent + available bus operations and generates an AppBlueprint on-the-fly:
+### A. IRI Prefix Interning (40-60% quad storage reduction)
+
+**Problem**: Every quad stores full IRI strings like `https://uor.foundation/schema/nodeType` repeatedly. A node with 10 properties generates 10 quads, each repeating `https://uor.foundation/` as a prefix.
+
+**Solution**: Maintain a prefix table (like SPARQL's `PREFIX` declarations but at the storage level). Store integer prefix IDs + suffix instead of full IRIs. This is standard in RDF databases (HDT format does exactly this).
 
 ```text
-User: "I need to verify a document's identity and share it encrypted"
-
-AI receives: list of 80+ bus operations with descriptions
-AI returns:  AppBlueprint { requires: ["kernel/derive", "cert/issue", "vault/encrypt", "store/put"] }
-
-Orchestrator instantiates the blueprint → app appears on desktop
+Before: <https://uor.foundation/schema/qualityScore> = 47 bytes per occurrence
+After:  prefix_id=2, suffix="qualityScore" = ~14 bytes
+Savings: ~70% on predicate storage alone
 ```
+
+### B. Property Map Columnar Compression
+
+**Problem**: `node.properties` is stored as `JSON.stringify(properties)` — a single literal blob per node. Two nodes with `{format: "csv", size: 1024}` and `{format: "csv", size: 2048}` store redundant schema structure.
+
+**Solution**: Extract the property schema (key set) as a content-addressed template. Store only the values array per node, referencing the shared schema by CID.
+
+```text
+Before: {"format":"csv","size":1024,"columns":5} = 38 bytes × N nodes
+After:  schema_cid + [csv, 1024, 5] = ~15 bytes × N nodes  (schema stored once)
+```
+
+### C. Canonical Form Deduplication (Already Exists — Enhance It)
+
+**Current**: `compressGraph()` merges nodes with identical `canonicalForm`. But it only runs on-demand.
+
+**Enhancement**: Make it incremental — on every `putNode()`, check if a node with the same canonical form already exists before inserting. This prevents duplicates from ever entering the graph, rather than cleaning them up after the fact.
+
+### D. Structural Sharing for Subgraphs (Content-Addressed DAG)
+
+**Principle**: When two subgraphs are structurally identical (same predicate/object patterns, different subjects), store the pattern once and reference it. This is the graph equivalent of Git's tree objects.
+
+**Example**: If 100 dataset nodes all have the same edge pattern (`hasColumn → revenue`, `hasColumn → date`, `hasFormat → csv`), store that pattern as a single content-addressed "subgraph template" and link each node to it.
+
+### E. Vault Chunk Deduplication
+
+**Problem**: `vault-store.ts` chunks documents and stores each chunk separately. If two documents share paragraphs (e.g., versioned docs), identical chunks are stored twice.
+
+**Solution**: Before writing a chunk to the Data Bank, check if a chunk with the same CID already exists. The CID is already computed — just add a lookup step. This gives automatic cross-document deduplication with zero fidelity loss.
+
+---
 
 ## Implementation Plan
 
-### File Structure
+### Files Created/Modified
 
-```text
-src/modules/compose/
-  types.ts              — AppBlueprint, AppKernel, OrchestratorState types
-  blueprint-registry.ts — Store/retrieve/verify blueprints (content-addressed)
-  app-kernel.ts         — Minimal per-app bus proxy with permission enforcement
-  orchestrator.ts       — Lifecycle manager: schedule, start, stop, healthcheck
-  static-blueprints.ts  — Current 12 desktop apps declared as blueprints
-  hooks.ts              — useOrchestrator, useAppKernel React hooks
-  index.ts              — Barrel export
-```
-
-### Step 1: Types & Blueprint Registry (types.ts, blueprint-registry.ts)
-
-Define `AppBlueprint` interface with content-addressing via `singleProofHash`. Registry stores blueprints in UnsKv, verifiable by canonical ID.
-
-### Step 2: AppKernel — Per-App Isolation (app-kernel.ts)
-
-Wraps `bus.call` with a permission filter. Each app receives its own AppKernel instance scoped to its declared `requires` list. All calls are traced.
-
-### Step 3: Orchestrator — Lifecycle Manager (orchestrator.ts)
-
-Singleton class that:
-- Accepts blueprints and schedules them
-- Resolves dependency order (topological sort on `requires`)
-- Starts/stops apps, tracks running state
-- Runs periodic healthchecks
-- Exposes state as a reactive observable for UI binding
-
-### Step 4: Static Blueprints (static-blueprints.ts)
-
-Convert the existing 12 `DESKTOP_APPS` entries into `AppBlueprint` declarations. Each blueprint lists the exact bus operations that app uses. The existing `desktop-apps.ts` becomes a thin wrapper that reads from blueprints.
-
-### Step 5: Desktop Integration (hooks.ts + desktop updates)
-
-- `useOrchestrator()` hook provides orchestrator state to desktop shell
-- App Hub shows blueprint metadata (required ops, permissions, health)
-- System Monitor gains an "Apps" tab showing per-app resource usage
-
-### Step 6: AI Composer (future — edge function)
-
-An edge function that receives:
-- User intent (natural language)
-- Available bus operations (from `bus.listMethods()` with descriptions)
-- Returns an AppBlueprint
-
-The orchestrator validates the blueprint, instantiates it, and renders the UI.
-
-## Files Created/Modified
-
-| File | Action |
+| File | Change |
 |------|--------|
-| `src/modules/compose/types.ts` | Create — core type definitions |
-| `src/modules/compose/blueprint-registry.ts` | Create — content-addressed blueprint storage |
-| `src/modules/compose/app-kernel.ts` | Create — per-app isolated bus proxy |
-| `src/modules/compose/orchestrator.ts` | Create — lifecycle manager |
-| `src/modules/compose/static-blueprints.ts` | Create — current apps as blueprints |
-| `src/modules/compose/hooks.ts` | Create — React hooks |
-| `src/modules/compose/index.ts` | Create — barrel export |
-| `src/modules/desktop/lib/desktop-apps.ts` | Modify — derive from blueprints |
+| `src/modules/knowledge-graph/lib/iri-intern.ts` | Create — IRI prefix interning table with bidirectional lookup |
+| `src/modules/knowledge-graph/lib/hedged-read.ts` | Create — parallel read from WASM + LRU cache, first-responder wins |
+| `src/modules/knowledge-graph/lib/schema-templates.ts` | Create — content-addressed property schema extraction and sharing |
+| `src/modules/knowledge-graph/grafeo-store.ts` | Modify — integrate IRI interning on insert/query, add incremental dedup on `putNode`, add hedged reads for `getNode` |
+| `src/modules/sovereign-vault/lib/vault-store.ts` | Modify — add CID-based chunk dedup check before `writeSlot` |
+| `src/modules/knowledge-graph/graph-compute.ts` | Modify — add subgraph template detection to `compressGraph()` |
 
-## What This Enables
+### Step 1: IRI Prefix Interning (`iri-intern.ts`)
 
-**Today (static):** Apps are declared as blueprints with explicit `requires` lists. The orchestrator enforces least-privilege and provides lifecycle management. The system is auditable — you can see exactly which operations each app needs.
+A singleton that maintains a bidirectional prefix table. On first use, registers the 8-10 standard prefixes (`uor:`, `rdf:`, `rdfs:`, `schema:`, etc.). Every quad insert compresses IRIs to `[prefixId, suffix]` before storage. Every query expands them back. Fully lossless — the prefix table is persisted alongside the graph.
 
-**Tomorrow (AI-driven):** The AI Composer generates blueprints from user intent. "I want to analyze my knowledge graph and export a report" produces a custom app on-the-fly that composes `graph/query`, `store/list`, `takeout/export`, and a generated UI. The app is ephemeral or persistable, content-addressed, and fully traceable.
+### Step 2: Hedged Read Layer (`hedged-read.ts`)
+
+An LRU cache (configurable size, default 500 nodes) that sits alongside GrafeoDB. On `getNode()`, both the cache and WASM are queried via `Promise.race()`. Cache is populated on every successful read and invalidated on writes. This eliminates IndexedDB tail latency for hot nodes.
+
+### Step 3: Property Schema Templates (`schema-templates.ts`)
+
+On `putNode()`, extract the property key set, sort it, hash it via `singleProofHash()` to get a schema CID. If the schema CID already exists, store only the values array. If new, register the schema. On `getNode()`, reconstruct the full properties object from schema + values.
+
+### Step 4: Incremental Canonical Dedup
+
+In `grafeoStore.putNode()`, before inserting, check if any existing node shares the same `canonicalForm`. If so, merge properties and skip the insert. This makes `compressGraph()` unnecessary for new data.
+
+### Step 5: Vault Chunk Dedup
+
+In `vaultStore.ingestDocument()`, before calling `writeSlot()` for each chunk, check if a slot with key `vault:*:chunk:*` having the same CID already exists. If so, store a reference (pointer) instead of duplicating the encrypted blob.
+
+## Compression Impact Estimate
+
+| Technique | Expected Savings | Fidelity Loss |
+|-----------|-----------------|---------------|
+| IRI interning | 40-60% on quad storage | Zero |
+| Property schema templates | 30-50% on property blobs | Zero |
+| Incremental canonical dedup | Prevents unbounded growth | Zero |
+| Vault chunk dedup | Variable (high for versioned docs) | Zero |
+| Subgraph templates | 20-40% on edge storage | Zero |
+| **Combined** | **~50% overall graph size reduction** | **Zero** |
+
+All techniques are fully reversible and lossless — they exploit structural redundancy in how RDF data is represented, not in the information itself.
 
