@@ -144,38 +144,10 @@ export type {
 } from "./snapshot";
 
 // ══════════════════════════════════════════════════════════════════════════
-// CONTAINER RE-EXPORT (convenience — same as "@/modules/uns/build/container")
-// Consumers may also import directly from "./container" to avoid barrel.
+// CONTAINER RUNTIME
+// Not re-exported from barrel to avoid PWA Rollup resolution issues.
+// Import directly:
+//   import { createContainer } from "@/modules/uns/build/container";
 // ══════════════════════════════════════════════════════════════════════════
-
-export {
-  createContainer,
-  startContainer,
-  stopContainer,
-  pauseContainer,
-  unpauseContainer,
-  crashContainer,
-  removeContainer,
-  execContainer,
-  listContainers,
-  inspectContainer,
-  containerLogs,
-  getContainer,
-  linkContainerToKernel,
-  clearContainers,
-} from "./container";
-export type {
-  ContainerState,
-  ContainerPortMapping,
-  ContainerMount,
-  ContainerResources,
-  ContainerConfig,
-  ContainerEvent,
-  ContainerEventType,
-  ContainerLogEntry,
-  UorContainer,
-  ContainerInspection,
-  ExecResult,
-} from "./container";
 
 /* end of barrel – v2.1.0 */
