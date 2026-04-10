@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ExternalLink, LayoutGrid, Share2, ChevronRight, Download } from "lucide-react";
 import { runAudit, type AuditFinding, type AuditReport } from "../audit";
@@ -8,6 +8,10 @@ import { exportMarkdown } from "../export";
 import AtomSidebar from "../components/AtomSidebar";
 import NodeDetailPanel, { type SelectedNode } from "../components/NodeDetailPanel";
 import ProvenanceGraph from "../components/ProvenanceGraph";
+import KnowledgeSidebar, { pushTrail, type BacklinkEntry } from "@/modules/knowledge-graph/components/KnowledgeSidebar";
+import ConceptMap, { type ConceptNode, type ConceptEdge } from "@/modules/knowledge-graph/components/ConceptMap";
+import StatBlock from "@/modules/core/components/StatBlock";
+import Breadcrumbs from "@/modules/core/components/Breadcrumbs";
 
 // ── Status Badge ────────────────────────────────────────────────
 
@@ -36,24 +40,7 @@ const CATEGORY_COLORS: Record<AtomCategory, string> = {
   Observable: "hsl(180 40% 50%)",
 };
 
-// ── Breadcrumb ──────────────────────────────────────────────────
-
-function Breadcrumb({ path }: { path: { label: string; action?: () => void }[] }) {
-  return (
-    <div className="flex items-center gap-1 text-[10px] font-mono text-zinc-500">
-      {path.map((p, i) => (
-        <span key={i} className="flex items-center gap-1">
-          {i > 0 && <ChevronRight size={8} className="text-zinc-700" />}
-          {p.action ? (
-            <button onClick={p.action} className="hover:text-zinc-300 transition-colors">{p.label}</button>
-          ) : (
-            <span className="text-zinc-400">{p.label}</span>
-          )}
-        </span>
-      ))}
-    </div>
-  );
-}
+// ── (Breadcrumbs now imported from core) ────────────────────────
 
 // ── Main Page ───────────────────────────────────────────────────
 
@@ -139,7 +126,7 @@ export default function ComplianceDashboardPage() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
         <div className="flex items-center gap-3 px-5 py-3 border-b border-white/[0.06]">
-          <Breadcrumb path={breadcrumbPath} />
+          <Breadcrumbs path={breadcrumbPath} />
 
           <div className="ml-auto flex items-center gap-2">
             <input
@@ -209,10 +196,7 @@ export default function ComplianceDashboardPage() {
             { label: "Longest Chain", value: longestChain },
             { label: "Firmware", value: `v${FIRMWARE_VERSION}` },
           ].map((s) => (
-            <div key={s.label} className="flex items-baseline gap-1.5">
-              <span className="text-sm font-bold text-zinc-200 tabular-nums">{s.value}</span>
-              <span className="text-[8px] font-mono uppercase tracking-widest text-zinc-600">{s.label}</span>
-            </div>
+            <StatBlock key={s.label} value={s.value} label={s.label} />
           ))}
 
           {/* Filter pills */}
