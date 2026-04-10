@@ -1,155 +1,90 @@
 
 
-# Telegram-Grade Messenger UX Overhaul
+# Unified Feature Discovery — App Hub + Contextual Surfacing
 
-## What This Does
+## Problem
 
-Transforms the current messenger into a Telegram-caliber experience: snappy animations, a proper hamburger menu with profile/contacts/settings, polished message bubbles with inline timestamps, pinned messages bar, sticker/emoji panel, saved messages, and crisp interaction patterns — all anchored to Sovereign Identity.
+The OS has 8 desktop apps, but the system contains 40+ modules with capabilities that are invisible to users. Features are only reachable through Spotlight search (if you know the name) or right-click context menus. Users who don't explore will never find Messenger, Graph Explorer, Daily Notes, or the bridge/identity features built into them.
 
-## Reference Analysis (from Telegram screenshot)
+## Solution: Three-Layer Discovery
 
-Key Telegram UX patterns to replicate:
+```text
+Layer 1: App Hub (dedicated window)
+  └─ Full catalog of apps, grouped by OS taxonomy category
+  └─ App cards with icon, name, 1-line description, quick-launch
+  └─ Featured/new section at top for recently added capabilities
 
-1. **Hamburger sidebar menu** — Profile, Wallet, New Group, New Channel, Contacts, Calls, Saved Messages, Settings, Night Mode toggle
-2. **Chat list** — Avatar, name, last message preview, time, unread badge (green), pinned icon, double-check delivery marks inline with time
-3. **Message bubbles** — Sender name in color (group), text body, emoji reactions inline below text, timestamp + double-check right-aligned at bottom-right of bubble, reply quotes with colored left bar
-4. **Pinned message bar** — Dismissable bar at top of conversation showing pinned content
-5. **Emoji panel** — Full emoji picker with tabs (Emoji, Stickers, GIFs), search, categories
-6. **Conversation header** — Group name, member count, search, layout toggle, kebab menu
-7. **Message input** — Clean input with emoji button, attachment, and send; voice note when empty
+Layer 2: Home Screen Quick-Access Row
+  └─ Below the search bar: 4-5 subtle icon buttons for core apps
+  └─ Replaces the current "nothing visible" state
+  └─ Always visible on the home screen (not in a menu)
 
-## Implementation Plan
+Layer 3: Contextual App Suggestions (KG-powered)
+  └─ Spotlight/search suggests relevant apps based on query context
+  └─ e.g. typing "message" surfaces Messenger; "graph" surfaces Graph Explorer
+  └─ Powered by keyword matching against app metadata
+```
 
-### 1. Hamburger Menu Sidebar (Telegram's signature navigation)
+## Implementation
 
-**New file: `SidebarMenu.tsx`**
-- Slide-out drawer from left (or overlay on mobile)
-- User avatar + name + handle at top (linked to Sovereign Identity)
-- Menu items: My Profile, Saved Messages, New Group, New Channel, Contacts, Calls, Settings, Night Mode toggle
-- "My Profile" opens identity panel; "Saved Messages" opens a self-conversation
-- Animated backdrop + slide transition
+### 1. App Hub Window (new desktop app)
 
-**Modify: `UnifiedInbox.tsx`**
-- Replace the static "Messages" header with hamburger icon (☰) on left + search icon on right
-- Tapping hamburger opens `SidebarMenu`
-- Search becomes an expandable bar (Telegram-style: tapping search expands it to full-width input)
+**New file: `src/modules/desktop/components/AppHub.tsx`**
+- A dedicated window/app registered in `desktop-apps.ts` with id `"app-hub"`, category `"RESOLVE"`
+- Layout: A clean grid organized by OS taxonomy categories (Resolve, Identity, Exchange, Observe, Structure)
+- Each app card: icon (from existing `DesktopApp.icon`), label, a short description (new `description` field on `DesktopApp`), and accent color indicator
+- Clicking a card launches the app via `window.dispatchEvent(new CustomEvent("uor:open-app", { detail: appId }))`
+- A "Featured" section at the top highlights 2-3 apps with slightly larger cards
+- Non-user-facing categories (Compute, Transform, Failure) are hidden
+- Clean, minimal grid — no marketing, just functional catalog
 
-### 2. Enhanced Chat List Items (Telegram crispness)
+**Modify: `src/modules/desktop/lib/desktop-apps.ts`**
+- Add `description: string` to `DesktopApp` interface
+- Add short descriptions to each existing app (e.g., Oracle: "AI-powered knowledge assistant", Messenger: "Sovereign encrypted messaging")
+- Register `app-hub` as a new app with `Grid3X3` icon, label "Apps", category "RESOLVE"
+- Add apps currently missing from the desktop: a `"wallet"` app pointing to identity/wallet
 
-**Modify: `ChatList.tsx`**
-- Delivery status checkmarks inline with timestamp (✓ or ✓✓ in color)
-- Show message type icons in preview (📷 Photo, 🎤 Voice, 📎 File)
-- Pinned conversations get subtle pin icon; muted get bell-off
-- Last message shows sender name in groups ("Alice: hey...")
-- Swipe gestures: swipe right → pin/unpin, swipe left → archive/mute
-- Active conversation gets a subtle teal left-border accent (not just bg change)
+### 2. Home Screen Quick-Access Dock
 
-### 3. Polished Message Bubbles (matching Telegram precision)
+**Modify: `src/modules/desktop/DesktopWidgets.tsx`**
+- Below the search bar (after context pills), add a row of 5 subtle circular icon buttons for the most-used apps: Oracle, Messenger, Library, Files, Apps (App Hub)
+- Icons use the same frosted-glass treatment as the search bar
+- Clicking any icon opens that app
+- Row fades with the rest of the home screen when windows are open
+- On mobile (`MobileShell.tsx`): the existing menu drawer grid already handles this
 
-**Modify: `MessageBubble.tsx`**
-- Bubble tail/pointer on the first message in a sequence from a sender
-- Compact grouping: consecutive messages from same sender within 1 minute collapse (no gap, no repeated avatar)
-- Timestamp + delivery status tucked into bottom-right corner of the text area (floated, not on a separate line)
-- Sender name in group chats gets a deterministic color (hash userId → hue)
-- Link previews: detect URLs and show a preview card (title, description, thumbnail)
-- Smooth hover reveal for action buttons (reply arrow) — currently works, make it snappier
+### 3. Enhanced Spotlight with App-Context Suggestions
 
-### 4. Full Emoji/Sticker Panel (Telegram's emoji panel)
+**Modify: `src/modules/desktop/SpotlightSearch.tsx`**
+- Add keyword-to-app mapping: each `DesktopApp` gets a `keywords: string[]` field (e.g., Messenger: ["chat", "message", "send", "whatsapp", "telegram"])
+- When typing, if the query matches app keywords, that app is promoted to the top of the results with a "Launch" indicator
+- This uses the existing `filter` function in cmdk — no KG query needed for this layer
 
-**New file: `EmojiPanel.tsx`**
-- Full panel (not just 6 reactions) — tabs for Emoji, Stickers, GIFs
-- Emoji tab: categorized grid (Smileys, People, Animals, Food, Travel, Activities, Objects, Symbols, Flags)
-- Search bar at top
-- Recent/frequently used section
-- Triggered by the smiley button in MessageInput
-- Slides up from bottom of input area (not a tiny popover)
+**Modify: `src/modules/desktop/lib/desktop-apps.ts`**
+- Add `keywords: string[]` to `DesktopApp` for richer search matching
 
-**Modify: `MessageInput.tsx`**
-- Smiley button toggles EmojiPanel open/closed
-- Selected emoji inserts at cursor position in textarea
-- Panel is a fixed-height overlay above the input bar
+### 4. OS Taxonomy Polish
 
-### 5. Pinned Message Bar
-
-**New file: `PinnedMessageBar.tsx`**
-- Shows at top of conversation (below header) when a message is pinned
-- Shows pinned message preview text, click to scroll to it
-- X button to dismiss (not unpin, just hide the bar)
-- Subtle animation on enter/exit
-
-**Modify: `ConversationView.tsx`**
-- Query for pinned messages in the session
-- Render `PinnedMessageBar` between header and message area
-
-**Modify: `MessageContextMenu.tsx`**
-- Add "Pin" action — inserts/updates a `pinned_messages` record or uses a `pinned_message_hash` column on the session
-
-### 6. Saved Messages
-
-**Modify: `SidebarMenu.tsx` + `use-conversations.ts`**
-- "Saved Messages" creates/opens a self-conversation (user talks to themselves)
-- Bookmark icon in chat list; shows as special conversation with bookmark avatar
-- Forwarding messages to Saved Messages = bookmarking
-
-### 7. Contact List & Calls Placeholder
-
-**New file: `ContactsPanel.tsx`**
-- Lists all users the current user has conversations with
-- Alphabetically sorted with letter headers
-- Shows online status dots
-- Click to open existing conversation or create new one
-
-**New file: `CallsPanel.tsx`**
-- Placeholder showing call history UI (future feature)
-- Voice/video call entries with duration, time, missed indicator
-
-### 8. Settings Panel
-
-**New file: `SettingsPanel.tsx`**
-- Account section: profile photo, name, handle, bio
-- Privacy: who can see last seen, profile photo
-- Notifications: sound, desktop notifications toggle
-- Chat settings: chat background, font size
-- Bridge connections (existing BridgeConnectionPanel integrated here)
-- About: version, encryption info
-
-### 9. Responsive & Animation Polish
-
-**Modify across all components:**
-- All transitions use `transition-all duration-150` for snappiness (Telegram feels instant)
-- Message send: brief scale animation on the sent bubble
-- Sidebar menu: 200ms slide with backdrop fade
-- Scroll-to-bottom FAB: show unread count badge on it when new messages arrive
-- Typing indicator: animated three-dot bounce in the conversation
-- Mobile: proper back-navigation with slide transitions
-
-### 10. Sovereign Identity Integration
-
-**Modify: `SidebarMenu.tsx` + `ContactHeader.tsx`**
-- User's avatar area in sidebar menu shows their UOR glyph / Sovereign Identity badge
-- Tapping profile opens the Identity Hub (existing route)
-- Contact info panel shows the peer's Sovereign Identity verification status
-- "Wallet" menu item links to identity/wallet route (placeholder for now)
+**Modify: `src/modules/desktop/lib/os-taxonomy.ts`**
+- Update `appIds` arrays to include the new `app-hub` and `wallet` entries
+- Ensure Graph Explorer appears under OBSERVE (already does)
 
 ## Files Summary
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `SidebarMenu.tsx` | Create | Telegram-style hamburger drawer |
-| `EmojiPanel.tsx` | Create | Full emoji picker with categories |
-| `PinnedMessageBar.tsx` | Create | Pinned message banner |
-| `ContactsPanel.tsx` | Create | Contact directory |
-| `CallsPanel.tsx` | Create | Call history placeholder |
-| `SettingsPanel.tsx` | Create | User settings screen |
-| `UnifiedInbox.tsx` | Modify | Hamburger + search bar redesign |
-| `ChatList.tsx` | Modify | Checkmarks, swipe, accent styling |
-| `MessageBubble.tsx` | Modify | Bubble tails, grouping, colored names |
-| `MessageInput.tsx` | Modify | Emoji panel integration |
-| `MessageContextMenu.tsx` | Modify | Pin action |
-| `ConversationView.tsx` | Modify | Pinned bar, typing dots, animation |
-| `ContactHeader.tsx` | Modify | Identity badge integration |
-| `MessengerPage.tsx` | Modify | Menu state, panel routing |
-| `ReactionPicker.tsx` | Modify | Expand to use EmojiPanel |
+| `desktop/components/AppHub.tsx` | Create | Full app catalog window |
+| `desktop/lib/desktop-apps.ts` | Modify | Add descriptions, keywords, new app entries |
+| `desktop/DesktopWidgets.tsx` | Modify | Quick-access icon row on home screen |
+| `desktop/SpotlightSearch.tsx` | Modify | Keyword-boosted app suggestions |
+| `desktop/lib/os-taxonomy.ts` | Modify | Update app registrations |
 
-No database migrations needed — this is purely a UI/UX overhaul using existing data structures.
+No database migrations needed. No new dependencies. Pure UI/UX layer.
+
+## Why This Works
+
+- **App Hub** = a single place to see everything (solves "I didn't know that existed")
+- **Home screen dock** = zero-tap access to the 5 core apps (solves "too many clicks")
+- **Smart Spotlight** = type naturally, get the right app (solves "I forgot the name")
+- Everything routes through the existing `openApp()` → `useWindowManager` pipeline — no new state management
 
