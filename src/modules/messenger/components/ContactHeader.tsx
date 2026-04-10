@@ -125,10 +125,10 @@ export default function ContactHeader({ conversation, onBack, presence, onSearch
         <button onClick={onSearch} className="hover:text-white/60 active:scale-[0.9] transition-all duration-100" title="Search messages">
           <Search size={18} />
         </button>
-        <button onClick={onInfo} className="hover:text-white/60 active:scale-[0.9] transition-all duration-100" title="Chat info">
+        <button onClick={onInfo} className="hover:text-white/60 active:scale-[0.9] transition-all duration-100">
           <Info size={16} />
         </button>
-        <ShieldCheck size={16} className="text-teal-400/60" title="End-to-end encrypted" />
+        <ShieldCheck size={16} className="text-teal-400/60" />
       </div>
     </div>
   );
