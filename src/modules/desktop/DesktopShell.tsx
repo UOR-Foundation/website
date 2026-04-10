@@ -191,6 +191,7 @@ function DesktopShellInner() {
               onSnap={wm.snapWindow}
               onSnapPreview={setSnapPreview}
               onCommit={wm.commitWindowPosition}
+              onBooted={wm.bootWindow}
             />
           ))}
 
