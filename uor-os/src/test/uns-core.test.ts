@@ -5,7 +5,7 @@ import {
   verifyCanonical,
   verifyIpv6Routing,
   ipv6ToContentBytes,
-} from "@/modules/uns/core";
+} from "@/modules/identity/uns/core";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Test 1: Critical identity holds for all 256 elements

@@ -5,11 +5,11 @@
  * all four refactored modules: ring-core, morphism, trace, certificate.
  */
 import { describe, it, expect } from "vitest";
-import { UorModule, type OperationRecord, type ModuleCertificate } from "@/modules/core/uor-module";
-import { RingCoreModule } from "@/modules/ring-core/ring-module";
-import { MorphismModule } from "@/modules/morphism/morphism-module";
+import { UorModule, type OperationRecord, type ModuleCertificate } from "@/modules/platform/core/uor-module";
+import { RingCoreModule } from "@/modules/kernel/ring-core/ring-module";
+import { MorphismModule } from "@/modules/kernel/morphism/morphism-module";
 import { TraceModule } from "@/modules/verify/trace-module";
-import { CertificateModule } from "@/modules/certificate/certificate-module";
+import { CertificateModule } from "@/modules/identity/addressing/certificate/certificate-module";
 
 // ── Generic Base Class Tests ────────────────────────────────────────────────
 
@@ -146,7 +146,7 @@ describe("RingCoreModule (UorModule<ByteTuple>)", () => {
 
 describe("MorphismModule (UorModule<TransformRecord>)", () => {
   it("transform is observed", () => {
-    const { UORRing } = require("@/modules/ring-core/ring");
+    const { UORRing } = require("@/modules/kernel/ring-core/ring");
     const morph = new MorphismModule();
     const r0 = new UORRing(0);
     const r1 = new UORRing(1);

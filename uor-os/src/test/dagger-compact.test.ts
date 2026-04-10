@@ -20,8 +20,8 @@ import {
   verifySnakeEquation,
   verifyDaggerCompact,
   analyzeBellStates,
-} from "@/modules/atlas/dagger-compact";
-import { getAtlas, ATLAS_VERTEX_COUNT } from "@/modules/atlas/atlas";
+} from "@/modules/research/atlas/dagger-compact";
+import { getAtlas, ATLAS_VERTEX_COUNT } from "@/modules/research/atlas/atlas";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: Dagger Functor. τ-Mirror Involution

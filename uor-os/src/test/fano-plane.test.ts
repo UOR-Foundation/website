@@ -20,7 +20,7 @@ import {
   FANO_ORDER,
   FANO_INCIDENCE,
   type FanoTopology,
-} from "@/modules/atlas/fano-plane";
+} from "@/modules/research/atlas/fano-plane";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: PG(2,2) Axioms

@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback } from "react";
-import type { AnnotatedClaim, EpistemicGrade } from "@/modules/ring-core/neuro-symbolic";
+import type { AnnotatedClaim, EpistemicGrade } from "@/modules/kernel/ring-core/neuro-symbolic";
 import {
   Shield, ShieldAlert, ChevronDown, ChevronUp,
   Search, RefreshCw, Lightbulb, ExternalLink, BookOpen,

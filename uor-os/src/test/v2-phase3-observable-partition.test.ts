@@ -15,7 +15,7 @@ import {
   stratum, ringMetric, hammingMetric, cascadeObs, cascadeLength,
   curvature, holonomy, catastrophe, catastropheThreshold, dihedralElement,
   metricObs, pathObs,
-} from "@/modules/ring-core";
+} from "@/modules/kernel/ring-core";
 import { OBSERVABLE_AXIS } from "@/types/uor-foundation/bridge/observable";
 import { classifyByte } from "@/lib/uor-ring";
 

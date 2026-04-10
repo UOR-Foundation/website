@@ -18,7 +18,7 @@
  * @see discovery.ts   . observer zones affect idle demotion (P9)
  */
 
-import { UnsKv } from "@/modules/uns/store/kv";
+import { UnsKv } from "@/modules/identity/uns/store/kv";
 
 // ── Tier Definitions ────────────────────────────────────────────────────────
 

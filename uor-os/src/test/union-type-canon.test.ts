@@ -11,7 +11,7 @@ import {
   coerceUnionValue,
   canonicalizeUnionTypes,
   UNION_TYPE_RANGES,
-} from "@/modules/morphism/union-type-canon";
+} from "@/modules/kernel/morphism/union-type-canon";
 import { singleProofHash } from "@/lib/uor-canonical";
 
 describe("Union Type Canonicalization. R2 compliance", () => {

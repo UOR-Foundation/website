@@ -15,7 +15,7 @@
  * T6.8: Entropy conservation. sign class distribution stays uniform
  */
 import { describe, it, expect } from "vitest";
-import { MODEL_CATALOG } from "@/modules/atlas/convergence";
+import { MODEL_CATALOG } from "@/modules/research/atlas/convergence";
 import {
   createTestEmbedding,
   decomposeToAtlas,
@@ -24,7 +24,7 @@ import {
   translate,
   translatePair,
   runCrossModelTranslation,
-} from "@/modules/atlas/translation";
+} from "@/modules/research/atlas/translation";
 
 const GPT2 = MODEL_CATALOG.find(m => m.name === "GPT-2")!;
 const LLAMA7B = MODEL_CATALOG.find(m => m.name === "LLaMA-7B")!;

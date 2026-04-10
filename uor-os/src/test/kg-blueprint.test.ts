@@ -14,11 +14,11 @@ import {
   serializeBlueprint,
   deserializeBlueprint,
   verifyBlueprint,
-} from "@/modules/knowledge-graph/blueprint";
+} from "@/modules/data/knowledge-graph/blueprint";
 import {
   validateBlueprint,
   registerNodeType,
-} from "@/modules/knowledge-graph/blueprint-registry";
+} from "@/modules/data/knowledge-graph/blueprint-registry";
 
 const CONTEXT = "https://uor.foundation/contexts/uor-v1.jsonld";
 
@@ -97,7 +97,7 @@ describe("KG Object Blueprint System", () => {
     const { node } = await materializeFromBlueprint(bp);
 
     // Re-ground using the same path verifyBlueprint uses internally
-    const { sha256, buildIdentity } = await import("@/modules/uns/core/address");
+    const { sha256, buildIdentity } = await import("@/modules/identity/uns/core/address");
     const { canonicalJsonLd } = await import("@/lib/uor-address");
     const forHashing = JSON.parse(JSON.stringify({ ...bp, createdAt: undefined }));
     const canonical = canonicalJsonLd(forHashing);
@@ -122,7 +122,7 @@ describe("KG Object Blueprint System", () => {
 
   it("5. verifyBlueprint returns false when attribute is tampered", async () => {
     const bp = makeBlueprint();
-    const { sha256, buildIdentity } = await import("@/modules/uns/core/address");
+    const { sha256, buildIdentity } = await import("@/modules/identity/uns/core/address");
     const { canonicalJsonLd } = await import("@/lib/uor-address");
     const forHashing = { ...bp, createdAt: undefined };
     const canonical = canonicalJsonLd(forHashing);

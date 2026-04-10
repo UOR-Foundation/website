@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { analyzeTypeScript } from "@/modules/code-kg/analyzer";
-import { ingestCodeGraph } from "@/modules/code-kg/bridge";
-import { buildVisualization } from "@/modules/code-kg/visualizer";
-import { Q0 } from "@/modules/ring-core/ring";
+import { analyzeTypeScript } from "@/modules/data/code-kg/analyzer";
+import { ingestCodeGraph } from "@/modules/data/code-kg/bridge";
+import { buildVisualization } from "@/modules/data/code-kg/visualizer";
+import { Q0 } from "@/modules/kernel/ring-core/ring";
 
 const SAMPLE = `
 interface Foo {

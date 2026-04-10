@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import Layout from "@/modules/core/components/Layout";
+import Layout from "@/modules/platform/core/components/Layout";
 import { ShieldCheck, ChevronDown, ChevronUp, Info, Loader2, CheckCircle2, XCircle, Copy, Check } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/modules/core/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/modules/platform/core/ui/tooltip";
 
 const API = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "erwfuxphwcvynxhfbvql"}.supabase.co/functions/v1/uor-api`;
 

@@ -28,7 +28,7 @@
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
-import { UnsKv } from "@/modules/uns/store/kv";
+import { UnsKv } from "@/modules/identity/uns/store/kv";
 import type { UsageRecord } from "./universal-identity";
 import { DEFAULT_REVENUE_SPLIT } from "./monetization-types";
 import type { RevenueSplit, Currency, PaymentProof } from "./monetization-types";

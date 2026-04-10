@@ -8,12 +8,12 @@ import {
   resolveByName,
   clearRecordStore,
   singleProofHash,
-} from "@/modules/uns/core";
+} from "@/modules/identity/uns/core";
 import type {
   UnsTarget,
   UnsNameRecord,
   CreateRecordOpts,
-} from "@/modules/uns/core";
+} from "@/modules/identity/uns/core";
 
 // ── Shared Fixtures ─────────────────────────────────────────────────────────
 

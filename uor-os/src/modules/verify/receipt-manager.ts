@@ -9,9 +9,9 @@
  *   - kg-store/store for receipt persistence (ingestReceipt)
  */
 
-import type { DerivationReceipt } from "@/modules/derivation/receipt";
+import type { DerivationReceipt } from "@/modules/kernel/derivation/receipt";
 import { singleProofHash } from "@/lib/uor-canonical";
-import { ingestReceipt } from "@/modules/knowledge-graph/store";
+import { ingestReceipt } from "@/modules/data/knowledge-graph/store";
 
 // ── URDNA2015-compliant hashing ─────────────────────────────────────────────
 

@@ -5,9 +5,9 @@
  * EU Data Act compliance, and royalty reporting.
  */
 import { describe, it, expect, beforeAll } from "vitest";
-import { UnsAttribution } from "@/modules/uns/trust/attribution";
-import { generateKeypair } from "@/modules/uns/core/keypair";
-import type { UnsKeypair } from "@/modules/uns/core/keypair";
+import { UnsAttribution } from "@/modules/identity/uns/trust/attribution";
+import { generateKeypair } from "@/modules/identity/uns/core/keypair";
+import type { UnsKeypair } from "@/modules/identity/uns/core/keypair";
 
 describe("P27. Attribution Protocol", () => {
   let keypair: UnsKeypair;

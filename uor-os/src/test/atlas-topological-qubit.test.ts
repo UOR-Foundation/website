@@ -13,7 +13,7 @@ import {
   instantiateQubits,
   computeBraids,
   runTopologicalQubitAnalysis,
-} from "@/modules/atlas/topological-qubit";
+} from "@/modules/research/atlas/topological-qubit";
 
 describe("Phase 11: Topological Qubit in Atlas Substrate", () => {
   describe("22-Node Submanifold", () => {

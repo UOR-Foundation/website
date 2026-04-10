@@ -11,13 +11,13 @@
  * T2.8: Disjoint constraints enforced at runtime
  */
 import { describe, it, expect } from "vitest";
-import { UORRing, Q0, Q1, Q2, fromBytes, compose, verifyCriticalComposition, verifyCriticalCompositionAll } from "@/modules/ring-core";
-import { OP_TABLE, OP_META, verifyGeometryAlignment, dihedralOrder } from "@/modules/ring-core/op-meta";
+import { UORRing, Q0, Q1, Q2, fromBytes, compose, verifyCriticalComposition, verifyCriticalCompositionAll } from "@/modules/kernel/ring-core";
+import { OP_TABLE, OP_META, verifyGeometryAlignment, dihedralOrder } from "@/modules/kernel/ring-core/op-meta";
 import { OP_GEOMETRY, CRITICAL_IDENTITY, D2N } from "@/types/uor-foundation/kernel/op";
 import { CRITICAL_COMPOSITION } from "@/types/uor-foundation/user/morphism";
 import type { Isometry, Transform } from "@/types/uor-foundation/user/morphism";
 import type { PrimitiveOp, GeometricCharacter } from "@/types/uor-foundation/enums";
-import { assertDisjointKind, enforceDisjointConstraints, type TransformRecord, type MorphismKind } from "@/modules/morphism/transform";
+import { assertDisjointKind, enforceDisjointConstraints, type TransformRecord, type MorphismKind } from "@/modules/kernel/morphism/transform";
 
 describe("Phase 2: Ring & Morphism Alignment", () => {
   // ── T2.1: All 10 PrimitiveOps callable at Q0 ────────────────────────────

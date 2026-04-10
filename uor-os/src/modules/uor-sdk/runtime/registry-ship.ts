@@ -16,14 +16,14 @@
  * @see uns/build/snapshot. deployment snapshots
  */
 
-import { pushImage, tagImage } from "@/modules/uns/build/registry";
+import { pushImage, tagImage } from "@/modules/identity/uns/build/registry";
 import {
   createSnapshot,
   hashComponentBytes,
-} from "@/modules/uns/build/snapshot";
-import type { UorImage } from "@/modules/uns/build/uorfile";
-import type { DeploymentSnapshot, SnapshotComponent } from "@/modules/uns/build/snapshot";
-import type { PushResult } from "@/modules/uns/build/registry";
+} from "@/modules/identity/uns/build/snapshot";
+import type { UorImage } from "@/modules/identity/uns/build/uorfile";
+import type { DeploymentSnapshot, SnapshotComponent } from "@/modules/identity/uns/build/snapshot";
+import type { PushResult } from "@/modules/identity/uns/build/registry";
 import type { AppManifest } from "../app-identity";
 
 // ── Types ───────────────────────────────────────────────────────────────────

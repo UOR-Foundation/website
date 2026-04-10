@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseSparql } from "@/modules/sparql/parser";
+import { parseSparql } from "@/modules/data/sparql/parser";
 
 describe("parseSparql", () => {
   it("parses basic SELECT * WHERE { ?s ?p ?o }", () => {

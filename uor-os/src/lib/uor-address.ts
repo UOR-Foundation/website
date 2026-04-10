@@ -33,18 +33,18 @@ export {
   bytesToHex,
   verifyIpv6Routing,
   buildIdentity,
-} from "@/modules/uns/core/address";
+} from "@/modules/identity/uns/core/address";
 
-export type { UorCanonicalIdentity } from "@/modules/uns/core/address";
+export type { UorCanonicalIdentity } from "@/modules/identity/uns/core/address";
 
 // ── Hologram Projections (re-export the unified registry) ──────────────────
 
-export { project, PROJECTIONS } from "@/modules/uns/core/hologram";
-export type { Hologram, HologramProjection, ProjectionInput } from "@/modules/uns/core/hologram";
+export { project, PROJECTIONS } from "@/modules/identity/uns/core/hologram";
+export type { Hologram, HologramProjection, ProjectionInput } from "@/modules/identity/uns/core/hologram";
 
 // ── computeUorAddress. Braille bijection wrapper ──────────────────────────
 
-import { encodeGlyph } from "@/modules/uns/core/address";
+import { encodeGlyph } from "@/modules/identity/uns/core/address";
 
 /** Compute the UOR address (Braille bijection) from raw bytes. */
 export function computeUorAddress(bytes: Uint8Array): {
@@ -57,7 +57,7 @@ export function computeUorAddress(bytes: Uint8Array): {
 
 // ── computeIpv6Address. structured IPv6 result ────────────────────────────
 
-import { formatIpv6 } from "@/modules/uns/core/address";
+import { formatIpv6 } from "@/modules/identity/uns/core/address";
 
 const UOR_IPV6_PREFIX_48 = "fd00:0075:6f72";
 

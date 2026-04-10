@@ -4,7 +4,7 @@
  * @deprecated This module is superseded by `@/modules/engine`.
  * All consumers should import from `@/modules/engine` instead:
  *
- *   import { getEngine, initEngine } from "@/modules/engine";
+ *   import { getEngine, initEngine } from "@/modules/kernel/engine";
  *   const e = getEngine();
  *   e.neg(x);  // WASM or TS, transparently
  *
@@ -12,7 +12,7 @@
  * transitive imports. It will be removed in a future version.
  */
 
-import { getEngine, initEngine } from "@/modules/engine";
+import { getEngine, initEngine } from "@/modules/kernel/engine";
 
 /** @deprecated Use `initEngine()` from `@/modules/engine` */
 export async function loadWasm(): Promise<unknown> {

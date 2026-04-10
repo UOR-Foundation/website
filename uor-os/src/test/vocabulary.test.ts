@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { emitVocabulary } from "@/modules/jsonld/vocabulary";
-import { emitContext } from "@/modules/jsonld/context";
+import { emitVocabulary } from "@/modules/data/jsonld/vocabulary";
+import { emitContext } from "@/modules/data/jsonld/context";
 
 describe("emitVocabulary", () => {
   const vocab = emitVocabulary();

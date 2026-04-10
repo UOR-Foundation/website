@@ -14,7 +14,7 @@ import {
   residueConstraint, carryConstraint, depthConstraint,
   compositeConstraint, applyConstraint, filterByConstraint,
   createFiberBudget, freeCount,
-} from "@/modules/ring-core";
+} from "@/modules/kernel/ring-core";
 
 describe("Phase 4: Constraint Algebra", () => {
   // ── T4.1: ResidueConstraint ─────────────────────────────────────────────

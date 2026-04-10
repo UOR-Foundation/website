@@ -12,10 +12,10 @@ import {
   scheduleStepsByMode,
   hasScheduledCycle,
   type ScheduleConfig,
-} from "@/modules/ring-core/strategy-scheduler";
-import { ZERO_TREE } from "@/modules/uns/core/hologram/polytree";
-import type { TransitionContext } from "@/modules/uns/core/hologram/polytree";
-import type { ProjectionInput } from "@/modules/uns/core/hologram/index";
+} from "@/modules/kernel/ring-core/strategy-scheduler";
+import { ZERO_TREE } from "@/modules/identity/uns/core/hologram/polytree";
+import type { TransitionContext } from "@/modules/identity/uns/core/hologram/polytree";
+import type { ProjectionInput } from "@/modules/identity/uns/core/hologram/index";
 
 const dummyInput: ProjectionInput = {
   hashBytes: new Uint8Array(32),

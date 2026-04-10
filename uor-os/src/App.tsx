@@ -1,27 +1,27 @@
 import { lazy, Suspense, useEffect } from "react";
-import { Toaster } from "@/modules/core/ui/toaster";
-import { Toaster as Sonner } from "@/modules/core/ui/sonner";
-import { TooltipProvider } from "@/modules/core/ui/tooltip";
+import { Toaster } from "@/modules/platform/core/ui/toaster";
+import { Toaster as Sonner } from "@/modules/platform/core/ui/sonner";
+import { TooltipProvider } from "@/modules/platform/core/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
-import { AuthPromptProvider } from "@/modules/auth/useAuthPrompt";
-import { PrivyWalletProvider } from "@/modules/auth/PrivyWalletProvider";
+import { AuthPromptProvider } from "@/modules/platform/auth/useAuthPrompt";
+import { PrivyWalletProvider } from "@/modules/platform/auth/PrivyWalletProvider";
 
 // ── Sovereign Bus ─────────────────────────────────────────────────────
-import { sovereignBoot } from "@/modules/boot";
+import { sovereignBoot } from "@/modules/platform/boot";
 
 // The OS shell is the root — loaded eagerly for instant render
-const DesktopShell = lazy(() => import("@/modules/desktop/DesktopShell"));
+const DesktopShell = lazy(() => import("@/modules/platform/desktop/DesktopShell"));
 
 // OS pages — code-split
-const OraclePage = lazy(() => import("@/modules/oracle/pages/OraclePage"));
-const ResolvePage = lazy(() => import("@/modules/oracle/pages/ResolvePage"));
-const MessengerPage = lazy(() => import("@/modules/messenger/pages/MessengerPage"));
-const LibraryPage = lazy(() => import("@/modules/oracle/pages/LibraryPage"));
-const AppStorePage = lazy(() => import("@/modules/app-store/pages/AppStorePage"));
-const ComplianceDashboardPage = lazy(() => import("@/modules/canonical-compliance/pages/ComplianceDashboardPage"));
-const DownloadPage = lazy(() => import("@/modules/landing/pages/DownloadPage"));
+const OraclePage = lazy(() => import("@/modules/intelligence/oracle/pages/OraclePage"));
+const ResolvePage = lazy(() => import("@/modules/intelligence/oracle/pages/ResolvePage"));
+const MessengerPage = lazy(() => import("@/modules/intelligence/messenger/pages/MessengerPage"));
+const LibraryPage = lazy(() => import("@/modules/intelligence/oracle/pages/LibraryPage"));
+const AppStorePage = lazy(() => import("@/modules/platform/app-store/pages/AppStorePage"));
+const ComplianceDashboardPage = lazy(() => import("@/modules/research/canonical-compliance/pages/ComplianceDashboardPage"));
+const DownloadPage = lazy(() => import("@/modules/platform/landing/pages/DownloadPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,10 +38,10 @@ const App = () => {
     sovereignBoot().catch(() => {});
     if ("requestIdleCallback" in window) {
       (window as any).requestIdleCallback(() => {
-        import("@/modules/bus/modules");
+        import("@/modules/platform/bus/modules");
       });
     } else {
-      setTimeout(() => { import("@/modules/bus/modules"); }, 100);
+      setTimeout(() => { import("@/modules/platform/bus/modules"); }, 100);
     }
   }, []);
 

@@ -9,7 +9,7 @@ import {
   verifySedenionMoufang,
   mapViolationsToBoundary,
   type MoufangVerification,
-} from "@/modules/atlas/moufang-identities";
+} from "@/modules/research/atlas/moufang-identities";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: Octonionic Moufang Identities

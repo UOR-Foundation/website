@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { UnsQuery } from "@/modules/sparql/query";
-import { UnsGraph } from "@/modules/knowledge-graph/uns-graph";
+import { UnsQuery } from "@/modules/data/sparql/query";
+import { UnsGraph } from "@/modules/data/knowledge-graph/uns-graph";
 
 function makeTestGraph(): UnsGraph {
   const g = new UnsGraph();
@@ -106,7 +106,7 @@ describe("P32: Query Namespace. Intent-Based Object Resolution", () => {
   // ── Integration: uor_query tool ─────────────────────────────────────────
 
   it("T11: uor_query with intent returns intentResult", async () => {
-    const { uor_query } = await import("@/modules/agent-tools/tools");
+    const { uor_query } = await import("@/modules/intelligence/agent-tools/tools");
     const output = await uor_query({ intent: "hello" });
     expect(output.intentResult).toBeDefined();
     expect(output.intentResult!["@type"]).toBe("query:Resolution");
@@ -116,7 +116,7 @@ describe("P32: Query Namespace. Intent-Based Object Resolution", () => {
   });
 
   it("T12: uor_query with sparql returns sparqlResult", async () => {
-    const { uor_query } = await import("@/modules/agent-tools/tools");
+    const { uor_query } = await import("@/modules/intelligence/agent-tools/tools");
     const output = await uor_query({
       sparql: "SELECT ?s ?p ?o WHERE { ?s ?p ?o }",
     });
@@ -139,7 +139,7 @@ describe("P32: Query Namespace. Intent-Based Object Resolution", () => {
   // ── SDK integration ─────────────────────────────────────────────────────
 
   it("T14: UnsClient has query() method", async () => {
-    const { UnsClient } = await import("@/modules/uns/sdk/client");
+    const { UnsClient } = await import("@/modules/identity/uns/sdk/client");
     const client = new UnsClient({ nodeUrl: "http://localhost" });
     expect(typeof client.query).toBe("function");
   });
@@ -147,7 +147,7 @@ describe("P32: Query Namespace. Intent-Based Object Resolution", () => {
   // ── All five agent tools present ────────────────────────────────────────
 
   it("T15: all five canonical agent tools are exported", async () => {
-    const tools = await import("@/modules/agent-tools/tools");
+    const tools = await import("@/modules/intelligence/agent-tools/tools");
     expect(typeof tools.uor_derive).toBe("function");
     expect(typeof tools.uor_query).toBe("function");
     expect(typeof tools.uor_verify).toBe("function");

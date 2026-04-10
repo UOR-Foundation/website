@@ -11,8 +11,8 @@ import {
   fingerprint,
   fingerprintAll,
   generateFingerprintReport,
-} from "@/modules/atlas/fingerprint";
-import { MODEL_CATALOG } from "@/modules/atlas/convergence";
+} from "@/modules/research/atlas/fingerprint";
+import { MODEL_CATALOG } from "@/modules/research/atlas/convergence";
 
 describe("Individual Fingerprints", () => {
   it("generates fingerprints for all 16 models", () => {

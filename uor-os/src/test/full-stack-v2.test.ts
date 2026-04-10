@@ -18,41 +18,41 @@
 import { describe, it, expect, beforeAll } from "vitest";
 
 // ── Layer 0: Ring Arithmetic ────────────────────────────────────────────────
-import { neg, bnot, succ } from "@/modules/uns/core/ring";
+import { neg, bnot, succ } from "@/modules/identity/uns/core/ring";
 import {
   negQ,
   bnotQ,
   succQ,
   verifyCriticalIdentityQ,
-} from "@/modules/morphism/quantum";
+} from "@/modules/kernel/morphism/quantum";
 
 // ── Conformance Suite ───────────────────────────────────────────────────────
-import { runConformanceSuite } from "@/modules/shacl/conformance";
+import { runConformanceSuite } from "@/modules/research/shacl/conformance";
 
 // ── SHACL Engine ────────────────────────────────────────────────────────────
-import { validateShaclShapes } from "@/modules/shacl/shacl-engine";
+import { validateShaclShapes } from "@/modules/research/shacl/shacl-engine";
 
 // ── Observer Theory ─────────────────────────────────────────────────────────
-import { UnsObserver } from "@/modules/observable/observer";
-import { UnsGraph } from "@/modules/knowledge-graph/uns-graph";
+import { UnsObserver } from "@/modules/kernel/observable/observer";
+import { UnsGraph } from "@/modules/data/knowledge-graph/uns-graph";
 
 // ── Attribution Protocol ────────────────────────────────────────────────────
-import { UnsAttribution } from "@/modules/uns/trust/attribution";
+import { UnsAttribution } from "@/modules/identity/uns/trust/attribution";
 
 // ── State Machine ───────────────────────────────────────────────────────────
-import { UnsStateMachine } from "@/modules/state/state-machine";
+import { UnsStateMachine } from "@/modules/kernel/state/state-machine";
 
 // ── Type System ─────────────────────────────────────────────────────────────
-import { typeCheck, U8 } from "@/modules/state/type-system";
+import { typeCheck, U8 } from "@/modules/kernel/state/type-system";
 
 // ── Schema.org Extension ────────────────────────────────────────────────────
-import { recordToSchemaOrg } from "@/modules/knowledge-graph/schema-org";
+import { recordToSchemaOrg } from "@/modules/data/knowledge-graph/schema-org";
 
 // Cross-quantum morphism verification uses negQ/bnotQ/succQ (already imported)
 
 // ── Keypair ─────────────────────────────────────────────────────────────────
-import { generateKeypair } from "@/modules/uns/core/keypair";
-import type { UnsKeypair } from "@/modules/uns/core/keypair";
+import { generateKeypair } from "@/modules/identity/uns/core/keypair";
+import type { UnsKeypair } from "@/modules/identity/uns/core/keypair";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 const CANONICAL_IRREDUCIBLE_COUNT = 126;

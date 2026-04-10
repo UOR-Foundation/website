@@ -23,7 +23,7 @@ import {
   benchmarkDepths,
   type CausalKernelReport,
   type DepthBenchmark,
-} from "@/modules/atlas/causal-kernel";
+} from "@/modules/research/atlas/causal-kernel";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: Octonionic Arithmetic

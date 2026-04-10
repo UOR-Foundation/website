@@ -11,7 +11,7 @@ import {
   createMetaObserver,
   UOR_MODULES,
   type ObservedOperation,
-} from "@/modules/observable/meta-observer";
+} from "@/modules/kernel/observable/meta-observer";
 
 function op(
   moduleId: string,

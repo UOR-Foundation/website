@@ -2,8 +2,8 @@
  * Stream Projection Tests. Live Coherence Engine
  */
 import { describe, it, expect, vi } from "vitest";
-import { StreamProjection, type StreamSnapshot } from "@/modules/observable/stream-projection";
-import { SystemEventBus } from "@/modules/observable/system-event-bus";
+import { StreamProjection, type StreamSnapshot } from "@/modules/kernel/observable/stream-projection";
+import { SystemEventBus } from "@/modules/kernel/observable/system-event-bus";
 
 describe("Stream Projection Engine", () => {
   it("1. Emits snapshot on ingest", () => {

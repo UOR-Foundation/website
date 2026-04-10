@@ -11,10 +11,10 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { singleProofHash } from "@/modules/uns/core/identity";
-import { project, PROJECTIONS } from "@/modules/uns/core/hologram";
-import { analyzeSynergies, discoverSynergies, SYNERGY_CHAINS, CLUSTERS } from "@/modules/uns/core/hologram/synergies";
-import type { ProjectionInput } from "@/modules/uns/core/hologram";
+import { singleProofHash } from "@/modules/identity/uns/core/identity";
+import { project, PROJECTIONS } from "@/modules/identity/uns/core/hologram";
+import { analyzeSynergies, discoverSynergies, SYNERGY_CHAINS, CLUSTERS } from "@/modules/identity/uns/core/hologram/synergies";
+import type { ProjectionInput } from "@/modules/identity/uns/core/hologram";
 
 // ── Test Identity ──────────────────────────────────────────────────────────
 

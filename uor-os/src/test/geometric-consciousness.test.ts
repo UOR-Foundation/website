@@ -12,8 +12,8 @@ import {
   collapseAmplitude,
   evolveConsciousness,
   type ConsciousnessReport,
-} from "@/modules/atlas/geometric-consciousness";
-import { octonion, octNorm, unitOctonion } from "@/modules/atlas/causal-kernel";
+} from "@/modules/research/atlas/geometric-consciousness";
+import { octonion, octNorm, unitOctonion } from "@/modules/research/atlas/causal-kernel";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: Polynon Collapse Functor

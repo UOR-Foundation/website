@@ -11,7 +11,7 @@ import {
   classifyDomains,
   operationDistribution,
   runMorphismMapVerification,
-} from "@/modules/atlas/morphism-map";
+} from "@/modules/research/atlas/morphism-map";
 
 describe("Morphism Map: 12 Domains → 5 Categorical Operations", () => {
 

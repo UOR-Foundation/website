@@ -5,9 +5,9 @@
  * and coherence (H-score/zone/Φ) in every projection result.
  */
 import { describe, it, expect } from "vitest";
-import { unifiedProject, assessByteCoherence } from "@/modules/uns/core/hologram/unified";
-import { project } from "@/modules/uns/core/hologram";
-import type { ProjectionInput } from "@/modules/uns/core/hologram";
+import { unifiedProject, assessByteCoherence } from "@/modules/identity/uns/core/hologram/unified";
+import { project } from "@/modules/identity/uns/core/hologram";
+import type { ProjectionInput } from "@/modules/identity/uns/core/hologram";
 
 // Deterministic test identity (all-zero hash)
 const ZERO_INPUT: ProjectionInput = {
@@ -164,4 +164,4 @@ describe("Unified Projection. Identity + Coherence Merge", () => {
 });
 
 // Import popcount for test 9
-import { popcount } from "@/modules/observable/h-score";
+import { popcount } from "@/modules/kernel/observable/h-score";

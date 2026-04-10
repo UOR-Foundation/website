@@ -1,0 +1,578 @@
+/**
+ * DesktopWidgets — Home screen: immersive clock, greeting, rich search bar.
+ * This IS the desktop — always visible when no windows are maximized.
+ * Theme-aware, supports immersive/dark/light via DesktopTheme context.
+ *
+ * Uses Pretext canvas measurement for adaptive clock sizing and
+ * orphan-free greeting text — no CSS clamp() hacks.
+ */
+
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useContextManager } from "@/modules/data/sovereign-vault/hooks/useContextManager";
+import ContextPills from "@/modules/data/sovereign-vault/components/ContextPills";
+import { ArrowRight, Upload, Sparkles, MessageCircle, BookOpen, FolderOpen, LayoutGrid, Play, Download, MonitorSmartphone } from "lucide-react";
+import type { WindowState } from "@/modules/platform/desktop/hooks/useWindowManager";
+import { useDesktopTheme } from "@/modules/platform/desktop/hooks/useDesktopTheme";
+import { usePlatform } from "@/modules/platform/desktop/hooks/usePlatform";
+import { useConnectivity } from "@/modules/platform/desktop/hooks/useConnectivity";
+import { useAuth } from "@/hooks/use-auth";
+import VoiceInput from "@/modules/intelligence/oracle/components/VoiceInput";
+import { isValidTriword, triwordBreakdown } from "@/lib/uor-triword";
+import BalancedBlock from "@/modules/intelligence/oracle/components/BalancedBlock";
+import { measureLineCount, FONTS } from "@/modules/intelligence/oracle/lib/pretext-layout";
+import DayRingClock from "@/modules/platform/desktop/components/DayRingClock";
+import { createSuggestionEngine, type SearchSuggestion } from "@/modules/intelligence/oracle/lib/search-suggestions";
+import { getSearchHistory } from "@/modules/intelligence/oracle/lib/search-history";
+import { loadProfile as loadAttentionProfile } from "@/modules/intelligence/oracle/lib/attention-tracker";
+import SearchSuggestions from "@/modules/platform/desktop/SearchSuggestions";
+import { generateHandoffLink } from "@/modules/platform/desktop/lib/handoff";
+
+interface Props {
+  windows: WindowState[];
+  onSearch?: (query: string) => void;
+  onOpenApp?: (appId: string) => void;
+}
+
+type AddressKind = "triword" | "ipv6" | null;
+
+function detectAddress(input: string): { kind: AddressKind; label: string | null } {
+  const t = input.trim();
+  if (!t) return { kind: null, label: null };
+  const normalized = t.replace(/\s*[·.]\s*/g, ".").replace(/\s+/g, ".").toLowerCase();
+  const parts = normalized.split(".");
+  if (parts.length === 3 && parts.every((p) => p.length >= 2)) {
+    if (isValidTriword(normalized)) {
+      const bd = triwordBreakdown(normalized);
+      return {
+        kind: "triword",
+        label: bd
+          ? `${bd.observer.charAt(0).toUpperCase() + bd.observer.slice(1)}.${bd.observable.charAt(0).toUpperCase() + bd.observable.slice(1)}.${bd.context.charAt(0).toUpperCase() + bd.context.slice(1)}`
+          : null,
+      };
+    }
+  }
+  if (/^[0-9a-fA-F:]+$/.test(t) && t.includes(":") && t.split(":").length >= 3) {
+    return { kind: "ipv6", label: t };
+  }
+  return { kind: null, label: null };
+}
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 5) return "Good evening";
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+/** Adaptive clock font sizes — Pretext picks the largest that fits on 1 line */
+
+export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) {
+  const [time, setTime] = useState(new Date());
+  const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const plusBtnRef = useRef<HTMLButtonElement>(null);
+  const { theme, isLight } = useDesktopTheme();
+  const { isMac, fontStack } = usePlatform();
+  const { profile } = useAuth();
+  const ctx = useContextManager();
+  const conn = useConnectivity();
+  
+  const hasMaximized = windows.some(w => w.maximized && !w.minimized);
+  const hasAnyWindows = windows.some(w => !w.minimized);
+  const [containerWidth, setContainerWidth] = useState(580);
+
+  // Suggestion state
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [activeIdx, setActiveIdx] = useState(-1);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const engineRef = useRef<ReturnType<typeof createSuggestionEngine> | null>(null);
+
+  const detected = useMemo(() => detectAddress(query), [query]);
+  const isAddress = detected.kind !== null;
+
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Initialize suggestion engine
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const history = await getSearchHistory(30);
+      const attention = loadAttentionProfile();
+      const contextKeywords = ctx.contextItems.map(c => c.filename);
+      if (cancelled) return;
+      engineRef.current = createSuggestionEngine({
+        history,
+        contextKeywords,
+        domainHistory: attention.domainHistory,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [ctx.contextItems]);
+
+  // Drive suggestions on query change
+  useEffect(() => {
+    if (!query.trim() || isAddress) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    if (engineRef.current) {
+      setShowSuggestions(true);
+      setActiveIdx(-1);
+      engineRef.current.suggest(query, setSuggestions);
+    }
+    return () => engineRef.current?.cancel();
+  }, [query, isAddress]);
+
+  // Track container width for Pretext measurements
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => {
+      const w = el.clientWidth;
+      if (w > 0) setContainerWidth(w);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Auto-focus search on desktop
+  useEffect(() => {
+    if (window.innerWidth >= 768) {
+      setTimeout(() => inputRef.current?.focus(), 400);
+    }
+  }, []);
+
+  const clockStr = time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }); // kept for suggestion engine
+  const fullName = profile?.displayName || "";
+  const firstName = fullName.split(/\s+/)[0];
+  const displayName = firstName || "Explorer";
+  // No trailing period — Apple-style
+  const greetingText = `${getGreeting()}, ${displayName}.`;
+
+
+  // Pretext-measured adaptive greeting size
+  const greetingFontInfo = useMemo(() => {
+    const lines = measureLineCount(greetingText, FONTS.osGreeting, containerWidth, 48);
+    if (lines <= 1) return { font: FONTS.osGreeting, lineHeight: 48, fontSize: "38px" };
+    return { font: FONTS.osGreetingSm, lineHeight: 36, fontSize: "28px" };
+  }, [greetingText, containerWidth]);
+
+  const handleSubmit = useCallback((e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (query.trim() && onSearch) {
+      onSearch(query.trim());
+      setQuery("");
+      setShowSuggestions(false);
+    }
+  }, [query, onSearch]);
+
+  const handleSuggestionSelect = useCallback((text: string) => {
+    setQuery(text);
+    setShowSuggestions(false);
+    if (onSearch) onSearch(text);
+    setQuery("");
+  }, [onSearch]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIdx(prev => (prev < suggestions.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIdx(prev => (prev > 0 ? prev - 1 : suggestions.length - 1));
+    } else if (e.key === "Enter" && activeIdx >= 0) {
+      e.preventDefault();
+      handleSuggestionSelect(suggestions[activeIdx].text);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  }, [showSuggestions, suggestions, activeIdx, handleSuggestionSelect]);
+
+  // Theme-aware colors
+  const isImmersive = theme === "immersive";
+  // Lighter clock — ethereal, weightless
+  
+  // Greeting defers to clock — lower opacity
+  const greetingColor = isImmersive ? "text-white/70" : isLight ? "text-black/30" : "text-white/35";
+
+  // Search bar styles — frosted glass
+  const searchBg = isImmersive
+    ? "hsl(200 10% 12% / 0.82)"
+    : isLight
+      ? "rgba(0,0,0,0.04)"
+      : "rgba(255,255,255,0.04)";
+  const searchBorder = isImmersive
+    ? "1px solid hsl(0 0% 100% / 0.10)"
+    : isLight
+      ? "1px solid rgba(0,0,0,0.06)"
+      : "1px solid rgba(255,255,255,0.06)";
+  const searchShadow = isImmersive
+    ? "0 8px 32px -8px hsl(0 0% 0% / 0.5)"
+    : isLight ? "0 4px 24px -8px rgba(0,0,0,0.06)" : "0 4px 24px -8px rgba(0,0,0,0.2)";
+  const inputColor = isImmersive
+    ? "hsl(0 0% 100% / 0.95)"
+    : isLight
+      ? "hsl(0 0% 0% / 0.85)"
+      : "hsl(0 0% 100% / 0.9)";
+  const placeholderColor = isImmersive ? "hsl(0 0% 100% / 0.30)" : isLight ? "hsl(0 0% 0% / 0.22)" : "hsl(0 0% 100% / 0.22)";
+  const btnBgStyle = isImmersive
+    ? "hsl(0 0% 100% / 0.08)"
+    : isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)";
+  const btnBorderStyle = isImmersive
+    ? "1px solid hsl(0 0% 100% / 0.08)"
+    : isLight ? "1px solid rgba(0,0,0,0.05)" : "1px solid rgba(255,255,255,0.06)";
+  const btnIconColor = isImmersive ? "text-white" : isLight ? "text-black/60" : "text-white/70";
+
+  const widgetOpacity = hasMaximized ? 0 : 1;
+  const clockOpacity = hasAnyWindows ? 0.4 : 1;
+
+  return (
+    <div
+      className="fixed inset-0 z-[5] flex flex-col items-center pointer-events-none contain-layout"
+      style={{
+        opacity: widgetOpacity,
+        transition: "opacity 300ms ease-out",
+      }}
+    >
+      {/* Golden ratio: place visual center at ~38.2% from top (1/φ ≈ 0.618, so top = 1-0.618) */}
+      <div style={{ flex: "0.382" }} />
+
+      <div ref={containerRef} className="pointer-events-auto w-full max-w-[580px] px-6 flex flex-col items-center">
+        {/* Day-progress ring clock */}
+        <DayRingClock time={time} theme={theme} isLight={isLight} opacity={clockOpacity} />
+
+        {/* Greeting */}
+        <div
+          className="mt-5 text-center"
+          style={{ opacity: clockOpacity, transition: "opacity 300ms ease-out" }}
+        >
+          <BalancedBlock
+            font={greetingFontInfo.font}
+            lineHeight={greetingFontInfo.lineHeight}
+            as="p"
+            className={`${greetingColor} font-normal select-none whitespace-nowrap`}
+            style={{
+              fontSize: greetingFontInfo.fontSize,
+              fontFamily: fontStack,
+              textShadow: isImmersive ? "0 1px 16px rgba(0,0,0,0.2)" : "none",
+              letterSpacing: "0",
+            }}
+            center
+          >
+            {greetingText}
+          </BalancedBlock>
+        </div>
+
+        {/* Search bar — tighter gap, frosted glass */}
+        <form onSubmit={handleSubmit} className="w-full mt-8">
+          <div className="relative w-full group">
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => { if (query.trim() && suggestions.length > 0) setShowSuggestions(true); }}
+              onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
+              placeholder="What's on your mind?"
+              className={`relative w-full ${isMac ? "rounded-full" : "rounded-xl"} pr-24 py-4 text-base focus:outline-none`}
+              style={{
+                paddingLeft: "3.5rem",
+                background: searchBg,
+                border: searchBorder,
+                boxShadow: isMac
+                  ? (isImmersive ? "0 8px 32px -8px hsl(0 0% 0% / 0.5)" : isLight ? "0 6px 28px -8px rgba(0,0,0,0.08)" : "0 6px 28px -8px rgba(0,0,0,0.25)")
+                  : (isImmersive ? "0 4px 16px -4px hsl(0 0% 0% / 0.6)" : isLight ? "0 2px 12px -4px rgba(0,0,0,0.1)" : "0 2px 12px -4px rgba(0,0,0,0.3)"),
+                color: inputColor,
+                caretColor: isImmersive ? "hsl(195 70% 65%)" : undefined,
+                fontFamily: isAddress
+                  ? "var(--font-mono, ui-monospace, monospace)"
+                  : fontStack,
+                letterSpacing: isAddress ? "0.03em" : undefined,
+                fontWeight: isAddress ? 500 : undefined,
+              }}
+              role="combobox"
+              aria-expanded={showSuggestions && suggestions.length > 0}
+              aria-autocomplete="list"
+              autoComplete="off"
+            />
+
+            {/* Suggestion dropdown */}
+            <SearchSuggestions
+              suggestions={suggestions}
+              visible={showSuggestions}
+              onSelect={handleSuggestionSelect}
+              onDismiss={() => setShowSuggestions(false)}
+              activeIndex={activeIdx}
+              onActiveIndexChange={setActiveIdx}
+            />
+
+            {/* Context button — opens File Explorer */}
+            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10">
+              <button
+                ref={plusBtnRef}
+                type="button"
+                onClick={() => onOpenApp?.("files")}
+                className="flex items-center justify-center transition-all relative p-1"
+                style={{
+                  color: isImmersive ? "hsl(0 0% 100% / 0.40)" : isLight ? "hsl(0 0% 0% / 0.25)" : "hsl(0 0% 100% / 0.30)",
+                }}
+                title="Open File Explorer"
+              >
+                <Upload className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Right-side actions */}
+            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-2 z-10">
+              <VoiceInput
+                onTranscript={(text, isFinal) => {
+                  setQuery(text);
+                  if (isFinal && text.trim() && onSearch) onSearch(text.trim());
+                }}
+                size="sm"
+                className={isImmersive
+                  ? "text-white/60 hover:text-white/90 border-white/10 hover:border-white/25"
+                  : isLight
+                    ? "text-black/40 hover:text-black/70 border-black/10 hover:border-black/20"
+                    : "text-white/50 hover:text-white/80 border-white/10 hover:border-white/20"
+                }
+              />
+              <button
+                type="submit"
+                disabled={!query.trim()}
+                className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-25 transition-all duration-200"
+                style={{
+                  background: btnBgStyle,
+                  border: btnBorderStyle,
+                }}
+              >
+                <ArrowRight className={`w-5 h-5 ${btnIconColor}`} />
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {/* Context pills — show active context items */}
+        {ctx.contextItems.length > 0 && (
+          <div className="w-full mt-3">
+            <ContextPills items={ctx.contextItems} onRemove={ctx.remove} />
+          </div>
+        )}
+
+        {/* Quick-access dock — monochrome, harmonious with search bar */}
+        <div
+          className="flex items-center justify-center gap-2.5 mt-5"
+          style={{ opacity: clockOpacity, transition: "opacity 300ms ease-out" }}
+        >
+          {([
+            { id: "oracle", icon: Sparkles, label: "Oracle" },
+            { id: "messenger", icon: MessageCircle, label: "Messenger" },
+            { id: "media", icon: Play, label: "Media" },
+            { id: "library", icon: BookOpen, label: "Library" },
+            { id: "files", icon: FolderOpen, label: "Files" },
+            { id: "app-hub", icon: LayoutGrid, label: "Apps" },
+          ] as const).map(({ id, icon: Icon, label }) => (
+            <button
+              key={id}
+              onClick={() => onOpenApp?.(id)}
+              title={label}
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
+              style={{
+                background: isImmersive
+                  ? "hsl(200 10% 12% / 0.55)"
+                  : isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)",
+                border: isImmersive
+                  ? "1px solid hsl(0 0% 100% / 0.08)"
+                  : isLight ? "1px solid rgba(0,0,0,0.05)" : "1px solid rgba(255,255,255,0.06)",
+                boxShadow: isImmersive
+                  ? "0 2px 8px -2px hsl(0 0% 0% / 0.3)"
+                  : "none",
+              }}
+            >
+              <Icon
+                className="w-[14px] h-[14px]"
+                style={{
+                  color: isImmersive ? "hsl(0 0% 100% / 0.45)" : isLight ? "hsl(0 0% 0% / 0.30)" : "hsl(0 0% 100% / 0.40)",
+                }}
+              />
+            </button>
+          ))}
+        </div>
+
+        {/* Download desktop app CTA — only in browser, not in Tauri */}
+        {!("__TAURI__" in window) && (
+          <div className="flex items-center gap-3 mt-5" style={{ opacity: clockOpacity, transition: "opacity 300ms ease-out" }}>
+            <a
+              href="/download"
+              className="group inline-flex items-center gap-3 px-6 py-3 text-[11px] font-semibold uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                color: isImmersive ? "hsl(210 100% 80%)" : isLight ? "hsl(210 80% 45%)" : "hsl(210 100% 75%)",
+                border: isImmersive
+                  ? "1px solid hsl(210 100% 72% / 0.20)"
+                  : isLight ? "1px solid hsl(210 80% 45% / 0.15)" : "1px solid hsl(210 100% 72% / 0.15)",
+                borderRadius: isMac ? "9999px" : "0.75rem",
+                background: isImmersive
+                  ? "linear-gradient(135deg, hsl(210 100% 72% / 0.08), hsl(220 80% 60% / 0.05))"
+                  : isLight
+                    ? "linear-gradient(135deg, hsl(210 80% 45% / 0.06), hsl(210 80% 45% / 0.02))"
+                    : "linear-gradient(135deg, hsl(210 100% 72% / 0.06), hsl(220 80% 60% / 0.03))",
+                boxShadow: "0 2px 12px -4px hsl(210 100% 50% / 0.1)",
+              }}
+            >
+              <Download className="w-4 h-4 transition-transform duration-300 group-hover:-translate-y-0.5" />
+              <span>Go Sovereign — Download Desktop</span>
+            </a>
+
+            {/* Transfer to Desktop — only when authenticated */}
+            {profile && (
+              <TransferToDesktopButton
+                windows={windows}
+                theme={theme}
+                isImmersive={isImmersive}
+                isLight={isLight}
+                isMac={isMac}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Offline banner — calm, reassuring */}
+      {!conn.online && (
+        <div className={`pointer-events-auto mt-4 px-4 py-2.5 rounded-full text-[12px] font-medium ${
+          isImmersive ? "text-white/40 bg-white/[0.04] border border-white/[0.06]"
+            : isLight ? "text-black/30 bg-black/[0.03] border border-black/[0.04]"
+            : "text-white/35 bg-white/[0.03] border border-white/[0.05]"
+        }`}>
+          Offline mode — your knowledge graph and data are fully available
+        </div>
+      )}
+
+      {/* Bottom spacer — golden ratio complement */}
+      <div style={{ flex: "0.618" }} />
+
+      {/* Placeholder style for placeholders */}
+      <style>{`
+        .pointer-events-auto input::placeholder {
+          color: ${placeholderColor};
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ── Transfer to Desktop Button ──────────────────────────────────────────
+
+function TransferToDesktopButton({
+  windows,
+  theme,
+  isImmersive,
+  isLight,
+  isMac,
+}: {
+  windows: WindowState[];
+  theme: string;
+  isImmersive: boolean;
+  isLight: boolean;
+  isMac: boolean;
+}) {
+  const [handoffUri, setHandoffUri] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleTransfer = async () => {
+    setGenerating(true);
+    setError(null);
+    try {
+      const { uri } = await generateHandoffLink({
+        windows,
+        activeWindowId: null,
+        theme,
+      });
+      setHandoffUri(uri);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to generate link");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={handleTransfer}
+        disabled={generating}
+        className="group inline-flex items-center gap-2 px-4 py-3 text-[11px] font-semibold uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+        style={{
+          color: isImmersive ? "hsl(160 70% 70%)" : isLight ? "hsl(160 60% 35%)" : "hsl(160 70% 65%)",
+          border: isImmersive
+            ? "1px solid hsl(160 70% 60% / 0.20)"
+            : isLight ? "1px solid hsl(160 60% 35% / 0.15)" : "1px solid hsl(160 70% 60% / 0.15)",
+          borderRadius: isMac ? "9999px" : "0.75rem",
+          background: isImmersive
+            ? "linear-gradient(135deg, hsl(160 70% 60% / 0.08), hsl(160 50% 50% / 0.05))"
+            : isLight
+              ? "linear-gradient(135deg, hsl(160 60% 35% / 0.06), hsl(160 60% 35% / 0.02))"
+              : "linear-gradient(135deg, hsl(160 70% 60% / 0.06), hsl(160 50% 50% / 0.03))",
+        }}
+        title="Transfer your current session to the desktop app"
+      >
+        <MonitorSmartphone className="w-4 h-4" />
+        <span>{generating ? "Generating…" : "Transfer"}</span>
+      </button>
+
+      {/* Handoff link popup */}
+      {handoffUri && (
+        <div
+          className="absolute bottom-full left-0 mb-2 p-3 rounded-xl text-xs w-64"
+          style={{
+            background: "hsl(220 15% 12%)",
+            border: "1px solid hsl(0 0% 100% / 0.1)",
+            boxShadow: "0 8px 32px -8px hsl(0 0% 0% / 0.5)",
+          }}
+        >
+          <p className="mb-2" style={{ color: "hsl(0 0% 70%)" }}>
+            Open this link on your desktop:
+          </p>
+          <a
+            href={handoffUri}
+            className="block font-mono text-[10px] break-all p-2 rounded-lg"
+            style={{
+              color: "hsl(210 100% 72%)",
+              background: "hsl(210 100% 72% / 0.06)",
+              border: "1px solid hsl(210 100% 72% / 0.15)",
+            }}
+          >
+            {handoffUri}
+          </a>
+          <button
+            onClick={() => {
+              navigator.clipboard?.writeText(handoffUri);
+            }}
+            className="mt-2 text-[10px] uppercase tracking-wider font-semibold"
+            style={{ color: "hsl(0 0% 50%)" }}
+          >
+            Copy Link
+          </button>
+        </div>
+      )}
+
+      {error && (
+        <p className="absolute bottom-full left-0 mb-2 text-[10px]" style={{ color: "hsl(0 70% 60%)" }}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}

@@ -7,7 +7,7 @@ import {
   createRecord,
   signRecord,
   clearRecordStore,
-} from "@/modules/uns/core";
+} from "@/modules/identity/uns/core";
 import type {
   UnsTarget,
   CreateRecordOpts,
@@ -16,7 +16,7 @@ import type {
   VerificationResult,
   PublishResult,
   ResolverInfo,
-} from "@/modules/uns/core";
+} from "@/modules/identity/uns/core";
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
 

@@ -9,10 +9,10 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { UnsGraph, Q0_GRAPH } from "@/modules/knowledge-graph/uns-graph";
-import { resolveEntity } from "@/modules/resolver/entity-resolver";
-import { hScoreMultiByte } from "@/modules/observable/h-score";
-import { assignZone } from "@/modules/observable/observer";
+import { UnsGraph, Q0_GRAPH } from "@/modules/data/knowledge-graph/uns-graph";
+import { resolveEntity } from "@/modules/kernel/resolver/entity-resolver";
+import { hScoreMultiByte } from "@/modules/kernel/observable/h-score";
+import { assignZone } from "@/modules/kernel/observable/observer";
 
 describe("P34. NL Entity Resolver + Q0 Graph 265 Nodes", () => {
   const graph = new UnsGraph();

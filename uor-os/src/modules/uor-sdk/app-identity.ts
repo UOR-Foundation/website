@@ -16,7 +16,7 @@
  */
 
 import { singleProofHash } from "@/lib/uor-canonical";
-import { UnsKv } from "@/modules/uns/store/kv";
+import { UnsKv } from "@/modules/identity/uns/store/kv";
 
 // ── Inline JSON-LD context (avoids remote fetch during canonicalization) ────
 

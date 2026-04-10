@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
-import { UnsLedger } from "@/modules/uns/ledger";
-import { generateKeypair, verifyRecord } from "@/modules/uns/core/keypair";
-import type { UnsKeypair } from "@/modules/uns/core/keypair";
-import { singleProofHash } from "@/modules/uns/core/identity";
+import { UnsLedger } from "@/modules/identity/uns/ledger";
+import { generateKeypair, verifyRecord } from "@/modules/identity/uns/core/keypair";
+import type { UnsKeypair } from "@/modules/identity/uns/core/keypair";
+import { singleProofHash } from "@/modules/identity/uns/core/identity";
 
 // ── Setup ───────────────────────────────────────────────────────────────────
 

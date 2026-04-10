@@ -4,7 +4,7 @@
  * Computes the true |Aut(Atlas)| via stabilizer chain and verifies structure.
  */
 import { describe, it, expect } from "vitest";
-import { runClosureAnalysis } from "@/modules/atlas/group-closure";
+import { runClosureAnalysis } from "@/modules/research/atlas/group-closure";
 
 describe("Group Closure: True |Aut(Atlas)|", () => {
   const analysis = runClosureAnalysis();

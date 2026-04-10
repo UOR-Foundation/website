@@ -62,7 +62,7 @@ import { MorphismRouter } from "@/modules/uor-sdk/morphism-router";
 import { FreeTierManager, TIERS } from "@/modules/uor-sdk/free-tier";
 
 // ── Shared KV ───────────────────────────────────────────────────────────────
-import { UnsKv } from "@/modules/uns/store/kv";
+import { UnsKv } from "@/modules/identity/uns/store/kv";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 

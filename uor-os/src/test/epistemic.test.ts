@@ -5,14 +5,14 @@ import {
   gradeToStyles,
   gradeInfo,
   ALL_GRADES,
-} from "@/modules/epistemic/grading";
+} from "@/modules/intelligence/epistemic/grading";
 import {
   assignGrade,
   graded,
   deriveGradeA,
   GRADE_DEFINITIONS,
-} from "@/modules/epistemic/grade-engine";
-import type { Graded } from "@/modules/epistemic/grade-engine";
+} from "@/modules/intelligence/epistemic/grade-engine";
+import type { Graded } from "@/modules/intelligence/epistemic/grade-engine";
 
 // ── Existing grading tests ──────────────────────────────────────────────────
 

@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import Layout from "@/modules/core/components/Layout";
+import Layout from "@/modules/platform/core/components/Layout";
 import { InteroperabilityMap } from "../components/InteroperabilityMap";
 import { KnowledgeGraph } from "../components/KnowledgeGraph";
 

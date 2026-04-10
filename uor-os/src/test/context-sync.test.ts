@@ -16,7 +16,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { emitContext } from "@/modules/jsonld/context";
+import { emitContext } from "@/modules/data/jsonld/context";
 
 // ── Load the published context ──────────────────────────────────────────────
 

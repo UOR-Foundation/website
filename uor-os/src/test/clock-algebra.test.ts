@@ -28,8 +28,8 @@ import {
   enumerateOrbits,
   discreteLog,
   runClockAlgebraVerification,
-} from "@/modules/atlas/clock-algebra";
-import { ATLAS_VERTEX_COUNT } from "@/modules/atlas/atlas";
+} from "@/modules/research/atlas/clock-algebra";
+import { ATLAS_VERTEX_COUNT } from "@/modules/research/atlas/atlas";
 
 describe("Clock Algebra: φ(360) = 96", () => {
   describe("Core identity", () => {

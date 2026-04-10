@@ -24,11 +24,11 @@
  * @see uns/build/registry. image pull
  */
 
-import { pullImage } from "@/modules/uns/build/registry";
+import { pullImage } from "@/modules/identity/uns/build/registry";
 import { singleProofHash } from "@/lib/uor-canonical";
 import { RuntimeWitness } from "../runtime-witness";
 import { initWebGpu, gpuHashString, getComputeSummary, IntegrityMonitor } from "./webgpu-compute";
-import type { UorImage } from "@/modules/uns/build/uorfile";
+import type { UorImage } from "@/modules/identity/uns/build/uorfile";
 import type { ExecutionTrace } from "../runtime-witness";
 
 // ── Types ───────────────────────────────────────────────────────────────────

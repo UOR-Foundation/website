@@ -30,7 +30,7 @@ import {
   stepsByMode,
   hasCompleteCycle,
   totalFibersResolved,
-} from "@/modules/ring-core/proof-machine";
+} from "@/modules/kernel/ring-core/proof-machine";
 import {
   createFiberBudget,
   residueConstraint,
@@ -38,7 +38,7 @@ import {
   deductiveStep,
   inductiveStep,
   abductiveCurvature,
-} from "@/modules/ring-core";
+} from "@/modules/kernel/ring-core";
 
 describe("Phase 4: Proof State Machine", () => {
   // ── T-PM1: Proof lifecycle ──────────────────────────────────────────

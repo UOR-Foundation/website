@@ -14,8 +14,8 @@ import {
   mapCriticalIdentityToClock,
   buildCorrespondence,
   runCryptoClockVerification,
-} from "@/modules/atlas/crypto-clock";
-import { modPow } from "@/modules/atlas/clock-algebra";
+} from "@/modules/research/atlas/crypto-clock";
+import { modPow } from "@/modules/research/atlas/clock-algebra";
 
 // SHA-256 of empty string
 const SHA256_EMPTY = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";

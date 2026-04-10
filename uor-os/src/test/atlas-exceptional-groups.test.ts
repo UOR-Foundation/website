@@ -16,7 +16,7 @@ import {
   isValidCartan, isSimplyLaced, isSymmetricCartan, cartanDeterminant,
   toDynkinDiagram,
   CARTAN_G2, CARTAN_F4, CARTAN_E6, CARTAN_E7, CARTAN_E8,
-} from "@/modules/atlas";
+} from "@/modules/research/atlas";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // Part I: Cartan Matrix Verification (Exact Integer Arithmetic)

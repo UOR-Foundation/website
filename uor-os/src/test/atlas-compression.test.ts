@@ -15,11 +15,11 @@
  * T7.8: Savings scale with model size
  */
 import { describe, it, expect } from "vitest";
-import { MODEL_CATALOG } from "@/modules/atlas/convergence";
+import { MODEL_CATALOG } from "@/modules/research/atlas/convergence";
 import {
   analyzeCompression,
   runCompressionAnalysis,
-} from "@/modules/atlas/compression";
+} from "@/modules/research/atlas/compression";
 
 const GPT2 = MODEL_CATALOG.find(m => m.name === "GPT-2")!;
 const LLAMA7B = MODEL_CATALOG.find(m => m.name === "LLaMA-7B")!;

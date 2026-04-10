@@ -16,8 +16,8 @@ import {
   atlasGradeAGraph,
   compareAttentionVsCoherence,
   type CoherenceHeadOutput,
-} from "@/modules/atlas/categorical-coherence-head";
-import { constructFanoTopology } from "@/modules/atlas/fano-plane";
+} from "@/modules/research/atlas/categorical-coherence-head";
+import { constructFanoTopology } from "@/modules/research/atlas/fano-plane";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: Vertex → Fano Mapping

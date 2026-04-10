@@ -40,7 +40,7 @@ import {
   DELTA_0_RAD,
   ALPHA_QSVG,
   ANOMALOUS_DIMENSION,
-} from "@/modules/qsvg";
+} from "@/modules/research/qsvg";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Phase 3: STRUCTURE. Geometric Units

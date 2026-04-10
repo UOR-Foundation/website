@@ -7,12 +7,12 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { MODEL_CATALOG } from "@/modules/atlas/convergence";
+import { MODEL_CATALOG } from "@/modules/research/atlas/convergence";
 import {
   runPipeline,
   compileAllModels,
   type PipelineResult,
-} from "@/modules/quantum/atlas-compilation-pipeline";
+} from "@/modules/research/quantum/atlas-compilation-pipeline";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // Part I: Single Model End-to-End

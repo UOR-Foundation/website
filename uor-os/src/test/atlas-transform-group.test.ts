@@ -18,8 +18,8 @@ import {
   IDENTITY,
   GROUP_ORDER,
   type TransformElement,
-} from "@/modules/atlas/transform-group";
-import { ATLAS_VERTEX_COUNT } from "@/modules/atlas/atlas";
+} from "@/modules/research/atlas/transform-group";
+import { ATLAS_VERTEX_COUNT } from "@/modules/research/atlas/atlas";
 
 describe("Phase 2: Transform Group (192 elements)", () => {
   it("enumerates exactly 192 elements", () => {

@@ -11,7 +11,7 @@ import {
 } from "@/modules/uor-sdk/pooled-subscription";
 import type { UsageRecord } from "@/modules/uor-sdk/universal-identity";
 import type { PooledSubscription } from "@/modules/uor-sdk/pooled-subscription";
-import { UnsKv } from "@/modules/uns/store/kv";
+import { UnsKv } from "@/modules/identity/uns/store/kv";
 
 describe("Universal Identity. One Login, All Apps", () => {
   it("creates an identity with a canonical ID and Dilithium-3 grade", async () => {

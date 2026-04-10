@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { UnsObjectStore } from "@/modules/uns/store";
+import { UnsObjectStore } from "@/modules/identity/uns/store";
 
 /** Compare two Uint8Arrays by value. */
 function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {

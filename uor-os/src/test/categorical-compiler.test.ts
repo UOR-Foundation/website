@@ -13,13 +13,13 @@ import {
   compile,
   compileFromPairs,
   compileFromChain,
-} from "@/modules/atlas/categorical-compiler";
+} from "@/modules/research/atlas/categorical-compiler";
 import {
   identityMorphism,
   findMorphism,
   dagger,
-} from "@/modules/atlas/dagger-compact";
-import { getAtlas, ATLAS_VERTEX_COUNT } from "@/modules/atlas/atlas";
+} from "@/modules/research/atlas/dagger-compact";
+import { getAtlas, ATLAS_VERTEX_COUNT } from "@/modules/research/atlas/atlas";
 
 /**
  * Helper: get a short BFS-reachable chain of vertices from vertex 0.

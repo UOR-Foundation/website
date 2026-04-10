@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { emitContext } from "@/modules/jsonld/context";
-import { emitDatum, emitDerivation, emitCoherenceProof, emitGraph } from "@/modules/jsonld/emitter";
-import { validateJsonLd } from "@/modules/jsonld/validator";
-import { Q0 } from "@/modules/ring-core/ring";
+import { emitContext } from "@/modules/data/jsonld/context";
+import { emitDatum, emitDerivation, emitCoherenceProof, emitGraph } from "@/modules/data/jsonld/emitter";
+import { validateJsonLd } from "@/modules/data/jsonld/validator";
+import { Q0 } from "@/modules/kernel/ring-core/ring";
 
 describe("emitContext", () => {
   it("has @base and @vocab", () => {

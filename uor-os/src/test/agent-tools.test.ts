@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { parseTerm } from "@/modules/agent-tools/parser";
-import { serializeTerm } from "@/modules/ring-core/canonicalization";
+import { parseTerm } from "@/modules/intelligence/agent-tools/parser";
+import { serializeTerm } from "@/modules/kernel/ring-core/canonicalization";
 
 describe("agent-tools parser", () => {
   it("parses decimal constant", () => {

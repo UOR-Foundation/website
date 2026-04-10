@@ -3,7 +3,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { verifyReceiptChain } from "@/modules/verify/audit-trail";
-import type { DerivationReceipt } from "@/modules/derivation/receipt";
+import type { DerivationReceipt } from "@/modules/kernel/derivation/receipt";
 
 function makeReceipt(overrides: Partial<DerivationReceipt> = {}): DerivationReceipt {
   return {

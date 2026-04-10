@@ -20,9 +20,9 @@ import {
   summarizeReceipt,
   type ProofAccumulator,
   type ProofOfThoughtReceipt,
-} from "@/modules/qsvg";
+} from "@/modules/research/qsvg";
 
-import { DELTA_0_RAD, RIEMANN_EIGENVALUES, ALPHA_QSVG } from "@/modules/qsvg";
+import { DELTA_0_RAD, RIEMANN_EIGENVALUES, ALPHA_QSVG } from "@/modules/research/qsvg";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Helper: build a typical accumulator with N iterations

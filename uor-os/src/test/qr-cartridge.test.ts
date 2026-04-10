@@ -7,9 +7,9 @@ import {
   buildQrPayload,
   CARTRIDGE_VERSION,
   CARTRIDGE_BASE_URL,
-} from "@/modules/qr-cartridge";
-import { decodeCartridgePayload } from "@/modules/qr-cartridge/decoder";
-import { singleProofHash, bytesToHex } from "@/modules/uns/core";
+} from "@/modules/identity/addressing/qr-cartridge";
+import { decodeCartridgePayload } from "@/modules/identity/addressing/qr-cartridge/decoder";
+import { singleProofHash, bytesToHex } from "@/modules/identity/uns/core";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // QR Cartridge Module. Canonical Compliance Tests

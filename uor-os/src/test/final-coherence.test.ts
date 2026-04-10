@@ -31,29 +31,29 @@ import {
 import {
   ringMetric, hammingMetric, cascadeLength, curvature,
   holonomy, commutator, CATASTROPHE_THRESHOLD,
-} from "@/modules/observable/geometry";
+} from "@/modules/kernel/observable/geometry";
 
 // ── Knowledge Graph ─────────────────────────────────────────────────────────
-import { UnsGraph, Q0_GRAPH } from "@/modules/knowledge-graph/uns-graph";
+import { UnsGraph, Q0_GRAPH } from "@/modules/data/knowledge-graph/uns-graph";
 
 // ── Conformance Suite ───────────────────────────────────────────────────────
-import { runConformanceSuite } from "@/modules/shacl/conformance";
+import { runConformanceSuite } from "@/modules/research/shacl/conformance";
 
 // ── Partition ───────────────────────────────────────────────────────────────
-import { analyzePayload, analyzePayloadFast } from "@/modules/uns/shield/partition";
+import { analyzePayload, analyzePayloadFast } from "@/modules/identity/uns/shield/partition";
 
 // ── Correlate Engine ────────────────────────────────────────────────────────
-import { correlateIds, FIDELITY_THRESHOLDS } from "@/modules/resolver/correlate-engine";
+import { correlateIds, FIDELITY_THRESHOLDS } from "@/modules/kernel/resolver/correlate-engine";
 
 // ── Query ───────────────────────────────────────────────────────────────────
-import { UnsQuery } from "@/modules/sparql/query";
+import { UnsQuery } from "@/modules/data/sparql/query";
 
 // ── Entity Resolver ─────────────────────────────────────────────────────────
-import { resolveEntity } from "@/modules/resolver/entity-resolver";
+import { resolveEntity } from "@/modules/kernel/resolver/entity-resolver";
 
 // ── Observer ────────────────────────────────────────────────────────────────
-import { hScore, popcount } from "@/modules/observable/h-score";
-import { assignZone } from "@/modules/observable/observer";
+import { hScore, popcount } from "@/modules/kernel/observable/h-score";
+import { assignZone } from "@/modules/kernel/observable/observer";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // GRAPH SETUP (shared across all tests)
@@ -220,7 +220,7 @@ describe("P35. Final Coherence Certificate", () => {
     expect(entity["derivation:derivationId"]).toMatch(/^urn:uor:derivation:sha256:/);
 
     // trace:. computation traces via observable path
-    const { observablePath } = await import("@/modules/observable/geometry");
+    const { observablePath } = await import("@/modules/kernel/observable/geometry");
     const path = observablePath(42, ["neg", "bnot", "succ"]);
     expect(path.epistemic_grade).toBe("A");
 
@@ -264,9 +264,9 @@ describe("P35. Final Coherence Certificate", () => {
   // ══════════════════════════════════════════════════════════════════════════
 
   it("T8: All 5 agent tools return valid typed results", async () => {
-    const { singleProofHash } = await import("@/modules/uns/core/identity");
-    const { analyzePayload: partitionAnalyze } = await import("@/modules/uns/shield/partition");
-    const { correlateIds: corrIds } = await import("@/modules/resolver/correlate-engine");
+    const { singleProofHash } = await import("@/modules/identity/uns/core/identity");
+    const { analyzePayload: partitionAnalyze } = await import("@/modules/identity/uns/shield/partition");
+    const { correlateIds: corrIds } = await import("@/modules/kernel/resolver/correlate-engine");
 
     // 1. uor_derive. produces derivation ID
     const derived = await singleProofHash({ "@type": "test:Derivation", value: 42 });
