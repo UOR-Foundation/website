@@ -1,90 +1,148 @@
 
 
-# Algebrica-Grade Knowledge Graph Experience — System-Wide Enforcement
+# Health Gate System — Systematic Bypass Detection & Compliance Enforcement
 
-## Analysis of Algebrica
+## Problem Identified
 
-Algebrica's power comes from three design principles:
+After auditing the codebase, here are the concrete bypass patterns found:
 
-1. **Graph-first hierarchy**: The ontological graph is the primary navigation structure, not a secondary feature. Content exists to serve the graph, not the other way around.
-2. **Brutal restraint**: Monochrome palette, monospace typography for data, generous whitespace, zero decorative elements. Every pixel carries information.
-3. **Contextual discovery**: The left sidebar (Your History, Discover, Most Explored) provides ambient awareness of where you are in the knowledge structure without demanding attention.
+### 1. Raw SHA-256 Bypassing `singleProofHash()` Pipeline
+**21 files** import `sha256hex` from `@/lib/crypto` and use it for direct string hashing, bypassing the canonical URDNA2015 → SHA-256 → UOR identity pipeline. Key offenders:
 
-Our system already has the foundational pieces — `KnowledgeSidebar`, `KnowledgeLayout`, `SovereignGraphExplorer`, `ConceptMap`, `NodeDetailSheet` — but they are confined to the graph-explorer app. The rest of the OS (Oracle, App Builder, Vault, Compliance, etc.) operates independently with no graph awareness.
+- `diffusion/compiler.ts` — defines its **own local `sha256Hex()` function** (lines 91-97), completely duplicating `@/lib/crypto`
+- `certificate/boundary.ts` — hashes boundary keys with raw `sha256hex()` instead of canonicalization
+- `code-kg/analyzer.ts` + `analyzer-rust.ts` — hashes entities with raw sha256 instead of `singleProofHash()`
+- `data-bank/lib/sync.ts` — content-addresses slots with raw sha256
+- `knowledge-graph/lib/schema-templates.ts` — schema CIDs from raw sha256
+- `knowledge-graph/raw-store.ts` — raw hashes for audit records
+- `boot/tech-stack.ts` — stack fingerprint via raw sha256
+- `boot/reflection-chain.ts` — reflection entries via raw sha256
+- `sovereign-spaces/sync/change-dag.ts` — change CIDs via raw sha256
+- `uns/mesh/triple-dedup.ts` + `sync-protocol.ts` — mesh message CIDs via raw sha256
+- `time-machine/checkpoint-capture.ts` — checkpoint hashes via raw sha256
+- `donate/DonatePopup.tsx` + `community/DonatePopup.tsx` — **duplicate components** both using raw sha256
 
-## What We Will Build
+### 2. Duplicate Components
+- `src/modules/donate/components/DonatePopup.tsx` and `src/modules/community/components/DonatePopup.tsx` — identical file, two locations
+- The pruning gate lists `donate` as absorbed into `community`, but the original still exists
 
-A **system-wide knowledge graph context layer** that makes every application in the OS graph-aware without cluttering any of them. Three components:
+### 3. Missing Provenance Registry Entries
+The `PROVENANCE_REGISTRY` in `provenance-map.ts` only covers ~19 modules. Missing modules that exist in the codebase:
+- `knowledge-graph`, `data-bank`, `sovereign-spaces`, `time-machine`, `code-kg`, `certificate`, `verify`, `bus`, `trust-graph`, `atlas`, `quantum`, `mcp`, `hologram-ui`, `audio`, `agent-tools`, `console`, `bitcoin`, `community`, `morphism`, `derivation`, `epistemic`, `sparql`, `state`, `observable`, `resolver`, `sovereign-vault`, `uor-sdk`, `projects`, `qsvg`
 
-### 1. GraphContextBar — Universal Bottom Strip (~120 lines)
-**File**: `src/modules/desktop/components/GraphContextBar.tsx`
+## Solution: Health Gate System
 
-A minimal, persistent bar that appears at the bottom of every `DesktopWindow` content area. It shows the current content's position in the knowledge graph:
+### Architecture
+
+A pluggable gate runner that lives in `canonical-compliance`, producing structured reports exportable as Markdown. Each gate is a pure function: `() => GateReport`. New gates can be added over time.
 
 ```text
 ┌─────────────────────────────────────────────────────────┐
-│  ● 3 nodes   ↔ 7 relations   ◇ graph-explorer          │
-│  [View in Graph]                                        │
+│  Compliance Dashboard                                    │
+│  [Provenance Graph]  [Health Gates]     ← new tab        │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  GATE                        STATUS    SCORE   DETAILS   │
+│  ─────────────────────────── ──────── ─────── ────────   │
+│  Canonical Pipeline Gate      ● PASS   92%    [View]     │
+│    sha256hex bypass: 15 files                            │
+│    local sha256 dupes: 1 file                            │
+│                                                          │
+│  Provenance Coverage Gate     ● WARN   40%    [View]     │
+│    19/48 modules registered                              │
+│    29 modules untraced                                   │
+│                                                          │
+│  Duplicate Detection Gate     ● FAIL   85%    [View]     │
+│    2 duplicate components                                │
+│    1 absorbed module still active                         │
+│                                                          │
+│  Module Hygiene Gate          ● PASS   94%    [View]     │
+│    37 active, 13 absorbed                                │
+│                                                          │
+│  [ Export All Gates as Markdown ]                         │
 └─────────────────────────────────────────────────────────┘
 ```
 
-- **24px tall**, monochrome, monospace — Algebrica-style stat strip
-- Shows: node count connected to current context, relation count, current app name
-- Single action: "View in Graph" opens the graph explorer focused on the current node
-- Conditionally visible: only when the current app has produced or resolved graph-addressable content
-- Uses the existing `localGraphStore.queryBySubject()` to check for related nodes
+### Implementation
 
-### 2. KnowledgeTrailProvider — Session-Wide Trail Tracking (~80 lines)
-**File**: `src/modules/desktop/hooks/useKnowledgeTrail.ts`
+#### 1. Create Gate Runner Engine (~120 lines)
+**File**: `src/modules/canonical-compliance/gates/gate-runner.ts`
 
-A React context that wraps `DesktopShell` and tracks every meaningful user action (opening an app, building an image, resolving a query, inspecting a node) as a trail entry. This feeds the existing `KnowledgeSidebar` component so it works system-wide, not just in the knowledge graph app.
+```typescript
+interface GateResult {
+  id: string;
+  name: string;
+  status: "pass" | "warn" | "fail";
+  score: number;           // 0-100
+  findings: GateFinding[];
+  timestamp: string;
+}
+interface GateFinding {
+  severity: "error" | "warning" | "info";
+  title: string;
+  detail: string;
+  file?: string;
+  recommendation?: string;
+}
+type Gate = () => GateResult;
+```
 
-- Hooks into `useWindowManager` to track app opens/focuses
-- Exposes `pushTrailEntry(id, label, appId)` to any app that wants to register a graph-relevant action
-- Stores trail in sessionStorage (already implemented in `KnowledgeSidebar.tsx` — we unify it)
+A registry of gates. `runAllGates()` executes them all, returns a combined report. `exportGatesMarkdown()` produces a detailed Markdown file.
 
-### 3. GraphQuickView — Inline Graph Preview (~150 lines)
-**File**: `src/modules/desktop/components/GraphQuickView.tsx`
+#### 2. Canonical Pipeline Gate (~80 lines)
+**File**: `src/modules/canonical-compliance/gates/canonical-pipeline-gate.ts`
 
-When a user clicks "View in Graph" from the GraphContextBar, instead of switching to the full graph-explorer app, a compact Algebrica-style overlay appears within the current window:
+Statically detects bypass patterns:
+- Counts modules using `sha256hex` directly vs `singleProofHash`
+- Flags any file that defines its own local hash function
+- Reports ratio of canonical vs raw hash calls
+- Produces per-file findings with recommendations to rewire
 
-- **Radial 1-hop concept map** (reuses existing `ConceptMap` component) centered on the current content node
-- Stat block at bottom: Nodes / Relations / Longest Chain (same `StatBlock` pattern from `SovereignGraphExplorer`)
-- Click any neighbor node to navigate to it (opens the relevant app or graph explorer)
-- Click "Full Graph" to open the graph-explorer app with the node pre-selected
-- Monochrome, frosted glass overlay, dismissible with Escape or click-outside
+#### 3. Provenance Coverage Gate (~60 lines)
+**File**: `src/modules/canonical-compliance/gates/provenance-coverage-gate.ts`
 
-### 4. DesktopWindow Integration (~30 lines changed)
-**File**: `src/modules/desktop/DesktopWindow.tsx`
+Compares `ACTIVE_MODULES` list from pruning-gate against `PROVENANCE_REGISTRY` entries. Flags every active module that has no provenance mapping — meaning it can't be traced back to UOR atoms.
 
-After boot completes, render `<GraphContextBar appId={win.appId} />` below the app content. The bar is opt-in per app via a blueprint flag `graphAware: true` (defaulting to true for all apps except system-monitor and settings).
+#### 4. Duplicate Detection Gate (~70 lines)
+**File**: `src/modules/canonical-compliance/gates/duplicate-detection-gate.ts`
 
-### 5. App-Specific Graph Emission (~40 lines total across files)
+Cross-references `ABSORBED_MODULES` from pruning-gate against actual `PROVENANCE_REGISTRY` and known file paths. Flags:
+- Absorbed modules that still appear in the active registry
+- Known duplicate component paths (donate/DonatePopup vs community/DonatePopup)
+- Multiple files exporting the same function name from different locations
 
-Wire existing apps to emit graph nodes when they produce content:
+#### 5. Module Hygiene Gate (wrapper) (~30 lines)
+**File**: `src/modules/canonical-compliance/gates/hygiene-gate.ts`
 
-- **Oracle**: After each response, emit a `uor:Query` node linked to any `uor:Claim` nodes from the neuro-symbolic scaffold (already produces `EnrichedReceipt` with CIDs)
-- **App Builder**: After each build, emit a `uor:Image` node linked to its `uor:Layer` nodes (already produces canonical IDs)
-- **Compliance**: Emit `uor:ComplianceReport` nodes from provenance data
+Wraps the existing `pruningGate()` into the standard `Gate` interface so it shows alongside the other gates.
 
-This is lightweight — each app adds 5-10 lines calling `localGraphStore.putNode()` after its primary operation.
+#### 6. Health Gates UI Tab (~180 lines)
+**File**: `src/modules/canonical-compliance/components/HealthGatesPanel.tsx`
+
+A new tab in `ComplianceDashboardPage` (alongside Table/Graph views) showing:
+- Gate list with status dots (green/amber/red), scores, and expandable findings
+- Each finding shows severity icon, title, detail, file path, and recommendation
+- "Export All as Markdown" button generates a comprehensive report
+- Per-gate "View Details" expansion with collapsible finding groups
+- Monochrome Algebrica-style aesthetic consistent with the existing compliance page
+
+#### 7. Update ComplianceDashboardPage (~25 lines changed)
+Add a third view mode `"gates"` alongside `"table"` and `"graph"`, with a Shield icon in the toolbar toggle.
+
+#### 8. Fix Known Bypasses (~40 lines across files)
+- **`diffusion/compiler.ts`**: Replace local `sha256Hex` with import from `@/lib/crypto`
+- **`donate/DonatePopup.tsx`**: Delete the file, ensure the `community/DonatePopup.tsx` version is the canonical one (it already is — donate is absorbed into community)
 
 ## Files
 
 | File | Action | Lines |
 |---|---|---|
-| `src/modules/desktop/components/GraphContextBar.tsx` | **Create** | ~120 |
-| `src/modules/desktop/components/GraphQuickView.tsx` | **Create** | ~150 |
-| `src/modules/desktop/hooks/useKnowledgeTrail.ts` | **Create** | ~80 |
-| `src/modules/desktop/DesktopWindow.tsx` | Update | ~15 lines |
-| `src/modules/desktop/DesktopShell.tsx` | Update | ~5 lines (wrap with trail provider) |
-| `src/modules/oracle/pages/OraclePage.tsx` | Update | ~10 lines (emit graph nodes on response) |
-| `src/modules/app-builder/pages/AppBuilderPage.tsx` | Update | ~10 lines (emit graph nodes on build) |
-
-## Design Principles
-
-- **Algebrica-grade restraint**: The GraphContextBar is 24px. The QuickView is a focused overlay, not a dashboard. No color except the monochrome zinc scale.
-- **Graph-first, not graph-only**: The graph is ambient context, not a mode switch. Users see their position in the knowledge structure at all times.
-- **Zero cognitive overhead**: The bar is informational. One click to see the graph. One more click to go deep. No configuration, no settings.
-- **Standardized across every app**: Same bar, same typography, same interaction pattern. The graph experience is the OS experience.
+| `src/modules/canonical-compliance/gates/gate-runner.ts` | Create | ~120 |
+| `src/modules/canonical-compliance/gates/canonical-pipeline-gate.ts` | Create | ~80 |
+| `src/modules/canonical-compliance/gates/provenance-coverage-gate.ts` | Create | ~60 |
+| `src/modules/canonical-compliance/gates/duplicate-detection-gate.ts` | Create | ~70 |
+| `src/modules/canonical-compliance/gates/hygiene-gate.ts` | Create | ~30 |
+| `src/modules/canonical-compliance/components/HealthGatesPanel.tsx` | Create | ~180 |
+| `src/modules/canonical-compliance/pages/ComplianceDashboardPage.tsx` | Update | ~25 lines |
+| `src/modules/uns/core/hologram/diffusion/compiler.ts` | Update | ~5 lines (fix local sha256 dupe) |
 
