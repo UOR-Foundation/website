@@ -175,7 +175,6 @@ export default function DesktopWindow({
         ...style,
         zIndex: win.zIndex,
         contain: "layout style",
-        willChange: isDragging ? "transform" : "auto",
       }}
       onPointerDown={() => onFocus(win.id)}
     >
