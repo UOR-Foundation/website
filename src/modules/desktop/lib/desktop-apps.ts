@@ -1,7 +1,7 @@
 import { lazy, type ComponentType } from "react";
 import {
   Search, Sparkles, BookOpen, MessageCircle, Shield, Activity, FolderOpen,
-  Network, CalendarDays, LayoutGrid, Wallet, Play,
+  Network, CalendarDays, LayoutGrid, Wallet, Play, PackageOpen,
 } from "lucide-react";
 import type { OsCategory } from "./os-taxonomy";
 
@@ -142,6 +142,17 @@ export const DESKTOP_APPS: DesktopApp[] = [
     category: "RESOLVE",
     description: "Stream curated high-quality video content",
     keywords: ["video", "watch", "stream", "music", "youtube", "play", "media", "tv"],
+  },
+  {
+    id: "takeout",
+    label: "Takeout",
+    icon: PackageOpen,
+    component: lazy(() => import("@/modules/takeout/components/SovereignTakeout")),
+    defaultSize: { w: 880, h: 640 },
+    color: "hsl(35 80% 55%)",
+    category: "STRUCTURE",
+    description: "Export, import, and migrate your entire sovereign data set",
+    keywords: ["takeout", "export", "import", "migrate", "backup", "portability", "data", "sovereignty"],
   },
 ];
 
