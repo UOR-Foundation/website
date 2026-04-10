@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Reply, Copy, Pencil, Trash2, Pin, Forward, Smile } from "lucide-react";
+import { Reply, Copy, Pencil, Trash2, Pin, Smile } from "lucide-react";
 import type { DecryptedMessage } from "../lib/types";
 
 interface Props {
@@ -56,8 +56,8 @@ export default function MessageContextMenu({
               <button
                 key={item.label}
                 onClick={() => { item.action(); onClose(); }}
-                className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] transition-colors duration-75 ${
-                  (item as any).danger ? "text-red-400/80 hover:bg-red-500/10" : "text-white/70 hover:bg-white/[0.06]"
+                className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] transition-all duration-75 select-none active:scale-[0.97] ${
+                  (item as any).danger ? "text-red-400/80 hover:bg-red-500/10 active:bg-red-500/15" : "text-white/70 hover:bg-white/[0.06] active:bg-white/[0.1]"
                 }`}
               >
                 <Icon size={15} />

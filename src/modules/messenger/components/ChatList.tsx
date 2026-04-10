@@ -39,7 +39,6 @@ export default function ChatList({ conversations, activeId, onSelect, filter, fi
     );
   }
 
-  // Message type icon for preview
   const getPreviewIcon = (type?: string) => {
     switch (type) {
       case "image": return "📷 ";
@@ -49,22 +48,17 @@ export default function ChatList({ conversations, activeId, onSelect, filter, fi
     }
   };
 
-  // Delivery checkmarks
   const DeliveryStatus = ({ status }: { status?: string }) => {
     switch (status) {
-      case "read":
-        return <CheckCheck size={14} className="text-teal-400/70 flex-shrink-0" />;
-      case "delivered":
-        return <CheckCheck size={14} className="text-white/25 flex-shrink-0" />;
-      case "sent":
-        return <Check size={14} className="text-white/25 flex-shrink-0" />;
-      default:
-        return null;
+      case "read": return <CheckCheck size={14} className="text-teal-400/70 flex-shrink-0" />;
+      case "delivered": return <CheckCheck size={14} className="text-white/25 flex-shrink-0" />;
+      case "sent": return <Check size={14} className="text-white/25 flex-shrink-0" />;
+      default: return null;
     }
   };
 
   return (
-    <div className="flex-1 overflow-y-auto pb-20">
+    <div className="flex-1 overflow-y-auto pb-20" style={{ willChange: "transform" }}>
       {filtered.map((convo) => {
         const isActive = activeId === convo.id;
         const isGroup = convo.sessionType === "group";
@@ -74,33 +68,29 @@ export default function ChatList({ conversations, activeId, onSelect, filter, fi
           : "";
         const lastMsgType = convo.lastMessage?.messageType;
         const lastMsgStatus = convo.lastMessage?.sentByMe ? (convo.lastMessage?.deliveryStatus ?? "sent") : undefined;
-        const lastSenderName = convo.lastMessage?.senderName;
 
         return (
           <button
             key={convo.id}
             onClick={() => onSelect(convo.id)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-100 text-left relative ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 transition-all duration-100 text-left relative select-none active:bg-white/[0.05] active:scale-[0.99] ${
               isActive
                 ? "bg-teal-500/[0.08]"
                 : "hover:bg-white/[0.03]"
             }`}
           >
-            {/* Active accent bar */}
             {isActive && (
               <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-teal-400/60" />
             )}
 
-            {/* Avatar */}
             {isGroup ? (
               <GroupAvatar members={convo.members} groupName={convo.groupMeta?.name} size="md" />
             ) : (
-              <div className="w-[52px] h-[52px] rounded-full bg-gradient-to-br from-teal-500/25 to-indigo-500/25 border border-white/[0.08] flex items-center justify-center text-base font-medium text-white/60 flex-shrink-0">
+              <div className="w-[52px] h-[52px] rounded-full bg-gradient-to-br from-teal-500/25 to-indigo-500/25 border border-white/[0.08] flex items-center justify-center text-base font-medium text-white/60 flex-shrink-0 relative">
                 {convo.peer.uorGlyph ?? convo.peer.displayName?.charAt(0)?.toUpperCase() ?? "?"}
               </div>
             )}
 
-            {/* Content */}
             <div className="flex-1 min-w-0 border-b border-white/[0.03] pb-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 min-w-0">
