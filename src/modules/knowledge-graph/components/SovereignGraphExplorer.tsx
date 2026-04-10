@@ -54,14 +54,19 @@ function GraphEvents({
         const isBacklink = graph.hasEdge(node, selectedNode) || 
           graph.someEdge(node, (_e, _a, source, target) => target === selectedNode);
         if (isBacklink) {
-          return { ...data, color: "#f59e0b", zIndex: 2, size: Math.max(7, (data.size as number || 5) * 1.2) };
+          return { ...data, color: "#e4e4e7", zIndex: 2, size: Math.max(7, (data.size as number || 5) * 1.2) };
         }
+        // Dim unrelated nodes
+        return { ...data, color: "#3f3f46", size: Math.max(2, (data.size as number || 4) * 0.6), zIndex: 0 };
+      }
+      if (selectedNode === node) {
+        return { ...data, color: "#fafafa", zIndex: 3, size: Math.max(10, (data.size as number || 6) * 1.5) };
       }
       if (lowerQuery && !(data.label as string || "").toLowerCase().includes(lowerQuery)) {
-        return { ...data, color: "#334155", size: Math.max(2, (data.size as number || 4) * 0.5), zIndex: 0 };
+        return { ...data, color: "#27272a", size: Math.max(2, (data.size as number || 4) * 0.5), zIndex: 0 };
       }
       if (lowerQuery && (data.label as string || "").toLowerCase().includes(lowerQuery)) {
-        return { ...data, highlighted: true, zIndex: 2, size: Math.max(8, (data.size as number || 6) * 1.3) };
+        return { ...data, color: "#fafafa", highlighted: true, zIndex: 2, size: Math.max(8, (data.size as number || 6) * 1.3) };
       }
       return data;
     });
@@ -70,14 +75,13 @@ function GraphEvents({
       if (selectedNode) {
         const source = graph.source(edge);
         const target = graph.target(edge);
-        // Gold for incoming edges (backlinks), emerald for outgoing
         if (target === selectedNode) {
-          return { ...data, color: "#f59e0b", size: 1.5 };
+          return { ...data, color: "#d4d4d8", size: 1.2 };
         }
         if (source === selectedNode) {
-          return { ...data, color: "#10b981", size: 1.5 };
+          return { ...data, color: "#a1a1aa", size: 1.2 };
         }
-        return { ...data, color: "#1e293b", size: 0.3 };
+        return { ...data, color: "#18181b", size: 0.2 };
       }
       return data;
     });
@@ -215,16 +219,25 @@ export function SovereignGraphExplorer() {
         />
       </div>
 
+      {/* Stats overlay — Algebrica-style */}
+      <div className={`absolute z-20 ${isMobile ? "bottom-2 right-2" : "bottom-3 right-3"}`}>
+        <div className="flex items-center gap-3 px-3 py-1.5 bg-card/60 backdrop-blur-md border border-border/20 rounded-lg">
+          <span className="text-[10px] text-muted-foreground/50 font-mono">{nodeCount} nodes</span>
+          <span className="text-muted-foreground/20">·</span>
+          <span className="text-[10px] text-muted-foreground/50 font-mono">{edgeCount} relations</span>
+        </div>
+      </div>
+
       {/* Sigma.js Canvas */}
       {graph.order > 0 && (
         <SigmaContainer
           graph={graph}
           style={{ width: "100%", height: "100%" }}
           settings={{
-            defaultNodeColor: "#64748b",
-            defaultEdgeColor: "#334155",
-            edgeReducer: (_edge, data) => ({ ...data, color: "#334155", size: 0.5 }),
-            labelColor: { color: "#94a3b8" },
+            defaultNodeColor: "#71717a",
+            defaultEdgeColor: "#27272a",
+            edgeReducer: (_edge, data) => ({ ...data, color: "#27272a", size: 0.4 }),
+            labelColor: { color: "#a1a1aa" },
             labelFont: "Inter, system-ui, sans-serif",
             labelSize: 11,
             labelRenderedSizeThreshold: 8,
