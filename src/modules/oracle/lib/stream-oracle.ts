@@ -106,9 +106,16 @@ export async function streamOracle({
       try {
         const parsed = JSON.parse(jsonStr);
         const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (content) { ttft.markFirstToken(); onDelta(content); }
+        if (content) { ttft.markFirstToken(); accumulated += content; onDelta(content); }
       } catch { /* ignore */ }
     }
+  }
+
+  // Auto-inject reflection for the Reflection Gate
+  if (accumulated.length > 20) {
+    const userQuery = messages.filter((m) => m.role === "user").pop()?.content ?? "";
+    const snippet = accumulated.slice(0, 300);
+    pushReflection(userQuery, snippet).catch(() => {/* non-critical */});
   }
 
   onDone();
