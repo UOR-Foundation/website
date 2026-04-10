@@ -11,7 +11,12 @@
  *   - Circuit breaker: auto-stop after N consecutive healthcheck failures
  *   - Exponential backoff restart
  *
- * @version 2.0.0
+ * v3 additions (Sovereign Reconciler — K8s equivalence):
+ *   - Declarative desired-state reconciliation (kernel::recursion)
+ *   - Metric-driven auto-scaling (kernel::stream)
+ *   - Rolling updates with health-gated rollback (kernel::cascade)
+ *
+ * @version 3.0.0
  */
 
 import { AppKernel } from "./app-kernel";
@@ -20,6 +25,9 @@ import {
   allBlueprints,
   getBlueprint,
 } from "./blueprint-registry";
+import { SovereignReconciler } from "./reconciler";
+import { SovereignAutoScaler } from "./auto-scaler";
+import { SovereignRollingUpdate } from "./rolling-update";
 import type {
   AppBlueprint,
   AppInstance,
@@ -27,6 +35,9 @@ import type {
   OrchestratorState,
   ComposeEvent,
   ComposeEventType,
+  Correction,
+  ReconcilerStatus,
+  ScalingConfig,
 } from "./types";
 
 // ── Constants ────────────────────────────────────────────────────────────
