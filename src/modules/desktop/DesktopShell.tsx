@@ -37,6 +37,7 @@ function DesktopShellInner() {
   const [booted, setBooted] = useState(false);
   const [welcomed, setWelcomed] = useState(!shouldShowLocalTwinWelcome());
   const { theme } = useDesktopTheme();
+  const { fontStack, cornerRadius } = usePlatform();
   const wm = useWindowManager(theme);
   const isMobile = useIsMobile();
   const [spotlightOpen, setSpotlightOpen] = useState(false);
