@@ -296,6 +296,40 @@ const A12_SELF_DECLARING: DesignAxiom = {
   version: "1.0.0",
 };
 
+const A13_GRAPH_FIRST: DesignAxiom = {
+  "@id": "axiom:GraphFirstInteraction",
+  "@type": "uor:DesignAxiom",
+  code: "A13",
+  label: "Graph-First Interaction",
+  category: "architecture",
+  principle:
+    "Every user-facing interaction must be anchored as a node in the Sovereign Knowledge Graph.",
+  rationale:
+    "A knowledge graph-first architecture ensures every interaction, rendering, and application component is traceable, queryable, and composable. The graph IS the operating system — UIs are merely lenses over graph data.",
+  constraint: {
+    rule: "All user-facing modules must call anchor() to record interactions in the Sovereign Knowledge Graph.",
+    forbids: ["user-facing modules without graph anchoring", "opaque state not represented in the graph"],
+    requires: ["anchor() calls at key interaction points", "named graph per module"],
+  },
+  verification: {
+    kind: "structural",
+    description: "Verify all user-facing modules anchor interactions to the Knowledge Graph via the universal anchor utility.",
+    targets: [
+      "src/modules/messenger",
+      "src/modules/media",
+      "src/modules/projects",
+      "src/modules/app-store",
+      "src/modules/data-bank",
+      "src/modules/api-explorer",
+      "src/modules/observable",
+      "src/modules/auth",
+    ],
+  },
+  "uor:derivedFrom": "uor:GraphTheory",
+  "skos:related": ["uor:KnowledgeGraph", "uor:ContentAddressing"],
+  version: "1.0.0",
+};
+
 // ── All Axioms ───────────────────────────────────────────────────────────
 
 export const ALGEBRICA_AXIOMS: readonly DesignAxiom[] = [
@@ -311,6 +345,7 @@ export const ALGEBRICA_AXIOMS: readonly DesignAxiom[] = [
   A10_DECLARATIVE,
   A11_PROTECTIVE_STILLNESS,
   A12_SELF_DECLARING,
+  A13_GRAPH_FIRST,
 ] as const;
 
 // ── CSS Tokens (Algebrica defaults) ──────────────────────────────────────
