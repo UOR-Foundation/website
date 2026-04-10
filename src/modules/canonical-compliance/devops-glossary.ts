@@ -1,17 +1,20 @@
 /**
- * DevOps Glossary — Canonical Terminology Registry
+ * DevOps Glossary — Backward-Compatible Re-export
  * ═════════════════════════════════════════════════════════════════
  *
- * Maps internal system terminology to industry-standard DevOps/CNCF
- * equivalents so experienced engineers can orient instantly.
+ * This module is now a thin shim over the canonical ontology.
+ * All terminology is defined in `@/modules/ontology/vocabulary.ts`.
  *
- * Consumed by:
- *   - devops-alignment-gate (verification)
- *   - System Monitor (tooltip labels)
- *   - Documentation generation
+ * Existing consumers of `DEVOPS_GLOSSARY`, `lookupStandard`, and
+ * `glossaryToMarkdown` continue to work unchanged.
  *
  * @module canonical-compliance/devops-glossary
  */
+
+import { ALL_CONCEPTS, resolveTerm } from "../ontology";
+import type { SkosConcept } from "../ontology";
+
+// ── Legacy GlossaryEntry shape ───────────────────────────────────────────
 
 export interface GlossaryEntry {
   /** Internal system term */
@@ -26,135 +29,35 @@ export interface GlossaryEntry {
   readonly note?: string;
 }
 
-export const DEVOPS_GLOSSARY: readonly GlossaryEntry[] = [
-  {
-    internal: "Sovereign Bus",
-    standard: "Service Mesh / Message Bus",
-    k8s: "kube-apiserver",
-    cncf: "Istio / Linkerd / NATS",
-    note: "Central API surface for all inter-module communication",
-  },
-  {
-    internal: "AppKernel",
-    standard: "Container Runtime + Sidecar Proxy",
-    k8s: "containerd + envoy",
-    cncf: "containerd / CRI-O",
-    note: "Isolation boundary with permission enforcement and rate limiting",
-  },
-  {
-    internal: "Reconciler",
-    standard: "Reconciliation Controller",
-    k8s: "kube-controller-manager",
-    cncf: "Kubernetes",
-    note: "Continuous desired-state ↔ actual-state diff loop",
-  },
-  {
-    internal: "AppBlueprint",
-    standard: "Deployment Manifest",
-    k8s: "Deployment / Pod spec",
-    cncf: "Helm chart",
-    note: "Declarative JSON-LD application identity and resource spec",
-  },
-  {
-    internal: "Sovereign Boot",
-    standard: "Init System",
-    k8s: "kubelet bootstrap",
-    cncf: "systemd",
-    note: "Deterministic module initialization sequence",
-  },
-  {
-    internal: "UorContainer",
-    standard: "Container",
-    k8s: "Pod / Container",
-    cncf: "containerd / CRI-O",
-    note: "Content-addressed runtime instance bridging build artifacts to execution",
-  },
-  {
-    internal: "UOR Seal",
-    standard: "Integrity Attestation",
-    k8s: "Admission Webhook",
-    cncf: "Sigstore / cosign",
-    note: "Cryptographic proof of artifact provenance and integrity",
-  },
-  {
-    internal: "Connectivity Probes",
-    standard: "Liveness / Readiness Probes",
-    k8s: "livenessProbe / readinessProbe",
-    note: "Periodic health checks for service availability",
-  },
-  {
-    internal: "ComposeEvent",
-    standard: "Cluster Event",
-    k8s: "kubectl get events",
-    note: "Lifecycle and state-change events emitted by the compose engine",
-  },
-  {
-    internal: "Error Budget",
-    standard: "SLO Error Budget",
-    cncf: "OpenSLO",
-    note: "Allowable failure margin before remediation triggers",
-  },
-  {
-    internal: "Bus Manifest",
-    standard: "Service Registry",
-    k8s: "Endpoints / Services",
-    cncf: "CoreDNS / etcd",
-    note: "Registry of all operations available on the bus",
-  },
-  {
-    internal: "DHT",
-    standard: "Service Discovery",
-    k8s: "kube-dns",
-    cncf: "CoreDNS",
-    note: "Distributed hash table for content-addressed name resolution",
-  },
-  {
-    internal: "Conduit",
-    standard: "mTLS Tunnel",
-    cncf: "SPIFFE / SPIRE",
-    note: "Encrypted session channel between participants",
-  },
-  {
-    internal: "Shield",
-    standard: "Runtime Security",
-    k8s: "PodSecurityPolicy",
-    cncf: "Falco / OPA",
-    note: "Static and runtime security analysis layer",
-  },
-  {
-    internal: "Orchestrator",
-    standard: "Scheduler + Kubelet",
-    k8s: "kube-scheduler + kubelet",
-    cncf: "Kubernetes",
-    note: "Application lifecycle management with placement and health monitoring",
-  },
-  {
-    internal: "Auto-Scaler",
-    standard: "Horizontal Pod Autoscaler",
-    k8s: "HPA",
-    cncf: "KEDA",
-    note: "Metric-driven replica scaling",
-  },
-  {
-    internal: "Rolling Update",
-    standard: "Rolling Deployment",
-    k8s: "Deployment strategy: RollingUpdate",
-    note: "Zero-downtime version transitions with health gates",
-  },
-  {
-    internal: "Static Blueprints",
-    standard: "Infrastructure as Code",
-    k8s: "ConfigMap / kustomize",
-    cncf: "Crossplane / Cloud Custodian",
-    note: "Declarative configuration enforced by reconciler",
-  },
-] as const;
+/** Convert a SKOS concept to the legacy GlossaryEntry shape. */
+function toGlossaryEntry(c: SkosConcept): GlossaryEntry {
+  return {
+    internal: c["skos:altLabel"][0] ?? c["skos:prefLabel"],
+    standard: c["skos:prefLabel"],
+    k8s: c["uor:k8sEquivalent"],
+    cncf: c["uor:cncfProject"],
+    note: c["skos:definition"],
+  };
+}
+
+/**
+ * Legacy glossary derived from the canonical ontology.
+ * Only includes concepts that have a CNCF or K8s mapping.
+ */
+export const DEVOPS_GLOSSARY: readonly GlossaryEntry[] = ALL_CONCEPTS
+  .filter((c) => c["uor:k8sEquivalent"] || c["uor:cncfProject"])
+  .map(toGlossaryEntry);
 
 /** Look up the standard DevOps term for an internal concept. */
 export function lookupStandard(internalTerm: string): GlossaryEntry | undefined {
-  return DEVOPS_GLOSSARY.find(
-    (e) => e.internal.toLowerCase() === internalTerm.toLowerCase(),
-  );
+  const concept = resolveTerm(internalTerm);
+  if (!concept) {
+    // Fallback: search legacy entries by internal name
+    return DEVOPS_GLOSSARY.find(
+      (e) => e.internal.toLowerCase() === internalTerm.toLowerCase(),
+    );
+  }
+  return toGlossaryEntry(concept);
 }
 
 /** Get all glossary entries as a formatted markdown table. */
