@@ -65,7 +65,7 @@ const EXEMPT_MODULES = new Set([
 // ── KG Substrate Layers ──────────────────────────────────────────────────────
 
 const SUBSTRATE_LAYERS = [
-  { id: "seed", label: "Static Data Seed", sentinel: "urn:uor:seed:sentinel" },
+  { id: "seed", label: "Static Data Seed", anchorModule: "knowledge-graph" },
   { id: "boot", label: "Boot Seal Anchor", anchorModule: "boot" },
   { id: "bus", label: "Bus Registry Sync", anchorModule: "bus" },
   { id: "ontology", label: "Ontology Materialization", anchorModule: "ontology" },

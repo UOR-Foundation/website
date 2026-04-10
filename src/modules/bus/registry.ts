@@ -53,7 +53,6 @@ async function _syncModuleToGraph(mod: ModuleRegistration): Promise<void> {
           namespace: mod.ns,
           operation: opName,
           description: descriptor.description ?? "",
-          layer: descriptor.layer ?? 0,
           remote: descriptor.remote ?? false,
         },
       }).catch(() => {});

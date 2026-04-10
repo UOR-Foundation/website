@@ -27,7 +27,7 @@ import { events } from "@/data/events";
 interface SeedEntry {
   readonly type: string;
   readonly graph: string;
-  readonly items: readonly Record<string, unknown>[];
+  readonly items: readonly any[];
   readonly labelKey: string;
 }
 
