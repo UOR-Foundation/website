@@ -5,6 +5,10 @@
  * Wraps critical graph mutations in content-addressed batches.
  * Each committed transaction gets a CID for audit trail.
  *
+ * Atomicity: All mutations are concatenated into a single SPARQL UPDATE
+ * and applied as one operation. CID is computed BEFORE application —
+ * if apply fails, nothing is committed.
+ *
  * Usage:
  *   const tx = beginTransaction("identity");
  *   tx.addMutation("INSERT DATA { ... }");
@@ -14,6 +18,7 @@
 
 import { sparqlUpdate } from "../grafeo-store";
 import { getProvider } from "../persistence";
+import { singleProofHash } from "@/lib/uor-canonical";
 import type { ChangeEntry } from "../persistence/types";
 
 // ── Transaction ─────────────────────────────────────────────────────────────
@@ -55,24 +60,28 @@ export function beginTransaction(namespace: string = "default"): Transaction {
       if (mutations.length === 0) throw new Error("Empty transaction");
       settled = true;
 
-      // Apply all mutations atomically to GrafeoDB
-      for (const sparql of mutations) {
-        await sparqlUpdate(sparql);
-      }
+      // 1. Content-address the batch BEFORE applying (deterministic CID)
+      const batchPayload = {
+        "@type": "uor:TransactionBatch",
+        "uor:namespace": namespace,
+        "uor:mutations": mutations,
+        "uor:timestamp": new Date().toISOString(),
+      };
+      const identity = await singleProofHash(batchPayload);
+      const cid = identity["u:canonicalId"] ?? identity.derivationId;
 
-      // Content-address the batch
-      const payload = JSON.stringify({ namespace, mutations, timestamp: Date.now() });
-      const encoder = new TextEncoder();
-      const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(payload));
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const cid = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+      // 2. Concatenate all mutations into a single SPARQL UPDATE for atomicity
+      const atomicUpdate = mutations.join(" ;\n");
 
-      // Persist to provider
+      // 3. Apply atomically — single call, all-or-nothing
+      await sparqlUpdate(atomicUpdate);
+
+      // 4. Persist the transaction CID to provider (best-effort)
       const change: ChangeEntry = {
         changeCid: cid,
         namespace,
-        payload,
-        timestamp: new Date().toISOString(),
+        payload: JSON.stringify(batchPayload),
+        timestamp: batchPayload["uor:timestamp"],
         deviceId: localStorage.getItem("uor:device-id") || "unknown",
         userId: "local",
       };
@@ -84,7 +93,7 @@ export function beginTransaction(namespace: string = "default"): Transaction {
         console.warn("[Transaction] Provider push failed (local commit succeeded):", err);
       }
 
-      console.log(`[Transaction] Committed ${mutations.length} mutations → CID: ${cid.slice(0, 16)}…`);
+      console.log(`[Transaction] ✓ Committed ${mutations.length} mutations atomically → CID: ${cid.slice(0, 16)}…`);
       return cid;
     },
 

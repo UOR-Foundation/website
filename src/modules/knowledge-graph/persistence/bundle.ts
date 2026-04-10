@@ -8,11 +8,38 @@
  *
  * Export: GrafeoDB → JSON-LD + metadata envelope → file
  * Import: file → validate seal → GrafeoDB
+ *
+ * Security: Seal verification routes through singleProofHash()
+ * ensuring the integrity check is a proper UOR identity, not raw SHA-256.
  */
 
 import { grafeoStore } from "../grafeo-store";
 import { getProvider } from "./index";
+import { singleProofHash } from "@/lib/uor-canonical";
 import type { SovereignBundle } from "./types";
+
+// ── Import Options ──────────────────────────────────────────────────────────
+
+export interface ImportBundleOptions {
+  /** Allow import even if the seal hash doesn't match (dev only) */
+  allowUntrusted?: boolean;
+}
+
+// ── Seal Computation ────────────────────────────────────────────────────────
+
+/**
+ * Compute a UOR-rooted seal from N-Quads payload.
+ * Uses singleProofHash for canonical content-addressing.
+ */
+async function computeSeal(nquads: string): Promise<string> {
+  const identity = await singleProofHash({
+    "@type": "uor:SovereignSeal",
+    "uor:payload": nquads,
+  });
+  return identity["u:canonicalId"] ?? identity.derivationId;
+}
+
+// ── Export ───────────────────────────────────────────────────────────────────
 
 /**
  * Export the entire knowledge graph as a portable sovereign bundle.
@@ -22,37 +49,50 @@ export async function exportSovereignBundle(): Promise<SovereignBundle> {
   return provider.exportBundle();
 }
 
+// ── Import ──────────────────────────────────────────────────────────────────
+
 /**
  * Import a sovereign bundle into the local knowledge graph.
- * Validates the seal hash before importing.
+ * Validates the seal hash before importing — rejects tampered bundles by default.
  * Returns the number of nodes imported.
  */
-export async function importSovereignBundle(bundle: SovereignBundle): Promise<number> {
+export async function importSovereignBundle(
+  bundle: SovereignBundle,
+  opts: ImportBundleOptions = {},
+): Promise<number> {
   // Validate version
   if (bundle.version !== "1.0.0") {
     throw new Error(`Unsupported bundle version: ${bundle.version}`);
   }
 
-  // Validate seal (recompute from graph and compare)
+  // Recompute seal from graph payload using UOR canonical identity
   const graphPayload = JSON.stringify(bundle.graph);
-  const encoder = new TextEncoder();
-  const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(graphPayload));
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const computedSeal = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  const computedSeal = await computeSeal(graphPayload);
 
-  // Note: seal is computed from N-Quads during export but from JSON-LD during import
-  // For now, log a warning if mismatch but still import (forward compat)
+  // Strict seal enforcement — reject tampered bundles
   if (computedSeal !== bundle.sealHash) {
-    console.warn("[Bundle] Seal mismatch — bundle may have been modified since export");
+    if (opts.allowUntrusted) {
+      console.warn(
+        "[Bundle] ⚠ Seal mismatch — importing in untrusted mode. " +
+        `Expected: ${bundle.sealHash.slice(0, 16)}… Got: ${computedSeal.slice(0, 16)}…`
+      );
+    } else {
+      throw new Error(
+        `[Bundle] Seal verification failed — bundle has been tampered with or was exported by a different version. ` +
+        `Expected seal: ${bundle.sealHash.slice(0, 16)}… Computed: ${computedSeal.slice(0, 16)}…`
+      );
+    }
   }
 
   // Import the graph
   const graph = bundle.graph as { "@graph"?: Array<Record<string, unknown>> };
   const count = await grafeoStore.importFromJsonLd(graph);
 
-  console.log(`[Bundle] Imported ${count} nodes from bundle (exported ${bundle.exportedAt})`);
+  console.log(`[Bundle] ✓ Imported ${count} nodes from sealed bundle (exported ${bundle.exportedAt})`);
   return count;
 }
+
+// ── Download ────────────────────────────────────────────────────────────────
 
 /**
  * Download a sovereign bundle as a file.

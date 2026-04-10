@@ -9,6 +9,15 @@
  * Think Docker: GrafeoDB = container image, Provider = registry.
  */
 
+// ── Auth Context ────────────────────────────────────────────────────────────
+
+export interface AuthContext {
+  /** User ID from the auth provider */
+  userId: string;
+  /** Whether the user has an active authenticated session */
+  isAuthenticated: boolean;
+}
+
 // ── Change Entry ────────────────────────────────────────────────────────────
 
 export interface ChangeEntry {
@@ -55,6 +64,9 @@ export interface SovereignBundle {
 export interface PersistenceProvider {
   /** Human-readable provider name */
   readonly name: string;
+
+  /** Get current auth context without leaking backend details */
+  getAuthContext(): Promise<AuthContext | null>;
 
   /** Push full N-Quads snapshot to remote */
   pushSnapshot(nquads: string): Promise<void>;

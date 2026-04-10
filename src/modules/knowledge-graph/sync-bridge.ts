@@ -1,9 +1,10 @@
 /**
- * UOR Knowledge Graph — Cloud Sync Bridge (v3: Provider-Based).
- * ═════════════════════════════════════════════════════════════
+ * UOR Knowledge Graph — Cloud Sync Bridge (v4: Fully Provider-Based).
+ * ════════════════════════════════════════════════════════════════════
  *
  * Routes sync through the active persistence provider.
  * NO DIRECT SUPABASE IMPORTS — fully backend-agnostic.
+ * Auth is resolved through the provider's getAuthContext().
  */
 
 import { grafeoStore } from "./grafeo-store";
@@ -80,13 +81,14 @@ export const syncBridge = {
     if (!space) return;
 
     const deviceId = getDeviceId();
-    // Get userId from provider context rather than direct Supabase
+
+    // Resolve auth through provider — no direct backend imports
     let userId = "anonymous";
     try {
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data: { session } } = await supabase.auth.getSession();
-      userId = session?.user?.id ?? "anonymous";
-    } catch { /* offline */ }
+      const provider = getProvider();
+      const auth = await provider.getAuthContext();
+      if (auth?.isAuthenticated) userId = auth.userId;
+    } catch { /* offline or provider unavailable */ }
 
     const envelope = await createChange(space.id, payload, deviceId, userId);
 
@@ -124,15 +126,9 @@ async function syncToCloud(): Promise<{ pushed: number; pulled: number }> {
   await initProvider();
   const provider = getProvider();
 
-  // Check auth via dynamic import (keeps this file backend-agnostic)
-  let session: any = null;
-  try {
-    const { supabase } = await import("@/integrations/supabase/client");
-    const result = await supabase.auth.getSession();
-    session = result.data.session;
-  } catch { /* no auth available */ }
-
-  if (!session) return { pushed: 0, pulled: 0 };
+  // Check auth through the provider — fully backend-agnostic
+  const auth = await provider.getAuthContext();
+  if (!auth?.isAuthenticated) return { pushed: 0, pulled: 0 };
 
   const space = spaceManager.getActiveSpace();
   if (!space || space.id === "local-personal") return { pushed: 0, pulled: 0 };
@@ -141,7 +137,7 @@ async function syncToCloud(): Promise<{ pushed: number; pulled: number }> {
 
   try {
     const deviceId = getDeviceId();
-    const userId = session.user.id;
+    const userId = auth.userId;
 
     // 1. Push pending changes via provider
     let pushed = 0;
