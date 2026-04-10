@@ -126,6 +126,16 @@ export { exportSovereignBundle, importSovereignBundle, downloadBundle } from "./
 
 // ── Graph Infrastructure ────────────────────────────────────────────────────
 
+// ── Universal Graph Anchoring ────────────────────────────────────────────────
+
+export { anchor, useGraphAnchor, getAnchoredModules } from "./anchor";
+export type { AnchorOptions, GraphAnchorHandle } from "./anchor";
+
+// ── Graph Anchor Compliance Gate (side-effect registration) ──────────────────
+import "./graph-anchor-gate";
+
+// ── Graph Infrastructure ────────────────────────────────────────────────────
+
 export { adjacencyIndex } from "./lib/adjacency-index";
 export { beginTransaction } from "./lib/transaction-envelope";
 export type { Transaction } from "./lib/transaction-envelope";

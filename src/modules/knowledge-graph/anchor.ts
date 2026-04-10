@@ -20,7 +20,7 @@
  */
 
 import { grafeoStore } from "./grafeo-store";
-import type { KGNode, KGEdge } from "./types";
+import type { KGNode } from "./types";
 import { useCallback, useEffect, useRef } from "react";
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -114,29 +114,17 @@ export async function anchor(
 
     // If linked to another node, create an edge
     if (options.linkedTo) {
-      const edge: KGEdge = {
-        id: `${options.linkedTo}|${options.linkPredicate ?? `${UOR_NS}schema/anchoredBy`}|${iri}`,
-        subject: options.linkedTo,
-        predicate: options.linkPredicate ?? `${UOR_NS}schema/anchoredBy`,
-        object: iri,
+      await grafeoStore.putEdge(
+        options.linkedTo,
+        options.linkPredicate ?? `${UOR_NS}schema/anchoredBy`,
+        iri,
         graphIri,
-        createdAt: now,
-        syncState: "local",
-      };
-      await grafeoStore.putEdge(edge);
+      );
     }
 
     // Module provenance edge — link anchor to its source module
     const moduleIri = `${UOR_NS}module/${module}`;
-    await grafeoStore.putEdge({
-      id: `${iri}|${UOR_NS}schema/sourceModule|${moduleIri}`,
-      subject: iri,
-      predicate: `${UOR_NS}schema/sourceModule`,
-      object: moduleIri,
-      graphIri,
-      createdAt: now,
-      syncState: "local",
-    });
+    await grafeoStore.putEdge(iri, `${UOR_NS}schema/sourceModule`, moduleIri, graphIri);
   } catch (err) {
     // Never block the caller — log and continue
     console.warn(`[KG:anchor] Failed to anchor ${module}/${event}:`, err);
