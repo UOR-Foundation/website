@@ -156,7 +156,7 @@ export function currentMinutes(): number {
   return now.getHours() * 60 + now.getMinutes();
 }
 
-/** Get user location: try geolocation API, cache in localStorage, fallback to timezone estimate */
+/** Get user location: IP-based geolocation with timezone fallback. No device permission needed. */
 export function getUserLocation(): Promise<{ lat: number; lng: number }> {
   return new Promise((resolve) => {
     // Check cache first
@@ -164,7 +164,6 @@ export function getUserLocation(): Promise<{ lat: number; lng: number }> {
     if (cached) {
       try {
         const { lat, lng, ts } = JSON.parse(cached);
-        // Cache valid for 24 hours
         if (Date.now() - ts < 86400000) {
           resolve({ lat, lng });
           return;
@@ -172,25 +171,23 @@ export function getUserLocation(): Promise<{ lat: number; lng: number }> {
       } catch { /* ignore */ }
     }
 
-    // Fallback based on timezone
     const fallback = () => {
       const offsetHours = -new Date().getTimezoneOffset() / 60;
       resolve({ lat: 40, lng: offsetHours * 15 });
     };
 
-    if (!navigator.geolocation) {
-      fallback();
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        localStorage.setItem("immersive_geo", JSON.stringify({ ...loc, ts: Date.now() }));
-        resolve(loc);
-      },
-      () => fallback(),
-      { timeout: 5000, maximumAge: 86400000 }
-    );
+    // Use free IP geolocation API instead of device permission
+    fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) })
+      .then(r => r.json())
+      .then(data => {
+        if (data?.latitude && data?.longitude) {
+          const loc = { lat: data.latitude, lng: data.longitude };
+          localStorage.setItem("immersive_geo", JSON.stringify({ ...loc, ts: Date.now() }));
+          resolve(loc);
+        } else {
+          fallback();
+        }
+      })
+      .catch(() => fallback());
   });
 }
