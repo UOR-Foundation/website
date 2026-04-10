@@ -73,7 +73,8 @@ export default function ChatList({ conversations, activeId, onSelect, filter, fi
           ? new Date(convo.lastMessage.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
           : "";
         const lastMsgType = convo.lastMessage?.messageType;
-        const lastMsgStatus = convo.lastMessage?.sentByMe ? (convo.lastMessage as any).deliveryStatus : undefined;
+        const lastMsgStatus = convo.lastMessage?.sentByMe ? (convo.lastMessage?.deliveryStatus ?? "sent") : undefined;
+        const lastSenderName = convo.lastMessage?.senderName;
 
         return (
           <button
