@@ -1,63 +1,169 @@
 
 
-# Fix SharedArrayBuffer — Cross-Origin Isolation Bootstrap
+# UOR Application Composition Engine — "Sovereign Compose"
 
-## Root Cause
+## Vision
 
-The `_headers` file in `public/` sets COOP/COEP headers, but Lovable's hosting platform does **not** process `_headers` files (that format is Netlify/Cloudflare-specific). So the only mechanism is the **service worker header injection** in `custom-sw.ts`.
-
-The SW approach has a **race condition** in `ensureCrossOriginIsolation()` (main.tsx):
-
-1. `navigator.serviceWorker.ready` resolves when the SW reaches `activated` state
-2. But `clients.claim()` (in the SW) is async — it may not have completed yet
-3. So `navigator.serviceWorker.controller` is still `null` when the `.ready.then()` callback runs
-4. The reload never triggers → page stays non-isolated → SAB unavailable
-
-Additionally, there's no fallback if the first reload doesn't achieve isolation, and no `controllerchange` listener to detect when the SW actually takes control.
-
-## Fix
-
-### 1. Fix `src/main.tsx` — Robust COI Bootstrap
-
-Replace the current `ensureCrossOriginIsolation` with a version that:
-- Listens for `controllerchange` event (fires when `clients.claim()` completes)
-- Uses a `sessionStorage` guard to prevent infinite reload loops (max 1 reload per session)
-- Explicitly registers the SW early (before VitePWA's lazy registration) to speed up the bootstrap
-
-### 2. Fix `src/custom-sw.ts` — Handle Opaque Responses
-
-The current `addCOIHeaders` tries to create a `new Response(response.body, ...)` from the fetch result. If the response is opaque (cross-origin without CORS), `response.body` is null and this fails silently. Add a guard to only inject headers on non-opaque responses.
-
-### 3. Enhance Health Report Diagnostics
-
-Update `SystemMonitorApp.tsx` to show **why** SAB is unavailable — distinguish between:
-- No service worker support
-- SW registered but not controlling
-- SW controlling but COEP/COOP not applied
-- Running in iframe (structurally impossible)
-
-## Files Modified
-
-| File | Change |
-|------|--------|
-| `src/main.tsx` | Fix COI bootstrap with `controllerchange` listener + reload guard |
-| `src/custom-sw.ts` | Guard against opaque response bodies |
-| `src/modules/boot/SystemMonitorApp.tsx` | Add SAB diagnostic detail to health report |
-| `src/modules/boot/SystemMonitorDetailViews.tsx` | Show COI diagnostic breakdown in capabilities view |
-
-## Technical Detail
+Three-layer composition model rooted in the existing UOR primitives:
 
 ```text
-Current flow (broken):
-  Page loads → SW registered (async) → ready fires → controller is null → no reload → SAB ✗
-
-Fixed flow:
-  Page loads → check crossOriginIsolated → false
-  → register SW explicitly → listen for controllerchange
-  → SW activates, calls clients.claim() → controllerchange fires
-  → check sessionStorage guard → reload once
-  → Page reloads through SW → COOP/COEP injected → SAB ✓
+┌─────────────────────────────────────────────────────┐
+│  Layer 3: Applications (AppBlueprint)                │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────────┐  │
+│  │ Oracle   │  │ Vault    │  │ AI-Generated App │  │
+│  └──────────┘  └──────────┘  └──────────────────┘  │
+├─────────────────────────────────────────────────────┤
+│  Layer 2: Modules (ModuleUnit)                       │
+│  ┌────────┐ ┌─────────┐ ┌──────┐ ┌───────────┐    │
+│  │ graph  │ │ oracle  │ │ cert │ │ resolver  │    │
+│  └────────┘ └─────────┘ └──────┘ └───────────┘    │
+├─────────────────────────────────────────────────────┤
+│  Layer 1: Operations (bus ops — atomic)              │
+│  kernel/derive  graph/query  cert/issue  store/put  │
+│  ring/neg  oracle/ask  vault/encrypt  resolve/name  │
+├─────────────────────────────────────────────────────┤
+│  Layer 0: UOR Kernel (Fano P0-P6)                    │
+│  encode  decode  compose  store  resolve  observe   │
+│  seal                                                │
+└─────────────────────────────────────────────────────┘
 ```
 
-The `sessionStorage` key `coi-reload` prevents infinite loops — if a reload was already attempted this session and COI still failed, the system logs a diagnostic and proceeds with the Transferable ArrayBuffer fallback.
+## Architecture — Inspired By
+
+| Inspiration | What We Take | Our Equivalent |
+|-------------|-------------|----------------|
+| **Docker** | Content-addressed images, Dockerfile, layered builds | Already have: Uorfile, image-builder, registry, wasm-loader |
+| **Unikraft** | Single-purpose kernel per app, only include what's needed | **AppKernel**: each app gets a minimal subset of bus operations, isolated in its own iframe sandbox |
+| **Kubernetes** | Declarative desired-state, pod scheduling, service mesh | **Orchestrator**: declares apps as blueprints, schedules them on the desktop shell, routes inter-app morphisms |
+| **OpenShift** | Templates, S2I (source-to-image), operator pattern | **Blueprint Templates**: static app definitions that declare which modules compose the app |
+
+## Core Concepts
+
+### 1. AppBlueprint — The "Pod Spec" for Applications
+
+A declarative, content-addressed JSON-LD document that defines an application by listing which bus operations it requires, which UI component it renders, and what resources it needs.
+
+```typescript
+interface AppBlueprint {
+  "@type": "uor:AppBlueprint";
+  name: string;
+  version: string;
+  canonicalId: string;               // computed from blueprint content
+  requires: string[];                 // bus operations: ["graph/query", "cert/issue"]
+  ui: { component: string; lazy: true };
+  resources: { memory?: string; workers?: number };
+  permissions: string[];              // namespaces this app can access
+  morphisms: MorphismInterface[];     // public API for other apps to call
+  healthcheck?: { op: string; interval: number };
+}
+```
+
+### 2. AppKernel — Unikraft-Inspired Isolation
+
+Each running app gets a **minimal kernel** — a filtered view of the bus containing only the operations declared in `requires`. This provides:
+- **Least-privilege**: app can only call operations it declared
+- **Audit trail**: every call is traced through the bus middleware
+- **Hot-swappable**: replace a module's implementation without affecting other apps
+
+```typescript
+class AppKernel {
+  private allowedOps: Set<string>;
+  
+  async call(method: string, params: unknown) {
+    if (!this.allowedOps.has(method)) throw new PermissionError(method);
+    return bus.call(method, params);
+  }
+}
+```
+
+### 3. Orchestrator — Kubernetes-Inspired Scheduling
+
+A singleton that manages the lifecycle of all running AppBlueprints:
+- **Desired state reconciliation**: compare declared blueprints vs running instances
+- **Dependency resolution**: ensure required modules are loaded before app starts
+- **Health monitoring**: periodic healthcheck calls, auto-restart on failure
+- **Resource accounting**: track memory/worker usage per app
+
+### 4. AI Composer — Future Intent-Driven Assembly
+
+An edge function that takes user intent + available bus operations and generates an AppBlueprint on-the-fly:
+
+```text
+User: "I need to verify a document's identity and share it encrypted"
+
+AI receives: list of 80+ bus operations with descriptions
+AI returns:  AppBlueprint { requires: ["kernel/derive", "cert/issue", "vault/encrypt", "store/put"] }
+
+Orchestrator instantiates the blueprint → app appears on desktop
+```
+
+## Implementation Plan
+
+### File Structure
+
+```text
+src/modules/compose/
+  types.ts              — AppBlueprint, AppKernel, OrchestratorState types
+  blueprint-registry.ts — Store/retrieve/verify blueprints (content-addressed)
+  app-kernel.ts         — Minimal per-app bus proxy with permission enforcement
+  orchestrator.ts       — Lifecycle manager: schedule, start, stop, healthcheck
+  static-blueprints.ts  — Current 12 desktop apps declared as blueprints
+  hooks.ts              — useOrchestrator, useAppKernel React hooks
+  index.ts              — Barrel export
+```
+
+### Step 1: Types & Blueprint Registry (types.ts, blueprint-registry.ts)
+
+Define `AppBlueprint` interface with content-addressing via `singleProofHash`. Registry stores blueprints in UnsKv, verifiable by canonical ID.
+
+### Step 2: AppKernel — Per-App Isolation (app-kernel.ts)
+
+Wraps `bus.call` with a permission filter. Each app receives its own AppKernel instance scoped to its declared `requires` list. All calls are traced.
+
+### Step 3: Orchestrator — Lifecycle Manager (orchestrator.ts)
+
+Singleton class that:
+- Accepts blueprints and schedules them
+- Resolves dependency order (topological sort on `requires`)
+- Starts/stops apps, tracks running state
+- Runs periodic healthchecks
+- Exposes state as a reactive observable for UI binding
+
+### Step 4: Static Blueprints (static-blueprints.ts)
+
+Convert the existing 12 `DESKTOP_APPS` entries into `AppBlueprint` declarations. Each blueprint lists the exact bus operations that app uses. The existing `desktop-apps.ts` becomes a thin wrapper that reads from blueprints.
+
+### Step 5: Desktop Integration (hooks.ts + desktop updates)
+
+- `useOrchestrator()` hook provides orchestrator state to desktop shell
+- App Hub shows blueprint metadata (required ops, permissions, health)
+- System Monitor gains an "Apps" tab showing per-app resource usage
+
+### Step 6: AI Composer (future — edge function)
+
+An edge function that receives:
+- User intent (natural language)
+- Available bus operations (from `bus.listMethods()` with descriptions)
+- Returns an AppBlueprint
+
+The orchestrator validates the blueprint, instantiates it, and renders the UI.
+
+## Files Created/Modified
+
+| File | Action |
+|------|--------|
+| `src/modules/compose/types.ts` | Create — core type definitions |
+| `src/modules/compose/blueprint-registry.ts` | Create — content-addressed blueprint storage |
+| `src/modules/compose/app-kernel.ts` | Create — per-app isolated bus proxy |
+| `src/modules/compose/orchestrator.ts` | Create — lifecycle manager |
+| `src/modules/compose/static-blueprints.ts` | Create — current apps as blueprints |
+| `src/modules/compose/hooks.ts` | Create — React hooks |
+| `src/modules/compose/index.ts` | Create — barrel export |
+| `src/modules/desktop/lib/desktop-apps.ts` | Modify — derive from blueprints |
+
+## What This Enables
+
+**Today (static):** Apps are declared as blueprints with explicit `requires` lists. The orchestrator enforces least-privilege and provides lifecycle management. The system is auditable — you can see exactly which operations each app needs.
+
+**Tomorrow (AI-driven):** The AI Composer generates blueprints from user intent. "I want to analyze my knowledge graph and export a report" produces a custom app on-the-fly that composes `graph/query`, `store/list`, `takeout/export`, and a generated UI. The app is ephemeral or persistable, content-addressed, and fully traceable.
 
