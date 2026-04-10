@@ -116,7 +116,7 @@ export const CNCF_CATEGORIES: CncfCategoryDescriptor[] = [
     description: "Pipeline spec with cascaded build/test/deploy stages",
     uorModules: ["cncf-compat/pipeline"],
     cncfProjects: ["Argo", "Flux", "OpenKruise"],
-    uorMaturity: "planned",
+    uorMaturity: "partial",
     iconKey: "GitBranch",
   },
   {

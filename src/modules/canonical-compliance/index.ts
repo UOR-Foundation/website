@@ -23,3 +23,6 @@ export { exportMarkdown, exportJsonLd, exportNQuads } from "./export";
 
 export { runAllGates, exportGatesMarkdown } from "./gates";
 export type { GateResult, GateFinding, GateReport } from "./gates";
+
+export { DEVOPS_GLOSSARY, lookupStandard, glossaryToMarkdown } from "./devops-glossary";
+export type { GlossaryEntry } from "./devops-glossary";
