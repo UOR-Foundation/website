@@ -8,7 +8,7 @@
  */
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseConfigured } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { runFoundingCeremony } from "@/modules/platform/ceremony/founding-forge";
 
@@ -110,6 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // If Supabase isn't configured, skip all auth setup and just mark as loaded
+    if (!supabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     // Set up listener BEFORE getting session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
