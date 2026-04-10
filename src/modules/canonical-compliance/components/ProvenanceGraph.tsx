@@ -247,8 +247,12 @@ export default function ProvenanceGraph({ findings, selectedCategory, search, on
   }, [nodes, selectedCategory, search]);
 
   const getNodeColor = useCallback((node: GraphNode) => {
+    if (node.type === "layer" && node.layerId) return LAYER_COLORS[node.layerId] || "hsl(0 0% 50%)";
     if (node.type === "atom" && node.category) return CATEGORY_COLORS[node.category];
-    if (node.type === "module") return "hsl(210 20% 50%)";
+    if (node.type === "module") {
+      if (node.layerId) return LAYER_COLORS[node.layerId] || "hsl(210 20% 50%)";
+      return "hsl(210 20% 50%)";
+    }
     return "hsl(0 0% 45%)";
   }, []);
 
