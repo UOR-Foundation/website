@@ -34,8 +34,8 @@ import "@/modules/desktop/desktop.css";
 
 function DesktopShellInner() {
   const [booted, setBooted] = useState(false);
-  const wm = useWindowManager();
   const { theme } = useDesktopTheme();
+  const wm = useWindowManager(theme);
   const isMobile = useIsMobile();
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [snapPreview, setSnapPreview] = useState<SnapZone | null>(null);
