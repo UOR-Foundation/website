@@ -1,127 +1,67 @@
 
 
-# Standardized Application Boot Sequence — Container-First Launch
+# Standardized Container-First Application Boot Sequence
 
-## Current State
+## Problem
 
-The infrastructure is fully built but **not wired to the UI**:
-- **AppKernel** exists (`compose/app-kernel.ts`) — per-app unikernel with permissions, rate limiting, call budgets, circuit breakers, and seal verification.
-- **UorContainer** exists (`uns/build/container.ts`) — Docker-equivalent lifecycle (create → start → running).
-- **Orchestrator** exists (`compose/orchestrator.ts`) — Kubernetes-equivalent scheduler that creates containers and kernels via `_startInstance()`.
-
-But `DesktopWindow.tsx` line 209 simply does `{AppComponent && <AppComponent />}` — it mounts the React component directly, bypassing the entire container/kernel pipeline.
+1. **Build is broken**: `./container` cannot be resolved from `src/modules/uns/build/index.ts` — the file exists but Vite's module graph is stale.
+2. **No boot sequence**: `DesktopWindow.tsx` line 209 mounts `<AppComponent />` directly, bypassing the entire AppKernel/Container/Orchestrator pipeline that is fully built but unwired.
 
 ## Solution
 
-Insert a **Container Boot Overlay** between window creation and component mounting. Every app launch goes through the same deterministic sequence — visible to the user as a brief boot animation, and wired to real orchestrator/kernel/container operations.
-
-### Boot Sequence (per application)
-
-```text
-Phase 1: INIT        → Orchestrator.ensureRunning(appName)
-Phase 2: CONTAINER   → createContainer() + startContainer()
-Phase 3: KERNEL      → AppKernel.start() (permissions, rate limits)
-Phase 4: MOUNT       → Load React component (existing Suspense)
-Phase 5: SEAL        → Kernel runtime seal verification
-Phase 6: READY       → Overlay fades, app is interactive
-```
-
-Each phase takes ~50-100ms of real work. The overlay shows a compact terminal-style log with green dots progressing through each phase — identical for every app, creating the standardized experience.
-
-### On-Demand Introspection
-
-After boot completes, a small status pill appears in the app window corner (e.g., "● oracle — 6 ops · 3 ns"). Clicking it reveals the **Container Inspector** — showing:
-- Container ID, state, image, uptime
-- Kernel: allowed operations, namespaces, call count, denied count
-- Modules/pipelines/atoms the app is using (from blueprint `requires`)
-- Live call rate and payload accounting
-
-This mirrors `docker inspect` / `kubectl describe pod`.
-
-## Implementation
-
-### 1. Fix Build Error (`src/modules/uns/build/index.ts`)
-Add a trivial whitespace change to force Vite module re-resolution for `./container`.
-
-### 2. Create `ContainerBootOverlay.tsx` (~180 lines)
-New component in `src/modules/desktop/components/`.
-
-- Accepts `appId`, `blueprint`, `onReady` callback
-- Runs the real boot sequence:
-  1. Calls `orchestrator.ensureRunning(appName)` — this creates the AppKernel + UorContainer
-  2. Reads container state and kernel metrics
-  3. Computes a runtime seal hash
-- Renders a compact terminal overlay showing each phase with timing
-- Auto-dismisses after boot completes (~300-500ms total)
-- Stores boot receipt in state for the inspector
-
-```text
-┌─────────────────────────────────────────┐
-│  ▸ Booting oracle                       │
-│                                         │
-│  ✓ init         orchestrator    12ms    │
-│  ✓ container    uor:oracle-1    8ms    │
-│  ✓ kernel       3 ns · 7 ops   15ms    │
-│  ✓ mount        OraclePage      45ms    │
-│  ● seal         verifying...            │
-│                                         │
-│  Container: oracle-1                    │
-│  Image: bp:oracle                       │
-│  Kernel: AppKernel [3 namespaces]       │
-└─────────────────────────────────────────┘
-```
-
-### 3. Create `ContainerInspector.tsx` (~120 lines)
-New component in `src/modules/desktop/components/`.
-
-- Small popover triggered by the status pill
-- Shows container details: ID, state, uptime, image reference
-- Shows kernel details: allowed ops, namespaces, call count, denied calls, payload bytes
-- Shows the app's `requires` list mapped to atom/pipeline/module levels (using provenance-map data if available)
-- Real-time updates via polling kernel metrics
-
-### 4. Update `DesktopWindow.tsx` (~40 lines changed)
-Replace the direct `<Suspense>` mount with a two-phase render:
-
-```typescript
-// Phase 1: Boot overlay (runs orchestrator + container + kernel)
-// Phase 2: App component (after boot completes)
-const [booted, setBooted] = useState(false);
-
-{!booted && app && (
-  <ContainerBootOverlay
-    appId={win.appId}
-    blueprint={app.blueprint}
-    onReady={() => setBooted(true)}
-  />
-)}
-{booted && (
-  <Suspense fallback={<Spinner />}>
-    <ContainerInspectorProvider appId={win.appId}>
-      {AppComponent && <AppComponent />}
-    </ContainerInspectorProvider>
-  </Suspense>
-)}
-```
-
-### 5. Update `useWindowManager.ts` (~10 lines)
-Add `booted: boolean` to `WindowState` so boot state persists across re-renders. When a window is re-focused (already open), skip boot.
+Wire the existing container infrastructure into the UI via a mandatory boot overlay that every application passes through before becoming interactive.
 
 ## Files
 
 | File | Action | Purpose |
 |---|---|---|
-| `src/modules/uns/build/index.ts` | Touch | Fix stale module resolution |
-| `src/modules/desktop/components/ContainerBootOverlay.tsx` | Create | Standardized boot sequence UI |
-| `src/modules/desktop/components/ContainerInspector.tsx` | Create | On-demand container/kernel introspection |
-| `src/modules/desktop/DesktopWindow.tsx` | Update | Two-phase render: boot → mount |
-| `src/modules/desktop/hooks/useWindowManager.ts` | Update | Add `booted` to WindowState |
+| `src/modules/uns/build/index.ts` | Re-save (add trailing newline) | Fix stale module resolution |
+| `src/modules/desktop/components/ContainerBootOverlay.tsx` | **Create** | Terminal-style boot sequence overlay |
+| `src/modules/desktop/components/ContainerInspector.tsx` | **Create** | On-demand `docker inspect` popover |
+| `src/modules/desktop/DesktopWindow.tsx` | **Update** | Two-phase render: boot overlay then app mount |
+| `src/modules/desktop/hooks/useWindowManager.ts` | **Update** | Add `booted` flag to WindowState |
+
+## Implementation Details
+
+### 1. Fix Build (`index.ts`)
+Add a trailing newline/comment to force Vite to re-resolve the barrel file. The underlying `container.ts` file is intact with all exports.
+
+### 2. ContainerBootOverlay (~180 lines)
+A dark terminal-style overlay that runs the **real** orchestrator pipeline:
+
+```text
+Phase 1: INIT       → orchestrator.ensureRunning(appName)     ~10ms
+Phase 2: CONTAINER  → Reads container ID + state from kernel  ~8ms
+Phase 3: KERNEL     → Reads permissions, namespaces, ops      ~15ms
+Phase 4: MOUNT      → Triggers Suspense lazy-load             ~40ms
+Phase 5: SEAL       → kernel.seal() → content-addressed hash  ~20ms
+Phase 6: READY      → Overlay fades out, app is interactive
+```
+
+Visual: monospace font, dark background matching window chrome, green checkmarks progressing through each phase with real timing. Shows container ID, image reference, kernel namespace count. Auto-dismisses after ~300-500ms total.
+
+### 3. ContainerInspector (~120 lines)
+A popover triggered by a small status pill in the window corner after boot completes. Shows:
+- **Container**: ID, state, uptime, image ref
+- **Kernel**: allowed ops, namespaces, call count, denied count, payload bytes
+- **Requires**: the app's `requires` list from its blueprint (atoms/pipelines/modules)
+- **Seal**: last seal hash
+
+Supports two views: **list** (conventional table) and **graph** (tree showing namespace-to-operation hierarchy). Polls every 2s for live updates.
+
+### 4. DesktopWindow Update (lines 200-211)
+Replace the direct `<AppComponent />` mount with a two-phase render:
+- If `!win.booted`: render `<ContainerBootOverlay>` which calls `onBooted(win.id)` when done
+- If `win.booted`: render the existing `<Suspense>` + `<AppComponent>` with a subtle status pill overlay (bottom-left corner) that opens the ContainerInspector on click
+
+### 5. WindowState Update
+Add `booted: boolean` (default `false`) to the `WindowState` interface. Set to `true` after boot completes. Already-open windows skip boot on re-focus. Persisted to localStorage so reopened windows from a saved session also skip.
 
 ## Design Principles
 
-- **Every app, same sequence** — no exceptions, no shortcuts
-- **Real operations** — not simulated; the orchestrator actually creates kernels and containers
-- **Fast** — total boot ~300-500ms; overlay auto-dismisses
-- **Inspectable on demand** — the status pill is always there, click to see the "docker inspect" view
-- **Familiar to DevOps** — phases map to Docker/K8s concepts (init → container → runtime → seal)
+- **No exceptions** — every app, same sequence, always
+- **Real operations** — `orchestrator.ensureRunning()` + `kernel.seal()` are called, not simulated
+- **Fast** — total ~300-500ms; the overlay auto-dismisses
+- **Inspectable** — click the status pill anytime for full container/kernel transparency
+- **Familiar** — phases map directly to Docker/K8s concepts; all labels use standard DevOps terminology
 
