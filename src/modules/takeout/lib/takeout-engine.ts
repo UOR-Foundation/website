@@ -24,7 +24,7 @@ export async function inventoryCategory(
   const tableResults = await Promise.all(
     cat.tables.map(async (table) => {
       try {
-        const { count, error } = await supabase
+        const { count, error } = await (supabase as any)
           .from(table)
           .select("*", { count: "exact", head: true });
         const rowCount = error ? 0 : (count ?? 0);
@@ -51,7 +51,7 @@ async function fetchTableData(table: string): Promise<Record<string, unknown>[]>
   const pageSize = 1000;
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from(table)
       .select("*")
       .range(from, from + pageSize - 1);
@@ -140,7 +140,7 @@ export async function importTakeout(
       // Batch insert in chunks of 500
       for (let j = 0; j < data.length; j += 500) {
         const chunk = data.slice(j, j + 500);
-        const { error } = await supabase.from(table).upsert(chunk as any[], {
+        const { error } = await (supabase as any).from(table).upsert(chunk as any[], {
           onConflict: "id",
           ignoreDuplicates: true,
         });

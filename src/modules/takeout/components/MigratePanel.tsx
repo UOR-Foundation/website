@@ -61,11 +61,11 @@ export default function MigratePanel() {
   // Phase 3: Erase (placeholder — actual deletion requires edge function w/ service role)
   const handleErase = useCallback(async () => {
     if (confirmText !== SAFETY_PHRASE) return;
-    setPhase("erasing");
+    setPhase("erasing" as MigrationPhase);
     // In production this would call a secure edge function that deletes user data
     // For now we simulate the flow
     await new Promise((r) => setTimeout(r, 2000));
-    setPhase("complete");
+    setPhase("complete" as MigrationPhase);
   }, [confirmText]);
 
   const meta = PHASE_META[phase];
