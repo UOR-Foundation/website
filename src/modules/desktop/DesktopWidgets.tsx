@@ -413,20 +413,23 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
         {!("__TAURI__" in window) && (
           <a
             href="/download"
-            className="mt-4 inline-flex items-center gap-2 px-5 py-2 text-[11px] font-medium uppercase tracking-widest transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            className="mt-5 group inline-flex items-center gap-3 px-6 py-3 text-[11px] font-semibold uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
             style={{
-              color: isImmersive ? "hsl(0 0% 100% / 0.40)" : isLight ? "hsl(0 0% 0% / 0.35)" : "hsl(0 0% 100% / 0.40)",
+              color: isImmersive ? "hsl(210 100% 80%)" : isLight ? "hsl(210 80% 45%)" : "hsl(210 100% 75%)",
               border: isImmersive
-                ? "1px solid hsl(0 0% 100% / 0.10)"
-                : isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
+                ? "1px solid hsl(210 100% 72% / 0.20)"
+                : isLight ? "1px solid hsl(210 80% 45% / 0.15)" : "1px solid hsl(210 100% 72% / 0.15)",
               borderRadius: isMac ? "9999px" : "0.75rem",
               background: isImmersive
-                ? "hsl(200 10% 12% / 0.35)"
-                : isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.02)",
+                ? "linear-gradient(135deg, hsl(210 100% 72% / 0.08), hsl(220 80% 60% / 0.05))"
+                : isLight
+                  ? "linear-gradient(135deg, hsl(210 80% 45% / 0.06), hsl(210 80% 45% / 0.02))"
+                  : "linear-gradient(135deg, hsl(210 100% 72% / 0.06), hsl(220 80% 60% / 0.03))",
+              boxShadow: "0 2px 12px -4px hsl(210 100% 50% / 0.1)",
             }}
           >
-            <Download className="w-3.5 h-3.5" />
-            Download Desktop App
+            <Download className="w-4 h-4 transition-transform duration-300 group-hover:-translate-y-0.5" />
+            <span>Go Sovereign — Download Desktop</span>
           </a>
         )}
       </div>
