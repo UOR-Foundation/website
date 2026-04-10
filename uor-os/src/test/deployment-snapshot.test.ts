@@ -13,12 +13,12 @@ import {
   hashComponentBytes,
   buildSnapshotChain,
   SnapshotRegistry,
-} from "@/modules/uns/build/snapshot";
+} from "@/modules/identity/uns/build/snapshot";
 import type {
   SnapshotComponent,
   DeploymentSnapshot,
-} from "@/modules/uns/build/snapshot";
-import { UnsKv } from "@/modules/uns/store/kv";
+} from "@/modules/identity/uns/build/snapshot";
+import { UnsKv } from "@/modules/identity/uns/store/kv";
 
 const CREATOR = "urn:uor:derivation:sha256:dev0000000000000000000000000000000000000000000000000000000000000";
 

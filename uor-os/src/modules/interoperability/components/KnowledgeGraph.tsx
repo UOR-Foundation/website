@@ -24,8 +24,8 @@ import {
   type SimulationLinkDatum,
 } from "d3-force";
 import { ECOSYSTEMS, PROJECTION_ECOSYSTEM } from "../data/ecosystem-taxonomy";
-import { SYNERGY_CHAINS } from "@/modules/uns/core/hologram/synergies";
-import { SPECS } from "@/modules/uns/core/hologram/specs";
+import { SYNERGY_CHAINS } from "@/modules/identity/uns/core/hologram/synergies";
+import { SPECS } from "@/modules/identity/uns/core/hologram/specs";
 import { X, ZoomIn, ZoomOut, Maximize2, Info, Layers, ArrowRight, Link2 } from "lucide-react";
 
 // ── Types ────────────────────────────────────────────────────────────

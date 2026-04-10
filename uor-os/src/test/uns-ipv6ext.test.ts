@@ -8,7 +8,7 @@ import {
   UOR_OPTION_TYPE,
   sha256,
   bytesToHex,
-} from "@/modules/uns/core";
+} from "@/modules/identity/uns/core";
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
 

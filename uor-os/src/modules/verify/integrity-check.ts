@@ -12,7 +12,7 @@
  * Zero duplication. each check delegates to the module's own verify() method.
  */
 
-import { Q0, Q1 } from "@/modules/ring-core/ring";
+import { Q0, Q1 } from "@/modules/kernel/ring-core/ring";
 import { supabase } from "@/integrations/supabase/client";
 import { getRecentReceipts, verifyReceiptChain } from "./audit-trail";
 

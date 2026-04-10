@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { FreeTierManager, TIERS } from "@/modules/uor-sdk/free-tier";
-import { UnsKv } from "@/modules/uns/store/kv";
+import { UnsKv } from "@/modules/identity/uns/store/kv";
 
 describe("Free Tier Manager (P14)", () => {
   let kv: UnsKv;

@@ -8,8 +8,8 @@ import {
   conjugateByTau,
   analyzeFactorAction,
   runSemidirectAnalysis,
-} from "@/modules/atlas/semidirect-analysis";
-import { IDENTITY, type TransformElement } from "@/modules/atlas/transform-group";
+} from "@/modules/research/atlas/semidirect-analysis";
+import { IDENTITY, type TransformElement } from "@/modules/research/atlas/transform-group";
 
 describe("Semidirect Product: τ-Conjugation on Z/4Z × Z/3Z × Z/8Z", () => {
   describe("Mirror Involution", () => {

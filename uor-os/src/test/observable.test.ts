@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { recordObservable, queryObservables } from "@/modules/observable";
+import { recordObservable, queryObservables } from "@/modules/kernel/observable";
 
 describe("observable module", () => {
   it("recordObservable creates content-addressed observable IRI", async () => {

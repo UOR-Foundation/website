@@ -17,7 +17,7 @@ import {
   unit,
   basis,
   multiply,
-} from "@/modules/atlas/cayley-dickson-functors";
+} from "@/modules/research/atlas/cayley-dickson-functors";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: Free Functor

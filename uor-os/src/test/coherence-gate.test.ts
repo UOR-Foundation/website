@@ -31,15 +31,15 @@ import { describe, it, expect, beforeAll } from "vitest";
 // T0. RING FOUNDATION (number-level functions from uns/core/ring)
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { neg, bnot, succ, verifyCriticalIdentity } from "@/modules/uns/core/ring";
-import { popcount, basisElements, computeTriad, stratumLevel, stratumDensity } from "@/modules/triad";
+import { neg, bnot, succ, verifyCriticalIdentity } from "@/modules/identity/uns/core/ring";
+import { popcount, basisElements, computeTriad, stratumLevel, stratumDensity } from "@/modules/kernel/triad";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // T1. HOLOGRAPHIC IDENTITY
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { project, PROJECTIONS } from "@/modules/uns/core/hologram";
-import type { UorCanonicalIdentity } from "@/modules/uns/core/address";
+import { project, PROJECTIONS } from "@/modules/identity/uns/core/hologram";
+import type { UorCanonicalIdentity } from "@/modules/identity/uns/core/address";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // T2. CANONICALIZATION
@@ -50,22 +50,22 @@ import {
   coerceLiteral,
   coerceEntity,
   coerceUnionValue,
-} from "@/modules/morphism/union-type-canon";
+} from "@/modules/kernel/morphism/union-type-canon";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // T3. INTEROPERABILITY
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { generateCertificate } from "@/modules/certificate";
-import { resolveDidDocument, resolveDidFull, cidToDid, didToCid, isDidUor } from "@/modules/certificate/did";
-import type { UorCertificate } from "@/modules/certificate/types";
+import { generateCertificate } from "@/modules/identity/addressing/certificate";
+import { resolveDidDocument, resolveDidFull, cidToDid, didToCid, isDidUor } from "@/modules/identity/addressing/certificate/did";
+import type { UorCertificate } from "@/modules/identity/addressing/certificate/types";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // T4. INFRASTRUCTURE
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { generateKeypair } from "@/modules/uns/core/keypair";
-import { UnsKv } from "@/modules/uns/store/kv";
+import { generateKeypair } from "@/modules/identity/uns/core/keypair";
+import { UnsKv } from "@/modules/identity/uns/store/kv";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // T5. DISCOVERY (Cross-module emergent pattern verification)
@@ -75,14 +75,14 @@ import {
   compressToBase64,
   decompressFromBase64,
   type CompressibleTriple,
-} from "@/modules/data-bank/lib/graph-compression";
-import { fusionToContextBlock } from "@/modules/data-bank/lib/fusion-graph";
+} from "@/modules/data/data-bank/lib/graph-compression";
+import { fusionToContextBlock } from "@/modules/data/data-bank/lib/fusion-graph";
 import {
   ingestMemories,
   ingestAudioTracks,
   ingestRelationships,
   unionTriples,
-} from "@/modules/data-bank/lib/ingesters";
+} from "@/modules/data/data-bank/lib/ingesters";
 
 // ── Shared Fixtures ─────────────────────────────────────────────────────────
 

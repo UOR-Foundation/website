@@ -16,8 +16,8 @@ import {
   holonomy,
   commutator,
   observablePath,
-} from "@/modules/observable/geometry";
-import { analyzePayload } from "@/modules/uns/shield/partition";
+} from "@/modules/kernel/observable/geometry";
+import { analyzePayload } from "@/modules/identity/uns/shield/partition";
 
 describe("P31: Observable Geometry Layer. 7 Ring Metrics", () => {
   // ── RingMetric ──────────────────────────────────────────────────────────

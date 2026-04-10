@@ -2,8 +2,8 @@
  * Tests for UOR Morphism module. transform and cross-quantum operations.
  */
 import { describe, it, expect } from "vitest";
-import { applyTransform, type MappingRule } from "@/modules/morphism/transform";
-import { UORRing, Q0, Q1 } from "@/modules/ring-core/ring";
+import { applyTransform, type MappingRule } from "@/modules/kernel/morphism/transform";
+import { UORRing, Q0, Q1 } from "@/modules/kernel/ring-core/ring";
 
 describe("morphism/transform", () => {
   it("embed preserves value in larger ring", () => {

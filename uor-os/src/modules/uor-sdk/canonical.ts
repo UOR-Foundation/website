@@ -31,7 +31,7 @@ export type { ModuleIdentity } from "@/lib/uor-address";
 // ── Hologram Projection Registry ───────────────────────────────────────────
 // The hologram IS the UOR implementation. one hash, every standard.
 
-export { project, PROJECTIONS, unifiedProject, assessByteCoherence } from "@/modules/uns/core/hologram";
+export { project, PROJECTIONS, unifiedProject, assessByteCoherence } from "@/modules/identity/uns/core/hologram";
 export type {
   Hologram,
   HologramProjection,
@@ -41,13 +41,13 @@ export type {
   UnifiedHologram,
   UnifiedProjectionResult,
   ProjectionCoherence,
-} from "@/modules/uns/core/hologram";
+} from "@/modules/identity/uns/core/hologram";
 
 // ── Holographic Lens (Composable Projection Circuits) ─────────────────────
 // Content-addressed circuits: elements + wiring → one hash → every standard.
 // Bidirectional: focus (dehydrate) + refract (rehydrate) = universal codec.
 
-export { composeLens, grindLens, focusLens, refractLens, dehydrate, rehydrate, roundTrip, nestLens, fromProjection, element, sequence, parallel } from "@/modules/uns/core/hologram";
+export { composeLens, grindLens, focusLens, refractLens, dehydrate, rehydrate, roundTrip, nestLens, fromProjection, element, sequence, parallel } from "@/modules/identity/uns/core/hologram";
 export type {
   HolographicLens,
   LensElement,
@@ -58,7 +58,7 @@ export type {
   RefractionModality,
   RefractResult,
   DehydrationResult,
-} from "@/modules/uns/core/hologram";
+} from "@/modules/identity/uns/core/hologram";
 
 // ── Executable Blueprint (Self-Evolving Programs / Hologram OS) ───────────
 // The merger of LensBlueprint (WHAT) + PolyTree (HOW) = Executable Blueprint.
@@ -76,7 +76,7 @@ export {
   STATIC_SCHEDULER,
   ADAPTIVE_SCHEDULER,
   LIFECYCLE_SCHEDULER,
-} from "@/modules/uns/core/hologram";
+} from "@/modules/identity/uns/core/hologram";
 export type {
   ExecutableBlueprint,
   GroundExecutableBlueprint,
@@ -89,7 +89,7 @@ export type {
   HologramSession,
   InteractionResult,
   SuspendedSession,
-} from "@/modules/uns/core/hologram";
+} from "@/modules/identity/uns/core/hologram";
 
 // ── Trust Spanning Protocol (TSP) ─────────────────────────────────────────
 // Authenticated messaging, relationship forming, and trust channels.
@@ -102,7 +102,7 @@ export {
   createRoutedEnvelope,
   verifyEnvelope,
   verifyRelationship,
-} from "@/modules/uns/core/tsp";
+} from "@/modules/identity/uns/core/tsp";
 
 export type {
   TspMessageType,
@@ -113,7 +113,7 @@ export type {
   TspRfa,
   TspRelationship,
   RoutedTspEnvelope,
-} from "@/modules/uns/core/tsp";
+} from "@/modules/identity/uns/core/tsp";
 
 // ── First Person Project (FPP) ───────────────────────────────────────────
 // Decentralized trust graph: PHCs, VRCs, VECs, personas, r-cards.
@@ -131,7 +131,7 @@ export {
   verifyTrustTriangle,
   issueAgentDelegation,
   verifyAgentDelegation,
-} from "@/modules/uns/core/fpp";
+} from "@/modules/identity/uns/core/fpp";
 
 export type {
   PersonhoodCredential,
@@ -150,7 +150,7 @@ export type {
   AgentDelegationCredential,
   SealedAgentDelegation,
   AgentDelegationCheck,
-} from "@/modules/uns/core/fpp";
+} from "@/modules/identity/uns/core/fpp";
 
 // ── Polynomial Trees (Coinductive Interface Evolution) ────────────────────
 // Spivak's PolyTr category: evolving projections via terminal coalgebra.
@@ -171,7 +171,7 @@ export {
   ZERO_TREE,
   UNIT_TREE,
   DIRECTIONS,
-} from "@/modules/uns/core/hologram/polytree";
+} from "@/modules/identity/uns/core/hologram/polytree";
 
 export type {
   PolyTree,
@@ -182,7 +182,7 @@ export type {
   InteractionStep,
   PolyTreeSnapshot,
   DirectionName,
-} from "@/modules/uns/core/hologram/polytree";
+} from "@/modules/identity/uns/core/hologram/polytree";
 
 // ── Post-Quantum Bridge (Lattice-Hash Duality) ──────────────────────────
 // Dilithium-3 signing + Bitcoin OP_RETURN anchoring for quantum-proof blockchains.
@@ -192,13 +192,13 @@ export {
   pqSign,
   pqVerify,
   pqBridgePipeline,
-} from "@/modules/uns/core/pq-bridge";
+} from "@/modules/identity/uns/core/pq-bridge";
 
 export type {
   PqKeyPair,
   PqEnvelope,
   PqVerifyResult,
-} from "@/modules/uns/core/pq-bridge";
+} from "@/modules/identity/uns/core/pq-bridge";
 
 // ── Lens Blueprints (Shareable, Content-Addressed Lens Circuits) ────────
 // Serializable lens compositions that can be saved, shared, and instantiated
@@ -216,7 +216,7 @@ export {
   registerElementFactory,
   getRegisteredKinds,
   isKindRegistered,
-} from "@/modules/uns/core/hologram/lens-blueprint";
+} from "@/modules/identity/uns/core/hologram/lens-blueprint";
 
 export type {
   LensBlueprint,
@@ -224,7 +224,7 @@ export type {
   GroundBlueprint,
   InstantiatedLens,
   ElementFactory,
-} from "@/modules/uns/core/hologram/lens-blueprint";
+} from "@/modules/identity/uns/core/hologram/lens-blueprint";
 
 // ── Pre-built Lens Library ──────────────────────────────────────────────
 export {
@@ -234,7 +234,7 @@ export {
   createPromptInjectionShieldBlueprint,
   SECURE_MEMORY_BLUEPRINT,
   createSecureMemoryBlueprint,
-} from "@/modules/uns/core/hologram/lenses";
+} from "@/modules/identity/uns/core/hologram/lenses";
 
 // ── Audio Namespace (Content-Addressed Music) ──────────────────────────
 export {
@@ -243,7 +243,7 @@ export {
   frameCatastrophe,
   AudioSegmentCache,
   globalSegmentCache,
-} from "@/modules/audio";
+} from "@/modules/intelligence/audio";
 export type {
   AudioFormatDescriptor,
   AudioFrameData,
@@ -253,4 +253,4 @@ export type {
   SegmentCacheEntry,
   AudioEngineState,
   AudioEngineEvents,
-} from "@/modules/audio";
+} from "@/modules/intelligence/audio";

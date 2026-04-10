@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { generateKeypair } from "@/modules/uns/core/keypair";
-import type { UnsKeypair } from "@/modules/uns/core/keypair";
+import { generateKeypair } from "@/modules/identity/uns/core/keypair";
+import type { UnsKeypair } from "@/modules/identity/uns/core/keypair";
 import {
   UnsAgentGateway,
   buildAgentMessage,
-} from "@/modules/uns/compute/agent-gateway";
-import type { AgentMessage } from "@/modules/uns/compute/agent-gateway";
+} from "@/modules/identity/uns/compute/agent-gateway";
+import type { AgentMessage } from "@/modules/identity/uns/compute/agent-gateway";
 
 describe("UNS Agent Gateway. Morphism-Typed AI Agent Routing", () => {
   let agentA: UnsKeypair;

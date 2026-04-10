@@ -15,7 +15,7 @@ import {
   observeNetwork,
   createFullStackObservation,
   SCALE_LABELS,
-} from "@/modules/observable/multi-scale";
+} from "@/modules/kernel/observable/multi-scale";
 
 describe("Multi-Scale Observer", () => {
   // ── L0: Byte ──────────────────────────────────────────────────────────

@@ -19,7 +19,7 @@ import {
   benchmarkLongSequence,
   benchmarkRepeatedPattern,
   runAllBenchmarks,
-} from "@/modules/atlas/attention-vs-coherence";
+} from "@/modules/research/atlas/attention-vs-coherence";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: Ground Truth Computation

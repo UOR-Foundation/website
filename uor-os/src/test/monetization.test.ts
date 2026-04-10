@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { MonetizationEngine, createPaymentGateMiddleware } from "@/modules/uor-sdk/monetization";
-import { UnsKv } from "@/modules/uns/store/kv";
+import { UnsKv } from "@/modules/identity/uns/store/kv";
 import type { MonetizationConfig, PaymentProof } from "@/modules/uor-sdk/monetization-types";
 
 // ── Fixtures ────────────────────────────────────────────────────────────────

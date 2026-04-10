@@ -7,14 +7,14 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { HologramEngine } from "@/modules/uns/core/hologram/engine";
+import { HologramEngine } from "@/modules/identity/uns/core/hologram/engine";
 import {
   createExecutableBlueprint,
   ADAPTIVE_SCHEDULER,
   STATIC_SCHEDULER,
   type ExecutableBlueprint,
-} from "@/modules/uns/core/hologram/executable-blueprint";
-import { DIRECTIONS } from "@/modules/uns/core/hologram/polytree";
+} from "@/modules/identity/uns/core/hologram/executable-blueprint";
+import { DIRECTIONS } from "@/modules/identity/uns/core/hologram/polytree";
 import {
   vExec,
   vForkBlueprint,
@@ -39,7 +39,7 @@ import {
   STDERR,
   NETFD,
   type FileDescriptor,
-} from "@/modules/uns/core/hologram/virtual-io";
+} from "@/modules/identity/uns/core/hologram/virtual-io";
 
 // ── Helper: create a minimal blueprint ─────────────────────────────────────
 

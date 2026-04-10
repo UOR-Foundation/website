@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { HologramEngine } from "@/modules/uns/core/hologram/engine";
+import { HologramEngine } from "@/modules/identity/uns/core/hologram/engine";
 import {
   ingest,
   ingestJson,
@@ -18,7 +18,7 @@ import {
   type IngestResult,
   type IngestExecutableResult,
   type IngestSpawnedResult,
-} from "@/modules/uns/core/hologram/universal-ingest";
+} from "@/modules/identity/uns/core/hologram/universal-ingest";
 import {
   vStat,
   vPs,
@@ -26,9 +26,9 @@ import {
   vIoctl,
   vRead,
   vKill,
-} from "@/modules/uns/core/hologram/virtual-io";
-import { DIRECTIONS } from "@/modules/uns/core/hologram/polytree";
-import { ADAPTIVE_SCHEDULER } from "@/modules/uns/core/hologram/executable-blueprint";
+} from "@/modules/identity/uns/core/hologram/virtual-io";
+import { DIRECTIONS } from "@/modules/identity/uns/core/hologram/polytree";
+import { ADAPTIVE_SCHEDULER } from "@/modules/identity/uns/core/hologram/executable-blueprint";
 
 // ── Tests ──────────────────────────────────────────────────────────────────
 

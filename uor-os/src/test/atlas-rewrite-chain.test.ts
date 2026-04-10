@@ -12,9 +12,9 @@ import {
   PAULI_SET,
   CLIFFORD_SET,
   FAULT_TOLERANT_SET,
-} from "@/modules/atlas/rewrite-chain";
-import { mapVerticesToGates } from "@/modules/atlas/quantum-isa";
-import { applyTransform, IDENTITY } from "@/modules/atlas/transform-group";
+} from "@/modules/research/atlas/rewrite-chain";
+import { mapVerticesToGates } from "@/modules/research/atlas/quantum-isa";
+import { applyTransform, IDENTITY } from "@/modules/research/atlas/transform-group";
 
 describe("Optimal Rewrite Chain Engine", () => {
   const mappings = mapVerticesToGates();

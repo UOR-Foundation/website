@@ -19,8 +19,8 @@ import {
   BELT_TOTAL,
   EXTERIOR_PER_VERTEX,
   FIBER_TOTAL,
-} from "@/modules/atlas/belt-fiber";
-import { ATLAS_VERTEX_COUNT } from "@/modules/atlas/atlas";
+} from "@/modules/research/atlas/belt-fiber";
+import { ATLAS_VERTEX_COUNT } from "@/modules/research/atlas/atlas";
 
 describe("Phase 4: Belt ↔ Fiber Bijection", () => {
   it("BELT_TOTAL = FIBER_TOTAL = 12,288", () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { AppCli } from "@/modules/uor-sdk/cli";
-import { UnsKv } from "@/modules/uns/store/kv";
+import { UnsKv } from "@/modules/identity/uns/store/kv";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // P12 Tests. 10/10

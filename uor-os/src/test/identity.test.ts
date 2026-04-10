@@ -9,8 +9,8 @@ import {
   verifyDeterminism,
   verifyRoundTrip,
   datumApiUrl,
-} from "@/modules/identity";
-import { Q0, Q1 } from "@/modules/ring-core";
+} from "@/modules/identity/addressing/addressing";
+import { Q0, Q1 } from "@/modules/kernel/ring-core";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // bytesToCodepoint

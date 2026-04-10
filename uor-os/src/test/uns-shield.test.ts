@@ -5,7 +5,7 @@ import {
   analyzePayloadFast,
   buildDerivationTrace,
   detectInjection,
-} from "@/modules/uns/shield";
+} from "@/modules/identity/uns/shield";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Phase 2-A Tests. 12/12

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { UnsKv, UnsCache, UnsObjectStore } from "@/modules/uns/store";
+import { UnsKv, UnsCache, UnsObjectStore } from "@/modules/identity/uns/store";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 

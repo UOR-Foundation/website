@@ -24,13 +24,13 @@ import {
   inferenceToObservation,
   type NeuralObservation,
   type SymbolicPrediction,
-} from "@/modules/ring-core/abductive-loop";
+} from "@/modules/kernel/ring-core/abductive-loop";
 import {
   createFiberBudget,
   residueConstraint,
   deductiveStep,
   inductiveStep,
-} from "@/modules/ring-core";
+} from "@/modules/kernel/ring-core";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 

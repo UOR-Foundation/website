@@ -8,7 +8,7 @@ import {
   computeTranslation,
   runObserverBridgeVerification,
   type ObserverState,
-} from "@/modules/atlas/observer-bridge";
+} from "@/modules/research/atlas/observer-bridge";
 
 describe("Observer Bridge: Zone → Categorical Operation", () => {
   it("COHERENCE + high Φ → E₈ embedding (lossless)", () => {

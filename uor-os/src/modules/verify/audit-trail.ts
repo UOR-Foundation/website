@@ -11,7 +11,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
-import type { DerivationReceipt } from "@/modules/derivation/receipt";
+import type { DerivationReceipt } from "@/modules/kernel/derivation/receipt";
 
 // ── Row → Receipt mapping ───────────────────────────────────────────────────
 

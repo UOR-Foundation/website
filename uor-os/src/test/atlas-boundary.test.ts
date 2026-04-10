@@ -14,7 +14,7 @@ import {
   identifyBoundaryElements,
   verifyG2Correspondence,
   runBoundaryInvestigation,
-} from "@/modules/atlas/boundary";
+} from "@/modules/research/atlas/boundary";
 import { neg, mul } from "@/lib/uor-ring";
 
 describe("Boundary Decomposition: 256 − 240 = 16", () => {

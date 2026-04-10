@@ -10,9 +10,9 @@ import {
   verifyPow,
   unsShield,
   runShield,
-} from "@/modules/uns/shield";
-import type { ShieldRequest, ShieldContext, UnsWafRule } from "@/modules/uns/shield";
-import { neg, bnot } from "@/modules/uns/core/ring";
+} from "@/modules/identity/uns/shield";
+import type { ShieldRequest, ShieldContext, UnsWafRule } from "@/modules/identity/uns/shield";
+import { neg, bnot } from "@/modules/identity/uns/core/ring";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 

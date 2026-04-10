@@ -28,9 +28,9 @@ import {
   STATIC_SCHEDULER,
   ADAPTIVE_SCHEDULER,
   LIFECYCLE_SCHEDULER,
-} from "@/modules/uns/core/hologram/executable-blueprint";
-import { DIRECTIONS } from "@/modules/uns/core/hologram/polytree";
-import type { ElementSpec } from "@/modules/uns/core/hologram/lens-blueprint";
+} from "@/modules/identity/uns/core/hologram/executable-blueprint";
+import { DIRECTIONS } from "@/modules/identity/uns/core/hologram/polytree";
+import type { ElementSpec } from "@/modules/identity/uns/core/hologram/lens-blueprint";
 
 // ── Test Helpers ───────────────────────────────────────────────────────────
 

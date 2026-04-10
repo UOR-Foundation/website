@@ -8,10 +8,10 @@ import {
   U16,
   U32,
   ConstrainedType,
-} from "@/modules/state/type-system";
-import { UnsStateMachine } from "@/modules/state/state-machine";
-import { generateKeypair } from "@/modules/uns/core/keypair";
-import type { UnsKeypair } from "@/modules/uns/core/keypair";
+} from "@/modules/kernel/state/type-system";
+import { UnsStateMachine } from "@/modules/kernel/state/state-machine";
+import { generateKeypair } from "@/modules/identity/uns/core/keypair";
+import type { UnsKeypair } from "@/modules/identity/uns/core/keypair";
 
 describe("P28. Type System", () => {
   // Test 1: typeCheck(42n, U8) → valid:true

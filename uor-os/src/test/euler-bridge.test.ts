@@ -20,8 +20,8 @@ import {
   E,
   PI,
   GROUP_EXPONENT,
-} from "@/modules/atlas/euler-bridge";
-import { generateClockElements, modPow } from "@/modules/atlas/clock-algebra";
+} from "@/modules/research/atlas/euler-bridge";
+import { generateClockElements, modPow } from "@/modules/research/atlas/clock-algebra";
 
 describe("Euler's Number Bridge: e connects Atlas ↔ Quantum ↔ Thermodynamics", () => {
   describe("Phase map: 96 vertices → unit circle", () => {

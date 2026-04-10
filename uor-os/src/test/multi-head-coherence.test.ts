@@ -11,8 +11,8 @@ import {
   createSingleCoherenceLayer,
   projectThroughLine,
   type MergeStrategy,
-} from "@/modules/atlas/multi-head-coherence";
-import { constructFanoTopology } from "@/modules/atlas/fano-plane";
+} from "@/modules/research/atlas/multi-head-coherence";
+import { constructFanoTopology } from "@/modules/research/atlas/fano-plane";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: Fano Line Projection

@@ -25,7 +25,7 @@ import {
   verifyDegreeDistribution,
   verifyCriticalIdentityAtlasLink,
   exceptionalGroupChain,
-} from "@/modules/atlas";
+} from "@/modules/research/atlas";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // Part I: Atlas Construction Proofs

@@ -12,7 +12,7 @@ import {
   generatorToFanoPoint,
   runGeneratorAnalysis,
   type GeneratorKind,
-} from "@/modules/atlas/morphism-generators";
+} from "@/modules/research/atlas/morphism-generators";
 
 describe("Phase 3: Extended 7 Morphism Generators", () => {
   it("exactly 7 generators", () => {

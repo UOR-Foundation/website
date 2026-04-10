@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { UORRing, Q0, Q1, Q2, Q3, Q, fromBytes, toBytes } from "@/modules/ring-core/ring";
-import { verifyQ0Exhaustive, CoherenceError } from "@/modules/ring-core/coherence";
-import { canonicalize, serializeTerm } from "@/modules/ring-core/canonicalization";
-import type { Term } from "@/modules/ring-core/canonicalization";
+import { UORRing, Q0, Q1, Q2, Q3, Q, fromBytes, toBytes } from "@/modules/kernel/ring-core/ring";
+import { verifyQ0Exhaustive, CoherenceError } from "@/modules/kernel/ring-core/coherence";
+import { canonicalize, serializeTerm } from "@/modules/kernel/ring-core/canonicalization";
+import type { Term } from "@/modules/kernel/ring-core/canonicalization";
 import { ringConfig } from "@/lib/uor-ring";
 
 // ═══════════════════════════════════════════════════════════════════════════

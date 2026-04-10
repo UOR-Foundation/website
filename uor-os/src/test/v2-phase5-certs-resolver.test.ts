@@ -10,13 +10,13 @@
  * T5.7: All certificates produce valid attestations
  */
 import { describe, it, expect } from "vitest";
-import { Q0, Q1 } from "@/modules/ring-core/ring";
+import { Q0, Q1 } from "@/modules/kernel/ring-core/ring";
 import {
   transformCertificate, isometryCertificate, involutionCertificate,
   resolve, deriveState,
   createFiberBudget, pinFiber,
   residueConstraint, depthConstraint,
-} from "@/modules/ring-core";
+} from "@/modules/kernel/ring-core";
 
 describe("Phase 5: Certificate Hierarchy & Resolver", () => {
   // ── T5.1: TransformCertificate ──────────────────────────────────────────

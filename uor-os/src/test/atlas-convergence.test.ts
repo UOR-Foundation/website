@@ -10,7 +10,7 @@ import {
   decomposeModel,
   verifyUniversalInvariants,
   runConvergenceTest,
-} from "@/modules/atlas/convergence";
+} from "@/modules/research/atlas/convergence";
 
 describe("Model Decomposition into Atlas R₈", () => {
   it("decomposes all 16 models", () => {

@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { derive, verifyDerivation } from "@/modules/derivation/derivation";
-import { issueCertificate, verifyCertificate } from "@/modules/derivation/certificate";
-import { generateReceipt } from "@/modules/derivation/receipt";
-import { Q0 } from "@/modules/ring-core/ring";
-import type { Term } from "@/modules/ring-core/canonicalization";
+import { derive, verifyDerivation } from "@/modules/kernel/derivation/derivation";
+import { issueCertificate, verifyCertificate } from "@/modules/kernel/derivation/certificate";
+import { generateReceipt } from "@/modules/kernel/derivation/receipt";
+import { Q0 } from "@/modules/kernel/ring-core/ring";
+import type { Term } from "@/modules/kernel/ring-core/canonicalization";
 
 describe("derive", () => {
   const ring = Q0();

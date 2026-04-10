@@ -13,13 +13,13 @@ import {
   negQ, bnotQ, succQ,
   verifyCriticalIdentityQ,
   RINGS,
-} from "@/modules/morphism/quantum";
+} from "@/modules/kernel/morphism/quantum";
 import {
   project,
   embed,
   identity,
   commutativityWitness,
-} from "@/modules/morphism/morphism-formal";
+} from "@/modules/kernel/morphism/morphism-formal";
 
 describe("P23. Multi-Quantum Ring Engine", () => {
   // Test 1: Critical identity Q0. exhaustive 256/256

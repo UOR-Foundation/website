@@ -9,13 +9,13 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { ECOSYSTEMS } from "../data/ecosystem-taxonomy";
-import { SYNERGY_CHAINS, CLUSTERS } from "@/modules/uns/core/hologram/synergies";
-import { SPECS } from "@/modules/uns/core/hologram/specs";
+import { SYNERGY_CHAINS, CLUSTERS } from "@/modules/identity/uns/core/hologram/synergies";
+import { SPECS } from "@/modules/identity/uns/core/hologram/specs";
 import {
   X, Zap, Link2, Layers, ChevronDown, ChevronRight,
   ArrowRight, Info,
 } from "lucide-react";
-import type { SynergyChain } from "@/modules/uns/core/hologram/synergies";
+import type { SynergyChain } from "@/modules/identity/uns/core/hologram/synergies";
 
 // ── Bridge type → color ────────────────────────────────────────────
 const BRIDGE_COLORS: Record<string, string> = {

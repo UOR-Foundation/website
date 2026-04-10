@@ -383,7 +383,7 @@ async function streamCloudFallback(
     return;
   }
 
-  const { streamOracle } = await import("@/modules/oracle/lib/stream-oracle");
+  const { streamOracle } = await import("@/modules/intelligence/oracle/lib/stream-oracle");
 
   let tokensGenerated = 0;
 

@@ -8,7 +8,7 @@ import {
   validateShaclShapes,
   validateShape,
   shaclGuard,
-} from "@/modules/shacl/shacl-engine";
+} from "@/modules/research/shacl/shacl-engine";
 
 describe("P25. SHACL Validation Engine", () => {
   // Test 1: Valid UnsNameRecord → conforms: true

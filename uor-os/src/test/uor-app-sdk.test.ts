@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createUorAppClient } from "@/modules/uor-sdk/app-sdk";
 import type { AppClient } from "@/modules/uor-sdk/app-sdk";
-import { UnsKv } from "@/modules/uns/store/kv";
+import { UnsKv } from "@/modules/identity/uns/store/kv";
 import { MonetizationEngine } from "@/modules/uor-sdk/monetization";
 import { singleProofHash } from "@/lib/uor-canonical";
 

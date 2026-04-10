@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
-import Layout from "@/modules/core/components/Layout";
+import Layout from "@/modules/platform/core/components/Layout";
 import { systemIntegrityCheck, getRecentReceipts, exportAuditTrail } from "@/modules/verify";
 import type { IntegrityReport } from "@/modules/verify";
-import type { DerivationReceipt } from "@/modules/derivation/receipt";
+import type { DerivationReceipt } from "@/modules/kernel/derivation/receipt";
 import { AuditField } from "@/modules/verify/components/AuditField";
 import DerivationPanel from "@/modules/verify/components/DerivationPanel";
 import CertificatePanel from "@/modules/verify/components/CertificatePanel";

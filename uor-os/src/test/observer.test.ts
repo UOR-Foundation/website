@@ -5,11 +5,11 @@
  * and convergence guarantee.
  */
 import { describe, it, expect } from "vitest";
-import { popcount, hScore, hScoreMultiByte } from "@/modules/observable/h-score";
+import { popcount, hScore, hScoreMultiByte } from "@/modules/kernel/observable/h-score";
 import {
   UnsObserver,
   assignZone,
-} from "@/modules/observable/observer";
+} from "@/modules/kernel/observable/observer";
 
 describe("P26. Observer Theory", () => {
   // Test 1: popcount(0b10110100) === 4

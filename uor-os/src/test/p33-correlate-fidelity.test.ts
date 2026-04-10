@@ -19,11 +19,11 @@ import {
   findNearDuplicates,
   classifyFidelity,
   FIDELITY_THRESHOLDS,
-} from "@/modules/resolver/correlate-engine";
-import { singleProofHash } from "@/modules/uns/core/identity";
-import { UnsObjectStore } from "@/modules/uns/store/object-store";
-import { crossQuantumTransform } from "@/modules/morphism/cross-quantum";
-import { UnsClient, generateKeypair } from "@/modules/uns/sdk";
+} from "@/modules/kernel/resolver/correlate-engine";
+import { singleProofHash } from "@/modules/identity/uns/core/identity";
+import { UnsObjectStore } from "@/modules/identity/uns/store/object-store";
+import { crossQuantumTransform } from "@/modules/kernel/morphism/cross-quantum";
+import { UnsClient, generateKeypair } from "@/modules/identity/uns/sdk";
 
 describe("P33. uor_correlate Fidelity Engine", () => {
   // ── Test 1: Self-correlation ──────────────────────────────────────────

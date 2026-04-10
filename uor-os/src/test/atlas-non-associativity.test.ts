@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeAssociator,
   analyzeNonAssociativity,
-} from "@/modules/atlas/fano-plane";
+} from "@/modules/research/atlas/fano-plane";
 
 describe("Non-Associativity Detection", () => {
   const analysis = analyzeNonAssociativity();

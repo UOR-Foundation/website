@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { Q0 } from "@/modules/ring-core/ring";
-import { contentAddress, bytesToGlyph } from "@/modules/identity";
-import { exactLookup, findSimilar } from "@/modules/resolver/index-builder";
-import { resolveEntity } from "@/modules/resolver/entity-linker";
-import type { SemanticIndex, IndexEntry } from "@/modules/resolver/index-builder";
+import { Q0 } from "@/modules/kernel/ring-core/ring";
+import { contentAddress, bytesToGlyph } from "@/modules/identity/addressing/addressing";
+import { exactLookup, findSimilar } from "@/modules/kernel/resolver/index-builder";
+import { resolveEntity } from "@/modules/kernel/resolver/entity-linker";
+import type { SemanticIndex, IndexEntry } from "@/modules/kernel/resolver/index-builder";
 
 // Build a small in-memory index for testing (no Supabase needed)
 function buildTestIndex(): SemanticIndex {

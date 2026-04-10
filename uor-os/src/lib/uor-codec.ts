@@ -29,7 +29,7 @@ import {
   lookupReceipt,
   type EnrichedReceipt,
   type RegistryEntry,
-} from "@/modules/oracle/lib/receipt-registry";
+} from "@/modules/intelligence/oracle/lib/receipt-registry";
 
 // ── THE Universal Encoder ──────────────────────────────────────────────────
 // Content → Address. Deterministic. Lossless. WASM-anchored.

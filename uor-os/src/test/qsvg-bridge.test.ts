@@ -28,7 +28,7 @@ import {
   completedZeta,
   runSpectralVerification,
   spectralGrade,
-} from "@/modules/qsvg";
+} from "@/modules/research/qsvg";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: Foundational Constants

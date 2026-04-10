@@ -12,8 +12,8 @@ import {
   emitFTQASM,
   verifyFTAttention,
   type FTAttentionCircuit,
-} from "@/modules/quantum/fault-tolerant-attention";
-import { runPipeline } from "@/modules/quantum/atlas-compilation-pipeline";
+} from "@/modules/research/quantum/fault-tolerant-attention";
+import { runPipeline } from "@/modules/research/quantum/atlas-compilation-pipeline";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: Single Head FT Compilation

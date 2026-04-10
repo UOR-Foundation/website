@@ -12,7 +12,7 @@ import {
   buildTower,
   fanoPlane,
   type CayleyDicksonAlgebra,
-} from "@/modules/atlas/cayley-dickson";
+} from "@/modules/research/atlas/cayley-dickson";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: Individual Algebra Construction

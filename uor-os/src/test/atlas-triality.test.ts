@@ -22,8 +22,8 @@ import {
   SLOT_COUNT,
   ORBIT_COUNT,
   type TrialityCoordinate,
-} from "@/modules/atlas/triality";
-import { ATLAS_VERTEX_COUNT } from "@/modules/atlas/atlas";
+} from "@/modules/research/atlas/triality";
+import { ATLAS_VERTEX_COUNT } from "@/modules/research/atlas/atlas";
 
 describe("Phase 1: Triality Coordinate System", () => {
   describe("Encoding & Decoding", () => {

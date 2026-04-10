@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { Q0 } from "@/modules/ring-core/ring";
-import { DatumShape, PartitionShape } from "@/modules/shacl/shapes";
-import { validateOnWrite } from "@/modules/shacl/validator";
-import { runConformanceSuite } from "@/modules/shacl/conformance";
-import { CANONICAL_PARTITION } from "@/modules/shacl/conformance-partition";
-import { computePartition } from "@/modules/resolver/partition";
-import { contentAddress, bytesToGlyph } from "@/modules/identity";
-import { computeTriad } from "@/modules/triad";
-import { fromBytes } from "@/modules/ring-core/ring";
+import { Q0 } from "@/modules/kernel/ring-core/ring";
+import { DatumShape, PartitionShape } from "@/modules/research/shacl/shapes";
+import { validateOnWrite } from "@/modules/research/shacl/validator";
+import { runConformanceSuite } from "@/modules/research/shacl/conformance";
+import { CANONICAL_PARTITION } from "@/modules/research/shacl/conformance-partition";
+import { computePartition } from "@/modules/kernel/resolver/partition";
+import { contentAddress, bytesToGlyph } from "@/modules/identity/addressing/addressing";
+import { computeTriad } from "@/modules/kernel/triad";
+import { fromBytes } from "@/modules/kernel/ring-core/ring";
 import { classifyByte } from "@/lib/uor-ring";
 
 const ring = Q0();

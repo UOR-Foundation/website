@@ -8,7 +8,7 @@
  * @module trace/trace-module
  */
 
-import { UorModule } from "@/modules/core/uor-module";
+import { UorModule } from "@/modules/platform/core/uor-module";
 import type { ComputationTrace, TraceStep } from "./trace";
 
 export class TraceModule extends UorModule<ComputationTrace> {

@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { pruningGate, type PruningReport } from "@/modules/uns/core/pruning-gate";
+import { pruningGate, type PruningReport } from "@/modules/identity/uns/core/pruning-gate";
 
 let report: PruningReport;
 

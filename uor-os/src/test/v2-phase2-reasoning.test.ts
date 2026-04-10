@@ -29,12 +29,12 @@ import {
   type DeductiveResult,
   type InductiveResult,
   type AbductiveResult,
-} from "@/modules/ring-core/reasoning";
+} from "@/modules/kernel/ring-core/reasoning";
 import {
   createFiberBudget,
   residueConstraint,
   depthConstraint,
-} from "@/modules/ring-core";
+} from "@/modules/kernel/ring-core";
 
 describe("Phase 2: Geometric Reasoning Primitives", () => {
   // ── T-R1: Canonical mappings ────────────────────────────────────────────

@@ -5,9 +5,9 @@ import {
   clearRegistry,
   invokeFunction,
   verifyExecution,
-} from "@/modules/uns/compute";
-import { generateKeypair } from "@/modules/uns/core/keypair";
-import type { UnsKeypair } from "@/modules/uns/core/keypair";
+} from "@/modules/identity/uns/compute";
+import { generateKeypair } from "@/modules/identity/uns/core/keypair";
+import type { UnsKeypair } from "@/modules/identity/uns/core/keypair";
 
 // ── Setup ───────────────────────────────────────────────────────────────────
 

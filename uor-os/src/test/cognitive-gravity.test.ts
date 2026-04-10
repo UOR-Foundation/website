@@ -13,8 +13,8 @@ import {
   proveIsomorphism,
   runCognitiveGravityAnalysis,
   type CognitiveGravityReport,
-} from "@/modules/atlas/cognitive-gravity";
-import { constructPolynon } from "@/modules/atlas/geometric-consciousness";
+} from "@/modules/research/atlas/cognitive-gravity";
+import { constructPolynon } from "@/modules/research/atlas/geometric-consciousness";
 
 const ALPHA = 1 / 137;
 

@@ -15,8 +15,8 @@ import {
   classifyRewrites,
   tierPreservingRewrites,
   findRewrite,
-} from "@/modules/atlas/quantum-isa";
-import { IDENTITY, type TransformElement } from "@/modules/atlas/transform-group";
+} from "@/modules/research/atlas/quantum-isa";
+import { IDENTITY, type TransformElement } from "@/modules/research/atlas/transform-group";
 
 describe("Phase 10: Quantum ISA Mapping (Triality-Based)", () => {
   describe("Vertex → Gate assignment via triality", () => {

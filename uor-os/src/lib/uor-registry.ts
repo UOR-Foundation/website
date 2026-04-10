@@ -20,38 +20,38 @@ import { generateCertificate, type UorCertificate } from "./uor-certificate";
 // ── Static manifest imports (consolidated modules) ─────────────────────────
 
 // Layer 0: Presentation & Shell
-import coreManifest from "@/modules/core/module.json";
-import landingManifest from "@/modules/landing/module.json";
-import frameworkManifest from "@/modules/core/module.json";   // absorbs: ruliad, uor-terms, framework
+import coreManifest from "@/modules/platform/core/module.json";
+import landingManifest from "@/modules/platform/landing/module.json";
+import frameworkManifest from "@/modules/platform/core/module.json";   // absorbs: ruliad, uor-terms, framework
 import communityManifest from "@/modules/community/module.json";  // absorbs: donate
 import projectsManifest from "@/modules/projects/module.json";
-import apiExplorerManifest from "@/modules/api-explorer/module.json";
+import apiExplorerManifest from "@/modules/interoperability/api-explorer/module.json";
 
 // Layer 1: Algebraic CPU
-import ringCoreManifest from "@/modules/ring-core/module.json";   // absorbs: triad
-import identityManifest from "@/modules/identity/module.json";    // absorbs: qr-cartridge
+import ringCoreManifest from "@/modules/kernel/ring-core/module.json";   // absorbs: triad
+import identityManifest from "@/modules/identity/addressing/module.json";    // absorbs: qr-cartridge
 
 // Layer 2: Derivation & KG
-import derivationManifest from "@/modules/derivation/module.json";
-import kgStoreManifest from "@/modules/knowledge-graph/module.json";     // absorbs: jsonld, semantic-index, kg-store
-import epistemicManifest from "@/modules/epistemic/module.json";
+import derivationManifest from "@/modules/kernel/derivation/module.json";
+import kgStoreManifest from "@/modules/data/knowledge-graph/module.json";     // absorbs: jsonld, semantic-index, kg-store
+import epistemicManifest from "@/modules/intelligence/epistemic/module.json";
 
 // Layer 3: Structure & Resolution
-import sparqlManifest from "@/modules/sparql/module.json";        // absorbs: shacl
-import resolverManifest from "@/modules/resolver/module.json";
-import morphismManifest from "@/modules/morphism/module.json";
+import sparqlManifest from "@/modules/data/sparql/module.json";        // absorbs: shacl
+import resolverManifest from "@/modules/kernel/resolver/module.json";
+import morphismManifest from "@/modules/kernel/morphism/module.json";
 
 // Layer 4: Observability & State
-import observableManifest from "@/modules/observable/module.json";
+import observableManifest from "@/modules/kernel/observable/module.json";
 import traceManifest from "@/modules/verify/module.json";   // trace absorbed into verify
-import stateManifest from "@/modules/state/module.json";
+import stateManifest from "@/modules/kernel/state/module.json";
 
 // Layer 5: Verification & Agent Tools
 import selfVerifyManifest from "@/modules/verify/module.json";
-import agentToolsManifest from "@/modules/agent-tools/module.json";
-import codeKgManifest from "@/modules/code-kg/module.json";
+import agentToolsManifest from "@/modules/intelligence/agent-tools/module.json";
+import codeKgManifest from "@/modules/data/code-kg/module.json";
 const dashboardManifest = { name: "dashboard", version: "0.0.0" };
-import unsManifest from "@/modules/uns/module.json";
+import unsManifest from "@/modules/identity/uns/module.json";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 

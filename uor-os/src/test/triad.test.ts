@@ -5,7 +5,7 @@ import {
   basisElements,
   stratumLevel,
   stratumDensity,
-} from "@/modules/triad";
+} from "@/modules/kernel/triad";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // popcount (re-exported bytePopcount)
@@ -94,7 +94,7 @@ describe("stratumDensity", () => {
 
 describe("coherence with ring-core", () => {
   it("computeTriad matches UORRing.stratum and UORRing.spectrum for all Q0", () => {
-    const { Q0 } = require("@/modules/ring-core");
+    const { Q0 } = require("@/modules/kernel/ring-core");
     const ring = Q0();
     for (let x = 0; x < 256; x++) {
       const bytes = ring.toBytes(x);

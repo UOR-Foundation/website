@@ -19,7 +19,7 @@ import {
   createSoftCausalCoherenceLayer,
   createFullCoherenceLayer,
   type CausalCoherenceOutput,
-} from "@/modules/atlas/multi-head-coherence";
+} from "@/modules/research/atlas/multi-head-coherence";
 
 // ══════════════════════════════════════════════════════════════════════════
 // Part I: Strict Causal Mask

@@ -8,7 +8,7 @@
 
 import { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp } from "lucide-react";
-import type { EpistemicGrade } from "@/modules/ring-core/neuro-symbolic";
+import type { EpistemicGrade } from "@/modules/kernel/ring-core/neuro-symbolic";
 
 const GRADE = {
   A: { color: "hsl(160, 45%, 55%)", bg: "hsla(160, 45%, 55%, 0.15)", label: "Proven", score: 4 },

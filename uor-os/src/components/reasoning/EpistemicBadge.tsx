@@ -12,7 +12,7 @@
 
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import type { AnnotatedClaim, EpistemicGrade } from "@/modules/ring-core/neuro-symbolic";
+import type { AnnotatedClaim, EpistemicGrade } from "@/modules/kernel/ring-core/neuro-symbolic";
 import {
   ChevronDown, ChevronUp, Shield, ShieldAlert, AlertTriangle,
   Lightbulb, ArrowRight, CheckCircle2, Info, ExternalLink,

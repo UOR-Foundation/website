@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { AnnotatedClaim, EpistemicGrade } from "@/modules/ring-core/neuro-symbolic";
+import type { AnnotatedClaim, EpistemicGrade } from "@/modules/kernel/ring-core/neuro-symbolic";
 
 interface SavePayload {
   messageContent: string;

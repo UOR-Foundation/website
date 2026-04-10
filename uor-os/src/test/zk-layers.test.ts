@@ -26,7 +26,7 @@ import {
   // L3
   content,
   contentToHashSync,
-} from "@/modules/qsvg/zk-layers";
+} from "@/modules/research/qsvg/zk-layers";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Layer 1: Substrate Integrity

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { Q0, Q1 } from "@/modules/ring-core/ring";
-import { resolve, classifyElement } from "@/modules/resolver/resolver";
-import { computePartition } from "@/modules/resolver/partition";
-import { correlate } from "@/modules/resolver/correlation";
+import { Q0, Q1 } from "@/modules/kernel/ring-core/ring";
+import { resolve, classifyElement } from "@/modules/kernel/resolver/resolver";
+import { computePartition } from "@/modules/kernel/resolver/partition";
+import { correlate } from "@/modules/kernel/resolver/correlation";
 
 describe("resolve", () => {
   const ring = Q0();

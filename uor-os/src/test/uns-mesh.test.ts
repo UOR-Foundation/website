@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { generateKeypair } from "@/modules/uns/core/keypair";
-import type { UnsKeypair } from "@/modules/uns/core/keypair";
-import { singleProofHash } from "@/modules/uns/core/identity";
+import { generateKeypair } from "@/modules/identity/uns/core/keypair";
+import type { UnsKeypair } from "@/modules/identity/uns/core/keypair";
+import { singleProofHash } from "@/modules/identity/uns/core/identity";
 import {
   canonicalIdToOrbitPrefix,
   canonicalIdToBgpCommunity,
   bgpCommunityToOrbitPrefix,
   buildRouteAnnouncements,
   UnsNode,
-} from "@/modules/uns/mesh";
+} from "@/modules/identity/uns/mesh";
 
 describe("UNS Mesh. BGP Orbit Routing & Node Orchestrator", () => {
   let kp: UnsKeypair;

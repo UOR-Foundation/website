@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { generateKeypair } from "@/modules/uns/core/keypair";
-import type { UnsKeypair } from "@/modules/uns/core/keypair";
+import { generateKeypair } from "@/modules/identity/uns/core/keypair";
+import type { UnsKeypair } from "@/modules/identity/uns/core/keypair";
 import {
   kyberKeygen,
   kyberEncapsulate,
@@ -9,8 +9,8 @@ import {
   aesGcmDecrypt,
   UnsConduit,
   ConduitRelay,
-} from "@/modules/uns/trust/conduit";
-import type { TunnelInitMessage } from "@/modules/uns/trust/conduit";
+} from "@/modules/identity/uns/trust/conduit";
+import type { TunnelInitMessage } from "@/modules/identity/uns/trust/conduit";
 
 // @ts-ignore
 import { ml_dsa65 } from "@noble/post-quantum/ml-dsa.js";

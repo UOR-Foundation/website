@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { generateKeypair } from "@/modules/uns/core/keypair";
-import type { UnsKeypair } from "@/modules/uns/core/keypair";
+import { generateKeypair } from "@/modules/identity/uns/core/keypair";
+import type { UnsKeypair } from "@/modules/identity/uns/core/keypair";
 import {
   UnsAuthServer,
   signChallenge,
   UnsAccessControl,
   trustMiddleware,
-} from "@/modules/uns/trust";
-import type { UnsSession } from "@/modules/uns/trust";
+} from "@/modules/identity/uns/trust";
+import type { UnsSession } from "@/modules/identity/uns/trust";
 
 // @ts-ignore
 import { ml_dsa65 } from "@noble/post-quantum/ml-dsa.js";

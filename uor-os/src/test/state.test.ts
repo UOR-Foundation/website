@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { Q0 } from "@/modules/ring-core/ring";
-import { computeStateFrame } from "@/modules/state/state";
+import { Q0 } from "@/modules/kernel/ring-core/ring";
+import { computeStateFrame } from "@/modules/kernel/state/state";
 
 describe("state module", () => {
   const ring = Q0();

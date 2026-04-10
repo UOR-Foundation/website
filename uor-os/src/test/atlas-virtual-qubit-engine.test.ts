@@ -24,8 +24,8 @@ import {
   SINGLE_QUBIT_GATE_COUNT,
   TWO_QUBIT_GATE_COUNT,
   THREE_QUBIT_GATE_COUNT,
-} from "@/modules/atlas/virtual-qubit-engine";
-import { IDENTITY, GROUP_ORDER } from "@/modules/atlas/transform-group";
+} from "@/modules/research/atlas/virtual-qubit-engine";
+import { IDENTITY, GROUP_ORDER } from "@/modules/research/atlas/transform-group";
 
 describe("Phase 5: Virtual Qubit Instantiation Engine", () => {
   describe("Fano Register", () => {

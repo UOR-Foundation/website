@@ -6,8 +6,8 @@ import {
   createRecord,
   signRecord,
   clearRecordStore,
-} from "@/modules/uns/core";
-import type { UnsTarget, CreateRecordOpts } from "@/modules/uns/core";
+} from "@/modules/identity/uns/core";
+import type { UnsTarget, CreateRecordOpts } from "@/modules/identity/uns/core";
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
 

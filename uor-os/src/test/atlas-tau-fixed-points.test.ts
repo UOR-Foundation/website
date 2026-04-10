@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 import {
   findTauFixedPoints,
   runTauFixedPointAnalysis,
-} from "@/modules/atlas/tau-fixed-points";
+} from "@/modules/research/atlas/tau-fixed-points";
 
 describe("τ-Fixed Point Analysis", () => {
   const analysis = runTauFixedPointAnalysis();

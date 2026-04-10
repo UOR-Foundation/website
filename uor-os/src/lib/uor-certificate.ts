@@ -6,5 +6,5 @@
  * The module handles boundary enforcement, canonicalization, and hashing.
  */
 
-export { generateCertificate, generateCertificates } from "@/modules/certificate/generate";
-export type { UorCertificate } from "@/modules/certificate/types";
+export { generateCertificate, generateCertificates } from "@/modules/identity/addressing/certificate/generate";
+export type { UorCertificate } from "@/modules/identity/addressing/certificate/types";
