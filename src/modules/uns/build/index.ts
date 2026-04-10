@@ -1,14 +1,77 @@
 /**
  * UNS Build. Module Barrel Export
+ * ═════════════════════════════════════════════════════════════════
  *
- * Complete Build→Ship→Run system with Docker backwards compatibility.
+ * Complete Build → Ship → Run system.
+ * The UOR equivalent of the Docker + Kubernetes toolchain.
  *
- * Build:  Uorfile parser, Dockerfile translator, image builder
- * Ship:   Registry with tag/push/pull, Docker image wrapping
- * Run:    Compose orchestration, secrets management
+ * ┌────────────────────────────────────────────────────────────────┐
+ * │  Docker Equivalent          │  UOR Implementation             │
+ * │────────────────────────────│──────────────────────────────────│
+ * │  Dockerfile                 │  Uorfile (+ CANON, TRUST, SHIELD) │
+ * │  docker build               │  buildImage()                    │
+ * │  docker create / run        │  createContainer()               │
+ * │  docker start / stop        │  startContainer() / stopContainer() │
+ * │  docker exec                │  execContainer()                 │
+ * │  docker pause / unpause     │  pauseContainer() / unpauseContainer() │
+ * │  docker ps / inspect        │  listContainers() / inspectContainer() │
+ * │  docker logs                │  containerLogs()                 │
+ * │  docker tag / push / pull   │  tagImage() / pushImage() / pullImage() │
+ * │  docker compose up/down     │  composeUp() / composeDown()     │
+ * │  docker secret              │  createSecret() / getSecretValue() │
+ * │  Docker Hub (registry)      │  UOR Image Registry              │
+ * │  Docker image wrapping      │  wrapDockerImage()               │
+ * │  docker checkpoint          │  createSnapshot()                │
+ * └────────────────────────────────────────────────────────────────┘
+ *
+ * Orchestration (Kubernetes equivalent) lives in @/modules/compose:
+ *   - SovereignReconciler  (K8s Controller Manager)
+ *   - SovereignAutoScaler  (K8s HPA)
+ *   - SovereignRollingUpdate (K8s Deployment rolling update)
+ *   - AppKernel             (container isolation + permissions)
+ *   - Orchestrator           (kubelet + scheduler)
+ *
+ * @version 2.0.0
  */
 
-// ── Uorfile (Build Spec) ───────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════
+// CONTAINER RUNTIME (docker create / run / exec / stop / rm)
+// ══════════════════════════════════════════════════════════════════════════
+
+export {
+  createContainer,
+  startContainer,
+  stopContainer,
+  pauseContainer,
+  unpauseContainer,
+  crashContainer,
+  removeContainer,
+  execContainer,
+  listContainers,
+  inspectContainer,
+  containerLogs,
+  getContainer,
+  linkContainerToKernel,
+  clearContainers,
+} from "./container";
+export type {
+  ContainerState,
+  ContainerPortMapping,
+  ContainerMount,
+  ContainerResources,
+  ContainerConfig,
+  ContainerEvent,
+  ContainerEventType,
+  ContainerLogEntry,
+  UorContainer,
+  ContainerInspection,
+  ExecResult,
+} from "./container";
+
+// ══════════════════════════════════════════════════════════════════════════
+// IMAGE BUILD (docker build / Dockerfile)
+// ══════════════════════════════════════════════════════════════════════════
+
 export {
   parseUorfile,
   parseDockerfile,
@@ -25,7 +88,10 @@ export type {
   UorImageLayer,
 } from "./uorfile";
 
-// ── Docker Compatibility ───────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════
+// DOCKER COMPATIBILITY (docker image wrapping / Dockerfile translation)
+// ══════════════════════════════════════════════════════════════════════════
+
 export {
   parseDockerRef,
   wrapDockerImage,
@@ -42,7 +108,10 @@ export type {
   DockerVerbMapping,
 } from "./docker-compat";
 
-// ── Image Registry (Tag / Push / Pull) ─────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════
+// IMAGE REGISTRY (docker tag / push / pull / inspect / history)
+// ══════════════════════════════════════════════════════════════════════════
+
 export {
   tagImage,
   resolveTag,
@@ -64,7 +133,10 @@ export type {
   ImageHistoryEntry,
 } from "./registry";
 
-// ── Compose (Multi-Service Orchestration) ──────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════
+// COMPOSE (docker compose up / down / ps / scale)
+// ══════════════════════════════════════════════════════════════════════════
+
 export {
   parseComposeSpec,
   composeUp,
@@ -88,7 +160,10 @@ export type {
   ComposeServiceStatus,
 } from "./compose";
 
-// ── Secrets Manager ────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════
+// SECRETS MANAGER (docker secret create / ls / inspect / rm)
+// ══════════════════════════════════════════════════════════════════════════
+
 export {
   createSecret,
   listSecrets,
@@ -104,7 +179,10 @@ export type {
   SecretWriteResult,
 } from "./secrets";
 
-// ── Deployment Snapshot (Unified Versioning Gate) ──────────────────────────
+// ══════════════════════════════════════════════════════════════════════════
+// DEPLOYMENT SNAPSHOTS (docker checkpoint — unified versioning gate)
+// ══════════════════════════════════════════════════════════════════════════
+
 export {
   createSnapshot,
   verifySnapshot,
