@@ -15,7 +15,7 @@
 import { lazy, type ComponentType } from "react";
 import {
   Search, Sparkles, BookOpen, MessageCircle, Shield, Activity, FolderOpen,
-  Network, CalendarDays, LayoutGrid, Wallet, Play, PackageOpen, Clock,
+  Network, CalendarDays, LayoutGrid, Wallet, Play, PackageOpen, Clock, ShieldCheck,
 } from "lucide-react";
 import type { OsCategory } from "./os-taxonomy";
 import { STATIC_BLUEPRINTS } from "@/modules/compose/static-blueprints";
