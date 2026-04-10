@@ -26,3 +26,13 @@ export type { GateResult, GateFinding, GateReport } from "./gates";
 
 export { DEVOPS_GLOSSARY, lookupStandard, glossaryToMarkdown } from "./devops-glossary";
 export type { GlossaryEntry } from "./devops-glossary";
+
+// Ontology re-exports for convenience
+export {
+  SYSTEM_ONTOLOGY,
+  ALL_CONCEPTS,
+  resolveTerm,
+  resolveLabel,
+  useOntologyLabel,
+} from "../ontology";
+export type { SkosConcept, OntologyProfile, ResolvedTerm } from "../ontology";
