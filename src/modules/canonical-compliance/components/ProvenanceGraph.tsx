@@ -417,10 +417,11 @@ export default function ProvenanceGraph({ findings, selectedCategory, search, on
                   opacity={isHovered ? 1 : 0.85}
                 />
               )}
-              {isHovered && (
+              {(isHovered || node.type === "layer") && (
                 <text
-                  x={node.x} y={node.y - node.r - 6}
-                  textAnchor="middle" fill="hsl(0 0% 85%)" fontSize={10} fontFamily="monospace"
+                  x={node.x} y={node.type === "layer" ? node.y + 4 : node.y - node.r - 6}
+                  textAnchor="middle" fill={node.type === "layer" ? "white" : "hsl(0 0% 85%)"} fontSize={node.type === "layer" ? 12 : 10} fontFamily="monospace"
+                  fontWeight={node.type === "layer" ? "bold" : "normal"}
                 >
                   {node.label}
                 </text>
