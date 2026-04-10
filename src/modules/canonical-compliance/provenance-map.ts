@@ -28,7 +28,7 @@ export interface ModuleProvenance {
  * to their UOR atom provenance chains.
  */
 export const PROVENANCE_REGISTRY: ModuleProvenance[] = [
-  // ── Layer 0: Engine ──────────────────────────────────────────
+  // ── Kernel ─────────────────────────────────────────────────
   {
     module: "ring-core",
     description: "Z/(2^n)Z algebraic foundation",
@@ -77,7 +77,7 @@ export const PROVENANCE_REGISTRY: ModuleProvenance[] = [
       { export: "verifyRecord",         atoms: ["type:proof", "type:certificate"],                     pipeline: "extract-sig → verify → assert" },
     ],
   },
-  // ── Layer 1: Name System ─────────────────────────────────────
+  // ── Protocol ───────────────────────────────────────────────
   {
     module: "uns/core/record",
     description: "Name records",
@@ -101,7 +101,7 @@ export const PROVENANCE_REGISTRY: ModuleProvenance[] = [
       { export: "UnsDht",               atoms: ["type:address", "type:region", "type:stream", "type:effect"], pipeline: "xor-distance → k-bucket → store/retrieve" },
     ],
   },
-  // ── Layer 2: Build System ────────────────────────────────────
+  // ── Runtime ────────────────────────────────────────────────
   {
     module: "uns/build/container",
     description: "Container runtime",
@@ -152,7 +152,7 @@ export const PROVENANCE_REGISTRY: ModuleProvenance[] = [
       { export: "verifySnapshot",        atoms: ["type:proof", "type:address"],                         pipeline: "recompute-hash → compare → assert" },
     ],
   },
-  // ── Layer 3: Services ────────────────────────────────────────
+  // ── Services ───────────────────────────────────────────────
   {
     module: "compose/orchestrator",
     description: "Sovereign reconciler (K8s equivalent)",
@@ -233,28 +233,34 @@ export interface SystemLayer {
  */
 export const SYSTEM_LAYERS: SystemLayer[] = [
   {
-    id: "engine",
-    label: "Engine",
+    id: "kernel",
+    label: "Kernel",
     description: "Algebraic foundation, content-addressing, identity, and cryptographic primitives",
     modules: ["ring-core", "uns/core/address", "uns/core/ring", "uns/core/identity", "uns/core/keypair"],
   },
   {
-    id: "names",
-    label: "Name System",
-    description: "Name records, resolution engine, and distributed hash table",
+    id: "protocol",
+    label: "Protocol",
+    description: "Name resolution, record management, and distributed hash table",
     modules: ["uns/core/record", "uns/core/resolver", "uns/core/dht"],
   },
   {
-    id: "build",
-    label: "Build System",
-    description: "Container runtime, image build, registry, compose, secrets, and snapshots",
+    id: "runtime",
+    label: "Runtime",
+    description: "Container lifecycle, image build, registry, compose, secrets, and snapshots",
     modules: ["uns/build/container", "uns/build/uorfile", "uns/build/registry", "uns/build/compose", "uns/build/secrets", "uns/build/snapshot"],
   },
   {
     id: "services",
     label: "Services",
-    description: "Orchestration, kernel isolation, oracle, identity, messaging, and applications",
-    modules: ["compose/orchestrator", "compose/app-kernel", "oracle", "identity", "messenger", "donate", "landing", "desktop", "app-store"],
+    description: "Orchestration, kernel isolation, reasoning, identity, and messaging",
+    modules: ["compose/orchestrator", "compose/app-kernel", "oracle", "identity", "messenger"],
+  },
+  {
+    id: "applications",
+    label: "Applications",
+    description: "User-facing workloads: landing, desktop shell, app store, and donations",
+    modules: ["donate", "landing", "desktop", "app-store"],
   },
 ];
 
