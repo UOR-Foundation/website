@@ -296,7 +296,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
                 caretColor: isImmersive ? "hsl(195 70% 65%)" : undefined,
                 fontFamily: isAddress
                   ? "var(--font-mono, ui-monospace, monospace)"
-                  : "'DM Sans', -apple-system, sans-serif",
+                  : fontStack,
                 letterSpacing: isAddress ? "0.03em" : undefined,
                 fontWeight: isAddress ? 500 : undefined,
               }}
