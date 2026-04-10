@@ -45,9 +45,16 @@ registerRoute(
 // SharedArrayBuffer is available on every hosting platform.
 
 function addCOIHeaders(response: Response): Response {
-  if (response.headers.get('Cross-Origin-Opener-Policy')) {
-    return response; // Already has headers (e.g. dev server)
+  // Don't modify opaque responses — their headers/body are inaccessible
+  if (response.type === 'opaque' || response.type === 'opaqueredirect') {
+    return response;
   }
+
+  // Already has isolation headers (e.g. dev server)
+  if (response.headers.get('Cross-Origin-Opener-Policy')) {
+    return response;
+  }
+
   const headers = new Headers(response.headers);
   headers.set('Cross-Origin-Opener-Policy', 'same-origin');
   headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
