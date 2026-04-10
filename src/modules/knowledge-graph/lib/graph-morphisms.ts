@@ -19,7 +19,10 @@
 
 import { grafeoStore } from "../grafeo-store";
 import { sparqlUpdate, sparqlQuery, type SparqlBinding } from "../grafeo-store";
-import { compute, makeDatum, DEFAULT_RING, type Datum } from "@/modules/uor-sdk/ring";
+import { compute, makeDatum, type Datum } from "@/modules/uor-sdk/ring";
+
+/** Default quantum level (q=0 → 1 byte → Z/256Z) */
+const DEFAULT_Q = 0;
 import { singleProofHash } from "@/lib/uor-canonical";
 
 // ── Types ───────────────────────────────────────────────────────────────────
