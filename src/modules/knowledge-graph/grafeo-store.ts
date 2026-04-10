@@ -267,6 +267,12 @@ function bindingToNode(r: SparqlBinding, uorAddress: string): KGNode {
 export const grafeoStore = {
   async init(): Promise<{ quadCount: number }> {
     const db = await getDb();
+
+    // Initialize hedged-read layer (cache-first, WASM fallback)
+    if (!getHedgedReader()) {
+      initHedgedReader((addr) => this._getNodeFromWasm(addr), 500);
+    }
+
     try {
       const result = await db.execute(`SELECT (COUNT(*) AS ?count) WHERE { ?s ?p ?o }`);
       const bindings = normalizeBindings(result);
@@ -438,6 +444,10 @@ export const grafeoStore = {
   },
 
   async removeNode(uorAddress: string): Promise<void> {
+    // Invalidate hedged-read cache
+    const reader = getHedgedReader();
+    if (reader) reader.onDelete(uorAddress);
+
     try {
       await sparqlUpdate(`DELETE WHERE { <${uorAddress}> ?p ?o }`);
     } catch {
@@ -898,6 +908,10 @@ export const grafeoStore = {
   },
 
   async clear(): Promise<void> {
+    // Clear hedged-read cache
+    const reader = getHedgedReader();
+    if (reader) reader.onClear();
+
     dbInstance = null;
     const { GrafeoDB } = await import("@grafeo-db/web");
     dbInstance = await GrafeoDB.create({ persist: "uor-knowledge-graph" });
@@ -906,6 +920,16 @@ export const grafeoStore = {
       await dbInstance.execute(`DELETE WHERE { ?s ?p ?o }`);
     } catch { /* empty store */ }
     emit();
+  },
+
+  // ── Compression Statistics ────────────────────────────────────────────
+
+  compressionStats() {
+    return {
+      iriInterner: iriInterner.stats(),
+      schemaTemplates: schemaTemplates.stats(),
+      hedgedReader: getHedgedReader()?.stats() ?? null,
+    };
   },
 };
 

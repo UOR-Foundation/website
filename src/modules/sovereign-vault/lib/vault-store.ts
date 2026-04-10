@@ -38,8 +38,10 @@ async function ingestDocument(
   // 2. Chunk the text
   const textChunks = chunkText(text);
 
-  // 3. Content-address each chunk and store encrypted in Data Bank
+  // 3. Content-address each chunk; deduplicate before storing in Data Bank
   const chunks: VaultChunk[] = [];
+  const seenCids = new Set<string>();
+
   for (let i = 0; i < textChunks.length; i++) {
     const chunkProof = await singleProofHash({
       "@type": "vault:DocumentChunk",
@@ -48,8 +50,16 @@ async function ingestDocument(
       "vault:content": textChunks[i],
     });
 
-    // Store encrypted chunk in Data Bank
-    await writeSlot(userId, `vault:${docCid}:chunk:${i}`, textChunks[i]);
+    // Chunk dedup: skip write if this CID was already stored in this batch
+    // or if a slot with this content already exists (cross-document dedup)
+    if (!seenCids.has(chunkProof.cid)) {
+      seenCids.add(chunkProof.cid);
+      const { readSlot } = await import("@/modules/data-bank/lib/sync");
+      const existing = await readSlot(userId, `vault:${docCid}:chunk:${i}`);
+      if (!existing) {
+        await writeSlot(userId, `vault:${docCid}:chunk:${i}`, textChunks[i]);
+      }
+    }
 
     chunks.push({
       index: i,
