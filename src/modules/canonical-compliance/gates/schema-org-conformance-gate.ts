@@ -286,7 +286,7 @@ registerGate(() => {
     detail: `${TEST_EMITTERS.length} emitters validated, ${SCHEMA_ORG_TYPE_INDEX.size} types registered, ${bridgedCount}/${EXPECTED_SCHEMA_ORG_BRIDGES.size} SKOS bridges active, ${coveredNamespaces.size}/${CORE_UOR_NAMESPACES.length} UOR namespaces covered.`,
   });
 
-  return buildGateResult("schema-org-conformance", "Schema.org Conformance", findings, {
+  return buildGateResult("schema-org-conformance", "Schema.org Gate", findings, {
     error: 10,
     warning: 3,
     info: 0,

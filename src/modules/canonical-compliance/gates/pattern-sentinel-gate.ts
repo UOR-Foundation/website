@@ -63,7 +63,7 @@ function patternSentinelGate() {
 
   return buildGateResult(
     "pattern-sentinel",
-    "Pattern Sentinel Gate",
+    "Sentinel Gate",
     findings,
     { error: 8, warning: 3, info: 0 },
   );

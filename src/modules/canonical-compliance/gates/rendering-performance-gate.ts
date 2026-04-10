@@ -99,7 +99,7 @@ registerGate((): GateResult => {
 
   return {
     id: "rendering-performance",
-    name: "Rendering Performance",
+    name: "Performance Gate",
     status,
     score,
     findings,

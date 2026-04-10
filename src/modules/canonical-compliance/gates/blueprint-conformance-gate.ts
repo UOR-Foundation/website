@@ -152,7 +152,7 @@ function blueprintConformanceGate() {
 
   return buildGateResult(
     "blueprint-conformance",
-    "Blueprint Conformance",
+    "Blueprint Gate",
     findings,
     { error: 10, warning: 5, info: 0 },
   );

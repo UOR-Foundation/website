@@ -36,7 +36,7 @@ import {
 // ── Constants ────────────────────────────────────────────────────────────
 
 const GATE_ID = "aesthetics-conformance";
-const GATE_NAME = "Aesthetic Coherence (A14)";
+const GATE_NAME = "Aesthetics Gate";
 
 const PHI_TOLERANCE = 0.15; // 15% tolerance for φ-progression checks
 const MIN_BODY_FONT = 16;

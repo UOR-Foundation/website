@@ -30,7 +30,7 @@ function hygieneGate(): GateResult {
 
   return {
     id: "module-hygiene",
-    name: "Module Hygiene Gate",
+    name: "Hygiene Gate",
     status: scoreToStatus(report.score),
     score: report.score,
     findings,

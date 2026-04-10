@@ -140,7 +140,7 @@ registerAsyncGate(async () => {
   try {
     reflections = await getAllReflections();
   } catch {
-    return buildGateResult("reflection-sentinel", "Reflection Sentinel", [
+    return buildGateResult("reflection-sentinel", "Reflection Gate", [
       {
         severity: "info",
         title: "Reflection chain unavailable",

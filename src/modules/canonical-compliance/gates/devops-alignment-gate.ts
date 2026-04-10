@@ -142,7 +142,7 @@ function devopsAlignmentGate() {
 
   return buildGateResult(
     "devops-alignment",
-    "DevOps Alignment Gate",
+    "DevOps Gate",
     findings,
     { error: 8, warning: 4, info: 0 },
   );
