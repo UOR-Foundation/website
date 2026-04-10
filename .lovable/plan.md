@@ -1,132 +1,78 @@
 
 
-# Cloud-to-Local Handoff via uor:// Deep-Link Protocol
+# Complete uor-os/ for Standalone Lovable Deployment
 
-## What Already Exists
+## Problem
 
-- **`session_transfers` table** in the database with token, user_id, target_url, target_lens, used flag, 5-min TTL
-- **`portal-transfer` edge function** — POST creates a token (authenticated), GET redeems it (returns magic link hashed_token + email for `verifyOtp`)
-- **`QrPortalPanel`** — generates QR codes with portal tokens for cross-device transfer (browser-to-browser)
-- **Deep-link handler** — parses `uor://space/`, `uor://resolve/`, `uor://app/`, `uor://search` but **no `handoff` type**
-- **Tauri deep-link plugin** — already registered for `uor://` scheme in `tauri.conf.json`
-- **Session snapshot system** — `createSnapshot()` captures windows, theme, app buffers, scroll positions
+The `uor-os/` folder is missing several files needed for Lovable compatibility and standalone deployment:
 
-## What's Missing
+1. **Build error**: The PWA `injectManifest` Rollup pass fails because it cannot resolve `@/modules/uns/build/container` — this is a path alias issue in the PWA's separate Rollup build. The `globIgnores` pattern should exclude the file from processing entirely.
+2. **Missing Lovable files**: `lovable-tagger` dev dependency, `componentTagger()` plugin in vite.config, `components.json`, `.gitignore`, split tsconfig files (`tsconfig.app.json`, `tsconfig.node.json`), `eslint.config.js`, `vitest.config.ts`
+3. **Missing supabase/**: Edge functions, migrations, and `config.toml` are not in `uor-os/`
+4. **Missing Apache 2.0 LICENSE file**
+5. **Missing .env handling**: Lovable auto-generates `.env` but the new repo needs awareness of it
 
-1. No `handoff` action type in the deep-link parser
-2. No desktop-side receiver that redeems a handoff token and signs the user in
-3. No "Transfer to Desktop" button in the browser OS that generates a `uor://handoff/{token}` link
-4. The QR panel currently generates browser URLs (`/search?portal=...`), not `uor://` deep-link URIs
-5. No session snapshot bundling with the transfer token
+## Plan
 
-## Implementation Plan
+### Step 1 — Fix the Build Error
 
-### Step 1 — Extend Deep-Link Parser
+The PWA `injectManifest` uses a separate Rollup build that does not understand Vite's `@/` alias. The `globIgnores` only affects precache listing, not import resolution. The actual fix: make the dynamic import in `ContainerBootOverlay.tsx` conditional so the PWA Rollup pass does not try to resolve it. Wrap it in a try/catch with a runtime-only path — OR — add the container module path to `build.rollupOptions.external` in the vite config so the SW build skips it entirely.
 
-Add `handoff` action type to `DeepLinkAction` union in `src/modules/sovereign-spaces/deep-link/handler.ts`:
-```
-| { type: "handoff"; token: string }
-```
-Add parsing for `uor://handoff/{token}` in `parseDeepLink()`.
+Simplest fix: the `injectManifest` rollup config needs the same `alias` and `external` settings. Since we can't easily configure the inner Rollup, the pragmatic fix is to make `ContainerBootOverlay.tsx` not statically analyzable by Rollup's SW pass — use a variable for the import path:
 
-### Step 2 — Create Handoff Library
-
-New file: `src/modules/desktop/lib/handoff.ts`
-
-**`generateHandoffLink()`** (browser-side):
-- Calls `portal-transfer` POST to create a token
-- Captures current session snapshot via `createSnapshot()`
-- Stores snapshot in `session_transfers` metadata (or a companion row)
-- Returns `uor://handoff/{token}` URI string
-
-**`redeemHandoff(token)`** (desktop-side):
-- Calls `portal-transfer` GET to redeem token, receives `hashed_token` + `email`
-- Signs user in via `supabase.auth.verifyOtp({ token_hash: hashed_token, email, type: 'magiclink' })`
-- Fetches the session snapshot associated with the token
-- Hydrates local sovereign store with the snapshot via `saveSnapshot()`
-- Returns `{ targetUrl, targetLens, snapshot }` for navigation
-
-### Step 3 — Create HandoffReceiver Component
-
-New file: `src/modules/desktop/components/HandoffReceiver.tsx`
-
-- Listens for `handoff` deep-link actions via `onDeepLink()`
-- Shows a full-screen animated overlay: "Receiving session from browser..."
-- Calls `redeemHandoff(token)` 
-- On success: shows module checklist verification, then navigates to `targetUrl`
-- On failure: shows clear error with retry option
-- Auto-dismisses after successful hydration
-
-### Step 4 — Add "Transfer to Desktop" Button
-
-Modify `src/modules/desktop/DesktopWidgets.tsx`:
-
-Below the existing "Go Sovereign — Download Desktop" CTA, add a "Transfer to Desktop" button (only shown when user is authenticated AND desktop app is detected/installed). This button:
-- Calls `generateHandoffLink()`
-- Displays the `uor://handoff/{token}` as a clickable link
-- Also shows a QR code variant for scanning from desktop
-
-### Step 5 — Wire HandoffReceiver into DesktopShell
-
-In `src/modules/desktop/DesktopShell.tsx`:
-- Import and render `<HandoffReceiver />` alongside `<LocalTwinWelcome />`
-- It only activates when a `handoff` deep-link is received
-
-### Step 6 — Update QrPortalPanel for Desktop Deep-Links
-
-In `src/modules/oracle/components/QrPortalPanel.tsx`:
-- Add option to generate `uor://handoff/{token}` URIs instead of browser URLs
-- When the user has the desktop app, the QR code encodes the deep-link URI so scanning opens Tauri directly
-
-## Database Changes
-
-Add a `snapshot_data` JSONB column to `session_transfers` to carry the session snapshot alongside the auth token. This avoids a second table.
-
-```sql
-ALTER TABLE public.session_transfers
-ADD COLUMN snapshot_data jsonb DEFAULT null;
+```typescript
+const mod = "@/modules/uns/build/container";
+const { getContainer } = await import(/* @vite-ignore */ mod);
 ```
 
-Update the `portal-transfer` edge function to accept and return `snapshot_data`.
+This prevents Rollup from resolving the import at build time.
+
+### Step 2 — Add Apache 2.0 LICENSE
+
+Create `uor-os/LICENSE` with the standard Apache License, Version 2.0 text.
+
+### Step 3 — Add Lovable-Specific Files
+
+| File | Purpose |
+|------|---------|
+| `uor-os/components.json` | shadcn/ui config (aliases point to `@/modules/core`) |
+| `uor-os/.gitignore` | Standard Vite gitignore |
+| `uor-os/tsconfig.app.json` | App-level TS config with vitest globals |
+| `uor-os/tsconfig.node.json` | Node-level TS config for vite.config |
+| `uor-os/eslint.config.js` | ESLint flat config |
+| `uor-os/vitest.config.ts` | Vitest configuration |
+
+Update `uor-os/tsconfig.json` to use project references (matching the parent repo pattern).
+
+Update `uor-os/vite.config.ts` to include `lovable-tagger` (`componentTagger()` plugin in dev mode).
+
+Update `uor-os/package.json` to add `lovable-tagger` to devDependencies.
+
+### Step 4 — Copy Supabase Directory
+
+Copy the entire `supabase/` directory (config.toml, migrations/, functions/) into `uor-os/supabase/`. This includes all 47 edge functions, all migrations, and the config.
+
+### Step 5 — Fix the Same Build Error in Main Repo
+
+Apply the same `/* @vite-ignore */` fix to `src/modules/desktop/components/ContainerBootOverlay.tsx` and `src/modules/compose/orchestrator.ts` in the main repo to resolve the current build failure.
 
 ## Files Created/Modified
 
 | File | Action |
 |------|--------|
-| `src/modules/sovereign-spaces/deep-link/handler.ts` | Add `handoff` action type |
-| `src/modules/desktop/lib/handoff.ts` | New: generate + redeem logic |
-| `src/modules/desktop/components/HandoffReceiver.tsx` | New: deep-link receiver overlay |
-| `src/modules/desktop/DesktopShell.tsx` | Wire HandoffReceiver |
-| `src/modules/desktop/DesktopWidgets.tsx` | Add "Transfer to Desktop" CTA |
-| `src/modules/oracle/components/QrPortalPanel.tsx` | Support `uor://` URI generation |
-| `supabase/functions/portal-transfer/index.ts` | Accept/return snapshot_data |
-| Migration | Add `snapshot_data` column to `session_transfers` |
-
-## Flow Summary
-
-```text
-Browser OS                          Desktop (Tauri)
-─────────                          ────────────────
-User clicks "Transfer to Desktop"
-  ↓
-Capture session snapshot
-  ↓
-POST /portal-transfer
-  → creates token + stores snapshot
-  ↓
-Generate uor://handoff/{token}
-  → show as link + QR code
-                                    User clicks link / scans QR
-                                      ↓
-                                    Tauri receives uor://handoff/{token}
-                                      ↓
-                                    GET /portal-transfer?token=...
-                                      → validates, marks used
-                                      → returns magic link + snapshot
-                                      ↓
-                                    verifyOtp() → user signed in
-                                    saveSnapshot() → state hydrated
-                                      ↓
-                                    Desktop shows identical viewpoint
-```
+| `uor-os/LICENSE` | New: Apache 2.0 |
+| `uor-os/components.json` | New: shadcn config |
+| `uor-os/.gitignore` | New: standard Vite ignore |
+| `uor-os/tsconfig.json` | Update: project references |
+| `uor-os/tsconfig.app.json` | New: app TS config |
+| `uor-os/tsconfig.node.json` | New: node TS config |
+| `uor-os/eslint.config.js` | New: ESLint config |
+| `uor-os/vitest.config.ts` | New: Vitest config |
+| `uor-os/vite.config.ts` | Update: add lovable-tagger |
+| `uor-os/package.json` | Update: add lovable-tagger |
+| `uor-os/supabase/` | New: full copy of supabase dir |
+| `src/modules/desktop/components/ContainerBootOverlay.tsx` | Fix: `@vite-ignore` on dynamic import |
+| `src/modules/compose/orchestrator.ts` | Fix: `@vite-ignore` on dynamic import |
+| `uor-os/src/modules/desktop/components/ContainerBootOverlay.tsx` | Fix: same |
+| `uor-os/src/modules/compose/orchestrator.ts` | Fix: same |
 
