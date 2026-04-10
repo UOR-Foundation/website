@@ -24,9 +24,9 @@ const DOTS: {
     label: "Earth",
     key: "1",
     colors: {
-      fill: "radial-gradient(circle at 35% 35%, #4db8ff 0%, #1a7a3a 40%, #0d5e2a 70%, #1a3a5e 100%)",
-      glow: "0 0 10px rgba(77,184,255,0.5), 0 0 20px rgba(26,122,58,0.3)",
-      ring: "rgba(77,184,255,0.6)",
+      fill: "radial-gradient(circle at 38% 36%, rgba(140,180,160,0.9) 0%, rgba(90,130,110,0.85) 50%, rgba(60,100,90,0.8) 100%)",
+      glow: "0 0 6px rgba(140,180,160,0.25)",
+      ring: "rgba(140,180,160,0.35)",
     },
   },
   {
@@ -34,9 +34,9 @@ const DOTS: {
     label: "Moon",
     key: "2",
     colors: {
-      fill: "radial-gradient(circle at 40% 38%, #e8e8e0 0%, #c8c8b8 45%, #9a9a8a 80%, #787870 100%)",
-      glow: "0 0 8px rgba(200,200,190,0.35), 0 0 16px rgba(200,200,190,0.15)",
-      ring: "rgba(220,220,210,0.5)",
+      fill: "radial-gradient(circle at 40% 38%, rgba(200,200,195,0.85) 0%, rgba(160,160,155,0.75) 55%, rgba(130,130,125,0.65) 100%)",
+      glow: "0 0 6px rgba(200,200,195,0.2)",
+      ring: "rgba(200,200,195,0.3)",
     },
   },
   {
@@ -44,9 +44,9 @@ const DOTS: {
     label: "Sun",
     key: "3",
     colors: {
-      fill: "radial-gradient(circle at 45% 42%, #fff7d0 0%, #ffcc33 40%, #ff9900 75%, #e07000 100%)",
-      glow: "0 0 12px rgba(255,204,51,0.5), 0 0 24px rgba(255,153,0,0.25)",
-      ring: "rgba(255,204,51,0.6)",
+      fill: "radial-gradient(circle at 42% 40%, rgba(240,210,150,0.9) 0%, rgba(210,170,100,0.8) 55%, rgba(185,145,80,0.7) 100%)",
+      glow: "0 0 6px rgba(220,190,120,0.25)",
+      ring: "rgba(220,190,120,0.35)",
     },
   },
 ];
@@ -85,13 +85,13 @@ export default function DesktopThemeDots({ windows = [] }: Props) {
       }}
     >
       <div
-        className="pointer-events-auto flex items-center gap-4 py-2 px-4 rounded-full relative"
+        className="pointer-events-auto flex items-center gap-3 py-1.5 px-3 rounded-full relative"
         style={{
           pointerEvents: hasVisibleWindows ? "none" : "auto",
-          background: "rgba(0,0,0,0.15)",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-          border: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(0,0,0,0.12)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.04)",
         }}
       >
         {DOTS.map(dot => {
@@ -101,15 +101,14 @@ export default function DesktopThemeDots({ windows = [] }: Props) {
             <div key={dot.id} className="relative flex flex-col items-center">
               {/* Hover label */}
               <span
-                className="absolute -top-7 text-white/60 text-[11px] font-medium whitespace-nowrap select-none pointer-events-none"
+                className="absolute -top-6 text-white/50 text-[10px] tracking-wide font-medium whitespace-nowrap select-none pointer-events-none"
                 style={{
                   opacity: hovered ? 1 : 0,
-                  transform: hovered ? "translateY(0)" : "translateY(4px)",
-                  transition: "opacity 150ms ease-out, transform 150ms ease-out",
+                  transform: hovered ? "translateY(0)" : "translateY(3px)",
+                  transition: "opacity 200ms ease-out, transform 200ms ease-out",
                 }}
               >
                 {dot.label}
-                <span className="ml-1 text-white/30 text-[10px]">{dot.key}</span>
               </span>
               <button
                 onClick={() => setTheme(dot.id)}
@@ -117,15 +116,16 @@ export default function DesktopThemeDots({ windows = [] }: Props) {
                 onMouseLeave={() => setHoveredDot(null)}
                 aria-label={`${dot.label} (${dot.key})`}
                 title={`${dot.label} — press ${dot.key}`}
-                className="rounded-full transition-all duration-300 ease-out"
+                className="rounded-full"
                 style={{
-                  width: active ? 16 : 12,
-                  height: active ? 16 : 12,
+                  width: active ? 10 : 8,
+                  height: active ? 10 : 8,
                   background: dot.colors.fill,
                   boxShadow: active ? dot.colors.glow : "none",
-                  outline: active ? `2px solid ${dot.colors.ring}` : "2px solid transparent",
+                  outline: active ? `1.5px solid ${dot.colors.ring}` : "1.5px solid transparent",
                   outlineOffset: 2,
-                  transform: hovered && !active ? "scale(1.2)" : "scale(1)",
+                  transform: hovered && !active ? "scale(1.25)" : "scale(1)",
+                  transition: "all 300ms cubic-bezier(0.16, 1, 0.3, 1)",
                   cursor: "pointer",
                 }}
               />
