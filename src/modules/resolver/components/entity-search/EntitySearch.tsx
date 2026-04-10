@@ -35,7 +35,7 @@ export function EntitySearch() {
     if (res.iri) {
       try {
         const datum = await getDatum(res.iri);
-        if (datum) setDatumDetail(datum as Record<string, unknown>);
+        if (datum) setDatumDetail(datum as unknown as Record<string, unknown>);
       } catch (e) {
         // Non-critical. just skip detail
       }

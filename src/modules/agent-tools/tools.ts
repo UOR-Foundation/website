@@ -225,36 +225,40 @@ export async function uor_verify(input: VerifyInput): Promise<VerifyOutput> {
     };
   }
 
-  const ring = getRing(stored.quantum);
+  const storedAny = stored as any;
+  const quantum = storedAny.quantum ?? storedAny.properties?.quantum ?? 0;
+  const ring = getRing(quantum);
   if (!ring.coherenceVerified) ring.verify();
 
   // Re-parse the original term and re-derive
-  const originalTerm = parseTerm(stored.original_term);
+  const origTerm = storedAny.original_term ?? storedAny.originalTerm ?? "";
+  const originalTerm = parseTerm(origTerm);
+  const derivId = storedAny.derivation_id ?? storedAny.derivationId ?? "";
   const rederived = await derive(ring, originalTerm);
-  const verified = rederived.derivationId === stored.derivation_id;
+  const verified = rederived.derivationId === derivId;
 
   // Issue certificate
   const derivation: Derivation = {
     "@type": "derivation:Record",
-    derivationId: stored.derivation_id,
-    originalTerm: stored.original_term,
-    canonicalTerm: stored.canonical_term,
-    resultValue: 0, // not needed for cert
-    resultIri: stored.result_iri,
-    epistemicGrade: stored.epistemic_grade as "A" | "B" | "C" | "D",
-    timestamp: stored.created_at,
-    metrics: stored.metrics as Derivation["metrics"],
+    derivationId: derivId,
+    originalTerm: origTerm,
+    canonicalTerm: storedAny.canonical_term ?? storedAny.canonicalTerm ?? "",
+    resultValue: 0,
+    resultIri: storedAny.result_iri ?? storedAny.resultIri ?? "",
+    epistemicGrade: (storedAny.epistemic_grade ?? storedAny.epistemicGrade ?? "C") as "A" | "B" | "C" | "D",
+    timestamp: storedAny.created_at ?? storedAny.createdAt ?? Date.now(),
+    metrics: storedAny.metrics as Derivation["metrics"],
   };
 
   const cert = await issueCertificate(derivation, ring, originalTerm);
 
   return {
     verified,
-    derivation_id: stored.derivation_id,
-    result_iri: stored.result_iri,
+    derivation_id: derivId,
+    result_iri: derivation.resultIri,
     cert_chain: cert.certChain,
     trace_iri: cert.certificateId,
-    quantum: stored.quantum,
+    quantum,
     executionTimeMs: Math.round(performance.now() - start),
   };
 }
