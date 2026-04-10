@@ -198,4 +198,4 @@ export type {
   SnapshotDiff,
 } from "./snapshot";
 
-/* end of barrel */
+/* end of barrel – v2.0.1 */
