@@ -2,7 +2,7 @@
  * DesktopShell — UOR OS shell.
  * Wallpaper + menu bar + windows + dock + spotlight + context menu + snap zones + theme.
  * Non-blocking boot: desktop renders immediately with boot overlay that fades away.
- * Includes global dictation (Wispr Flow-style voice input anywhere).
+ * Includes global voice-to-voice interaction (Wispr Flow-style voice input + Oracle TTS reply).
  */
 
 import { useCallback, useState, useMemo, useEffect, useRef } from "react";
@@ -27,7 +27,7 @@ import { PlatformProvider } from "@/modules/desktop/hooks/usePlatform";
 import { ConnectivityProvider } from "@/modules/desktop/hooks/useConnectivity";
 import { useWindowManager, type SnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopShortcuts } from "@/modules/desktop/hooks/useDesktopShortcuts";
-import { useGlobalDictation } from "@/modules/oracle/hooks/useGlobalDictation";
+import { useVoiceToVoice } from "@/modules/oracle/hooks/useVoiceToVoice";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getApp } from "@/modules/desktop/lib/desktop-apps";
 import "@/modules/desktop/desktop.css";
@@ -42,8 +42,8 @@ function DesktopShellInner() {
   const [cheatSheetOpen, setCheatSheetOpen] = useState(false);
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
 
-  // Global dictation (Wispr Flow-style)
-  const [dictationState, dictationActions] = useGlobalDictation();
+  // Voice-to-voice (replaces raw useGlobalDictation)
+  const [voiceState, voiceActions] = useVoiceToVoice();
 
   const handleHomeSearch = useCallback((query: string) => {
     const app = getApp("search");
@@ -84,10 +84,10 @@ function DesktopShellInner() {
     onHideAll: handleHideAll,
     onShowShortcuts: () => setCheatSheetOpen(o => !o),
     onFullscreen: handleFullscreen,
-    onVoice: () => dictationActions.toggle(),
+    onVoice: () => voiceActions.toggle(),
     onQuickCapture: () => setQuickCaptureOpen(o => !o),
     onDailyNote: () => handleOpenApp("daily-notes"),
-  }), [handleCloseWindow, handleMinimizeWindow, handleHideAll, handleFullscreen, handleOpenApp, dictationActions]);
+  }), [handleCloseWindow, handleMinimizeWindow, handleHideAll, handleFullscreen, handleOpenApp, voiceActions]);
 
   const { ringActive } = useDesktopShortcuts(shortcutHandlers);
 
@@ -212,11 +212,15 @@ function DesktopShellInner() {
         <ShortcutCheatSheet open={cheatSheetOpen} onClose={() => setCheatSheetOpen(false)} />
         <QuickCapture open={quickCaptureOpen} onClose={() => setQuickCaptureOpen(false)} />
 
-        {/* Global dictation floating pill (Wispr Flow-style) */}
+        {/* Global voice-to-voice floating pill */}
         <FloatingDictationPill
-          state={dictationState}
-          onStop={dictationActions.stop}
-          onCancel={dictationActions.cancel}
+          state={voiceState.dictation}
+          phase={voiceState.phase}
+          responseText={voiceState.responseText}
+          voiceReplyEnabled={voiceState.voiceReplyEnabled}
+          onStop={voiceActions.stop}
+          onCancel={voiceActions.cancel}
+          onToggleVoiceReply={voiceActions.setVoiceReplyEnabled}
         />
 
         {/* Boot overlay — renders on top, fades away when done. Desktop is interactive underneath. */}

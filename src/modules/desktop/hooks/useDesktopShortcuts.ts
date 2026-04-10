@@ -52,6 +52,14 @@ export function useDesktopShortcuts(handlers: ShortcutHandlers) {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      // Direct shortcut: Ctrl/⌘ + Shift + V → toggle voice (bypasses Ring)
+      if (e[modKeyCode] && e.shiftKey && (e.key === "v" || e.key === "V")) {
+        e.preventDefault();
+        e.stopPropagation();
+        handlersRef.current.onVoice?.();
+        return;
+      }
+
       // Step 1: Activate ring with Ctrl/⌘ + .
       if (e[modKeyCode] && e.key === ".") {
         e.preventDefault();
