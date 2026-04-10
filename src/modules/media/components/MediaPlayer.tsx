@@ -27,8 +27,6 @@ function getEmbedUrl(videoId: string, autoplay = true): string {
     rel: "0",
     color: "white",
     playsinline: "1",
-    enablejsapi: "1",
-    origin: window.location.origin,
   });
   return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
 }
@@ -197,7 +195,6 @@ export default function MediaPlayer() {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-presentation allow-popups-to-escape-sandbox"
               />
             </div>
             {/* Video info below embed */}
