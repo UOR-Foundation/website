@@ -13,6 +13,7 @@ import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
 import { ArrowRight, Upload, Sparkles, MessageCircle, BookOpen, FolderOpen, LayoutGrid, Play } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
+import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
 import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
 import { useAuth } from "@/hooks/use-auth";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
@@ -72,6 +73,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
   const containerRef = useRef<HTMLDivElement>(null);
   const plusBtnRef = useRef<HTMLButtonElement>(null);
   const { theme, isLight } = useDesktopTheme();
+  const { isMac, fontStack } = usePlatform();
   const { profile } = useAuth();
   const ctx = useContextManager();
   const conn = useConnectivity();
@@ -260,7 +262,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
             className={`${greetingColor} font-normal select-none whitespace-nowrap`}
             style={{
               fontSize: greetingFontInfo.fontSize,
-              fontFamily: "'DM Sans', -apple-system, sans-serif",
+              fontFamily: fontStack,
               textShadow: isImmersive ? "0 1px 16px rgba(0,0,0,0.2)" : "none",
               letterSpacing: "0",
             }}
@@ -282,17 +284,19 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
               onFocus={() => { if (query.trim() && suggestions.length > 0) setShowSuggestions(true); }}
               onBlur={() => { setTimeout(() => setShowSuggestions(false), 150); }}
               placeholder="What's on your mind?"
-              className="relative w-full rounded-full pr-24 py-4 text-base focus:outline-none"
+              className={`relative w-full ${isMac ? "rounded-full" : "rounded-xl"} pr-24 py-4 text-base focus:outline-none`}
               style={{
                 paddingLeft: "3.5rem",
                 background: searchBg,
                 border: searchBorder,
-                boxShadow: searchShadow,
+                boxShadow: isMac
+                  ? (isImmersive ? "0 8px 32px -8px hsl(0 0% 0% / 0.5)" : isLight ? "0 6px 28px -8px rgba(0,0,0,0.08)" : "0 6px 28px -8px rgba(0,0,0,0.25)")
+                  : (isImmersive ? "0 4px 16px -4px hsl(0 0% 0% / 0.6)" : isLight ? "0 2px 12px -4px rgba(0,0,0,0.1)" : "0 2px 12px -4px rgba(0,0,0,0.3)"),
                 color: inputColor,
                 caretColor: isImmersive ? "hsl(195 70% 65%)" : undefined,
                 fontFamily: isAddress
                   ? "var(--font-mono, ui-monospace, monospace)"
-                  : "'DM Sans', -apple-system, sans-serif",
+                  : fontStack,
                 letterSpacing: isAddress ? "0.03em" : undefined,
                 fontWeight: isAddress ? 500 : undefined,
               }}

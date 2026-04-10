@@ -24,7 +24,7 @@ import ShortcutCheatSheet from "@/modules/desktop/components/ShortcutCheatSheet"
 import BootSequence from "@/modules/desktop/BootSequence";
 import LocalTwinWelcome, { shouldShowLocalTwinWelcome } from "@/modules/desktop/components/LocalTwinWelcome";
 import { DesktopThemeProvider, useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
-import { PlatformProvider } from "@/modules/desktop/hooks/usePlatform";
+import { PlatformProvider, usePlatform } from "@/modules/desktop/hooks/usePlatform";
 import { ConnectivityProvider } from "@/modules/desktop/hooks/useConnectivity";
 import { useWindowManager, type SnapZone } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopShortcuts } from "@/modules/desktop/hooks/useDesktopShortcuts";
@@ -37,6 +37,7 @@ function DesktopShellInner() {
   const [booted, setBooted] = useState(false);
   const [welcomed, setWelcomed] = useState(!shouldShowLocalTwinWelcome());
   const { theme } = useDesktopTheme();
+  const { fontStack, cornerRadius } = usePlatform();
   const wm = useWindowManager(theme);
   const isMobile = useIsMobile();
   const [spotlightOpen, setSpotlightOpen] = useState(false);
@@ -112,7 +113,7 @@ function DesktopShellInner() {
       onSpotlight={() => setSpotlightOpen(true)}
       onHideAll={handleHideAll}
     >
-      <div className={`fixed inset-0 overflow-hidden ${shellBg} select-none`}>
+      <div className={`fixed inset-0 overflow-hidden ${shellBg} select-none`} style={{ fontFamily: fontStack, ["--uor-corner-radius" as string]: `${cornerRadius}px` }}>
         {theme === "immersive" && (
           <>
             <DesktopImmersiveWallpaper />
