@@ -6,68 +6,12 @@
  * Complete Build → Ship → Run system.
  * The UOR equivalent of the Docker + Kubernetes toolchain.
  *
- * ┌────────────────────────────────────────────────────────────────┐
- * │  Docker Equivalent          │  UOR Implementation             │
- * │────────────────────────────│──────────────────────────────────│
- * │  Dockerfile                 │  Uorfile (+ CANON, TRUST, SHIELD) │
- * │  docker build               │  buildImage()                    │
- * │  docker create / run        │  createContainer()               │
- * │  docker start / stop        │  startContainer() / stopContainer() │
- * │  docker exec                │  execContainer()                 │
- * │  docker pause / unpause     │  pauseContainer() / unpauseContainer() │
- * │  docker ps / inspect        │  listContainers() / inspectContainer() │
- * │  docker logs                │  containerLogs()                 │
- * │  docker tag / push / pull   │  tagImage() / pushImage() / pullImage() │
- * │  docker compose up/down     │  composeUp() / composeDown()     │
- * │  docker secret              │  createSecret() / getSecretValue() │
- * │  Docker Hub (registry)      │  UOR Image Registry              │
- * │  Docker image wrapping      │  wrapDockerImage()               │
- * │  docker checkpoint          │  createSnapshot()                │
- * └────────────────────────────────────────────────────────────────┘
+ * Container runtime is NOT re-exported here to avoid PWA Rollup
+ * resolution issues. Import directly from "./container" instead:
+ *   import { createContainer } from "@/modules/uns/build/container";
  *
- * Orchestration (Kubernetes equivalent) lives in @/modules/compose:
- *   - Reconciliation Controller  (K8s Controller Manager)  @ontology uor:Reconciler
- *   - Horizontal Pod Autoscaler  (K8s HPA)                 @ontology uor:HPA
- *   - Rolling Update             (K8s Deployment rolling update)
- *   - Container Runtime          (container isolation + permissions)  @ontology uor:ContainerRuntime
- *   - Orchestrator               (kubelet + scheduler)     @ontology uor:Scheduler
- *
- * @version 2.0.0
+ * @version 2.1.0
  */
-
-// ══════════════════════════════════════════════════════════════════════════
-// CONTAINER RUNTIME (docker create / run / exec / stop / rm)
-// ══════════════════════════════════════════════════════════════════════════
-
-export {
-  createContainer,
-  startContainer,
-  stopContainer,
-  pauseContainer,
-  unpauseContainer,
-  crashContainer,
-  removeContainer,
-  execContainer,
-  listContainers,
-  inspectContainer,
-  containerLogs,
-  getContainer,
-  linkContainerToKernel,
-  clearContainers,
-} from "./container.ts";
-export type {
-  ContainerState,
-  ContainerPortMapping,
-  ContainerMount,
-  ContainerResources,
-  ContainerConfig,
-  ContainerEvent,
-  ContainerEventType,
-  ContainerLogEntry,
-  UorContainer,
-  ContainerInspection,
-  ExecResult,
-} from "./container.ts";
 
 // ══════════════════════════════════════════════════════════════════════════
 // IMAGE BUILD (docker build / Dockerfile)
@@ -78,7 +22,7 @@ export {
   parseDockerfile,
   buildImage,
   serializeUorfile,
-} from "./uorfile.ts";
+} from "./uorfile";
 export type {
   UorfileDirective,
   UorfileInstruction,
@@ -87,7 +31,7 @@ export type {
   UorfileHealthcheck,
   UorImage,
   UorImageLayer,
-} from "./uorfile.ts";
+} from "./uorfile";
 
 // ══════════════════════════════════════════════════════════════════════════
 // DOCKER COMPATIBILITY (docker image wrapping / Dockerfile translation)
@@ -100,14 +44,14 @@ export {
   generateCompatReport,
   DOCKER_FEATURE_MAP,
   DOCKER_VERB_MAP,
-} from "./docker-compat.ts";
+} from "./docker-compat";
 export type {
   DockerImageRef,
   WrappedDockerImage,
   DockerCompatStatus,
   DockerFeatureMapping,
   DockerVerbMapping,
-} from "./docker-compat.ts";
+} from "./docker-compat";
 
 // ══════════════════════════════════════════════════════════════════════════
 // IMAGE REGISTRY (docker tag / push / pull / inspect / history)
@@ -126,13 +70,13 @@ export {
   removeImage,
   searchImages,
   clearImageRegistry,
-} from "./registry.ts";
+} from "./registry";
 export type {
   ImageTag,
   PushResult,
   PullResult,
   ImageHistoryEntry,
-} from "./registry.ts";
+} from "./registry";
 
 // ══════════════════════════════════════════════════════════════════════════
 // COMPOSE (docker compose up / down / ps / scale)
@@ -147,7 +91,7 @@ export {
   getComposeApp,
   listComposeApps,
   clearComposeApps,
-} from "./compose.ts";
+} from "./compose";
 export type {
   ComposeService,
   ComposeBuildConfig,
@@ -159,7 +103,7 @@ export type {
   ComposeSpec,
   ComposeApp,
   ComposeServiceStatus,
-} from "./compose.ts";
+} from "./compose";
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECRETS MANAGER (docker secret create / ls / inspect / rm)
@@ -173,12 +117,12 @@ export {
   removeSecret,
   injectSecrets,
   clearSecrets,
-} from "./secrets.ts";
+} from "./secrets";
 export type {
   UorSecret,
   SecretValue,
   SecretWriteResult,
-} from "./secrets.ts";
+} from "./secrets";
 
 // ══════════════════════════════════════════════════════════════════════════
 // DEPLOYMENT SNAPSHOTS (docker checkpoint — unified versioning gate)
@@ -191,12 +135,47 @@ export {
   hashComponentBytes,
   buildSnapshotChain,
   SnapshotRegistry,
-} from "./snapshot.ts";
+} from "./snapshot";
 export type {
   SnapshotComponent,
   DeploymentSnapshot,
   SnapshotInput,
   SnapshotDiff,
-} from "./snapshot.ts";
+} from "./snapshot";
 
-/* end of barrel – v2.0.4 */
+// ══════════════════════════════════════════════════════════════════════════
+// CONTAINER RE-EXPORT (convenience — same as "@/modules/uns/build/container")
+// Consumers may also import directly from "./container" to avoid barrel.
+// ══════════════════════════════════════════════════════════════════════════
+
+export {
+  createContainer,
+  startContainer,
+  stopContainer,
+  pauseContainer,
+  unpauseContainer,
+  crashContainer,
+  removeContainer,
+  execContainer,
+  listContainers,
+  inspectContainer,
+  containerLogs,
+  getContainer,
+  linkContainerToKernel,
+  clearContainers,
+} from "./container";
+export type {
+  ContainerState,
+  ContainerPortMapping,
+  ContainerMount,
+  ContainerResources,
+  ContainerConfig,
+  ContainerEvent,
+  ContainerEventType,
+  ContainerLogEntry,
+  UorContainer,
+  ContainerInspection,
+  ExecResult,
+} from "./container";
+
+/* end of barrel – v2.1.0 */
