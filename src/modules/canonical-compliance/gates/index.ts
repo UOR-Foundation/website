@@ -21,6 +21,9 @@ import "./blueprint-conformance-gate";
 // Ontology gate is registered via the ontology module barrel
 import "../../ontology/gate";
 
+// SKOS W3C Conformance gate
+import "./skos-conformance-gate";
+
 // Axioms gate is registered via the axioms module barrel
 import "../../axioms/gate";
 
