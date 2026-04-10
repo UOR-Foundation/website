@@ -1,136 +1,80 @@
 
 
-# Messenger UX Polish — Responsiveness, Snappiness & Full Wiring
+# Media Player — Native Video Streaming Experience
 
-## Critical Issues Found
+## Platform Choice: YouTube IFrame API
 
-### 1. Performance: N+1 Query Problem in `use-conversations.ts`
-Lines 133-150 execute **two sequential database queries per conversation** (latest message + unread count) inside a `for` loop. With 20 conversations, that's 40 sequential network requests on every load AND on every realtime event (new message, session update). This is the single biggest performance killer.
+YouTube is the optimal choice for several reasons:
+- Largest video catalog on earth (800M+ videos), highest quality
+- Free IFrame Player API with full programmatic control (play, pause, seek, volume, quality selection)
+- No API key required for embed playback — zero setup friction
+- Supports `origin` parameter for security, `modestbranding` for clean UI
+- Already proven in this codebase: the VinylPlayer uses the same iframe-embed pattern with SoundCloud
 
-### 2. Performance: Full Refetch on Every Realtime Event
-Both `use-conversations.ts` and `use-messages.ts` call their full `fetch` function on every INSERT/UPDATE event. A single new message triggers a full re-fetch of all conversations (including the N+1 loop above), plus a full re-fetch of all messages + reactions + profiles.
+Alternative platforms (Vimeo, Dailymotion) have smaller catalogs and more restrictive embed policies. YouTube wins on breadth, quality, and API maturity.
 
-### 3. Scroll Jank
-`handleScroll` in `ConversationView.tsx` (line 76) calls `setShowScrollBottom` on every scroll event with no throttle — causes re-renders during scrolling.
+## Architecture
 
-### 4. Unwired Buttons & Dead Ends
-- **Video/Audio call buttons** in `ContactHeader.tsx` (lines 74-85): `onCall` is never passed from `ConversationView.tsx` — buttons do nothing
-- **"Forward" option** listed in `MessageContextMenu.tsx` import but not used
-- **"New Channel"** in `SidebarMenu.tsx` (line 31): `action` just closes the menu, does nothing
-- **Privacy & Security** and **Chat Settings** in `SettingsPanel.tsx`: no actions, just dead buttons
-- **Bridge Connections** button in Settings: `onOpenBridges` is passed but the bridges panel can't open from Settings because the sidebar panel replaces the inbox view
+Register a new `"media"` desktop app in the existing app system. The player opens as a standard OS window — consistent with Oracle, Messenger, Library, etc.
 
-### 5. Emoji Search is Broken
-`EmojiPanel.tsx` line 61: search filter is `filter(() => true)` — it returns ALL emojis regardless of search query, just sliced to 100.
+```text
+MediaPlayer (desktop app window)
+├── Header: search bar + category tabs
+├── Featured Grid: curated video cards (thumbnail + title + channel)
+├── Video Player: YouTube IFrame embed with custom controls overlay
+└── Queue sidebar: up next / related
+```
 
-### 6. Missing Touch Feedback
-No `active:` states on interactive elements — on mobile, taps feel unresponsive because there's no visual feedback.
+## Implementation
 
-### 7. Edit Uses `prompt()`, Delete Uses `confirm()`
-`ConversationView.tsx` lines 99-106: uses browser `prompt()` and `confirm()` dialogs — breaks the premium feel completely.
+### 1. New file: `src/modules/media/components/MediaPlayer.tsx`
+The main app component with three views:
+- **Browse view**: A grid of curated video cards organized by categories (Music, Science, Technology, Nature, Art). Each card shows a YouTube thumbnail (`https://img.youtube.com/vi/{id}/mqdefault.jpg`), title, and channel name. Clicking opens the player view.
+- **Player view**: YouTube IFrame embed (using the IFrame Player API for programmatic control), custom frosted-glass controls overlay matching the OS aesthetic, video title/channel below, and a sidebar list of related/queued videos.
+- **Search view**: Text input that searches a curated catalog (local array of ~50-80 hand-picked high-quality videos across categories). No YouTube Data API needed — we curate the catalog ourselves.
 
-## Implementation Plan
+The curated catalog is a static array of `{ id, title, channel, category, duration }` objects — beautiful, high-quality content (nature documentaries, electronic music sets, science explainers, art films). This avoids API key requirements entirely while ensuring quality control.
 
-### Phase 1: Fix the N+1 Query (biggest performance win)
+### 2. New file: `src/modules/media/lib/video-catalog.ts`
+Static catalog of ~60 curated YouTube video IDs across categories:
+- Music (Cercle sets, ambient, electronic)
+- Nature (BBC, National Geographic clips)
+- Science & Technology (Kurzgesagt, 3Blue1Brown, Veritasium)
+- Art & Design (creative processes, architecture)
+- Ambient (fireplace, rain, ocean — matching the OS calm aesthetic)
 
-**Modify: `use-conversations.ts`**
-- Replace the per-conversation loop with two batch queries:
-  - One query using a window function or `DISTINCT ON` to get the latest message per session
-  - One query using `GROUP BY` to get unread counts per session
-- Result: 5-6 total queries instead of 2N+4
+### 3. Modify: `src/modules/desktop/lib/desktop-apps.ts`
+Register the new app:
+- id: `"media"`, label: `"Media"`, icon: `Play` (from lucide)
+- component: lazy import of MediaPlayer
+- defaultSize: `{ w: 960, h: 640 }`
+- category: `"RESOLVE"`
+- keywords: `["video", "watch", "stream", "music", "youtube", "play", "media", "tv"]`
 
-### Phase 2: Optimistic Realtime Updates
+### 4. Modify: `src/modules/desktop/lib/os-taxonomy.ts`
+Add `"media"` to RESOLVE appIds.
 
-**Modify: `use-messages.ts`**
-- On realtime INSERT: append the new message to local state immediately instead of refetching everything
-- Only do a full refetch for UPDATE events (edits/deletes)
-- On reaction changes: patch the specific message's reactions array locally
+### 5. Design
+- Dark theme matching the OS aesthetic (slate-950 backgrounds, white/[0.x] text)
+- Frosted-glass video cards with hover scale effect
+- Smooth transitions between browse ↔ player views
+- Category tabs use the same pill style as messenger filter tabs
+- Thumbnail grid uses golden-ratio proportions (16:10 cards)
+- Touch-friendly: `active:scale-[0.97]`, `touch-manipulation`
+- Player view: video fills ~70% width, queue sidebar fills remaining 30%
 
-**Modify: `use-conversations.ts`**
-- On new message INSERT: update only the affected conversation's `lastMessage` and `unread` count locally
-- Debounce full refetch to max once per 5 seconds as a consistency check
-
-### Phase 3: Scroll & Render Performance
-
-**Modify: `ConversationView.tsx`**
-- Throttle `handleScroll` with `requestAnimationFrame` 
-- Use `will-change: transform` on the scroll container for GPU compositing
-- Wrap the scroll-to-bottom FAB in a CSS transition instead of conditional render (avoids layout shift)
-
-### Phase 4: Wire All Dead Buttons
-
-**Modify: `ConversationView.tsx`**
-- Call buttons → show a toast: "Sovereign voice/video calls — coming soon"
-- Pass `onCall` to `ContactHeader`
-
-**Modify: `SidebarMenu.tsx`**
-- "New Channel" → show toast: "Channels — coming soon"
-
-**Modify: `SettingsPanel.tsx`**
-- Privacy & Security → show toast: "Coming soon"
-- Chat Settings → show toast: "Coming soon"
-- Make Bridge Connections navigate back to inbox first, then open bridges
-
-### Phase 5: Fix Emoji Search
-
-**Modify: `EmojiPanel.tsx`**
-- Implement actual Unicode name-based search using a lightweight emoji name map
-- Filter emojis whose names contain the search query
-
-### Phase 6: Replace `prompt()`/`confirm()` with In-App Modals
-
-**Create: `EditMessageModal.tsx`**
-- Clean inline edit UI that appears in-place or as a minimal bottom sheet
-- Pre-filled textarea, Cancel/Save buttons, matches messenger aesthetic
-
-**Create: `ConfirmDialog.tsx`**
-- Reusable confirmation dialog with the frosted-glass treatment
-- Used for delete confirmation
-
-**Modify: `ConversationView.tsx`**
-- Replace `prompt()` call with `EditMessageModal`
-- Replace `confirm()` call with `ConfirmDialog`
-
-### Phase 7: Touch & Interaction Polish
-
-**Modify across all interactive components:**
-- Add `active:scale-[0.97]` to chat list items, buttons, and menu items for instant tap feedback
-- Add `active:bg-white/[0.06]` to all tappable elements
-- Ensure all `transition-` durations are `100ms` or `75ms` for snappiness
-- Add `touch-action: manipulation` to prevent 300ms tap delay on mobile
-- Add `select-none` to interactive elements to prevent text selection on long press
-
-### Phase 8: Visual Micro-Polish
-
-**Modify: `MessageBubble.tsx`**
-- Add a subtle `animate-in` for new messages (fade + slight slide up, 100ms)
-
-**Modify: `ConversationView.tsx`**
-- Typing indicator: use a more refined dot animation (opacity pulse instead of bounce, which feels janky)
-
-**Modify: `ChatList.tsx`**
-- Add `will-change: transform` for smooth scroll
-- Avatar: add a subtle ring for online contacts
+### 6. Home screen dock update
+Modify `DesktopWidgets.tsx` to add Media to the quick-access row (replacing or extending the 5-icon dock).
 
 ## Files Summary
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `lib/use-conversations.ts` | Modify | Batch queries, optimistic realtime |
-| `lib/use-messages.ts` | Modify | Optimistic inserts, debounced refetch |
-| `ConversationView.tsx` | Modify | Scroll throttle, wire calls, replace prompt/confirm, typing animation |
-| `MessageBubble.tsx` | Modify | Entry animation, touch states |
-| `ChatList.tsx` | Modify | Touch feedback, online ring, scroll perf |
-| `ContactHeader.tsx` | Modify | Wire call buttons with toast |
-| `SidebarMenu.tsx` | Modify | Wire New Channel toast |
-| `SettingsPanel.tsx` | Modify | Wire dead buttons with toasts, fix bridges flow |
-| `EmojiPanel.tsx` | Modify | Fix search to actually filter by emoji name |
-| `EditMessageModal.tsx` | Create | In-app message edit UI |
-| `ConfirmDialog.tsx` | Create | Reusable confirmation dialog |
-| `UnifiedInbox.tsx` | Modify | Touch states on filter tabs |
-| `MessageInput.tsx` | Modify | Touch manipulation, active states |
-| `MessageContextMenu.tsx` | Modify | Active states on menu items |
-| `MessengerPage.tsx` | Modify | Minor touch-action CSS |
+| `src/modules/media/components/MediaPlayer.tsx` | Create | Main video player app |
+| `src/modules/media/lib/video-catalog.ts` | Create | Curated video catalog |
+| `desktop-apps.ts` | Modify | Register media app |
+| `os-taxonomy.ts` | Modify | Add to RESOLVE category |
+| `DesktopWidgets.tsx` | Modify | Add to home dock |
 
-No database migrations needed.
+No database migrations needed. No API keys needed. Pure client-side.
 
