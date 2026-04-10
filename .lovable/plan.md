@@ -1,76 +1,83 @@
 
 
-# Fix Video Loading — Replace YouTube Embeds with Piped API Streams
+# Messenger — Fix Build, Ensure One-Click Launch, Align with Matrix UX
 
-## Problem
+## Build Fix
 
-YouTube videos fail to load in two ways:
-1. **Thumbnails**: `img.youtube.com` returns gray YouTube play-button placeholders for most videos (visible in the screenshot)
-2. **Playback**: `youtube-nocookie.com/embed/` iframes are blocked when nested inside Lovable's preview iframe (YouTube sets `X-Frame-Options: SAMEORIGIN` which prevents double-nesting)
+The build error `Could not resolve "./container" from "src/modules/uns/build/index.ts"` is a stale module resolution issue. The file `container.ts` exists and has all required exports. The fix is to re-save `index.ts` with no changes (or a trivial whitespace change) to bust the Vite cache.
 
-These are fundamental restrictions from YouTube's side that cannot be worked around with the current iframe approach.
+## One-Click Launch Verification
 
-## Solution: Piped API + Native HTML5 Video
+The launch path is:
+1. Dock/Spotlight/Widget → `handleOpenApp("messenger")` → `getApp("messenger")` → blueprint lookup → lazy-loads `MessengerPage`
+2. MessengerPage checks auth → shows sign-in gate or conversation list
 
-**Piped** is an open-source, privacy-respecting YouTube proxy with a public API. It provides:
-- Direct video stream URLs (no iframe needed)
-- Working thumbnail URLs (proxied through their CDN)
-- No API key required
+This chain is correctly wired. The blueprint exists in `static-blueprints.ts`, the component map in `desktop-apps.ts` has the lazy import, and the dock includes it. No code changes needed for launch — just verify it opens after the build fix.
 
-Instead of embedding YouTube iframes, we'll fetch stream metadata from Piped's API and play videos using a native `<video>` element — completely bypassing YouTube's iframe restrictions.
+## Matrix Alignment — UX Improvements
 
-**Why Piped over alternatives:**
-- Invidious: primarily a frontend, API is less reliable for stream extraction
-- Vimeo/Mux/BunnyCDN: require accounts, API keys, and content uploads
-- Self-hosted proxy: would require significant infrastructure
-- Piped: free, public API, multiple fallback instances, returns direct stream URLs
+The Matrix/Element paradigm centers on: **Rooms, Spaces, Direct Messages, Threads, E2EE verification, Federation indicators, and device trust.** Our Messenger has most primitives but the UX doesn't surface them coherently. Here's what to improve:
 
-## Implementation
+### 1. Fix Build (`src/modules/uns/build/index.ts`)
+- Re-export with a trivial touch to clear the module resolution cache
 
-### 1. Create Edge Function: `video-stream` (`supabase/functions/video-stream/index.ts`)
+### 2. Conversation List UX — Align with Element's "Rooms" Pattern
+**File: `src/modules/messenger/components/UnifiedInbox.tsx`**
+- Replace emoji-based platform filters with proper icon pills (Element uses labeled filter chips)
+- Add a "Spaces" concept at the top — group conversations by context (Work, Personal, Bridges) like Element's Space sidebar
+- Show encryption verification badges per conversation (green shield = verified, orange = unverified)
+- Add last message preview with proper sender name for groups (Element shows "Alice: Hey...")
+- Show typing indicators in the conversation list (not just inside chat)
 
-A backend function that calls the Piped API to resolve YouTube video IDs into playable stream URLs and proxied thumbnails. This keeps API calls server-side and provides a stable interface.
+### 3. Conversation View — Align with Element's Chat UX
+**File: `src/modules/messenger/components/ConversationView.tsx`**
+- Add thread support: long-press/right-click a message to "Reply in Thread" (Element's signature feature)
+- Show device verification status in the encryption banner (currently just says "End-to-end encrypted")
+- Add message read receipts as small avatars at the bottom-right of messages (Element pattern)
+- Show "decrypting..." skeleton states instead of "🔒 Encrypted" placeholder while async decrypt runs
 
-```
-GET /video-stream?id=VjHMDlAPMUw          → { streamUrl, thumbnailUrl, title }
-GET /video-stream?id=VjHMDlAPMUw&thumb=1  → redirect to proxied thumbnail
-```
+### 4. Contact Header — Federation & Bridge Awareness
+**File: `src/modules/messenger/components/ContactHeader.tsx`**
+- Show the source platform badge prominently (WhatsApp, Telegram, native Matrix, etc.)
+- Display homeserver/federation info for Matrix contacts
+- Add call buttons with proper disabled states and tooltips
 
-- Tries multiple Piped instances as fallbacks (pipedapi.kavin.rocks, pipedapi.adminforge.de, etc.)
-- Returns the best quality audio+video stream URL
-- Caches responses in-memory for the function's lifetime
+### 5. Settings — Matrix-Aligned Security Panel
+**File: `src/modules/messenger/components/SettingsPanel.tsx`**
+- Add "Security & Verification" section showing:
+  - Device list with verification status
+  - Cross-signing status
+  - Session key backup status
+- Add "Spaces" management section
+- Rename "Bridge Connections" to "Connected Platforms" (more intuitive)
 
-### 2. Update `video-catalog.ts` — Add Piped Thumbnail Helper
+### 6. New Conversation — Room Creation Alignment
+**File: `src/modules/messenger/components/NewConversationDialog.tsx`**
+- Add room visibility option (Private/Public) like Element
+- Add encryption toggle (on by default, matches Element)
+- Add "Invite via link" option
 
-Add a `getPipedThumbnail(id)` function that returns a URL through our edge function, falling back to `img.youtube.com` if needed.
+### 7. Message Bubbles — Verification & Platform Indicators
+**File: `src/modules/messenger/components/MessageBubble.tsx`**
+- Show a small platform icon for bridged messages
+- Show verification shield on messages from verified devices
+- Improve reaction display (Element shows reactions as pills below the message)
 
-### 3. Rewrite `MediaPlayer.tsx` — Native Video Player
-
-Replace the YouTube iframe with a native `<video>` element:
-- On video selection, call the `video-stream` edge function to get the direct stream URL
-- Show a loading state while the stream URL resolves
-- Use `<video>` with full HTML5 controls (play/pause, seek, volume, fullscreen)
-- Thumbnails load through the edge function's `?thumb=1` endpoint
-- Keep all existing UI (browse grid, category tabs, search, queue sidebar)
-
-### 4. Add Video Player Controls Component
-
-Since we're moving from iframe (which has YouTube's built-in controls) to native `<video>`, add a minimal custom control bar:
-- Play/Pause, seek bar, volume, fullscreen toggle
-- Styled to match the existing dark cinema aesthetic
-
-## Files
+## Files Summary
 
 | File | Action | Purpose |
 |---|---|---|
-| `supabase/functions/video-stream/index.ts` | Create | Piped API proxy edge function |
-| `src/modules/media/lib/video-catalog.ts` | Update | Add Piped thumbnail helper |
-| `src/modules/media/components/MediaPlayer.tsx` | Rewrite | Native `<video>` player replacing iframe |
+| `src/modules/uns/build/index.ts` | Touch/re-save | Fix module resolution cache |
+| `src/modules/messenger/components/UnifiedInbox.tsx` | Update | Space-based filtering, verification badges, typing in list |
+| `src/modules/messenger/components/ConversationView.tsx` | Update | Thread support, decrypt skeleton, read receipt avatars |
+| `src/modules/messenger/components/ContactHeader.tsx` | Update | Federation/bridge awareness, platform badge |
+| `src/modules/messenger/components/SettingsPanel.tsx` | Update | Security panel, spaces management |
+| `src/modules/messenger/components/NewConversationDialog.tsx` | Update | Room visibility, encryption toggle |
+| `src/modules/messenger/components/MessageBubble.tsx` | Update | Platform icons, verification shields |
 
-## Fallback Strategy
-
-If Piped instances are temporarily down:
-1. Try 3 different Piped API instances before failing
-2. Fall back to `youtube-nocookie.com` iframe as last resort (works when not in nested iframe)
-3. Thumbnails fall back to `img.youtube.com`
+## Priority Order
+1. **Build fix** (unblocks everything)
+2. **UnifiedInbox + ConversationView** (highest UX impact)
+3. **ContactHeader + MessageBubble** (polish)
+4. **Settings + NewConversation** (secondary flows)
 
