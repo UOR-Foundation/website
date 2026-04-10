@@ -110,6 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // If Supabase isn't configured, skip all auth setup and just mark as loaded
+    if (!supabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     // Set up listener BEFORE getting session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
