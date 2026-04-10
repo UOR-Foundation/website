@@ -405,6 +405,33 @@ export async function sovereignBoot(
       seal.canonicalBytes,
     );
 
+    // ── KG Anchoring: write seal + provenance into graph ──────────────
+    // Fire-and-forget — never block boot on graph writes
+    import("@/modules/knowledge-graph/anchor").then(({ anchor }) => {
+      anchor("boot", "seal:created", {
+        label: `Boot sealed: ${seal.glyph}`,
+        properties: {
+          derivationId: seal.derivationId,
+          kernelHash: seal.kernelHash,
+          ringTableHash: seal.ringTableHash,
+          manifestHash: seal.manifestHash,
+          wasmBinaryHash: seal.wasmBinaryHash,
+          engineType: getEngine().engine,
+          bootTimeMs,
+          moduleCount,
+          deviceContext: provenance.context,
+          hostname: provenance.hostname,
+          sealStatus: seal.status,
+          bootedAt: seal.bootedAt,
+        },
+      }).catch(() => {});
+
+      // Seed static data into the graph after boot
+      import("@/modules/knowledge-graph/seed").then(({ seedStaticData }) => {
+        seedStaticData().catch(() => {});
+      }).catch(() => {});
+    }).catch(() => {});
+
     // Phase 4: Start monitor
     onProgress?.({ phase: "monitor-start", progress: 0.9, detail: "Starting monitor" });
     _monitorCleanup = startSealMonitor(seal, receipt);

@@ -663,3 +663,54 @@ export const LABEL_INDEX: ReadonlyMap<string, SkosConcept> = new Map(
     ),
   ]),
 );
+
+// ── Graph Materialization ─────────────────────────────────────────────────
+
+/**
+ * Materialize all SKOS concepts into the Knowledge Graph as proper triples.
+ * This makes the ontology queryable via SPARQL alongside all other data.
+ *
+ * Fire-and-forget. Idempotent — concepts are keyed by their @id.
+ */
+export async function materializeToGraph(): Promise<number> {
+  try {
+    const { grafeoStore } = await import("@/modules/knowledge-graph/grafeo-store");
+    const { anchor } = await import("@/modules/knowledge-graph/anchor");
+
+    let count = 0;
+    for (const concept of CONCEPTS) {
+      await grafeoStore.putNode({
+        uorAddress: `urn:uor:ontology:${concept["@id"]}`,
+        label: concept["skos:prefLabel"],
+        nodeType: "skos:Concept",
+        rdfType: "http://www.w3.org/2004/02/skos/core#Concept",
+        properties: {
+          "@id": concept["@id"],
+          prefLabel: concept["skos:prefLabel"],
+          altLabels: concept["skos:altLabel"],
+          definition: concept["skos:definition"],
+          cncfCategory: concept["uor:cncfCategory"] ?? null,
+          k8sEquivalent: concept["uor:k8sEquivalent"] ?? null,
+          cncfProject: concept["uor:cncfProject"] ?? null,
+          profileLabels: concept["uor:profileLabels"],
+          namespace: concept["uor:namespace"] ?? null,
+        },
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        syncState: "local",
+      });
+      count++;
+    }
+
+    anchor("ontology", "vocabulary:materialized", {
+      label: `Materialized ${count} SKOS concepts to KG`,
+      properties: { conceptCount: count },
+    }).catch(() => {});
+
+    console.log(`[Ontology] Materialized ${count} SKOS concepts to Knowledge Graph`);
+    return count;
+  } catch (err) {
+    console.warn("[Ontology] Failed to materialize vocabulary:", err);
+    return 0;
+  }
+}

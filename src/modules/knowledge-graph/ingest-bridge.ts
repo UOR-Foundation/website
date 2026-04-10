@@ -14,7 +14,8 @@
  * Same content → same IPv6 → same node (free dedup).
  */
 
-import { localGraphStore, type KGNode, type KGEdge, type KGDerivation } from "./local-store";
+import { grafeoStore as localGraphStore } from "./grafeo-store";
+import type { KGNode, KGEdge, KGDerivation } from "./types";
 import { singleProofHash } from "@/lib/uor-canonical";
 import type { GuestContextItem } from "@/modules/sovereign-vault/lib/guest-context";
 import { decomposeToBlueprint, serializeBlueprint } from "./blueprint";
