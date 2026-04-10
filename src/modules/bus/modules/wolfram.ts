@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Wolfram Module.
+ * Service Mesh — Wolfram Module.
+ * @ontology uor:ServiceMesh
  * Layer 2 — remote. Computational knowledge via Wolfram Alpha.
  * @version 1.0.0
  */

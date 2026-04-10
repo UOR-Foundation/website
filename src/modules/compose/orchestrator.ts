@@ -1,5 +1,6 @@
 /**
- * Sovereign Compose — Orchestrator.
+ * Scheduling & Orchestration — Orchestrator.
+ * @ontology uor:Scheduler
  * ═════════════════════════════════════════════════════════════════
  *
  * Kubernetes-inspired lifecycle manager for AppBlueprints.
@@ -12,7 +13,7 @@
  *   - Exponential backoff restart
  *
  * v3 additions (Sovereign Reconciler — K8s equivalence):
- *   - Declarative desired-state reconciliation (kernel::recursion)
+ *   - Declarative desired-state reconciliation via Reconciliation Controller (kernel::recursion)
  *   - Metric-driven auto-scaling (kernel::stream)
  *   - Rolling updates with health-gated rollback (kernel::cascade)
  *

@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Resolver Module.
+ * Service Mesh — Resolver Module.
+ * @ontology uor:ServiceMesh
  * Layer 1 — local. Resolve UOR addresses to content and back.
  * @version 1.0.0
  */

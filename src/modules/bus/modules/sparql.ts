@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — SPARQL Module.
+ * Service Mesh — SPARQL Module.
+ * @ontology uor:ServiceMesh
  * Layer 1 — remote. SPARQL query and update via edge functions.
  * @version 1.0.0
  */

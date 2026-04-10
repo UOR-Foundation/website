@@ -1,5 +1,6 @@
 /**
- * Sovereign Boot — Self-Verifying Boot Sequence
+ * Init System — Self-Verifying Boot Sequence
+ * @ontology uor:InitSystem
  * ═══════════════════════════════════════════════════════════════
  *
  * Orchestrates all boot phases and produces a single UOR derivation ID

@@ -1,5 +1,6 @@
 /**
- * Sovereign Rolling Update — Zero-Downtime Version Transitions.
+ * Rolling Update — Zero-Downtime Version Transitions.
+ * @ontology uor:Scheduler
  * ═════════════════════════════════════════════════════════════════
  *
  * Manages atomic version transitions for running applications:

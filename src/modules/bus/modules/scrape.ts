@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Scrape Module Registration.
+ * Service Mesh — Scrape Module Registration.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Exposes web scraping: url, search.

@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Core Dispatcher.
+ * Service Mesh — Core Dispatcher.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Single entry point for the entire system.

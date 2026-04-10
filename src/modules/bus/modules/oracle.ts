@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Oracle Module Registration.
+ * Service Mesh — Oracle Module Registration.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Exposes AI inference: ask, stream.

@@ -2,7 +2,7 @@
  * CNCF Compatibility — API Gateway / Ingress.
  * ═════════════════════════════════════════════════════════════════
  *
- * Maps external HTTP paths to internal Sovereign Bus operations.
+ * Maps external HTTP paths to internal Service Mesh operations.
  * Equivalent to Envoy / Emissary-Ingress / Kubernetes Ingress.
  *
  * Uses kernel::morphism::Morphism to translate external requests

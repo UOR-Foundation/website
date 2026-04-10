@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Verify Module.
+ * Service Mesh — Verify Module.
+ * @ontology uor:ServiceMesh
  * Layer 0 — local, pure computation. Verification proofs and receipts.
  * @version 1.0.0
  */

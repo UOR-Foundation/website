@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — UNS (Universal Name Service) Module.
+ * Service Mesh — UNS (Universal Name Service) Module.
+ * @ontology uor:ServiceMesh
  * Layer 1 — local. Resolve, publish, and compute UNS identities.
  * @version 1.0.0
  */

@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Clipboard Module
+ * Service Mesh — Clipboard Module
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Bus operations for cross-device clipboard sync.

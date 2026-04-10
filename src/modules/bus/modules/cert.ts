@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Certificate Module Registration.
+ * Service Mesh — Certificate Module Registration.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Exposes certificate operations: issue, verify, chain.

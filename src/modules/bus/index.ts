@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Barrel Export.
+ * Service Mesh — Barrel Export.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * The canonical entry point for the entire system.

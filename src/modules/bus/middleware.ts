@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Built-in Middleware.
+ * Service Mesh — Built-in Middleware.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Pluggable cross-cutting concerns applied to every local bus call.

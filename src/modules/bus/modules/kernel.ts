@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Kernel Module Registration.
+ * Service Mesh — Kernel Module Registration.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Exposes UOR engine operations: encode, decode, verify, derive,

@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Module Registry.
+ * Service Mesh — Module Registry.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * A Map<string, OperationDescriptor> keyed by "ns/op".
