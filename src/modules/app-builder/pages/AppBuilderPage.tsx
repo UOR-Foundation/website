@@ -146,6 +146,26 @@ export default function AppBuilderPage() {
       result.fileLayers.forEach((fl) => {
         log("BUILD", `Layer: ${fl.path}`, fl.layerCanonicalId);
       });
+
+      // ── Emit to Knowledge Graph ──
+      try {
+        const { localGraphStore } = await import("@/modules/knowledge-graph");
+        const now = Date.now();
+        await localGraphStore.putNode({
+          uorAddress: result.image.canonicalId,
+          label: `${appName}:${appVersion}`,
+          nodeType: "image",
+          properties: { layers: result.image.layers.length, sizeBytes: result.image.sizeBytes },
+          createdAt: now, updatedAt: now, syncState: "local" as const,
+        });
+        for (const fl of result.fileLayers) {
+          await localGraphStore.putEdge(
+            result.image.canonicalId, "uor:containsLayer", fl.layerCanonicalId,
+            "uor:graph:app-builder",
+          );
+        }
+        log("BUILD", "Emitted image node to knowledge graph");
+      } catch { /* graph emission is best-effort */ }
     } catch (err: any) {
       log("BUILD", `Build failed: ${err.message}`);
     } finally {
