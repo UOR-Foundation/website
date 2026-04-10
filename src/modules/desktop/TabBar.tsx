@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
 import ConnectivityPopover from "@/modules/desktop/components/ConnectivityPopover";
 import {
-  X, Plus, Search, User, Pin, Layers, SplitSquareHorizontal,
+  X, Plus, Search, Home, User, Pin, Layers, SplitSquareHorizontal,
   Keyboard, Monitor, Moon, Sun, Sparkles, EyeOff, Info, Maximize, Minimize2,
 } from "lucide-react";
 
@@ -325,7 +325,7 @@ export default function TabBar({
             className="flex items-center justify-center shrink-0 h-full transition-opacity duration-150 hover:opacity-70"
             style={{ width: 46 }}
           >
-            <Search className={`w-[14px] h-[14px] ${isLight ? "text-black/50" : "text-white/50"}`} />
+            <Home className={`w-[14px] h-[14px] ${isLight ? "text-black/50" : "text-white/50"}`} />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
