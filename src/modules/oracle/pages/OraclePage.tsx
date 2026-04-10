@@ -402,6 +402,28 @@ const OraclePage = () => {
             ...prev,
             [msgIndex]: { ...prev[msgIndex], receipts: receiptMap },
           }));
+
+          // ── Emit to Knowledge Graph ──
+          try {
+            const { localGraphStore } = await import("@/modules/knowledge-graph");
+            const now = Date.now();
+            const proofCid = receiptMap["proof"]?.cid;
+            if (proofCid) {
+              await localGraphStore.putNode({
+                uorAddress: proofCid,
+                label: `Query: ${(prompt || "").slice(0, 40)}`,
+                nodeType: "query",
+                properties: { grade, converged: report.converged, claimCount: report.annotations.length },
+                createdAt: now, updatedAt: now, syncState: "local" as const,
+              });
+              // Link claims to proof
+              for (const [key, receipt] of Object.entries(receiptMap)) {
+                if (key.startsWith("claim-") && receipt.cid) {
+                  await localGraphStore.putEdge(proofCid, "uor:hasClaim", receipt.cid, "uor:graph:oracle");
+                }
+              }
+            }
+          } catch { /* graph emission is best-effort */ }
         } catch (e) {
           console.warn("UOR receipt generation failed:", e);
         }
