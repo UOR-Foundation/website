@@ -13,6 +13,7 @@ import { sovereignBoot } from "@/modules/boot";
 
 // Eager. homepage renders instantly
 import { IndexPage } from "@/modules/landing";
+import Layout from "@/modules/core/components/Layout";
 
 // Lazy. each page code-splits into its own chunk
 const AboutPage = lazy(() => import("@/modules/core/pages/AboutPage"));
@@ -100,7 +101,7 @@ const App = () => {
               <Route path="/resolve" element={<SearchPage />} />
               <Route path="/uns" element={<UnsExplainer />} />
               <Route path="/messenger" element={<MessengerPage />} />
-              <Route path="/library" element={<LibraryPage />} />
+              <Route path="/library" element={<Layout><LibraryPage /></Layout>} />
               <Route path="/app-store" element={<AppStorePage />} />
               <Route path="/compliance" element={<ComplianceDashboardPage />} />
               <Route path="/desktop" element={<Navigate to="/os" replace />} />
