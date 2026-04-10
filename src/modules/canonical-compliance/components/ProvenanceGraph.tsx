@@ -257,7 +257,11 @@ export default function ProvenanceGraph({ findings, selectedCategory, search, on
   }, []);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
-    if (node.type === "atom") {
+    if (node.type === "layer") {
+      // Layer nodes don't map to SelectedNode, but we can show the first module
+      const layer = SYSTEM_LAYERS.find((l) => l.id === node.layerId);
+      if (layer) onNodeSelect({ type: "module", module: layer.modules[0], description: layer.description });
+    } else if (node.type === "atom") {
       const atom = ATOM_INDEX.get(node.id.replace("atom:", ""));
       if (atom) onNodeSelect({ type: "atom", atom });
     } else if (node.type === "module") {
