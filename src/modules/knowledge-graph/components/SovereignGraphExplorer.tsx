@@ -1,6 +1,8 @@
 /**
  * SovereignGraphExplorer — Immersive, full-screen interactive knowledge graph visualizer.
  * Uses Sigma.js (WebGL) + Graphology for high-performance rendering.
+ *
+ * Algebrica-style monochrome aesthetic with structural stats.
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
@@ -13,7 +15,39 @@ import { NodeDetailSheet } from "./NodeDetailSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Network, Loader2 } from "lucide-react";
 
-/** Internal component that registers Sigma events and manages interactions */
+// ── Longest Chain (BFS-based longest shortest path) ───────────────────────
+
+function computeLongestChain(graph: ReturnType<typeof useGraphData>["graph"]): number {
+  if (graph.order === 0) return 0;
+
+  let longestPath = 0;
+  const nodes = graph.nodes();
+
+  // Sample up to 50 nodes for performance (BFS from each)
+  const sample = nodes.length <= 50 ? nodes : nodes.filter((_, i) => i % Math.ceil(nodes.length / 50) === 0);
+
+  for (const start of sample) {
+    const visited = new Set<string>([start]);
+    const queue: Array<{ node: string; depth: number }> = [{ node: start, depth: 0 }];
+
+    while (queue.length > 0) {
+      const { node, depth } = queue.shift()!;
+      if (depth > longestPath) longestPath = depth;
+
+      graph.forEachNeighbor(node, (neighbor) => {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          queue.push({ node: neighbor, depth: depth + 1 });
+        }
+      });
+    }
+  }
+
+  return longestPath;
+}
+
+// ── Sigma Event Handler ───────────────────────────────────────────────────
+
 function GraphEvents({
   onClickNode,
   onHoverNode,
@@ -30,7 +64,6 @@ function GraphEvents({
   const sigma = useSigma();
   const registerEvents = useRegisterEvents();
 
-  // Register click/hover events
   useEffect(() => {
     registerEvents({
       clickNode: (event) => onClickNode(event.node),
@@ -39,7 +72,6 @@ function GraphEvents({
     });
   }, [registerEvents, onClickNode, onHoverNode]);
 
-  // Apply node reducers for filtering, search highlighting, and backlink visualization
   useEffect(() => {
     const graph = sigma.getGraph();
     const lowerQuery = searchQuery.toLowerCase();
@@ -49,24 +81,22 @@ function GraphEvents({
       if (hiddenTypes.has(nt)) {
         return { ...data, hidden: true };
       }
-      // Highlight backlinks when a node is selected
       if (selectedNode && selectedNode !== node) {
-        const isBacklink = graph.hasEdge(node, selectedNode) || 
-          graph.someEdge(node, (_e, _a, source, target) => target === selectedNode);
+        const isBacklink = graph.hasEdge(node, selectedNode) ||
+          graph.someEdge(node, (_e, _a, _source, target) => target === selectedNode);
         if (isBacklink) {
-          return { ...data, color: "#e4e4e7", zIndex: 2, size: Math.max(7, (data.size as number || 5) * 1.2) };
+          return { ...data, color: "#d4d4d8", zIndex: 2, size: Math.max(7, (data.size as number || 5) * 1.2) };
         }
-        // Dim unrelated nodes
-        return { ...data, color: "#3f3f46", size: Math.max(2, (data.size as number || 4) * 0.6), zIndex: 0 };
+        return { ...data, color: "#27272a", size: Math.max(2, (data.size as number || 4) * 0.6), zIndex: 0 };
       }
       if (selectedNode === node) {
         return { ...data, color: "#fafafa", zIndex: 3, size: Math.max(10, (data.size as number || 6) * 1.5) };
       }
       if (lowerQuery && !(data.label as string || "").toLowerCase().includes(lowerQuery)) {
-        return { ...data, color: "#27272a", size: Math.max(2, (data.size as number || 4) * 0.5), zIndex: 0 };
+        return { ...data, color: "#1c1c1e", size: Math.max(2, (data.size as number || 4) * 0.5), zIndex: 0 };
       }
       if (lowerQuery && (data.label as string || "").toLowerCase().includes(lowerQuery)) {
-        return { ...data, color: "#fafafa", highlighted: true, zIndex: 2, size: Math.max(8, (data.size as number || 6) * 1.3) };
+        return { ...data, color: "#e4e4e7", highlighted: true, zIndex: 2, size: Math.max(8, (data.size as number || 6) * 1.3) };
       }
       return data;
     });
@@ -76,12 +106,12 @@ function GraphEvents({
         const source = graph.source(edge);
         const target = graph.target(edge);
         if (target === selectedNode) {
-          return { ...data, color: "#d4d4d8", size: 1.2 };
+          return { ...data, color: "#a1a1aa", size: 1 };
         }
         if (source === selectedNode) {
-          return { ...data, color: "#a1a1aa", size: 1.2 };
+          return { ...data, color: "#71717a", size: 1 };
         }
-        return { ...data, color: "#18181b", size: 0.2 };
+        return { ...data, color: "#0a0a0a", size: 0.15 };
       }
       return data;
     });
@@ -92,7 +122,8 @@ function GraphEvents({
   return null;
 }
 
-/** Run ForceAtlas2 layout for N iterations */
+// ── ForceAtlas2 Layout ────────────────────────────────────────────────────
+
 function useLayout(graph: ReturnType<typeof useGraphData>["graph"], loading: boolean) {
   const layoutRan = useRef(false);
 
@@ -100,7 +131,6 @@ function useLayout(graph: ReturnType<typeof useGraphData>["graph"], loading: boo
     if (loading || graph.order === 0 || layoutRan.current) return;
     layoutRan.current = true;
 
-    // Assign random positions if missing
     graph.forEachNode((node) => {
       if (graph.getNodeAttribute(node, "x") == null) {
         graph.setNodeAttribute(node, "x", Math.random() * 500);
@@ -108,7 +138,6 @@ function useLayout(graph: ReturnType<typeof useGraphData>["graph"], loading: boo
       }
     });
 
-    // Run synchronous ForceAtlas2 for a fixed number of iterations
     try {
       forceAtlas2.assign(graph, {
         iterations: 100,
@@ -125,6 +154,23 @@ function useLayout(graph: ReturnType<typeof useGraphData>["graph"], loading: boo
   }, [graph, loading]);
 }
 
+// ── Algebrica Stat Block ──────────────────────────────────────────────────
+
+function StatBlock({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="flex flex-col items-center px-3">
+      <span className="text-[15px] font-mono font-semibold text-foreground/80 tracking-tight tabular-nums">
+        {typeof value === "number" ? value.toLocaleString() : value}
+      </span>
+      <span className="text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/40 mt-0.5">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────
+
 export function SovereignGraphExplorer() {
   const { graph, loading, error, nodeCount, edgeCount, nodeTypes, refresh } = useGraphData();
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
@@ -133,8 +179,9 @@ export function SovereignGraphExplorer() {
   const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(new Set());
   const isMobile = useIsMobile();
 
-  // Run layout
   useLayout(graph, loading);
+
+  const longestChain = useMemo(() => computeLongestChain(graph), [graph, nodeCount]);
 
   const toggleType = useCallback((type: string) => {
     setHiddenTypes((prev) => {
@@ -153,7 +200,6 @@ export function SovereignGraphExplorer() {
     setHoveredNode(nodeId);
   }, []);
 
-  // Get selected node details
   const selectedNodeData = useMemo(() => {
     if (!selectedNode || !graph.hasNode(selectedNode)) return null;
     const attrs = graph.getNodeAttributes(selectedNode);
@@ -166,18 +212,18 @@ export function SovereignGraphExplorer() {
       });
     });
     return { attrs, edges };
-  }, [selectedNode, graph, nodeCount]); // nodeCount as dependency to re-derive after refresh
+  }, [selectedNode, graph, nodeCount]);
 
   // Empty state
   if (!loading && nodeCount === 0) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-background/50">
-        <div className="w-16 h-16 rounded-2xl bg-muted/40 flex items-center justify-center">
-          <Network className="w-8 h-8 text-muted-foreground/60" />
+      <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-[#0a0a0a]">
+        <div className="w-16 h-16 rounded-2xl bg-[#141414] border border-[#1c1c1e] flex items-center justify-center">
+          <Network className="w-8 h-8 text-[#3f3f46]" />
         </div>
         <div className="text-center space-y-1">
-          <p className="text-sm font-medium text-foreground">No graph data yet</p>
-          <p className="text-xs text-muted-foreground max-w-[280px]">
+          <p className="text-sm font-medium text-[#a1a1aa]">No graph data yet</p>
+          <p className="text-xs text-[#52525b] max-w-[280px]">
             Ingest data from the Knowledge Graph page to populate the visual explorer.
           </p>
         </div>
@@ -186,11 +232,11 @@ export function SovereignGraphExplorer() {
   }
 
   return (
-    <div className="relative w-full h-full bg-background overflow-hidden">
+    <div className="relative w-full h-full bg-[#0a0a0a] overflow-hidden">
       {/* Loading overlay */}
       {loading && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#0a0a0a]/90 backdrop-blur-sm">
+          <div className="flex items-center gap-2 text-sm text-[#71717a]">
             <Loader2 className="w-4 h-4 animate-spin" />
             Loading graph…
           </div>
@@ -199,12 +245,12 @@ export function SovereignGraphExplorer() {
 
       {/* Error */}
       {error && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-40 px-3 py-1.5 bg-destructive/20 text-destructive text-xs rounded-lg border border-destructive/30">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-40 px-3 py-1.5 bg-[#1c1c1e] text-[#a1a1aa] text-xs rounded-lg border border-[#27272a]">
           {error}
         </div>
       )}
 
-      {/* Filter bar — floating top-left */}
+      {/* Filter bar */}
       <div className={`absolute z-30 ${isMobile ? "top-2 left-2 right-2" : "top-3 left-3 w-[240px]"}`}>
         <GraphFilterBar
           nodeTypes={nodeTypes}
@@ -219,12 +265,12 @@ export function SovereignGraphExplorer() {
         />
       </div>
 
-      {/* Stats overlay — Algebrica-style */}
-      <div className={`absolute z-20 ${isMobile ? "bottom-2 right-2" : "bottom-3 right-3"}`}>
-        <div className="flex items-center gap-3 px-3 py-1.5 bg-card/60 backdrop-blur-md border border-border/20 rounded-lg">
-          <span className="text-[10px] text-muted-foreground/50 font-mono">{nodeCount} nodes</span>
-          <span className="text-muted-foreground/20">·</span>
-          <span className="text-[10px] text-muted-foreground/50 font-mono">{edgeCount} relations</span>
+      {/* Algebrica-style stats panel — bottom-right */}
+      <div className={`absolute z-20 ${isMobile ? "bottom-2 right-2 left-2" : "bottom-3 right-3"}`}>
+        <div className="flex items-center divide-x divide-[#1c1c1e] px-1 py-2 bg-[#0a0a0a]/80 backdrop-blur-md border border-[#1c1c1e] rounded-xl">
+          <StatBlock label="Nodes" value={nodeCount} />
+          <StatBlock label="Relations" value={edgeCount} />
+          <StatBlock label="Longest Chain" value={longestChain} />
         </div>
       </div>
 
@@ -234,11 +280,11 @@ export function SovereignGraphExplorer() {
           graph={graph}
           style={{ width: "100%", height: "100%" }}
           settings={{
-            defaultNodeColor: "#71717a",
-            defaultEdgeColor: "#27272a",
-            edgeReducer: (_edge, data) => ({ ...data, color: "#27272a", size: 0.4 }),
-            labelColor: { color: "#a1a1aa" },
-            labelFont: "Inter, system-ui, sans-serif",
+            defaultNodeColor: "#52525b",
+            defaultEdgeColor: "#18181b",
+            edgeReducer: (_edge, data) => ({ ...data, color: "#18181b", size: 0.3 }),
+            labelColor: { color: "#71717a" },
+            labelFont: "'DM Sans', system-ui, sans-serif",
             labelSize: 11,
             labelRenderedSizeThreshold: 8,
             renderEdgeLabels: false,
@@ -258,16 +304,16 @@ export function SovereignGraphExplorer() {
 
       {/* Hovered node tooltip */}
       {hoveredNode && graph.hasNode(hoveredNode) && !selectedNode && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 bg-card/90 backdrop-blur-md border border-border/50 rounded-lg shadow-lg">
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 bg-[#141414]/95 backdrop-blur-md border border-[#1c1c1e] rounded-lg shadow-2xl">
           <div className="flex items-center gap-2">
             <span
-              className="w-2.5 h-2.5 rounded-full"
+              className="w-2 h-2 rounded-full"
               style={{ backgroundColor: colorForType(graph.getNodeAttribute(hoveredNode, "nodeType") || "entity") }}
             />
-            <span className="text-xs font-medium text-foreground">
+            <span className="text-[11px] font-medium text-[#e4e4e7]">
               {graph.getNodeAttribute(hoveredNode, "label")}
             </span>
-            <span className="text-[10px] text-muted-foreground font-mono">
+            <span className="text-[9px] text-[#52525b] font-mono">
               {graph.getNodeAttribute(hoveredNode, "nodeType")}
             </span>
           </div>
