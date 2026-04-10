@@ -1,0 +1,31 @@
+{
+  "name": "uor_certify",
+  "morphism_type": "cert:Certificate",
+  "description": "Issue a UOR certificate. Three whitepaper-defined types: TransformCertificate (Grade A — algebraic derivation), IsometryCertificate (Grade B — metric preservation), InvolutionCertificate (Grade A — self-inverse property). Two extensions: EmpiricalAttestation (Grade C), UnverifiedAssertion (Grade D).",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "cert_type": {
+        "type": "string",
+        "enum": ["TransformCertificate", "IsometryCertificate", "InvolutionCertificate", "EmpiricalAttestation", "UnverifiedAssertion"]
+      },
+      "claim": { "type": "string" },
+      "derivation_id": {
+        "type": "string",
+        "description": "Required for TransformCertificate"
+      },
+      "operation": {
+        "type": "string",
+        "enum": ["neg", "bnot"],
+        "description": "Required for InvolutionCertificate"
+      },
+      "source_url": {
+        "type": "string",
+        "description": "Required for EmpiricalAttestation"
+      }
+    },
+    "required": ["cert_type", "claim"]
+  },
+  "api_call": "POST https://api.uor.foundation/v1/grade/assess",
+  "returns": "cert:Certificate subclass per cert_type"
+}

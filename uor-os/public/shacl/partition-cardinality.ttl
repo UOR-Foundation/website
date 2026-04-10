@@ -1,0 +1,42 @@
+@prefix sh:        <http://www.w3.org/ns/shacl#> .
+@prefix partition: <https://uor.foundation/partition/> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
+
+# §4.1 — Partition cardinality invariant: |Irr|+|Red|+|Unit|+|Ext| = 2ⁿ
+# "All four sets pairwise disjoint (enforced by owl:disjointWith)."
+#
+# CONFORMANCE GAP FLAG:
+# Whitepaper §4.1 defines UnitSet as "multiplicatively invertible elements; in Rₙ, the odd integers."
+# At Q0 (R₈): 128 odd integers (1,3,5,…,255) are the units.
+# Current API returns unit cardinality=2 (only 1 and 255). This shape flags the gap.
+
+partition:PartitionCardinalityShape
+  a sh:NodeShape ;
+  sh:targetClass partition:Partition ;
+  rdfs:comment "Every partition:Partition must have cardinalities |Irr|+|Red|+|Unit|+|Ext| summing to 2^quantum (§4.1). At Q0, sum must equal 256. CONFORMANCE GAP: API returns unit_count=2 but §4.1 defines units as odd integers (128 at Q0)." ;
+  sh:property [
+    sh:path partition:irreducibleCount ;
+    sh:datatype xsd:integer ;
+    sh:minCount 1 ;
+    sh:message "partition:Partition must have partition:irreducibleCount (§4.1)." ;
+  ] ;
+  sh:property [
+    sh:path partition:reducibleCount ;
+    sh:datatype xsd:integer ;
+    sh:minCount 1 ;
+    sh:message "partition:Partition must have partition:reducibleCount (§4.1)." ;
+  ] ;
+  sh:property [
+    sh:path partition:unitCount ;
+    sh:datatype xsd:integer ;
+    sh:minCount 1 ;
+    sh:message "partition:Partition must have partition:unitCount (§4.1)." ;
+  ] ;
+  sh:property [
+    sh:path partition:exteriorCount ;
+    sh:datatype xsd:integer ;
+    sh:minCount 1 ;
+    sh:message "partition:Partition must have partition:exteriorCount (§4.1)." ;
+  ] ;
+  sh:severity sh:Violation .

@@ -1,0 +1,169 @@
+/**
+ * UOR Content Certificate Registry.
+ * Generates verification certificates for all key data objects on the site,
+ * making every significant content structure content-addressed and verifiable.
+ */
+
+import { encode } from "@/lib/uor-codec";
+import { generateCertificate, type UorCertificate } from "./uor-certificate";
+
+// Data imports
+import { navItems } from "@/data/nav-items";
+import { pillars } from "@/data/pillars";
+import { highlights } from "@/data/highlights";
+import { featuredProjects } from "@/data/featured-projects";
+import { frameworkLayers } from "@/data/framework-layers";
+import { researchCategories } from "@/data/research-categories";
+import { blogPosts } from "@/data/blog-posts";
+import { projects, maturityInfo } from "@/data/projects";
+import { governanceBoard } from "@/data/governance";
+import { routeTable } from "@/data/route-table";
+import { teamMembers } from "@/data/team-members";
+import { events } from "@/data/events";
+import { categoryResearch } from "@/data/research-papers";
+import { whatWeDoCards, ourPrinciplesCards } from "@/data/about-cards";
+import { donationProjects } from "@/data/donation-projects";
+import { applications } from "@/data/applications";
+import { LAYERS, DISCOVERY_ENDPOINTS } from "@/data/api-layers";
+import { quantumLevels } from "@/data/quantum-levels";
+import { closureModes } from "@/data/closure-modes";
+import { canonicalizationRules } from "@/data/canonicalization-rules";
+import { signatureOps } from "@/data/signature-ops";
+import { TRIWORD_GENESIS } from "./uor-triword";
+// ── Types ───────────────────────────────────────────────────────────────────
+
+export interface ContentCertificateEntry {
+  subjectId: string;
+  label: string;
+  certificate: UorCertificate;
+  verified: boolean;
+}
+
+// ── Registry singleton ──────────────────────────────────────────────────────
+
+const contentCertificates = new Map<string, ContentCertificateEntry>();
+let initialized = false;
+const initListeners: Array<() => void> = [];
+
+export function onContentRegistryInitialized(cb: () => void): () => void {
+  if (initialized) {
+    cb();
+    return () => {};
+  }
+  initListeners.push(cb);
+  return () => {
+    const idx = initListeners.indexOf(cb);
+    if (idx >= 0) initListeners.splice(idx, 1);
+  };
+}
+
+// ── Certifiable content definitions ─────────────────────────────────────────
+
+const CERTIFIABLE_CONTENT: Array<{
+  subjectId: string;
+  label: string;
+  data: unknown;
+}> = [
+  { subjectId: "content:route-table", label: "Route Table", data: routeTable },
+  { subjectId: "content:nav-items", label: "Navigation Items", data: navItems },
+  { subjectId: "content:pillars", label: "Three Pillars", data: pillars },
+  { subjectId: "content:highlights", label: "Community Highlights", data: highlights },
+  { subjectId: "content:featured-projects", label: "Featured Projects", data: featuredProjects },
+  { subjectId: "content:framework-layers", label: "Framework Layers", data: frameworkLayers },
+  { subjectId: "content:research-categories", label: "Research Categories", data: researchCategories },
+  { subjectId: "content:blog-posts", label: "Blog Posts", data: blogPosts },
+  { subjectId: "content:projects", label: "Project Catalog", data: projects },
+  { subjectId: "content:maturity-model", label: "Maturity Model", data: maturityInfo },
+  { subjectId: "content:governance-board", label: "Governance Board", data: governanceBoard },
+  { subjectId: "content:team-members", label: "Team Members", data: teamMembers },
+  { subjectId: "content:events", label: "Community Events", data: events },
+  { subjectId: "content:research-papers", label: "Research Papers", data: categoryResearch },
+  { subjectId: "content:about-cards", label: "About Page Cards", data: { whatWeDoCards, ourPrinciplesCards } },
+  { subjectId: "content:donation-projects", label: "Donation Projects", data: donationProjects },
+  { subjectId: "content:applications", label: "Application Domains", data: applications },
+  { subjectId: "content:api-layers", label: "API Layers", data: { layers: LAYERS, discovery: DISCOVERY_ENDPOINTS } },
+  { subjectId: "content:quantum-levels", label: "Quantum Levels", data: quantumLevels },
+  { subjectId: "content:closure-modes", label: "Closure Modes", data: closureModes },
+  { subjectId: "content:canonicalization-rules", label: "Canonicalization Rules", data: canonicalizationRules },
+  { subjectId: "content:signature-ops", label: "Signature Operations", data: signatureOps },
+  { subjectId: "content:triword-genesis", label: "Triword Genesis", data: TRIWORD_GENESIS },
+];
+
+// ── Initialization ──────────────────────────────────────────────────────────
+
+export async function initializeContentRegistry(force = false): Promise<void> {
+  if (initialized && !force) return;
+  if (force) {
+    contentCertificates.clear();
+    initialized = false;
+  }
+
+  const results = await Promise.all(
+    CERTIFIABLE_CONTENT.map(async ({ subjectId, label, data }) => {
+      const envelope: Record<string, unknown> = {
+        "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+        "@type": "uor:ContentObject",
+        "uor:subjectId": subjectId,
+        "uor:data": data,
+      };
+      const certificate = await generateCertificate(subjectId, envelope);
+      return { subjectId, label, certificate };
+    })
+  );
+
+  for (const { subjectId, label, certificate } of results) {
+    contentCertificates.set(subjectId, {
+      subjectId,
+      label,
+      certificate,
+      verified: true,
+    });
+  }
+
+  initialized = true;
+  initListeners.forEach((cb) => cb());
+  initListeners.length = 0;
+
+  console.log(
+    `[UOR Content Registry] Certified ${contentCertificates.size} content objects.`
+  );
+}
+
+// ── Verification ────────────────────────────────────────────────────────────
+
+export async function verifyContentCertificate(id: string): Promise<boolean> {
+  const entry = contentCertificates.get(id);
+  if (!entry) return false;
+
+  const storedPayload = entry.certificate["cert:canonicalPayload"];
+  const storedCid = entry.certificate["cert:cid"];
+
+  // Recompute CID from the stored canonical N-Quads payload
+  const { computeCid } = await import("./uor-address");
+  const bytes = new TextEncoder().encode(storedPayload);
+  const recomputedCid = await computeCid(bytes);
+
+  return recomputedCid === storedCid;
+}
+
+export async function verifyAllContentCertificates(): Promise<Map<string, boolean>> {
+  const results = new Map<string, boolean>();
+  const entries = Array.from(contentCertificates.keys());
+  const verified = await Promise.all(entries.map((id) => verifyContentCertificate(id)));
+  entries.forEach((id, i) => results.set(id, verified[i]));
+  return results;
+}
+
+// ── Public API ──────────────────────────────────────────────────────────────
+
+export function getAllContentCertificates(): Map<string, ContentCertificateEntry> {
+  return contentCertificates;
+}
+
+export function getContentCertificate(id: string): ContentCertificateEntry | undefined {
+  return contentCertificates.get(id);
+}
+
+export function isContentRegistryInitialized(): boolean {
+  return initialized;
+}

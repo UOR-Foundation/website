@@ -1,0 +1,25 @@
+@prefix sh:        <http://www.w3.org/ns/shacl#> .
+@prefix op:        <https://uor.foundation/op/> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
+
+# §3.2.3 — "The composition structure is explicit — the critical identity is recorded in the ontology graph."
+# op:succ is defined as the composition of op:neg and op:bnot.
+
+op:SuccCompositionShape
+  a sh:NodeShape ;
+  sh:targetNode op:succ ;
+  rdfs:comment "op:succ must have op:composedOf with values [op:neg, op:bnot] (§3.2.3). The critical identity neg(bnot(x)) = succ(x) is explicit in the ontology." ;
+  sh:property [
+    sh:path op:composedOf ;
+    sh:hasValue op:neg ;
+    sh:minCount 1 ;
+    sh:message "op:succ must be composedOf op:neg (§3.2.3)." ;
+  ] ;
+  sh:property [
+    sh:path op:composedOf ;
+    sh:hasValue op:bnot ;
+    sh:minCount 1 ;
+    sh:message "op:succ must be composedOf op:bnot (§3.2.3)." ;
+  ] ;
+  sh:severity sh:Violation .

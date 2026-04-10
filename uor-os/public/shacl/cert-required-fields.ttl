@@ -1,0 +1,26 @@
+@prefix sh:        <http://www.w3.org/ns/shacl#> .
+@prefix cert:      <https://uor.foundation/cert/> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
+
+# §3.3 — cert:Certificate subclasses must have cert:verified and cert:quantum
+
+cert:CertificateRequiredFieldsShape
+  a sh:NodeShape ;
+  sh:targetClass cert:Certificate ;
+  rdfs:comment "All cert:Certificate subclasses must have cert:verified (xsd:boolean) and cert:quantum (xsd:integer) per §3.3." ;
+  sh:property [
+    sh:path cert:verified ;
+    sh:datatype xsd:boolean ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:message "cert:Certificate must have exactly one cert:verified (xsd:boolean)." ;
+  ] ;
+  sh:property [
+    sh:path cert:quantum ;
+    sh:datatype xsd:integer ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:message "cert:Certificate must have exactly one cert:quantum (xsd:integer)." ;
+  ] ;
+  sh:severity sh:Violation .
