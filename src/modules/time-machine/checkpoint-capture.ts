@@ -70,7 +70,7 @@ function captureOrchestratorState(): SerializedOrchestratorState {
 
   for (const [, inst] of state.instances) {
     instances.push({
-      name: inst.blueprintName,
+      name: inst.blueprint.name,
       state: inst.state,
       callCount: inst.callCount,
       deniedCount: inst.deniedCount,
