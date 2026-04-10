@@ -10,7 +10,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useContextManager } from "@/modules/sovereign-vault/hooks/useContextManager";
 import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
-import { ArrowRight, Upload, Sparkles, MessageCircle, BookOpen, FolderOpen, LayoutGrid, Play } from "lucide-react";
+import { ArrowRight, Upload, Sparkles, MessageCircle, BookOpen, FolderOpen, LayoutGrid, Play, Download } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
@@ -408,6 +408,27 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
             </button>
           ))}
         </div>
+
+        {/* Download desktop app CTA — only in browser, not in Tauri */}
+        {!("__TAURI__" in window) && (
+          <a
+            href="/download"
+            className="mt-4 inline-flex items-center gap-2 px-5 py-2 text-[11px] font-medium uppercase tracking-widest transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              color: isImmersive ? "hsl(0 0% 100% / 0.40)" : isLight ? "hsl(0 0% 0% / 0.35)" : "hsl(0 0% 100% / 0.40)",
+              border: isImmersive
+                ? "1px solid hsl(0 0% 100% / 0.10)"
+                : isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
+              borderRadius: isMac ? "9999px" : "0.75rem",
+              background: isImmersive
+                ? "hsl(200 10% 12% / 0.35)"
+                : isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.02)",
+            }}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Download Desktop App
+          </a>
+        )}
       </div>
 
       {/* Offline banner — calm, reassuring */}
