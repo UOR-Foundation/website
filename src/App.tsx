@@ -13,6 +13,7 @@ import { sovereignBoot } from "@/modules/boot";
 
 // Eager. homepage renders instantly
 import { IndexPage } from "@/modules/landing";
+import Layout from "@/modules/core/components/Layout";
 
 // Lazy. each page code-splits into its own chunk
 const AboutPage = lazy(() => import("@/modules/core/pages/AboutPage"));
