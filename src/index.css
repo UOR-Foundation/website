@@ -1547,3 +1547,34 @@
 .live-mode-active {
   animation: livePulse 2s ease-in-out infinite;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   §  Algebrica — Prose Measure & Scrollbar Refinement
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Golden ratio optimal line length for reading content */
+.prose-measure {
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Thin overlay scrollbars — consistent across platforms */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(220 15% 20%) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(220 15% 20%);
+  border-radius: 3px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(220 15% 30%);
+}
