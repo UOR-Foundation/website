@@ -51,6 +51,7 @@ export default function DesktopWindow({
   // ── Boot state ──────────────────────────────────────────────────────────
   const [bootReceipt, setBootReceipt] = useState<BootReceipt | null>(null);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [graphQuickViewOpen, setGraphQuickViewOpen] = useState(false);
   const booted = win.booted === true;
 
   const handleBootReady = useCallback((receipt: BootReceipt) => {
@@ -243,6 +244,19 @@ export default function DesktopWindow({
               {inspectorOpen && bootReceipt && (
                 <ContainerInspector appId={win.appId} receipt={bootReceipt} />
               )}
+
+              {/* Graph context bar — ambient KG awareness */}
+              <GraphContextBar
+                appId={win.appId}
+                onViewGraph={() => setGraphQuickViewOpen(true)}
+              />
+
+              {/* Graph quick view overlay */}
+              <GraphQuickView
+                open={graphQuickViewOpen}
+                onClose={() => setGraphQuickViewOpen(false)}
+                centerLabel={win.title}
+              />
             </WindowContextProvider>
           )}
         </div>
