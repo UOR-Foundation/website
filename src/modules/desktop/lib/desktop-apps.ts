@@ -15,7 +15,7 @@
 import { lazy, type ComponentType } from "react";
 import {
   Search, Sparkles, BookOpen, MessageCircle, Shield, Activity, FolderOpen,
-  Network, CalendarDays, LayoutGrid, Wallet, Play, PackageOpen,
+  Network, CalendarDays, LayoutGrid, Wallet, Play, PackageOpen, Clock,
 } from "lucide-react";
 import type { OsCategory } from "./os-taxonomy";
 import { STATIC_BLUEPRINTS } from "@/modules/compose/static-blueprints";
@@ -54,6 +54,7 @@ const ICON_MAP: Record<string, ComponentType<any>> = {
   Wallet,
   Play,
   PackageOpen,
+  Clock,
 };
 
 // ── Component Loader ──────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ const COMPONENT_MAP: Record<string, React.LazyExoticComponent<ComponentType<any>
   "@/modules/desktop/components/AppHub": lazy(() => import("@/modules/desktop/components/AppHub")),
   "@/modules/media/components/MediaPlayer": lazy(() => import("@/modules/media/components/MediaPlayer")),
   "@/modules/takeout/components/SovereignTakeout": lazy(() => import("@/modules/takeout/components/SovereignTakeout")),
+  "@/modules/time-machine/pages/TimeMachinePage": lazy(() => import("@/modules/time-machine/pages/TimeMachinePage")),
 };
 
 // ── Blueprint → DesktopApp Derivation ─────────────────────────────────────
