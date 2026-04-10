@@ -1,0 +1,3558 @@
+{
+  "openapi": "3.1.0",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "UOR Framework Agent API",
+    "version": "1.0.0",
+    "summary": "A complete, agent-navigable REST API for the Universal Object Reference (UOR) Framework — strictly mapped to the formal ontology at github.com/UOR-Foundation/UOR-Framework.",
+    "description": "## Overview\n\nThis API exposes the full UOR kernel as REST operations. Every endpoint, schema field, and enum value maps 1:1 to a named class, property, or individual in the Rust ontology source under `spec/src/namespaces/`.\n\nThe UOR Framework is structured in three spaces:\n\n| Space  | Namespaces                                         | API group        |\n|--------|----------------------------------------------------|------------------|\n| Kernel | `u:`, `schema:`, `op:`                             | `/kernel`        |\n| Bridge | `resolver:`, `partition:`, `observable:`, `proof:`,| `/bridge`        |\n|        | `derivation:`, `trace:`, `cert:`                   |                  |\n| User   | `type:`, `morphism:`, `state:`                     | `/user`          |\n\nThe end-to-end resolution cycle (test7_end_to_end.rs) is:\n```\nContext → Type → Resolver → Partition → Observable → Cert → Trace → Transform\n```\n\n## Quick Start\n\nGET /kernel/op/verify?x=42 — verify neg(bnot(42)) = succ(42) = 43\n\n## Security\n\nAll GET endpoints require no authentication. POST endpoints accept optional `X-UOR-Agent-Key` header for rate-limit tier elevation. Rate limits (unauthenticated): 120 req/min for kernel GET, 60 req/min for bridge POST.\n\n## POST Semantics\n\nAll POST endpoints return `200 OK` (not `201`) because they compute deterministic artifacts on-the-fly — same inputs always produce the same output. No resource is persisted.",
+    "contact": {
+      "name": "UOR Foundation",
+      "url": "https://uor.foundation",
+      "email": "hello@uor.foundation"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "identifier": "Apache-2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    },
+    "x-agent-entry-point": "https://uor.foundation/llms.md",
+    "x-discovery-metadata": "https://uor.foundation/.well-known/uor.json",
+    "x-community": "https://www.moltbook.com/m/uor",
+    "x-ontology-source": "https://github.com/UOR-Foundation/UOR-Framework",
+    "x-conformance-suite": "cargo run --bin uor-conformance",
+    "x-source-crate": "https://crates.io/crates/uor-foundation",
+    "x-source-docs": "https://docs.rs/uor-foundation",
+    "x-source-install": "cargo add uor-foundation"
+  },
+  "servers": [
+    {
+      "url": "https://api.uor.foundation/v1",
+      "description": "Live API — active endpoint (all requests go here)",
+      "x-server-status": "active"
+    }
+  ],
+  "security": [
+    {},
+    { "AgentKey": [] }
+  ],
+  "externalDocs": {
+    "description": "UOR Framework GitHub source and conformance suite",
+    "url": "https://github.com/UOR-Foundation/UOR-Framework"
+  },
+  "tags": [
+    {
+      "name": "kernel-op",
+      "description": "**`op/` namespace** — Ring operations, involutions, and algebraic identities.\nSource: `spec/src/namespaces/op.rs`\nClasses: `Operation`, `UnaryOp`, `BinaryOp`, `Involution`, `Identity`, `Group`, `DihedralGroup`.\nNamed individuals: `neg`, `bnot`, `succ`, `pred`, `add`, `sub`, `mul`, `xor`, `and`, `or`, `criticalIdentity`, `D2n`.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/op.rs", "description": "op.rs — ontology source" }
+    },
+    {
+      "name": "kernel-schema",
+      "description": "**`schema/` + `u/` namespaces** — Ring substrate, term language, datum values, and content addressing.\nSource: `spec/src/namespaces/schema.rs`, `spec/src/namespaces/u.rs`",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/schema.rs", "description": "schema.rs — ontology source" }
+    },
+    {
+      "name": "bridge-partition",
+      "description": "**`partition/` namespace** — Irreducibility partition of the ring.\nSource: `spec/src/namespaces/partition.rs`\nClasses: `Partition`, `IrreducibleSet`, `ReducibleSet`, `UnitSet`, `ExteriorSet`.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/partition.rs", "description": "partition.rs — ontology source" }
+    },
+    {
+      "name": "bridge-proof",
+      "description": "**`proof/` namespace** — Verification proofs.\nSource: `spec/src/namespaces/proof.rs`\nClasses: `Proof`, `CriticalIdentityProof`, `CoherenceProof`, `WitnessData`.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/proof.rs", "description": "proof.rs — ontology source" }
+    },
+    {
+      "name": "bridge-cert",
+      "description": "**`cert/` namespace** — Attestation certificates.\nSource: `spec/src/namespaces/cert.rs`\nClasses: `Certificate`, `TransformCertificate`, `IsometryCertificate`, `InvolutionCertificate`.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/cert.rs", "description": "cert.rs — ontology source" }
+    },
+    {
+      "name": "bridge-observable",
+      "description": "**`observable/` namespace** — Metric and geometric measurements.\nSource: `spec/src/namespaces/observable.rs`\nClasses: `RingMetric`, `HammingMetric`, `CascadeLength`, `CatastropheThreshold`, `Commutator`, `Monodromy`.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/observable.rs", "description": "observable.rs — ontology source" }
+    },
+    {
+      "name": "bridge-derivation",
+      "description": "**`derivation/` namespace** — Auditable step-by-step operation records.\nSource: `spec/src/namespaces/derivation.rs`",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/derivation.rs", "description": "derivation.rs — ontology source" }
+    },
+    {
+      "name": "bridge-trace",
+      "description": "**`trace/` namespace** — Bit-level execution traces for injection detection.\nSource: `spec/src/namespaces/trace.rs`",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/trace.rs", "description": "trace.rs — ontology source" }
+    },
+    {
+      "name": "bridge-resolver",
+      "description": "**`resolver/` namespace** — Canonical form classification of ring elements.\nSource: `spec/src/namespaces/resolver.rs`",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/resolver.rs", "description": "resolver.rs — ontology source" }
+    },
+    {
+      "name": "bridge-sparql",
+      "description": "**SPARQL 1.1** — query and federation endpoints over the UOR knowledge graph.",
+      "externalDocs": { "url": "https://www.w3.org/TR/sparql11-query/", "description": "W3C SPARQL 1.1 Query Language" }
+    },
+    {
+      "name": "bridge-shacl",
+      "description": "**SHACL** — W3C Shapes Constraint Language validation over the UOR ontology graph.",
+      "externalDocs": { "url": "https://www.w3.org/TR/shacl/", "description": "W3C SHACL specification" }
+    },
+    {
+      "name": "bridge-emit",
+      "description": "**JSON-LD emission** — emit UOR datums, derivations, and coherence proofs as valid W3C JSON-LD 1.1 documents."
+    },
+    {
+      "name": "bridge-gnn",
+      "description": "**Graph Neural Network** — export the UOR knowledge graph in GNN-ready formats for ML pipelines."
+    },
+    {
+      "name": "user-type",
+      "description": "**`type/` namespace** — Runtime type declarations.\nSource: `spec/src/namespaces/type_.rs`",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/type_.rs", "description": "type_.rs — ontology source" }
+    },
+    {
+      "name": "user-morphism",
+      "description": "**`morphism/` namespace** — Structure-preserving maps between ring sizes.\nSource: `spec/src/namespaces/morphism.rs`",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/morphism.rs", "description": "morphism.rs — ontology source" }
+    },
+    {
+      "name": "user-state",
+      "description": "**`state/` namespace** — Agent lifecycle state binding.\nSource: `spec/src/namespaces/state.rs`",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/state.rs", "description": "state.rs — ontology source" }
+    },
+    {
+      "name": "navigate",
+      "description": "Framework navigation — reading order, namespace index, ontology links, all endpoint URLs.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework", "description": "UOR Framework source" }
+    },
+    {
+      "name": "store",
+      "description": "UOR × IPFS persistent storage. Serialises UOR objects to JSON-LD, computes dual addresses (u:Address via Braille bijection + CIDv1 via sha2-256 multihash), and stores to IPFS.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework", "description": "UOR store/ namespace spec" }
+    },
+    {
+      "name": "pod-storage",
+      "description": "**Personal Object Data (POD)** — agent-scoped persistent key-value store backed by UOR content-addressing. Contexts, bindings, and frames."
+    },
+    {
+      "name": "agent-tools",
+      "description": "**Five canonical agent tool functions** (§6.4) — uor_derive, uor_query, uor_verify, uor_correlate, uor_partition. All endpoints return epistemic_grade.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework", "description": "UOR Roadmap §6.4" }
+    },
+    {
+      "name": "morphism",
+      "description": "**Morphism Transform API** (§5) — structure-preserving maps between rings."
+    },
+    {
+      "name": "certificates",
+      "description": "**Certificate Chains** — issue cert:TransformCertificate and GDPR Article 20 Verifiable Credentials."
+    },
+    {
+      "name": "sparql",
+      "description": "**SPARQL** — query endpoints and federation cardinality planning for the UOR knowledge graph."
+    },
+    {
+      "name": "resolver",
+      "description": "**Entity Resolution** — natural-language entity resolver using dihedral factorization strategy."
+    },
+    {
+      "name": "semantic-web",
+      "description": "**Semantic Web Surface** — schema.org extension with UOR derivation attribution."
+    },
+    {
+      "name": "discovery",
+      "description": "**Discovery** — VoID dataset descriptors, .well-known endpoints, and Linked Open Data registration."
+    },
+    {
+      "name": "oracle",
+      "description": "**Oracle Ledger** — immutable audit log of all UOR store operations with single-source-of-truth guarantees."
+    },
+    {
+      "name": "observer",
+      "description": "**Observer Theory** — agent registration, zone classification (COHERENCE/DRIFT/COLLAPSE), and network convergence analysis.",
+      "externalDocs": { "url": "https://github.com/UOR-Foundation/UOR-Framework", "description": "Observer namespace spec" }
+    },
+    {
+      "name": "graph",
+      "description": "**Knowledge Graph** — pre-computed Q0 instance graph with all 2^n datums, SPARQL verification, and per-datum lookup."
+    },
+    {
+      "name": "attribution",
+      "description": "**Attribution** — register derivation provenance, verify attribution chains, and compute royalty reports."
+    },
+    {
+      "name": "ontology",
+      "description": "**Ontology** — full OWL/RDFS ontology export for the UOR framework."
+    },
+    {
+      "name": "test",
+      "description": "**End-to-end tests** — runtime conformance verification endpoint."
+    }
+  ],
+  "paths": {
+    "/navigate": {
+      "get": {
+        "operationId": "frameworkIndex",
+        "tags": ["navigate"],
+        "summary": "Framework navigation index — reading order, all endpoints, namespace map",
+        "description": "Returns a complete navigation index of the UOR Framework API. Start here to discover all endpoints, namespace mappings, and reading order. No parameters required.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": {
+            "description": "Complete navigation index with all endpoint URLs and reading order",
+            "headers": {
+              "Cache-Control": { "schema": { "type": "string" } },
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NavigationIndex" }
+              }
+            }
+          },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "operationId": "openapiSpec",
+        "tags": ["navigate"],
+        "summary": "Inline OpenAPI 3.1.0 specification",
+        "description": "Returns the OpenAPI 3.1.0 specification for this API. The full static spec is also available at https://uor.foundation/openapi.json",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "301": {
+            "description": "Permanent redirect to canonical static spec at https://uor.foundation/openapi.json",
+            "headers": {
+              "Location": { "schema": { "type": "string", "format": "uri" }, "description": "https://uor.foundation/openapi.json" }
+            }
+          },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/kernel/op/verify": {
+      "get": {
+        "operationId": "opVerifyCriticalIdentity",
+        "tags": ["kernel-op"],
+        "summary": "Verify op:criticalIdentity — neg(bnot(x)) = succ(x)",
+        "description": "Verifies the foundational theorem of the UOR kernel for a given input x.\n\n**Framework mapping:**\n- Individual: `op:criticalIdentity` (type `op:Identity`)\n- Properties checked: `op:lhs = op:succ`, `op:rhs = [op:neg, op:bnot]`, `op:forAll = \"x ∈ R_n\"`\n- Proof type produced: `proof:CriticalIdentityProof`\n- Witness type: `proof:WitnessData`\n\n**Source:** `spec/src/namespaces/op.rs`, `conformance/src/tests/fixtures/test6_critical_identity.rs`",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Critical identity verification with proof and witness",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CriticalIdentityProofResponse" },
+                "examples": {
+                  "x42": {
+                    "summary": "Verify x=42 in R_8",
+                    "value": {
+                      "@type": ["proof:Proof", "proof:CriticalIdentityProof"],
+                      "proof:quantum": 8,
+                      "proof:verified": true,
+                      "proof:witness": {
+                        "@type": "proof:WitnessData",
+                        "proof:x": 42,
+                        "proof:bnot_x": 213,
+                        "proof:neg_bnot_x": 43,
+                        "proof:succ_x": 43,
+                        "proof:holds": true
+                      },
+                      "derivation": {
+                        "step1": "op:bnot(42) = 42 XOR 255 = 213",
+                        "step2": "op:neg(213) = (-213) mod 256 = 43",
+                        "step3": "op:succ(42) = (42+1) mod 256 = 43",
+                        "conclusion": "neg(bnot(42)) = 43 = succ(42) [PASS]"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/kernel/op/verify/all": {
+      "get": {
+        "operationId": "opVerifyAll",
+        "tags": ["kernel-op"],
+        "summary": "Verify op:criticalIdentity for all 2^n elements of R_n",
+        "description": "Runs `neg(bnot(x)) = succ(x)` for every x in Z/(2^n)Z and returns a `proof:CoherenceProof`.\n\nWhen `expand=false` (default), only summary counts are returned. When `expand=true`, the full `proof:WitnessData` array is included.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/n" },
+          {
+            "name": "expand",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false },
+            "description": "Include all witness rows when true (~14 KB for n=8)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Universal coherence proof for the full ring",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CoherenceProofResponse" }
+              }
+            }
+          },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/kernel/op/compute": {
+      "get": {
+        "operationId": "opCompute",
+        "tags": ["kernel-op"],
+        "summary": "Compute all op:UnaryOp and op:BinaryOp values for a datum",
+        "description": "Returns the result of every named op/ individual applied to x.\n\n**UnaryOp individuals:** neg (ring_reflection), bnot (hypercube_reflection), succ (rotation), pred (rotation_inverse)\n\n**BinaryOp individuals:** add (translation), sub, mul (scaling), xor (hypercube_translation), and (hypercube_projection), or (hypercube_join)",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" },
+          {
+            "name": "y",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 0, "maximum": 65535 },
+            "description": "Second operand for binary operations. Must satisfy 0 ≤ y < 2^n. Defaults to x if omitted."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All ring operations for x (and binary ops for x,y)",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OpComputeResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/kernel/op/operations": {
+      "get": {
+        "operationId": "opList",
+        "tags": ["kernel-op"],
+        "summary": "List all named op/ individuals with full metadata",
+        "description": "Returns the complete catalogue of all 12 operation individuals defined in `op.rs`: neg, bnot, succ, pred, add, sub, mul, xor, and, or, criticalIdentity, D2n.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": {
+            "description": "All named op/ individuals",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OpListResponse" }
+              }
+            }
+          },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/kernel/address/encode": {
+      "post": {
+        "operationId": "addressEncode",
+        "tags": ["kernel-schema"],
+        "summary": "Encode content as a u:Address with u:Glyph decomposition",
+        "description": "Encodes an arbitrary UTF-8 string as a UOR content address using the 6-bit bijection chr(0x2800 + (b & 0x3F)).\n\nReturns `200 OK` because this endpoint computes a deterministic artifact on-the-fly — same inputs always produce the same output. No resource is persisted.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AddressEncodeRequest" },
+              "examples": {
+                "hello": {
+                  "summary": "Encode 'hello'",
+                  "value": { "input": "hello", "encoding": "utf8" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "u:Address with full u:Glyph decomposition per byte",
+            "headers": {
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AddressEncodeResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "413": { "$ref": "#/components/responses/PayloadTooLarge" },
+          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/kernel/schema/datum": {
+      "get": {
+        "operationId": "schemaDatum",
+        "tags": ["kernel-schema"],
+        "summary": "Get full schema:Datum representation for a ring value",
+        "description": "Returns a complete `schema:Datum` object for a given integer value at quantum level n.\n\n**Framework mapping (schema.rs):**\n- `schema:value` — integer value in [0, 2^n)\n- `schema:quantum` — the ring's bit-width n\n- `schema:stratum` — popcount of set bits\n- `schema:spectrum` — binary representation string\n- `schema:glyph` — linked `u:Address`",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full schema:Datum representation",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Datum" },
+                "examples": {
+                  "x42": {
+                    "value": {
+                      "@type": "schema:Datum",
+                      "schema:value": 42,
+                      "schema:quantum": 8,
+                      "schema:stratum": 3,
+                      "schema:spectrum": "00101010",
+                      "schema:glyph": { "@type": "u:Address", "u:glyph": "⠪", "u:length": 1 }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/bridge/partition": {
+      "post": {
+        "operationId": "partitionResolve",
+        "tags": ["bridge-partition"],
+        "summary": "Resolve a type:TypeDefinition to a partition:Partition of R_n",
+        "description": "Applies the partition map Π : T_n → Part(R_n) to produce a four-component partition of the ring.\n\nReturns `200 OK` because this endpoint computes a deterministic artifact on-the-fly — same inputs always produce the same output. No resource is persisted.\n\n**Two modes:** Pass `type_definition` for full ring partition, or `input` string for per-byte analysis.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PartitionRequest" },
+              "examples": {
+                "primitive_u8": {
+                  "summary": "Partition R_8 under PrimitiveType",
+                  "value": { "type_definition": { "@type": "type:PrimitiveType", "type:bitWidth": 8 }, "resolver": "DihedralFactorizationResolver" }
+                },
+                "byte_sequence": {
+                  "summary": "Partition 'hello' bytes for quality analysis",
+                  "value": { "input": "hello", "encoding": "utf8", "resolver": "EvaluationResolver" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Four-component partition:Partition of R_n",
+            "headers": {
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PartitionResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "413": { "$ref": "#/components/responses/PayloadTooLarge" },
+          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/bridge/proof/critical-identity": {
+      "get": {
+        "operationId": "proofCriticalIdentity",
+        "tags": ["bridge-proof"],
+        "summary": "Produce a proof:CriticalIdentityProof for a given witness x",
+        "description": "Returns a fully structured `proof:CriticalIdentityProof` linking back to `op:criticalIdentity` via `proof:provesIdentity`.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "proof:CriticalIdentityProof with full witness data",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CriticalIdentityProofResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/bridge/proof/coherence": {
+      "post": {
+        "operationId": "proofCoherence",
+        "tags": ["bridge-proof"],
+        "summary": "Produce a proof:CoherenceProof for a type:TypeDefinition",
+        "description": "Returns a `proof:CoherenceProof` asserting that a given type declaration is mutually consistent with the ring substrate at quantum level n.\n\nReturns `200 OK` because this endpoint computes a deterministic artifact on-the-fly — same inputs always produce the same output. No resource is persisted.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CoherenceProofRequest" },
+              "examples": {
+                "u8_coherence": {
+                  "summary": "Coherence proof for R_8",
+                  "value": { "type_definition": { "@type": "type:PrimitiveType", "type:bitWidth": 8 }, "n": 8 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "proof:CoherenceProof for the submitted type",
+            "headers": {
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CoherenceProofResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/bridge/cert/involution": {
+      "get": {
+        "operationId": "certInvolution",
+        "tags": ["bridge-cert"],
+        "summary": "Issue a cert:InvolutionCertificate for op:neg or op:bnot",
+        "description": "Verifies that a named operation is an involution (f(f(x)) = x for all x in R_n) and returns a `cert:InvolutionCertificate`.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          {
+            "name": "operation",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "enum": ["neg", "bnot"] },
+            "description": "The operation to certify. Must be an op:Involution individual."
+          },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "cert:InvolutionCertificate",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InvolutionCertificateResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/bridge/observable/metrics": {
+      "get": {
+        "operationId": "observableMetrics",
+        "tags": ["bridge-observable"],
+        "summary": "Compute observable metrics for a ring element",
+        "description": "Returns RingMetric, HammingMetric, CascadeLength, CatastropheThreshold, and Commutator for a ring element.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Observable metric bundle for x in R_n",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ObservableMetricsResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/bridge/observable/metric": {
+      "get": {
+        "operationId": "observableMetric",
+        "tags": ["bridge-observable"],
+        "summary": "Pairwise metric between two ring elements",
+        "description": "Compute RingMetric, HammingMetric, or IncompatibilityMetric between two datums.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "a", "in": "query", "required": true, "schema": { "type": "integer", "minimum": 0, "maximum": 65535 } },
+          { "name": "b", "in": "query", "required": true, "schema": { "type": "integer", "minimum": 0, "maximum": 65535 } },
+          { "name": "type", "in": "query", "required": true, "schema": { "type": "string", "enum": ["ring", "hamming", "incompatibility"] } },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": { "200": { "description": "Metric observable" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/bridge/observable/stratum": {
+      "get": {
+        "operationId": "observableStratum",
+        "tags": ["bridge-observable"],
+        "summary": "Stratum analysis — value, delta, or trajectory",
+        "description": "StratumValue (popcount), StratumDelta (difference), or StratumTrajectory (operation sequence).",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "value", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "For type=value" },
+          { "name": "a", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "For type=delta" },
+          { "name": "b", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "For type=delta" },
+          { "name": "start", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "For type=trajectory" },
+          { "name": "op", "in": "query", "required": false, "schema": { "type": "string", "enum": ["succ", "neg", "bnot", "pred"] } },
+          { "name": "steps", "in": "query", "required": false, "schema": { "type": "integer", "default": 8, "maximum": 256 } },
+          { "name": "type", "in": "query", "required": true, "schema": { "type": "string", "enum": ["value", "delta", "trajectory"] } },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": { "200": { "description": "Stratum observable" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/bridge/observable/path": {
+      "post": {
+        "operationId": "observablePath",
+        "tags": ["bridge-observable"],
+        "summary": "Path analysis — length, total variation, or winding number",
+        "description": "Analyse a path of ring elements for PathLength, TotalVariation, or WindingNumber.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": { "type": "array", "items": { "type": "integer" }, "minItems": 2 },
+                  "type": { "type": "string", "enum": ["length", "total_variation", "winding_number"], "default": "length" },
+                  "quantum": { "type": "integer", "default": 0 }
+                },
+                "required": ["path"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Path observable" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/bridge/observable/curvature": {
+      "get": {
+        "operationId": "observableCurvature",
+        "tags": ["bridge-observable"],
+        "summary": "Commutator [f,g](x) — measures non-commutativity",
+        "description": "Compute the commutator of two operations f and g at ring element x.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "name": "f", "in": "query", "required": false, "schema": { "type": "string", "enum": ["neg", "bnot", "succ", "pred"], "default": "neg" } },
+          { "name": "g", "in": "query", "required": false, "schema": { "type": "string", "enum": ["neg", "bnot", "succ", "pred"], "default": "bnot" } },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": { "200": { "description": "Commutator observable" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/bridge/observable/holonomy": {
+      "post": {
+        "operationId": "observableHolonomy",
+        "tags": ["bridge-observable"],
+        "summary": "Holonomy — accumulated ring element over a closed path",
+        "description": "Compute the accumulated transform over a closed path in the ring.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": { "type": "array", "items": { "type": "integer" }, "minItems": 3 },
+                  "quantum": { "type": "integer", "default": 0 }
+                },
+                "required": ["path"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Holonomy observable" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/bridge/observable/stream": {
+      "post": {
+        "operationId": "observableStream",
+        "tags": ["bridge-observable"],
+        "summary": "Sliding-window stream analysis",
+        "description": "Process a stream of ring values with sliding windows, computing stratum, hamming, and curvature metrics per window.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "stream": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 10000 },
+                  "window_size": { "type": "integer", "minimum": 2, "default": 8 },
+                  "metrics": { "type": "array", "items": { "type": "string", "enum": ["stratum", "hamming", "curvature", "ring"] }, "default": ["stratum", "hamming"] },
+                  "quantum": { "type": "integer", "default": 0 }
+                },
+                "required": ["stream"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Stream analysis with per-window metrics" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/user/type/primitives": {
+      "get": {
+        "operationId": "typeList",
+        "tags": ["user-type"],
+        "summary": "List all type:PrimitiveType definitions",
+        "description": "Returns the catalogue of primitive type definitions: U1, U4, U8, U16, and composite type structures.\n\n**Source:** `spec/src/namespaces/type_.rs`",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": {
+            "description": "Catalogue of type:PrimitiveType and composite types",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TypeListResponse" }
+              }
+            }
+          },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/bridge/derivation": {
+      "get": {
+        "operationId": "bridgeDerivation",
+        "tags": ["bridge-derivation"],
+        "summary": "Produce a derivation:DerivationTrace — auditable step-by-step operation record",
+        "description": "Takes a starting value and a sequence of operations and returns a formal record of every step: input, output, formula used, and ontology reference. Also verifies the core rule holds for the original value — an independent integrity check bundled into the same response.\n\nUse for execution audit trails. Peers can replay the trace to verify independently.\n\n**Required parameter:** `x` — the starting value.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" },
+          {
+            "name": "ops",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "default": "neg,bnot,succ" },
+            "description": "Comma-separated operation sequence. Valid values: neg, bnot, succ, pred. Default: neg,bnot,succ."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "derivation:DerivationTrace with per-step input, output, formula, and ontology reference",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DerivationTraceResponse" },
+                "example": {
+                  "summary": { "source_value": 42, "operation_sequence": ["neg","bnot","succ"], "final_value": 42, "steps": 3, "identity_holds": true, "statement": "neg(bnot(42)) = succ(42) in R_8 [PASS]" },
+                  "@type": "derivation:DerivationTrace",
+                  "derivation:sourceValue": 42,
+                  "derivation:stepCount": 3,
+                  "derivation:finalValue": 42
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/bridge/trace": {
+      "get": {
+        "operationId": "bridgeTrace",
+        "tags": ["bridge-trace"],
+        "summary": "Produce a trace:ExecutionTrace — exact bit state per step with Hamming drift",
+        "description": "Records the exact binary state of the value after each operation: decimal value, binary form, Hamming weight, bits flipped, and XOR delta from the previous step.\n\nNon-zero `trace:totalHammingDrift` signals an anomalous operation sequence. Use alongside `/bridge/derivation` for injection detection.\n\n**Required parameter:** `x` — the starting value.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" },
+          {
+            "name": "ops",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "default": "neg,bnot" },
+            "description": "Comma-separated operation sequence. Valid values: neg, bnot, succ, pred. Default: neg,bnot."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "trace:ExecutionTrace with per-frame bit state, Hamming weight, XOR delta",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ExecutionTraceResponse" },
+                "example": {
+                  "summary": { "source_value": 42, "operation_sequence": ["neg","bnot"], "final_state": 41, "frames": 3, "total_hamming_drift": 0, "injection_detected": false, "note": "zero Hamming drift — operation sequence is canonical" },
+                  "@type": "trace:ExecutionTrace",
+                  "trace:totalHammingDrift": 0,
+                  "trace:frameCount": 3
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/bridge/resolver": {
+      "get": {
+        "operationId": "bridgeResolver",
+        "tags": ["bridge-resolver"],
+        "summary": "Resolve any value to its canonical category — resolver:Resolution",
+        "description": "Sorts any value into one of four canonical categories:\n\n- **IrreducibleSet** — odd, not a unit. Structurally unique building block.\n- **ReducibleSet** — even. Factors as 2^k × odd core.\n- **UnitSet** — the ring's multiplicative identity (1) or its inverse (2^n - 1).\n- **ExteriorSet** — zero or the ring midpoint (2^(n-1)).\n\nFor reducible values, returns the full factor cascade. For irreducible values, confirms no further decomposition is possible.\n\n**Required parameter:** `x` — the value to resolve.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "resolver:Resolution with canonical category, factor decomposition, and partition reference",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ResolutionResponse" },
+                "example": {
+                  "summary": { "input": 42, "component": "partition:ReducibleSet", "canonical_form": "2^1 × 21", "is_irreducible": false, "category_label": "Reducible — decomposes in R_8" },
+                  "@type": "resolver:Resolution",
+                  "resolver:component": "partition:ReducibleSet",
+                  "resolver:isIrreducible": false,
+                  "resolver:canonicalForm": "2^1 × 21"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/user/morphism/transforms": {
+      "get": {
+        "operationId": "morphismTransforms",
+        "tags": ["user-morphism"],
+        "summary": "Map a value between ring sizes — morphism:RingHomomorphism",
+        "description": "Maps a value from one ring size to another while preserving its structural properties.\n\n- **Smaller target ring (projection):** strips the high bits — f(x) = x mod 2^toN.\n- **Larger target ring (inclusion):** embeds the value unchanged.\n- **Same size (identity):** identity map.\n\nReturns the mapped value, which properties are preserved, injectivity and surjectivity flags, and a `morphism:CommutativityWitness` proving the map is a valid ring homomorphism.\n\n**Required parameter:** `x` — the value to map.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          {
+            "name": "from_n",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 16, "default": 8 },
+            "description": "Source ring size in bits. Default 8."
+          },
+          {
+            "name": "to_n",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 16, "default": 16 },
+            "description": "Target ring size in bits. Default 16 (inclusion/lossless embedding — demonstrates InclusionHomomorphism). Use to_n < from_n for projection."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "morphism:RingHomomorphism with mapped value, preserved properties, and commutativity witness",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RingHomomorphismResponse" },
+                "example": {
+                  "summary": { "input": 42, "from_ring": "R_8 = Z/256Z", "to_ring": "R_16 = Z/65536Z", "image": 42, "morphism_type": "InclusionHomomorphism", "is_injective": true, "is_isomorphism": false, "ring_structure_preserved": true },
+                  "@type": ["morphism:RingHomomorphism", "morphism:InclusionHomomorphism"],
+                  "morphism:image": 42,
+                  "morphism:isInjective": true
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/user/state": {
+      "get": {
+        "operationId": "userState",
+        "tags": ["user-state"],
+        "summary": "Get the formal lifecycle state for a value — state:Frame",
+        "description": "Returns the formal lifecycle state for an agent at value x.\n\n- What category x belongs to and why.\n- Whether x is a stable entry point (an identity or unit).\n- Whether x is at a phase boundary.\n- For each operation (neg, bnot, succ, pred) — where does x go, and does its category change?\n\nUse before committing to an operation to understand the structural consequences.\n\n**Required parameter:** `x` — the agent's current value.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "state:Frame with category, entry/exit conditions, and all 4 operation transitions",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StateFrameResponse" },
+                "example": {
+                  "summary": { "value": 42, "component": "partition:ReducibleSet", "stable_entry": false, "phase_boundary": false, "transition_count": 4, "critical_identity_holds": true },
+                  "@type": "state:Frame",
+                  "state:binding": { "state:component": "partition:ReducibleSet" },
+                  "state:entryCondition": { "state:isStableEntry": false },
+                  "state:transitions": []
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/store/resolve": {
+      "get": {
+        "operationId": "storeResolve",
+        "summary": "Fetch a URL and compute its UOR address",
+        "description": "Fetches any HTTP/HTTPS resource, computes its UOR address via the Braille bijection (each byte b maps to Unicode codepoint U+2800+b), and returns a store:RetrievedObject. Does NOT write to IPFS. To persist the content, call POST /store/write.",
+        "tags": ["store"],
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" },
+            "description": "The HTTP or HTTPS URL to fetch. Only http: and https: protocols accepted."
+          },
+          {
+            "name": "n",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "enum": [4, 8, 16], "default": 8 },
+            "description": "Ring size. Determines Z/(2^n)Z. Default 8 gives Z/256Z."
+          },
+          {
+            "name": "include_partition",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false },
+            "description": "If true, include partition analysis of the fetched bytes."
+          },
+          {
+            "name": "include_metrics",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false },
+            "description": "If true, include observable metrics on the first byte."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "UOR address computed successfully.",
+            "content": {
+              "application/ld+json": {
+                "schema": { "$ref": "#/components/schemas/StoreRetrievedObject" }
+              }
+            },
+            "headers": {
+              "X-UOR-Address": { "schema": { "type": "string" }, "description": "First 64 chars of the computed u:Address glyph." },
+              "X-UOR-Byte-Length": { "schema": { "type": "string" }, "description": "Number of bytes fetched." },
+              "X-UOR-Source-URL": { "schema": { "type": "string" }, "description": "The URL that was fetched." }
+            }
+          },
+          "400": { "description": "Missing or invalid url parameter." },
+          "413": { "description": "Remote resource exceeds 10MB limit." },
+          "429": { "description": "Rate limit exceeded." },
+          "502": { "description": "Remote resource unreachable or returned non-2xx." },
+          "504": { "description": "Remote resource timed out after 15 seconds." }
+        }
+      }
+    },
+    "/store/write": {
+      "post": {
+        "operationId": "storeWrite",
+        "summary": "Serialise a UOR object and pin it to IPFS",
+        "description": "Takes any valid User-space or Bridge-space UOR object, wraps it in a store:StoredObject JSON-LD envelope, computes the UOR address (Braille bijection) and CIDv1 (dag-json, sha2-256), pins the envelope to IPFS, and returns the complete store:StoredObject with a store:PinRecord. Kernel-space types (u:, schema:, op:) are rejected with 422.",
+        "tags": ["store"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["object"],
+                "properties": {
+                  "object": {
+                    "type": "object",
+                    "description": "The UOR object to store. Must have an @type field. Must be a User-space or Bridge-space type.",
+                    "required": ["@type"]
+                  },
+                  "pin": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "If false, compute addresses only — do not pin to IPFS (dry run)."
+                  },
+                  "gateway": {
+                    "type": "string",
+                    "enum": ["web3.storage", "pinata", "storacha"],
+                    "default": "pinata",
+                    "description": "Write gateway to use. 'pinata' = Pinata dedicated gateway (pinFileToIPFS, requires PINATA_JWT). 'storacha' = Storacha Network / web3.storage successor (uploadFile, requires STORACHA_KEY + STORACHA_PROOF, 5GB free tier). 'web3.storage' = legacy (degraded, use storacha instead)."
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Optional human-readable label. Does not affect computed addresses."
+                  }
+                }
+              },
+              "example": {
+                "object": {
+                  "@type": "cert:TransformCertificate",
+                  "cert:transformType": "uor-address-to-ipfs-cid",
+                  "cert:verified": true,
+                  "cert:quantum": 8
+                },
+                "pin": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Object stored successfully.",
+            "content": {
+              "application/ld+json": {
+                "schema": { "$ref": "#/components/schemas/StoreStoredObject" }
+              }
+            },
+            "headers": {
+              "X-UOR-Address": { "schema": { "type": "string" } },
+              "X-IPFS-CID": { "schema": { "type": "string" } },
+              "X-IPFS-Gateway-URL": { "schema": { "type": "string" } },
+              "X-Store-Dry-Run": { "schema": { "type": "string", "enum": ["true", "false"] } }
+            }
+          },
+          "400": { "description": "Missing object field or missing @type." },
+          "422": { "description": "Kernel-space type rejected. Only User-space and Bridge-space types may be stored." },
+          "502": { "description": "IPFS gateway unreachable." },
+          "503": { "description": "IPFS gateway returned an error." }
+        }
+      }
+    },
+    "/store/read/{cid}": {
+      "get": {
+        "operationId": "storeRead",
+        "summary": "Retrieve a stored UOR object from IPFS and verify integrity",
+        "description": "Retrieves a stored UOR object by CID from an IPFS gateway, performs dual verification (CID integrity check + UOR address recomputation), and returns the full store:RetrievedObject. Set strict=true (default) to receive HTTP 409 on verification failure.",
+        "tags": ["store"],
+        "parameters": [
+          {
+            "name": "cid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "A valid IPFS CID. Accepts CIDv0 (Qm...) or CIDv1 (bafy...)."
+          },
+          {
+            "name": "gateway",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "https://uor.mypinata.cloud",
+                "https://gateway.pinata.cloud",
+                "https://ipfs.io",
+                "https://w3s.link",
+                "https://cloudflare-ipfs.com",
+                "https://storacha.link"
+              ],
+              "default": "https://uor.mypinata.cloud",
+              "description": "IPFS read gateway. Default is the dedicated Pinata gateway (fastest, most reliable). For Storacha-stored objects, use https://storacha.link with the directory CID and optional ?filename= parameter."
+            }
+          },
+          {
+            "name": "strict",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": true },
+            "description": "If true, return 409 when store:verified is false. If false, return 200 with verified:false."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Object retrieved. Check store:verified for integrity result.",
+            "content": {
+              "application/ld+json": {
+                "schema": { "$ref": "#/components/schemas/StoreRetrievedObject" }
+              }
+            },
+            "headers": {
+              "X-UOR-Verified": { "schema": { "type": "string", "enum": ["true", "false"] } },
+              "X-IPFS-CID": { "schema": { "type": "string" } }
+            }
+          },
+          "400": { "description": "Invalid or missing CID." },
+          "404": { "description": "CID not found on IPFS gateway." },
+          "409": { "description": "Retrieved but verification failed: UOR address mismatch (strict mode)." },
+          "502": { "description": "Gateway unreachable." },
+          "504": { "description": "Gateway timeout." }
+        }
+      }
+    },
+    "/store/write-context": {
+      "post": {
+        "operationId": "storeWriteContext",
+        "summary": "Persist a state:Context as an IPLD DAG on IPFS",
+        "description": "Serialises a complete UOR state:Context (a set of state:Binding objects) as a linked IPLD DAG on IPFS. Each binding becomes an individual IPFS block. The root block links to all bindings. Returns the root CID and per-binding CIDs. Designed for agent memory persistence.",
+        "tags": ["store"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["context"],
+                "properties": {
+                  "context": {
+                    "type": "object",
+                    "required": ["bindings"],
+                    "properties": {
+                      "name": { "type": "string", "description": "Context name. Used as state:contentAddress." },
+                      "quantum": { "type": "integer", "default": 8, "enum": [4, 8, 16] },
+                      "bindings": {
+                        "type": "array",
+                        "maxItems": 256,
+                        "items": {
+                          "type": "object",
+                          "required": ["address", "value"],
+                          "properties": {
+                            "address": { "type": "string", "description": "Braille glyph or plain string (will be bijected)." },
+                            "value": { "type": "integer", "minimum": 0 },
+                            "type": { "type": "string", "default": "type:PrimitiveType" }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "pin": { "type": "boolean", "default": true },
+                  "gateway": { "type": "string", "default": "pinata" }
+                }
+              },
+              "example": {
+                "context": {
+                  "name": "agent-session-001",
+                  "quantum": 8,
+                  "bindings": [
+                    { "address": "hello", "value": 42 },
+                    { "address": "world", "value": 99 }
+                  ]
+                },
+                "pin": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Context persisted. Returns root CID and all binding CIDs.",
+            "headers": {
+              "X-UOR-Context-Root-CID": { "schema": { "type": "string" } },
+              "X-UOR-Binding-Count": { "schema": { "type": "string" } }
+            }
+          },
+          "400": { "description": "Missing context, empty bindings, or invalid binding format." },
+          "502": { "description": "Gateway unreachable during pin." }
+        }
+      }
+    },
+    "/store/verify/{cid}": {
+      "get": {
+        "operationId": "storeVerify",
+        "summary": "Verify a stored UOR object without returning its content",
+        "description": "Lightweight verification endpoint. Retrieves bytes from IPFS, runs dual verification (CID integrity + UOR address recomputation), and returns only the boolean verdict and proof metadata. Content is not echoed back. Use this before processing any content received from a peer.",
+        "tags": ["store"],
+        "parameters": [
+          {
+            "name": "cid",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "gateway",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "https://uor.mypinata.cloud",
+                "https://gateway.pinata.cloud",
+                "https://ipfs.io",
+                "https://w3s.link",
+                "https://cloudflare-ipfs.com",
+                "https://storacha.link"
+              ],
+              "default": "https://uor.mypinata.cloud",
+              "description": "IPFS read gateway. Default is the dedicated Pinata gateway. For Storacha-stored objects, use https://storacha.link with the directory CID."
+            }
+          },
+          {
+            "name": "expected_uor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Compare recomputed UOR address against this expected value instead of the stored one."
+          }
+        ],
+        "responses": {
+          "200": { "description": "Verified or indeterminate. Check store:verified." },
+          "400": { "description": "Invalid CID." },
+          "404": { "description": "CID not found." },
+          "409": { "description": "Verification failed: UOR address mismatch." }
+        }
+      }
+    },
+    "/store/gateways": {
+      "get": {
+        "operationId": "storeGateways",
+        "summary": "List available IPFS gateways and their health status",
+        "description": "Returns all configured IPFS gateways with their capabilities, health status (checked via the bafkqaaa identity probe per IPFS Trustless Gateway spec §7.1), and which gateway is default for read and write operations.",
+        "tags": ["store"],
+        "responses": {
+          "200": {
+            "description": "Gateway registry returned successfully."
+          }
+        }
+      }
+    },
+    "/bridge/sparql": {
+      "get": {
+        "operationId": "bridgeSparql",
+        "tags": ["bridge-sparql"],
+        "summary": "SPARQL 1.1 query endpoint",
+        "description": "SELECT, CONSTRUCT, or ASK over the UOR knowledge graph (ontology + Q0 instance graph with all 256 datums). Supports WHERE triple patterns, FILTER, LIMIT, OFFSET. Implements the uor_query tool from Section 6.4.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "URL-encoded SPARQL SELECT query",
+            "example": "SELECT ?s WHERE { ?s a schema:Datum . ?s schema:value 42 }"
+          },
+          {
+            "name": "n",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 8, "minimum": 1, "maximum": 12 },
+            "description": "Ring bit width (default 8 → Z/256Z)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "application/sparql-results+json — SPARQL result set with epistemic grading",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sparql:totalResults": { "type": "integer" },
+                    "sparql:returnedResults": { "type": "integer" },
+                    "sparql:executionTimeMs": { "type": "number" },
+                    "sparql:results": { "type": "object" },
+                    "epistemic_grade": { "type": "string", "enum": ["A", "B", "C", "D"] },
+                    "epistemic_grade_label": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      },
+      "post": {
+        "operationId": "bridgeSparqlPost",
+        "tags": ["bridge-sparql"],
+        "summary": "SPARQL 1.1 query (POST)",
+        "description": "POST variant — send SPARQL query as JSON body {query: '...'} or as raw text with Content-Type: application/sparql-query.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": { "type": "string" },
+                  "n": { "type": "integer", "default": 8 }
+                },
+                "required": ["query"]
+              }
+            },
+            "application/sparql-query": {
+              "schema": { "type": "string" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "application/sparql-results+json" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/shapes/uor-shapes.ttl": {
+      "get": {
+        "operationId": "shaclShapesTtl",
+        "tags": ["bridge-sparql"],
+        "summary": "SHACL shapes in Turtle format",
+        "description": "Returns the canonical SHACL shapes for UOR data validation in W3C Turtle syntax. These shapes define constraints for Datum, Derivation, Certificate, and Partition nodes.",
+        "responses": {
+          "200": {
+            "description": "text/turtle — SHACL shapes document",
+            "content": {
+              "text/turtle": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/q0/instance-graph": {
+      "get": {
+        "operationId": "q0InstanceGraph",
+        "tags": ["bridge-sparql"],
+        "summary": "Q0 instance graph — all 256 datums of Z/256Z as JSON-LD",
+        "description": "Returns the complete Q0 instance graph with 256 Datum individuals, 6 canonical derivation examples, a critical identity proof, and a partition node. Available as static file at https://uor.foundation/uor_q0.jsonld",
+        "responses": {
+          "200": {
+            "description": "application/ld+json — Q0 instance graph",
+            "content": {
+              "application/ld+json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/derive": {
+      "get": {
+        "operationId": "toolDerive",
+        "tags": ["agent-tools"],
+        "summary": "uor_derive — evaluate ring-arithmetic expression",
+        "description": "Evaluate a ring-arithmetic expression with AC normalisation. Returns Grade A derivation certificate with SHA-256 derivation_id. Supports unary (neg, bnot, succ, pred), binary (xor, and, or, add, sub, mul), and literal (hex, decimal, binary) syntax.",
+        "parameters": [
+          { "name": "term", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Ring expression e.g. xor(0x55,0xaa), neg(bnot(42))" },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 }, "description": "Quantum level (0 = 8-bit ring Z/256Z)" }
+        ],
+        "responses": {
+          "200": { "description": "Derivation result with derivation_id and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/tools/query": {
+      "post": {
+        "operationId": "toolQuery",
+        "tags": ["agent-tools"],
+        "summary": "uor_query — SPARQL query with epistemic grading",
+        "description": "Execute a SPARQL query over the UOR knowledge graph. Each result node is annotated with derivation_id and epistemic_grade.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sparql": { "type": "string", "description": "SPARQL SELECT query" },
+                  "graph_uri": { "type": "string", "description": "Optional named graph URI" }
+                },
+                "required": ["sparql"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "JSON-LD @graph array with epistemic grading per node" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/tools/verify": {
+      "get": {
+        "operationId": "toolVerify",
+        "tags": ["agent-tools"],
+        "summary": "uor_verify — verify a derivation_id",
+        "description": "Verify a derivation_id against the knowledge graph. Returns verified:true (Grade A) or false (Grade D).",
+        "parameters": [
+          { "name": "derivation_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" }, "description": "SHA-256 derivation ID to verify" }
+        ],
+        "responses": {
+          "200": { "description": "Verification result with cert_chain and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/tools/correlate": {
+      "get": {
+        "operationId": "toolCorrelate",
+        "tags": ["agent-tools"],
+        "summary": "uor_correlate — algebraic fidelity between two elements",
+        "description": "Compute algebraic fidelity (0.0–1.0) between two ring elements using Hamming distance, XOR value, and ring distance.",
+        "parameters": [
+          { "name": "a", "in": "query", "required": true, "schema": { "type": "integer" }, "description": "First ring element" },
+          { "name": "b", "in": "query", "required": true, "schema": { "type": "integer" }, "description": "Second ring element" },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 }, "description": "Quantum level" }
+        ],
+        "responses": {
+          "200": { "description": "Correlation result with fidelity, Hamming distance, and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/tools/partition": {
+      "post": {
+        "operationId": "toolPartition",
+        "tags": ["agent-tools"],
+        "summary": "uor_partition — build ring partition from seed set",
+        "description": "Build a ring partition from a seed set with closure analysis. Supports GRAPH_CLOSED (no expansion) and FIXED_POINT (expand until closed under unary ops) modes.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "seed_set": { "type": "array", "items": { "type": "integer" }, "description": "Seed elements" },
+                  "closure_mode": { "type": "string", "enum": ["GRAPH_CLOSED", "FIXED_POINT"], "description": "Closure computation mode" },
+                  "quantum": { "type": "integer", "default": 0, "description": "Quantum level" }
+                },
+                "required": ["seed_set"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Partition result with cardinality, closure analysis, and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/bridge/morphism/transform": {
+      "post": {
+        "operationId": "bridgeMorphismTransform",
+        "tags": ["morphism"],
+        "summary": "Verify a ring morphism (embedding, isometry, or action)",
+        "description": "Exhaustively verify a structure-preserving map between two quantum rings. Returns a TransformCertificate with verification result and computation trace.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "source_quantum": { "type": "integer", "default": 0, "description": "Source ring quantum level" },
+                  "target_quantum": { "type": "integer", "default": 1, "description": "Target ring quantum level" },
+                  "transform_type": { "type": "string", "enum": ["embedding", "isometry", "action"], "description": "Type of morphism to verify" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Transform verification result with certificate and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/bridge/morphism/isometry": {
+      "get": {
+        "operationId": "bridgeMorphismIsometry",
+        "tags": ["morphism"],
+        "summary": "Verify neg or bnot as a ring isometry",
+        "description": "Exhaustively verify that neg or bnot is an involution and metric-preserving isometry on the ring. Returns IsometryCertificate.",
+        "parameters": [
+          { "name": "op", "in": "query", "required": false, "schema": { "type": "string", "enum": ["neg", "bnot"], "default": "neg" }, "description": "Operation to verify as isometry" },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 }, "description": "Quantum level" }
+        ],
+        "responses": {
+          "200": { "description": "Isometry verification with involution check and metric preservation" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/bridge/morphism/coerce": {
+      "get": {
+        "operationId": "bridgeMorphismCoerce",
+        "tags": ["morphism"],
+        "summary": "Cross-quantum value coercion (embed or project)",
+        "description": "Coerce a value from one quantum ring to another. Embedding (lower→higher) is lossless; projection (higher→lower) may lose information.",
+        "parameters": [
+          { "name": "value", "in": "query", "required": true, "schema": { "type": "integer" }, "description": "Value to coerce" },
+          { "name": "from_q", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 }, "description": "Source quantum level" },
+          { "name": "to_q", "in": "query", "required": false, "schema": { "type": "integer", "default": 1 }, "description": "Target quantum level" }
+        ],
+        "responses": {
+          "200": { "description": "Coerced value with target IRI and transform reference" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/cert/issue": {
+      "post": {
+        "operationId": "certIssue",
+        "tags": ["certificates"],
+        "summary": "Issue a cert:Certificate for a derivation",
+        "description": "Generates a verifiable cert:TransformCertificate with deterministic IRI (SHA-256 of derivation_id). Includes PROV-O provenance and epistemic grading.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "certify": { "type": "string", "enum": ["derivation", "partition"], "default": "derivation" },
+                  "derivation_id": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" }
+                },
+                "required": ["derivation_id"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "cert:TransformCertificate with algebraic proof" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/cert/portability": {
+      "get": {
+        "operationId": "certPortability",
+        "tags": ["certificates"],
+        "summary": "GDPR Article 20 data portability attestation",
+        "description": "Returns a W3C Verifiable Credential attesting GDPR Article 20 data portability rights for a UOR derivation.",
+        "parameters": [
+          { "name": "derivation_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" } }
+        ],
+        "responses": { "200": { "description": "W3C VerifiableCredential with GDPR attestation" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/sparql/federation-plan": {
+      "get": {
+        "operationId": "sparqlFederationPlan",
+        "tags": ["sparql"],
+        "summary": "SPARQL federation cardinality planning",
+        "description": "Returns partition cardinality estimates (irreducibles, reducibles, units, exterior) for federated SPARQL query planning. Computed algebraically without network requests.",
+        "parameters": [
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } },
+          { "name": "query", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Federation plan with cardinality estimates and join strategy" } }
+      }
+    },
+    "/bridge/resolver/entity": {
+      "post": {
+        "operationId": "bridgeResolverEntity",
+        "tags": ["resolver"],
+        "summary": "Natural-language entity resolver",
+        "description": "Resolves natural-language entity descriptions to ring elements using constraint extraction (Hamming weight, value proximity, stratum). Returns Grade B (NL extraction is not algebraically proven).",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "entity": { "type": "string", "description": "NL entity description e.g. 'the byte with Hamming weight 3 nearest to 42'" },
+                  "quantum": { "type": "integer", "default": 0 }
+                },
+                "required": ["entity"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Resolver candidates with fidelity scores" }, "400": { "$ref": "#/components/responses/BadRequest" } }
+      }
+    },
+    "/schema-org/extend": {
+      "get": {
+        "operationId": "schemaOrgExtendGet",
+        "tags": ["semantic-web"],
+        "summary": "Get schema.org ↔ UOR extension vocabulary",
+        "description": "Returns the UOR extension vocabulary for schema.org: the set of additional properties (derivation_id, contentHash, attributionCertificate) that UOR adds to any schema.org object. Use this to understand the extension schema before calling POST.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": { "description": "Extension vocabulary with property definitions and examples" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      },
+      "post": {
+        "operationId": "schemaOrgExtend",
+        "tags": ["semantic-web"],
+        "summary": "Extend schema.org JSON-LD with UOR attribution",
+        "description": "Takes any valid schema.org JSON-LD object and adds UOR derivation_id, contentHash, and attributionCertificate. Grade B (content hash, not algebraic proof).",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "description": "Any valid schema.org JSON-LD object" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Extended JSON-LD with UOR attribution" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "operationId": "apiRoot",
+        "tags": ["navigate"],
+        "summary": "API root — redirect to /navigate",
+        "description": "Returns the same navigation index as /navigate. Convenience alias for the root path.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": { "description": "Navigation index", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NavigationIndex" } } } },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/oracle/ledger": {
+      "get": {
+        "operationId": "oracleLedger",
+        "tags": ["oracle"],
+        "summary": "Query the oracle ledger — immutable audit log of all store operations",
+        "description": "Returns paginated oracle ledger entries. Each entry records a store operation with derivation ID, CIDs, epistemic grade, and timestamps.",
+        "parameters": [
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 50, "maximum": 200 } },
+          { "name": "offset", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } },
+          { "name": "operation", "in": "query", "required": false, "schema": { "type": "string", "enum": ["write", "read", "verify", "write-context"] } },
+          { "name": "object_type", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated oracle ledger entries with total count" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/oracle/stats": {
+      "get": {
+        "operationId": "oracleStats",
+        "tags": ["oracle"],
+        "summary": "Oracle ledger statistics — aggregate counts and metrics",
+        "description": "Returns aggregate statistics: total operations, operations by type, objects by type, storage distribution, and time-series data.",
+        "responses": {
+          "200": { "description": "Aggregate oracle statistics" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/kernel/op/correlate": {
+      "get": {
+        "operationId": "opCorrelate",
+        "tags": ["kernel-op"],
+        "summary": "Algebraic correlation between two ring elements",
+        "description": "Compute fidelity (0.0–1.0) between two ring elements using Hamming distance, XOR value, and ring distance. Equivalent to /tools/correlate.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "a", "in": "query", "required": true, "schema": { "type": "integer", "minimum": 0, "maximum": 65535 } },
+          { "name": "b", "in": "query", "required": true, "schema": { "type": "integer", "minimum": 0, "maximum": 65535 } },
+          { "name": "quantum", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": { "description": "Correlation result with fidelity, Hamming distance, XOR value, ring distance, and epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/kernel/derive": {
+      "post": {
+        "operationId": "kernelDerive",
+        "tags": ["kernel-schema"],
+        "summary": "Derive a canonical content-addressed identity for arbitrary input",
+        "description": "Accepts any JSON object or string, canonicalises it via URDNA2015, computes SHA-256, and returns the full UOR identity (derivation_id, CIDv1, Braille address, IPv6 ULA).",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "properties": { "input": { "description": "Any JSON value to derive" } }, "required": ["input"] }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "UOR identity with derivation_id, CID, Braille address, and IPv6" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/kernel/ontology": {
+      "get": {
+        "operationId": "kernelOntology",
+        "tags": ["ontology"],
+        "summary": "Export the full UOR ontology as OWL/RDFS JSON-LD",
+        "description": "Returns the complete UOR ontology: all classes, properties, individuals, and axioms expressed as W3C OWL 2 / RDFS. Includes all 14 namespaces.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": { "description": "OWL/RDFS ontology in JSON-LD format", "content": { "application/ld+json": { "schema": { "type": "object" } } } },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/shacl/shapes": {
+      "get": {
+        "operationId": "shaclShapes",
+        "tags": ["bridge-shacl"],
+        "summary": "List all SHACL shapes for UOR ontology validation",
+        "description": "Returns the catalogue of W3C SHACL shapes used to validate UOR data graphs. Each shape constrains a specific UOR type (schema:Datum, derivation:DerivationTrace, etc.).",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": { "description": "SHACL shapes graph in JSON-LD", "content": { "application/ld+json": { "schema": { "type": "object" } } } },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/shacl/validate": {
+      "get": {
+        "operationId": "shaclValidate",
+        "tags": ["bridge-shacl"],
+        "summary": "Validate a UOR object against SHACL shapes",
+        "description": "Validates a ring element's datum representation against all applicable SHACL shapes. Returns a W3C SHACL validation report.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": { "description": "SHACL validation report (sh:ValidationReport)", "content": { "application/ld+json": { "schema": { "type": "object" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/emit": {
+      "get": {
+        "operationId": "bridgeEmit",
+        "tags": ["bridge-emit"],
+        "summary": "Emit a UOR datum as W3C JSON-LD 1.1",
+        "description": "Emits a fully expanded JSON-LD 1.1 document for a ring element. Includes all algebraic metadata, @context, @id, and ontology references.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" },
+          { "name": "type", "in": "query", "required": false, "schema": { "type": "string", "enum": ["datum", "derivation", "coherence-proof", "graph"], "default": "datum" } }
+        ],
+        "responses": {
+          "200": { "description": "JSON-LD 1.1 document", "content": { "application/ld+json": { "schema": { "type": "object" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/gnn/graph": {
+      "get": {
+        "operationId": "gnnGraph",
+        "tags": ["bridge-gnn"],
+        "summary": "Export UOR knowledge graph in GNN-ready format",
+        "description": "Returns the knowledge graph as a node-edge-feature structure suitable for Graph Neural Network ingestion.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/n" },
+          { "name": "format", "in": "query", "required": false, "schema": { "type": "string", "enum": ["adjacency", "edge_list", "coo"], "default": "adjacency" } }
+        ],
+        "responses": {
+          "200": { "description": "GNN graph with node features, adjacency structure, and edge types" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/gnn/ground": {
+      "post": {
+        "operationId": "gnnGround",
+        "tags": ["bridge-gnn"],
+        "summary": "Ground a GNN embedding back to ring elements",
+        "description": "Maps a floating-point embedding vector to the nearest ring elements via Hamming distance minimization.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "embedding": { "type": "array", "items": { "type": "number" } },
+                  "top_k": { "type": "integer", "default": 5 },
+                  "quantum": { "type": "integer", "default": 0 }
+                },
+                "required": ["embedding"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Grounded ring elements with similarity scores" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/store/pod-context": {
+      "post": {
+        "operationId": "storePodContext",
+        "tags": ["pod-storage"],
+        "summary": "Create or retrieve a POD context for agent-scoped storage",
+        "description": "Creates an evaluation context with a given capacity and quantum level. Returns context_id for subsequent bindings.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "capacity": { "type": "integer", "minimum": 1, "maximum": 256 },
+                  "quantum": { "type": "integer", "enum": [4, 8, 16], "default": 8 }
+                },
+                "required": ["capacity"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Context created or retrieved" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/store/pod-write": {
+      "post": {
+        "operationId": "storePodWrite",
+        "tags": ["pod-storage"],
+        "summary": "Write a binding into a POD context",
+        "description": "Stores a content-addressed binding (address → value) in the given context.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "context_id": { "type": "string" },
+                  "address": { "type": "string" },
+                  "content": { "type": "string" }
+                },
+                "required": ["context_id", "address", "content"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Binding stored" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/store/pod-read": {
+      "get": {
+        "operationId": "storePodRead",
+        "tags": ["pod-storage"],
+        "summary": "Read a binding from a POD context",
+        "description": "Retrieves a specific binding by context_id and address.",
+        "parameters": [
+          { "name": "context_id", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "address", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Binding content" },
+          "404": { "description": "Binding not found" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/store/pod-list": {
+      "get": {
+        "operationId": "storePodList",
+        "tags": ["pod-storage"],
+        "summary": "List all bindings in a POD context",
+        "description": "Returns all bindings for the given context_id with their addresses, content, and timestamps.",
+        "parameters": [
+          { "name": "context_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Array of bindings" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/graph/q0.jsonld": {
+      "get": {
+        "operationId": "graphQ0Jsonld",
+        "tags": ["graph"],
+        "summary": "Full Q0 knowledge graph as JSON-LD @graph",
+        "description": "Returns the complete pre-computed Q0 instance graph (all 2^n datums) as a JSON-LD @graph array with full algebraic metadata per datum.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": { "description": "JSON-LD @graph array of all datums", "content": { "application/ld+json": { "schema": { "type": "object" } } } },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/graph/q0/stats": {
+      "get": {
+        "operationId": "graphQ0Stats",
+        "tags": ["graph"],
+        "summary": "Q0 knowledge graph statistics",
+        "description": "Returns aggregate statistics for the Q0 instance graph: datum count, triple count, partition distribution, and namespace usage.",
+        "security": [{}, {"AgentKey": []}],
+        "responses": {
+          "200": { "description": "Graph statistics" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/graph/q0/datum/{value}": {
+      "get": {
+        "operationId": "graphQ0Datum",
+        "tags": ["graph"],
+        "summary": "Lookup a single datum in the Q0 knowledge graph",
+        "description": "Returns the full schema:Datum for a specific value in the Q0 instance graph, including all algebraic properties and linked triples.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "value", "in": "path", "required": true, "schema": { "type": "integer", "minimum": 0 }, "description": "The datum value to look up" }
+        ],
+        "responses": {
+          "200": { "description": "Full datum with algebraic metadata", "content": { "application/ld+json": { "schema": { "$ref": "#/components/schemas/Datum" } } } },
+          "404": { "description": "Datum value not found in the graph" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/observer/register": {
+      "post": {
+        "operationId": "observerRegister",
+        "tags": ["observer"],
+        "summary": "Register an observer agent",
+        "description": "Registers an agent as an observer in the observer network. Assigns initial zone (COHERENCE) and records founding derivation.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "agent_id": { "type": "string" },
+                  "founding_derivation_id": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" }
+                },
+                "required": ["agent_id", "founding_derivation_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Observer registered with zone assignment" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/observer/network/summary": {
+      "get": {
+        "operationId": "observerNetworkSummary",
+        "tags": ["observer"],
+        "summary": "Observer network summary — zone distribution and convergence metrics",
+        "description": "Returns aggregate network statistics: observer counts per zone, mean h-scores, convergence indicators.",
+        "responses": {
+          "200": { "description": "Network summary with zone distribution" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/observer/assess": {
+      "post": {
+        "operationId": "observerAssess",
+        "tags": ["observer"],
+        "summary": "Assess an observer output for epistemic grading",
+        "description": "Submits an output hash for epistemic assessment. Computes h-score, updates observer persistence, and may trigger zone transitions.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "agent_id": { "type": "string" },
+                  "output_hash": { "type": "string" },
+                  "derivation_id": { "type": "string" }
+                },
+                "required": ["agent_id", "output_hash"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Assessment result with h-score and zone status" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/observer/convergence-check": {
+      "get": {
+        "operationId": "observerConvergenceCheck",
+        "tags": ["observer"],
+        "summary": "Check network convergence status",
+        "description": "Determines whether the observer network has reached convergence based on zone stability thresholds.",
+        "responses": {
+          "200": { "description": "Convergence status with metrics" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/observer/{id}": {
+      "get": {
+        "operationId": "observerGet",
+        "tags": ["observer"],
+        "summary": "Get observer details by agent ID",
+        "description": "Returns full observer profile: zone, h-score mean, persistence, grade A rate, founding derivation, and field of observation.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Observer agent_id" }
+        ],
+        "responses": {
+          "200": { "description": "Observer profile" },
+          "404": { "description": "Observer not found" }
+        }
+      }
+    },
+    "/attribution/register": {
+      "post": {
+        "operationId": "attributionRegister",
+        "tags": ["attribution"],
+        "summary": "Register derivation attribution — provenance chain for content",
+        "description": "Records the provenance of a derivation: who created it, when, and what it derives from. Returns an attribution certificate.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "derivation_id": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" },
+                  "creator": { "type": "string" },
+                  "source_derivation_ids": { "type": "array", "items": { "type": "string" } }
+                },
+                "required": ["derivation_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Attribution certificate" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/attribution/verify": {
+      "get": {
+        "operationId": "attributionVerify",
+        "tags": ["attribution"],
+        "summary": "Verify an attribution chain",
+        "description": "Verifies the attribution chain for a derivation, checking certificate validity and provenance integrity.",
+        "parameters": [
+          { "name": "derivation_id", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" } }
+        ],
+        "responses": {
+          "200": { "description": "Verification result with chain status" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/attribution/royalty-report": {
+      "get": {
+        "operationId": "attributionRoyaltyReport",
+        "tags": ["attribution"],
+        "summary": "Generate royalty/revenue attribution report",
+        "description": "Computes revenue attribution based on derivation provenance chains.",
+        "parameters": [
+          { "name": "derivation_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Royalty report with attribution splits" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/schema-org/coherence": {
+      "post": {
+        "operationId": "schemaOrgCoherence",
+        "tags": ["semantic-web"],
+        "summary": "Verify schema.org ↔ UOR coherence",
+        "description": "Validates that a schema.org JSON-LD object's UOR attribution is consistent and the derivation chain is intact.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "description": "Schema.org JSON-LD object with UOR attribution" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Coherence verification result" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/schema-org/pin-all": {
+      "post": {
+        "operationId": "schemaOrgPinAll",
+        "tags": ["semantic-web"],
+        "summary": "Batch pin schema.org objects to IPFS with UOR attribution",
+        "description": "Extends and pins multiple schema.org objects in a single request.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "objects": { "type": "array", "items": { "type": "object" }, "maxItems": 50 },
+                  "gateway": { "type": "string", "default": "pinata" }
+                },
+                "required": ["objects"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Batch pin results with per-object CIDs and derivation IDs" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/sparql/verify": {
+      "get": {
+        "operationId": "sparqlVerify",
+        "tags": ["bridge-sparql"],
+        "summary": "Verify a SPARQL query result against the knowledge graph",
+        "description": "Replays a SPARQL query and verifies each result node's derivation_id. Returns epistemic grading per node.",
+        "parameters": [
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "n", "in": "query", "required": false, "schema": { "type": "integer", "default": 8 } }
+        ],
+        "responses": {
+          "200": { "description": "Verification result with per-node grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/test/e2e": {
+      "get": {
+        "operationId": "testE2e",
+        "tags": ["test"],
+        "summary": "End-to-end conformance test",
+        "description": "Runs the full UOR conformance test suite (test7_end_to_end.rs equivalent) against the live API and returns pass/fail per test.",
+        "responses": {
+          "200": { "description": "Test results with pass/fail per test case" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/.well-known/void": {
+      "get": {
+        "operationId": "wellKnownVoid",
+        "tags": ["discovery"],
+        "summary": "VoID dataset descriptor",
+        "description": "W3C VoID (Vocabulary of Interlinked Datasets) descriptor for Linked Open Data registration. Describes the Q0 knowledge graph, SPARQL endpoint, and vocabulary URIs.",
+        "responses": {
+          "200": {
+            "description": "VoID dataset descriptor in Turtle or JSON-LD",
+            "content": {
+              "application/ld+json": { "schema": { "type": "object" } }
+            }
+          }
+        }
+      }
+    },
+    "/kernel/schema/triad": {
+      "get": {
+        "operationId": "schemaTriad",
+        "tags": ["kernel-schema"],
+        "summary": "Get full schema:Triad decomposition for a ring value",
+        "description": "Returns the triadic coordinate decomposition (datum, stratum, spectrum) for a given integer value at quantum level n. The Triad is the canonical analytical lens of the UOR framework: datum↔subject (WHAT), stratum↔predicate (HOW MUCH), spectrum↔object (WHICH bits).\n\n**Framework mapping (schema.rs):**\n- `schema:Triad` — triadic coordinate system\n- `schema:datum` — big-endian byte tuple\n- `schema:stratum` — popcount per byte position\n- `schema:spectrum` — LSB-indexed basis elements per byte",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full schema:Triad with per-byte stratum and spectrum decomposition",
+            "headers": {
+              "ETag": { "$ref": "#/components/headers/ETag" },
+              "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+              "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+              "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Datum" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "405": { "$ref": "#/components/responses/MethodNotAllowed" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" },
+          "default": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/store/resolve": {
+      "get": {
+        "operationId": "storeResolve",
+        "tags": ["store"],
+        "summary": "Resolve a UOR address to its stored IPFS CID",
+        "description": "Given a UOR Braille address or derivation_id, resolves to the corresponding IPFS CID if the object has been stored. Returns the CID, gateway URL, and storage metadata.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "address", "in": "query", "required": false, "schema": { "type": "string" }, "description": "UOR Braille address (u:glyph) to resolve" },
+          { "name": "derivation_id", "in": "query", "required": false, "schema": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$" }, "description": "Derivation ID to resolve" }
+        ],
+        "responses": {
+          "200": { "description": "Resolution result with CID and gateway URL" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "description": "No stored object found for the given address or derivation_id" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/bridge/graph/query": {
+      "get": {
+        "operationId": "bridgeGraphQuery",
+        "tags": ["graph"],
+        "summary": "Query the UOR knowledge graph by triple pattern",
+        "description": "Lightweight triple-pattern query over the UOR knowledge graph. Supports subject, predicate, and object filters. Returns matching triples as a JSON-LD @graph array.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "subject", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Filter by subject IRI" },
+          { "name": "predicate", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Filter by predicate IRI" },
+          { "name": "object", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Filter by object IRI or literal" },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 100, "maximum": 1000 }, "description": "Maximum results to return" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching triples as JSON-LD @graph",
+            "content": {
+              "application/ld+json": { "schema": { "type": "object" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/InternalServerError" }
+        }
+      }
+    },
+    "/observer/{id}/zone": {
+      "get": {
+        "operationId": "observerGetZone",
+        "tags": ["observer"],
+        "summary": "Get observer zone classification",
+        "description": "Returns the current zone (COHERENCE, DRIFT, or COLLAPSE) for a specific observer agent, along with zone transition history and h-score metrics.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Observer agent_id" }
+        ],
+        "responses": {
+          "200": { "description": "Zone classification with metrics" },
+          "404": { "description": "Observer not found" }
+        }
+      }
+    },
+    "/observer/{id}/history": {
+      "get": {
+        "operationId": "observerGetHistory",
+        "tags": ["observer"],
+        "summary": "Get observer assessment history",
+        "description": "Returns the full assessment history for an observer agent: all submitted outputs, h-scores, epistemic grades, and zone transitions over time.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Observer agent_id" },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 50, "maximum": 200 }, "description": "Maximum history entries to return" }
+        ],
+        "responses": {
+          "200": { "description": "Assessment history with h-scores and zone transitions" },
+          "404": { "description": "Observer not found" }
+        }
+      }
+    },
+    "/observer/{id}/remediate": {
+      "post": {
+        "operationId": "observerRemediate",
+        "tags": ["observer"],
+        "summary": "Remediate a drifting or collapsed observer",
+        "description": "Initiates remediation for an observer in DRIFT or COLLAPSE zone. Resets h-score accumulation and provides a remediation derivation_id for the agent to rebuild coherence.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Observer agent_id" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "remediation_derivation_id": { "type": "string", "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$", "description": "New founding derivation for remediation" }
+                },
+                "required": ["remediation_derivation_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Remediation initiated with new zone assessment" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "description": "Observer not found" }
+        }
+      }
+    },
+    "/sparql": {
+      "get": {
+        "operationId": "sparqlGet",
+        "tags": ["sparql"],
+        "summary": "SPARQL 1.1 query (alias for /bridge/sparql)",
+        "description": "Top-level SPARQL endpoint — alias for /bridge/sparql. Accepts the same query parameter and returns identical SPARQL results with epistemic grading.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" }, "description": "URL-encoded SPARQL query" },
+          { "name": "n", "in": "query", "required": false, "schema": { "type": "integer", "default": 8 }, "description": "Ring bit width" }
+        ],
+        "responses": {
+          "200": { "description": "application/sparql-results+json with epistemic grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      },
+      "post": {
+        "operationId": "sparqlPost",
+        "tags": ["sparql"],
+        "summary": "SPARQL 1.1 query POST (alias for /bridge/sparql POST)",
+        "description": "POST variant of the top-level SPARQL endpoint.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": { "type": "string" },
+                  "n": { "type": "integer", "default": 8 }
+                },
+                "required": ["query"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "application/sparql-results+json" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/sparql/verify": {
+      "get": {
+        "operationId": "sparqlVerifyTopLevel",
+        "tags": ["sparql"],
+        "summary": "Verify SPARQL query results (alias)",
+        "description": "Top-level alias for SPARQL result verification with epistemic grading.",
+        "security": [{}, {"AgentKey": []}],
+        "parameters": [
+          { "name": "query", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "n", "in": "query", "required": false, "schema": { "type": "integer", "default": 8 } }
+        ],
+        "responses": {
+          "200": { "description": "Verification result with per-node grading" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AgentKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-UOR-Agent-Key",
+        "description": "Optional API key for elevated rate limits. Unauthenticated: 120 req/min GET, 60 req/min POST. Authenticated: 600 req/min. Obtain at https://uor.foundation."
+      }
+    },
+    "headers": {
+      "ETag": {
+        "schema": { "type": "string" },
+        "description": "Cache validation token. Deterministic: same inputs always produce the same ETag. Use with If-None-Match for conditional requests (returns 304 Not Modified on match)."
+      },
+      "X-RateLimit-Limit": {
+        "schema": { "type": "integer" },
+        "description": "Maximum number of requests per minute for this endpoint class (120 for GET kernel, 60 for POST bridge)."
+      },
+      "X-RateLimit-Remaining": {
+        "schema": { "type": "integer" },
+        "description": "Remaining requests in the current 60-second window."
+      },
+      "X-RateLimit-Reset": {
+        "schema": { "type": "integer" },
+        "description": "Unix timestamp (seconds) when the rate limit window resets."
+      }
+    },
+    "parameters": {
+      "x": {
+        "name": "x",
+        "in": "query",
+        "required": true,
+        "schema": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "description": "Ring element value. Must satisfy 0 ≤ x < 2^n (e.g., < 256 for n=8, < 65536 for n=16). Schema maximum is the widest valid range (n=16); actual bound enforced at runtime against `n`.",
+        "example": 42
+      },
+      "n": {
+        "name": "n",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "integer", "minimum": 1, "maximum": 16, "default": 8 },
+        "description": "Ring quantum (bit-width). Selects R_n = Z/(2^n)Z. Default: 8 (R_8 = Z/256Z).",
+        "example": 8
+      }
+    },
+    "schemas": {
+      "EpistemicGrading": {
+        "type": "object",
+        "description": "Every API response includes epistemic grading fields. Grade A responses also include derivation:derivationId and derivation:resultIri.",
+        "properties": {
+          "epistemic_grade": {
+            "type": "string",
+            "enum": ["A", "B", "C", "D"],
+            "description": "UOR epistemic grade. A=Algebraically Proven (ring arithmetic + derivation ID). B=Graph-Certified (cert chain). C=Graph-Present (no cert). D=LLM-Generated (unverified)."
+          },
+          "epistemic_grade_label": { "type": "string", "description": "Human-readable label for the epistemic grade." },
+          "epistemic_grade_reason": { "type": "string", "description": "Explanation of why this grade was assigned and what it means for agent citation." },
+          "derivation:derivationId": {
+            "type": "string",
+            "pattern": "^urn:uor:derivation:sha256:[0-9a-f]{64}$",
+            "description": "SHA-256 content-addressed derivation identifier. Present for Grade A responses only. AC-normalised: commutative ops (xor, and, or) have arguments sorted ascending before hashing."
+          },
+          "derivation:resultIri": {
+            "type": "string",
+            "format": "uri",
+            "description": "Content-addressed IRI of the result datum. Pattern: https://uor.foundation/u/U{hex} for Q0."
+          }
+        }
+      },
+      "Datum": {
+        "type": "object",
+        "description": "schema:Datum — ring element with full algebraic metadata. Source: spec/src/namespaces/schema.rs. Property names use JSON-LD prefixed notation matching the @context in the response envelope — use string-key access in typed languages (e.g., obj[\"schema:value\"]).",
+        "required": ["@type", "schema:value", "schema:quantum", "schema:stratum", "schema:spectrum"],
+        "properties": {
+          "@type": { "type": "string", "const": "schema:Datum" },
+          "schema:value": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Integer value in [0, 2^n). JSON-LD wire key: 'schema:value'.",
+            "x-json-ld-term": "schema:value",
+            "example": 42
+          },
+          "schema:quantum": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "description": "Ring bit-width n. JSON-LD wire key: 'schema:quantum'.",
+            "x-json-ld-term": "schema:quantum",
+            "example": 8
+          },
+          "schema:stratum": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of set bits (popcount / Hamming weight). JSON-LD wire key: 'schema:stratum'.",
+            "x-json-ld-term": "schema:stratum",
+            "example": 3
+          },
+          "schema:spectrum": {
+            "type": "string",
+            "pattern": "^[01]+$",
+            "minLength": 1,
+            "maxLength": 16,
+            "description": "Binary representation string, zero-padded to n digits. JSON-LD wire key: 'schema:spectrum'.",
+            "x-json-ld-term": "schema:spectrum",
+            "example": "00101010"
+          },
+          "schema:glyph": {
+            "type": "object",
+            "description": "u:Address — content-addressable Braille identifier. JSON-LD wire key: 'schema:glyph'.",
+            "x-json-ld-term": "schema:glyph",
+            "required": ["@type", "u:glyph", "u:length"],
+            "properties": {
+              "@type": { "type": "string", "const": "u:Address" },
+              "u:glyph": {
+                "type": "string",
+                "pattern": "^[⠀-⣿]+$",
+                "description": "Braille character(s) from Unicode Braille block (U+2800–U+28FF). Wire key: 'u:glyph'.",
+                "x-json-ld-term": "u:glyph"
+              },
+              "u:length": {
+                "type": "integer",
+                "minimum": 1,
+                "x-json-ld-term": "u:length"
+              }
+            }
+          }
+        }
+      },
+      "WitnessData": {
+        "type": "object",
+        "description": "proof:WitnessData — algebraic witness for critical identity verification. Wire keys use JSON-LD prefixed notation.",
+        "required": ["@type", "proof:x", "proof:bnot_x", "proof:neg_bnot_x", "proof:succ_x", "proof:holds"],
+        "properties": {
+          "@type": { "type": "string", "const": "proof:WitnessData" },
+          "proof:x": { "type": "integer", "minimum": 0, "x-json-ld-term": "proof:x" },
+          "proof:bnot_x": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "bnot(x) = x XOR (2^n - 1). Wire key: 'proof:bnot_x'.",
+            "x-json-ld-term": "proof:bnot_x"
+          },
+          "proof:neg_bnot_x": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "neg(bnot(x)) = (-bnot(x)) mod 2^n. Wire key: 'proof:neg_bnot_x'.",
+            "x-json-ld-term": "proof:neg_bnot_x"
+          },
+          "proof:succ_x": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "succ(x) = (x + 1) mod 2^n. Wire key: 'proof:succ_x'.",
+            "x-json-ld-term": "proof:succ_x"
+          },
+          "proof:holds": {
+            "type": "boolean",
+            "description": "neg(bnot(x)) === succ(x). Wire key: 'proof:holds'.",
+            "x-json-ld-term": "proof:holds"
+          }
+        }
+      },
+      "CriticalIdentityProofResponse": {
+        "type": "object",
+        "description": "proof:CriticalIdentityProof — full algebraic verification with derivation steps",
+        "required": ["@context", "@id", "@type", "proof:quantum", "proof:verified", "proof:timestamp", "proof:witness", "derivation", "ontology_ref", "conformance_ref"],
+        "properties": {
+          "@context": { "type": "string", "format": "uri", "description": "JSON-LD context URL. Resolves to https://uor.foundation/contexts/uor-v1.jsonld — fetch once, cache permanently.", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "array", "items": { "type": "string" } },
+          "proof:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "proof:quantum" },
+          "proof:verified": { "type": "boolean", "x-json-ld-term": "proof:verified" },
+          "proof:timestamp": { "type": "string", "format": "date-time", "x-json-ld-term": "proof:timestamp" },
+          "proof:criticalIdentity": { "type": "string", "x-json-ld-term": "proof:criticalIdentity" },
+          "proof:provesIdentity": { "type": "object", "x-json-ld-term": "proof:provesIdentity" },
+          "proof:witness": { "$ref": "#/components/schemas/WitnessData" },
+          "derivation": {
+            "type": "object",
+            "required": ["@type"],
+            "properties": {
+              "@type": { "type": "string", "const": "derivation:DerivationTrace" },
+              "derivation:step1": { "type": "string" },
+              "derivation:step2": { "type": "string" },
+              "derivation:step3": { "type": "string" },
+              "derivation:conclusion": { "type": "string" }
+            }
+          },
+          "ontology_ref": { "type": "string", "format": "uri" },
+          "conformance_ref": { "type": "string", "format": "uri" }
+        }
+      },
+      "CoherenceProofResponse": {
+        "type": "object",
+        "description": "proof:CoherenceProof — universal verification across all 2^n ring elements",
+        "required": ["@type", "proof:quantum", "proof:verified", "proof:timestamp", "summary"],
+        "properties": {
+          "@type": { "type": "array", "items": { "type": "string" } },
+          "proof:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "proof:quantum" },
+          "proof:verified": { "type": "boolean", "x-json-ld-term": "proof:verified" },
+          "proof:timestamp": { "type": "string", "format": "date-time", "x-json-ld-term": "proof:timestamp" },
+          "summary": {
+            "type": "object",
+            "required": ["ring", "total", "passed", "failed", "holds_universally", "claim"],
+            "properties": {
+              "ring": { "type": "string" },
+              "total": { "type": "integer" },
+              "passed": { "type": "integer" },
+              "failed": { "type": "integer" },
+              "holds_universally": { "type": "boolean" },
+              "claim": { "type": "string" }
+            }
+          },
+          "coherence_layers": { "type": "object" }
+        }
+      },
+      "CoherenceProofRequest": {
+        "type": "object",
+        "required": ["type_definition"],
+        "properties": {
+          "type_definition": {
+            "type": "object",
+            "description": "type:TypeDefinition to verify coherence for. Minimum: {\"@type\": \"type:PrimitiveType\", \"type:bitWidth\": 8}",
+            "required": ["@type"],
+            "properties": {
+              "@type": {
+                "type": "string",
+                "enum": ["type:PrimitiveType", "type:ProductType", "type:SumType", "type:ConstrainedType"]
+              },
+              "type:bitWidth": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16,
+                "description": "Required for type:PrimitiveType. Specifies the ring quantum n.",
+                "x-json-ld-term": "type:bitWidth"
+              }
+            }
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16,
+            "default": 8,
+            "description": "Ring quantum (bit-width). If omitted, taken from type_definition.type:bitWidth, then defaults to 8."
+          }
+        }
+      },
+      "UnaryOpResult": {
+        "type": "object",
+        "description": "Result of a named op:UnaryOp individual applied to x",
+        "required": ["@id", "@type", "op:arity", "op:geometricCharacter", "formula", "result"],
+        "properties": {
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "op:UnaryOp" },
+          "op:arity": { "type": "integer", "const": 1, "x-json-ld-term": "op:arity" },
+          "op:geometricCharacter": { "type": "string", "x-json-ld-term": "op:geometricCharacter" },
+          "formula": { "type": "string" },
+          "result": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "BinaryOpResult": {
+        "type": "object",
+        "description": "Result of a named op:BinaryOp individual applied to (x, y)",
+        "required": ["@id", "@type", "op:arity", "op:commutative", "op:associative", "formula", "result"],
+        "properties": {
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "op:BinaryOp" },
+          "op:arity": { "type": "integer", "const": 2, "x-json-ld-term": "op:arity" },
+          "op:commutative": { "type": "boolean", "x-json-ld-term": "op:commutative" },
+          "op:associative": { "type": "boolean", "x-json-ld-term": "op:associative" },
+          "op:geometricCharacter": { "type": "string", "x-json-ld-term": "op:geometricCharacter" },
+          "formula": { "type": "string" },
+          "result": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "OpComputeResponse": {
+        "type": "object",
+        "description": "Results of all ring operations applied to x (and y for binary ops)",
+        "required": ["datum", "ring", "unary_ops", "binary_ops", "critical_identity"],
+        "properties": {
+          "@context": { "type": "string", "format": "uri", "description": "JSON-LD context URL.", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
+          "@id": { "type": "string", "format": "uri" },
+          "datum": { "$ref": "#/components/schemas/Datum" },
+          "ring": {
+            "type": "object",
+            "required": ["@type", "schema:ringQuantum", "schema:modulus"],
+            "properties": {
+              "@type": { "type": "string", "const": "schema:Ring" },
+              "schema:ringQuantum": { "type": "integer", "x-json-ld-term": "schema:ringQuantum" },
+              "schema:modulus": { "type": "integer", "x-json-ld-term": "schema:modulus" }
+            }
+          },
+          "unary_ops": {
+            "type": "object",
+            "properties": {
+              "neg": { "$ref": "#/components/schemas/UnaryOpResult" },
+              "bnot": { "$ref": "#/components/schemas/UnaryOpResult" },
+              "succ": { "$ref": "#/components/schemas/UnaryOpResult" },
+              "pred": { "$ref": "#/components/schemas/UnaryOpResult" }
+            }
+          },
+          "binary_ops": {
+            "type": "object",
+            "properties": {
+              "y": { "type": "integer" },
+              "add": { "$ref": "#/components/schemas/BinaryOpResult" },
+              "sub": { "$ref": "#/components/schemas/BinaryOpResult" },
+              "mul": { "$ref": "#/components/schemas/BinaryOpResult" },
+              "xor": { "$ref": "#/components/schemas/BinaryOpResult" },
+              "and": { "$ref": "#/components/schemas/BinaryOpResult" },
+              "or": { "$ref": "#/components/schemas/BinaryOpResult" }
+            }
+          },
+          "critical_identity": {
+            "type": "object",
+            "required": ["holds", "neg_bnot_x", "succ_x", "statement"],
+            "properties": {
+              "holds": { "type": "boolean" },
+              "neg_bnot_x": { "type": "integer" },
+              "succ_x": { "type": "integer" },
+              "statement": { "type": "string" }
+            }
+          }
+        }
+      },
+      "OpListResponse": {
+        "type": "object",
+        "description": "Complete catalogue of all 12 named op/ individuals",
+        "required": ["@type", "unary_operations", "binary_operations", "special_individuals", "total_individuals"],
+        "properties": {
+          "@type": { "type": "string" },
+          "unary_operations": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UnaryOpResult" }
+          },
+          "binary_operations": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BinaryOpResult" }
+          },
+          "special_individuals": {
+            "type": "array",
+            "items": { "type": "object" }
+          },
+          "total_individuals": { "type": "integer" }
+        }
+      },
+      "AddressEncodeRequest": {
+        "type": "object",
+        "required": ["input"],
+        "properties": {
+          "input": { "type": "string", "maxLength": 1000, "description": "UTF-8 string to encode as a u:Address" },
+          "encoding": { "type": "string", "enum": ["utf8"], "default": "utf8" }
+        }
+      },
+      "AddressEncodeResponse": {
+        "type": "object",
+        "description": "u:Address with per-byte u:Glyph decomposition",
+        "required": ["@type", "u:glyph", "u:length", "address_simplified"],
+        "properties": {
+          "@type": { "type": "string", "const": "u:Address" },
+          "u:glyph": { "type": "string", "description": "Braille address string. Wire key: 'u:glyph'.", "x-json-ld-term": "u:glyph" },
+          "u:length": { "type": "integer", "minimum": 1, "x-json-ld-term": "u:length" },
+          "address_simplified": { "type": "string" },
+          "address_canonical": { "type": "string" },
+          "encoding_note": { "type": "string" },
+          "glyphs": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "PartitionRequest": {
+        "description": "Exactly one of `type_definition` or `input` must be provided.",
+        "oneOf": [
+          {
+            "title": "TypeDefinitionPartition",
+            "description": "Full ring partition for a type:TypeDefinition",
+            "required": ["type_definition"],
+            "properties": {
+              "type_definition": {
+                "type": "object",
+                "description": "type:TypeDefinition to partition. E.g. {\"@type\": \"type:PrimitiveType\", \"type:bitWidth\": 8}",
+                "required": ["@type"],
+                "properties": { "@type": { "type": "string" } }
+              },
+              "resolver": {
+                "type": "string",
+                "enum": ["DihedralFactorizationResolver", "EvaluationResolver"],
+                "default": "DihedralFactorizationResolver"
+              }
+            }
+          },
+          {
+            "title": "InputStringPartition",
+            "description": "Per-byte partition analysis of a UTF-8 string",
+            "required": ["input"],
+            "properties": {
+              "input": {
+                "type": "string",
+                "maxLength": 1000,
+                "description": "UTF-8 string for per-byte partition analysis"
+              },
+              "encoding": { "type": "string", "enum": ["utf8"], "default": "utf8" },
+              "resolver": {
+                "type": "string",
+                "enum": ["DihedralFactorizationResolver", "EvaluationResolver"],
+                "default": "EvaluationResolver"
+              }
+            }
+          }
+        ]
+      },
+      "PartitionResponse": {
+        "type": "object",
+        "description": "partition:Partition with four disjoint, exhaustive components summing to 2^n",
+        "required": ["@type", "partition:quantum", "partition:density"],
+        "properties": {
+          "@type": { "type": "string", "const": "partition:Partition" },
+          "partition:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "partition:quantum" },
+          "partition:density": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "|IrreducibleSet| / |carrier|. > 0.25 indicates non-spam content.",
+            "x-json-ld-term": "partition:density"
+          },
+          "partition:irreducibles": { "type": "object" },
+          "partition:reducibles": { "type": "object" },
+          "partition:units": { "type": "object" },
+          "partition:exterior": { "type": "object" },
+          "cardinality_check": {
+            "type": "object",
+            "properties": {
+              "sum": { "type": "integer" },
+              "expected": { "type": "integer" },
+              "valid": { "type": "boolean" }
+            }
+          },
+          "quality_signal": { "type": "string" }
+        }
+      },
+      "InvolutionCertificateResponse": {
+        "type": "object",
+        "description": "cert:InvolutionCertificate — proof that f(f(x)) = x for all x in R_n",
+        "required": ["@type", "cert:operation", "cert:verified", "cert:quantum", "cert:timestamp", "verification"],
+        "properties": {
+          "@type": { "type": "array", "items": { "type": "string" } },
+          "cert:operation": { "type": "object", "x-json-ld-term": "cert:operation" },
+          "cert:method": { "type": "string", "x-json-ld-term": "cert:method" },
+          "cert:verified": { "type": "boolean", "x-json-ld-term": "cert:verified" },
+          "cert:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "cert:quantum" },
+          "cert:timestamp": { "type": "string", "format": "date-time", "x-json-ld-term": "cert:timestamp" },
+          "verification": {
+            "type": "object",
+            "required": ["total_checked", "passed", "failed", "holds_universally"],
+            "properties": {
+              "claim": { "type": "string" },
+              "formula": { "type": "string" },
+              "total_checked": { "type": "integer" },
+              "passed": { "type": "integer" },
+              "failed": { "type": "integer" },
+              "holds_universally": { "type": "boolean" }
+            }
+          }
+        }
+      },
+      "ObservableMetricsResponse": {
+        "type": "object",
+        "description": "observable:MetricBundle — RingMetric, HammingMetric, CascadeLength, CatastropheThreshold, Commutator for x in R_n",
+        "required": ["@type", "observable:quantum", "observable:datum"],
+        "properties": {
+          "@type": { "type": "string", "const": "observable:MetricBundle" },
+          "observable:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "observable:quantum" },
+          "observable:datum": { "$ref": "#/components/schemas/Datum" },
+          "observable:ringMetric": { "type": "object", "description": "d_R(x,0) = min(x, m-x)" },
+          "observable:hammingMetric": { "type": "object", "description": "popcount — number of set bits" },
+          "observable:cascadeLength": { "type": "object", "description": "trailing zero count — depth of 2-adic factorization" },
+          "observable:catastropheThreshold": { "type": "object", "description": "phase boundary detection" },
+          "observable:commutator": { "type": "object", "description": "Commutator measurement — 0 for commutative ring operations", "x-json-ld-term": "observable:commutator" }
+        }
+      },
+      "TypeListResponse": {
+        "type": "object",
+        "description": "Catalogue of type:PrimitiveType and composite type definitions",
+        "required": ["@type", "primitive_types", "composite_types"],
+        "properties": {
+          "@type": { "type": "string" },
+          "primitive_types": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["@id", "@type", "type:name", "type:bitWidth", "type:ringQuantum", "type:modulus"],
+              "properties": {
+                "@id": { "type": "string", "format": "uri" },
+                "@type": { "type": "string", "const": "type:PrimitiveType" },
+                "type:name": { "type": "string", "x-json-ld-term": "type:name" },
+                "type:bitWidth": { "type": "integer", "x-json-ld-term": "type:bitWidth" },
+                "type:ringQuantum": { "type": "integer", "x-json-ld-term": "type:ringQuantum" },
+                "type:modulus": { "type": "integer", "x-json-ld-term": "type:modulus" },
+                "description": { "type": "string" }
+              }
+            }
+          },
+          "composite_types": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "NavigationIndex": {
+        "type": "object",
+        "description": "Complete navigation index — all endpoints, namespace map, reading order",
+        "required": ["title", "version", "openapi_spec", "quick_start", "spaces", "namespace_map", "reading_order"],
+        "properties": {
+          "title": { "type": "string" },
+          "version": { "type": "string" },
+          "openapi_spec": { "type": "string", "format": "uri" },
+          "quick_start": { "type": "object" },
+          "spaces": { "type": "object" },
+          "namespace_map": { "type": "array" },
+          "reading_order": { "type": "array" }
+        }
+      },
+      "DerivationTraceResponse": {
+        "type": "object",
+        "description": "derivation:DerivationTrace — auditable, step-by-step operation record. Source: spec/src/namespaces/derivation.rs",
+        "required": ["@context", "@id", "@type", "summary", "derivation:sourceValue", "derivation:stepCount", "derivation:finalValue", "derivation:steps", "derivation:verification"],
+        "properties": {
+          "@context": { "type": "string", "format": "uri", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "derivation:DerivationTrace" },
+          "summary": {
+            "type": "object",
+            "required": ["source_value", "operation_sequence", "final_value", "steps", "identity_holds", "statement"],
+            "properties": {
+              "source_value": { "type": "integer" },
+              "operation_sequence": { "type": "array", "items": { "type": "string" } },
+              "final_value": { "type": "integer" },
+              "steps": { "type": "integer" },
+              "identity_holds": { "type": "boolean" },
+              "statement": { "type": "string" }
+            }
+          },
+          "derivation:sourceValue": { "type": "integer", "minimum": 0, "x-json-ld-term": "derivation:sourceValue" },
+          "derivation:quantum": { "type": "integer", "minimum": 1, "maximum": 16, "x-json-ld-term": "derivation:quantum" },
+          "derivation:ringModulus": { "type": "integer", "x-json-ld-term": "derivation:ringModulus" },
+          "derivation:operationSequence": { "type": "array", "items": { "type": "string" }, "x-json-ld-term": "derivation:operationSequence" },
+          "derivation:finalValue": { "type": "integer", "x-json-ld-term": "derivation:finalValue" },
+          "derivation:stepCount": { "type": "integer", "x-json-ld-term": "derivation:stepCount" },
+          "derivation:steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["@type", "derivation:stepNumber", "derivation:operationId", "derivation:input", "derivation:output", "derivation:formula"],
+              "properties": {
+                "@type": { "type": "string", "const": "derivation:DerivationStep" },
+                "derivation:stepNumber": { "type": "integer" },
+                "derivation:operationId": { "type": "string" },
+                "derivation:operationDescription": { "type": "string" },
+                "derivation:input": { "type": "integer" },
+                "derivation:output": { "type": "integer" },
+                "derivation:formula": { "type": "string" },
+                "derivation:ontologyRef": { "type": "string", "format": "uri" }
+              }
+            }
+          },
+          "derivation:verification": {
+            "type": "object",
+            "properties": {
+              "@type": { "type": "string" },
+              "derivation:criticalIdentityHolds": { "type": "boolean" },
+              "derivation:statement": { "type": "string" }
+            }
+          },
+          "ontology_ref": { "type": "string", "format": "uri" }
+        }
+      },
+      "ExecutionTraceResponse": {
+        "type": "object",
+        "description": "trace:ExecutionTrace — bit-level execution trace per operation step. Non-zero totalHammingDrift signals injection. Source: spec/src/namespaces/trace.rs",
+        "required": ["@context", "@id", "@type", "summary", "trace:sourceValue", "trace:finalState", "trace:frameCount", "trace:totalHammingDrift", "trace:frames"],
+        "properties": {
+          "@context": { "type": "string", "format": "uri", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "trace:ExecutionTrace" },
+          "summary": {
+            "type": "object",
+            "required": ["source_value", "operation_sequence", "final_state", "frames", "total_hamming_drift", "injection_detected", "note"],
+            "properties": {
+              "source_value": { "type": "integer" },
+              "operation_sequence": { "type": "array", "items": { "type": "string" } },
+              "final_state": { "type": "integer" },
+              "frames": { "type": "integer" },
+              "total_hamming_drift": { "type": "integer" },
+              "injection_detected": { "type": "boolean" },
+              "note": { "type": "string" }
+            }
+          },
+          "injection_example": {
+            "type": "object",
+            "description": "Worked example showing canonical (drift=0) vs anomalous (drift≠0) sequences",
+            "properties": {
+              "description": { "type": "string" },
+              "canonical_sequence": { "type": "object" },
+              "anomalous_sequence": { "type": "object" },
+              "detection_rule": { "type": "string" }
+            }
+          },
+          "trace:sourceValue": { "type": "integer", "x-json-ld-term": "trace:sourceValue" },
+          "trace:quantum": { "type": "integer", "x-json-ld-term": "trace:quantum" },
+          "trace:operationSequence": { "type": "array", "items": { "type": "string" }, "x-json-ld-term": "trace:operationSequence" },
+          "trace:finalState": { "type": "integer", "x-json-ld-term": "trace:finalState" },
+          "trace:frameCount": { "type": "integer", "x-json-ld-term": "trace:frameCount" },
+          "trace:totalHammingDrift": {
+            "type": "integer",
+            "description": "Net change in Hamming weight from start to end state. 0 = canonical, non-zero = anomalous / injection signal.",
+            "x-json-ld-term": "trace:totalHammingDrift"
+          },
+          "trace:frames": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["@type", "trace:frameIndex", "trace:state", "trace:binaryState", "trace:hammingWeight"],
+              "properties": {
+                "@type": { "type": "string", "const": "trace:Frame" },
+                "trace:frameIndex": { "type": "integer" },
+                "trace:operation": { "type": ["string", "null"] },
+                "trace:state": { "type": "integer" },
+                "trace:binaryState": { "type": "string" },
+                "trace:hammingWeight": { "type": "integer" },
+                "trace:hammingWeightDelta": { "type": "integer" },
+                "trace:delta": { "type": "string" },
+                "trace:xorDiff": { "type": "integer" }
+              }
+            }
+          },
+          "ontology_ref": { "type": "string", "format": "uri" }
+        }
+      },
+      "ResolutionResponse": {
+        "type": "object",
+        "description": "resolver:Resolution — canonical category classification with factor decomposition. Source: spec/src/namespaces/resolver.rs",
+        "required": ["@context", "@id", "@type", "summary", "resolver:inputValue", "resolver:component", "resolver:isIrreducible", "resolver:canonicalForm"],
+        "properties": {
+          "@context": { "type": "string", "format": "uri", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "resolver:Resolution" },
+          "summary": {
+            "type": "object",
+            "required": ["input", "component", "canonical_form", "is_irreducible", "category_label"],
+            "properties": {
+              "input": { "type": "integer" },
+              "component": { "type": "string", "enum": ["partition:IrreducibleSet", "partition:ReducibleSet", "partition:UnitSet", "partition:ExteriorSet"] },
+              "canonical_form": { "type": "string" },
+              "is_irreducible": { "type": "boolean" },
+              "category_label": { "type": "string" }
+            }
+          },
+          "resolver:inputValue": { "type": "integer", "x-json-ld-term": "resolver:inputValue" },
+          "resolver:quantum": { "type": "integer", "x-json-ld-term": "resolver:quantum" },
+          "resolver:component": { "type": "string", "x-json-ld-term": "resolver:component" },
+          "resolver:componentReason": { "type": "string", "x-json-ld-term": "resolver:componentReason" },
+          "resolver:isIrreducible": { "type": "boolean", "x-json-ld-term": "resolver:isIrreducible" },
+          "resolver:canonicalForm": { "type": "string", "x-json-ld-term": "resolver:canonicalForm" },
+          "resolver:decomposition": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "step": { "type": "integer" },
+                "action": { "type": "string" },
+                "result": { "type": "string" },
+                "cascadeDepth": { "type": "integer" },
+                "oddCore": { "type": "integer" }
+              }
+            }
+          },
+          "ontology_ref": { "type": "string", "format": "uri" }
+        }
+      },
+      "RingHomomorphismResponse": {
+        "type": "object",
+        "description": "morphism:RingHomomorphism — structure-preserving map between ring sizes. Source: spec/src/namespaces/morphism.rs",
+        "required": ["@context", "@id", "@type", "summary", "morphism:inputValue", "morphism:image", "morphism:morphismType", "morphism:isInjective", "morphism:isSurjective"],
+        "properties": {
+          "@context": { "type": "string", "format": "uri", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "array", "items": { "type": "string" } },
+          "summary": {
+            "type": "object",
+            "required": ["input", "from_ring", "to_ring", "image", "morphism_type", "is_injective", "is_isomorphism", "ring_structure_preserved"],
+            "properties": {
+              "input": { "type": "integer" },
+              "from_ring": { "type": "string" },
+              "to_ring": { "type": "string" },
+              "image": { "type": "integer" },
+              "morphism_type": { "type": "string", "enum": ["InclusionHomomorphism", "ProjectionHomomorphism", "IdentityHomomorphism"] },
+              "is_injective": { "type": "boolean" },
+              "is_isomorphism": { "type": "boolean" },
+              "ring_structure_preserved": { "type": "boolean" }
+            }
+          },
+          "morphism:source": { "type": "object", "x-json-ld-term": "morphism:source" },
+          "morphism:target": { "type": "object", "x-json-ld-term": "morphism:target" },
+          "morphism:inputValue": { "type": "integer", "x-json-ld-term": "morphism:inputValue" },
+          "morphism:image": { "type": "integer", "x-json-ld-term": "morphism:image" },
+          "morphism:mapFormula": { "type": "string", "x-json-ld-term": "morphism:mapFormula" },
+          "morphism:kernelSize": { "type": "integer", "x-json-ld-term": "morphism:kernelSize" },
+          "morphism:preserves": { "type": "array", "items": { "type": "string" }, "x-json-ld-term": "morphism:preserves" },
+          "morphism:isInjective": { "type": "boolean", "x-json-ld-term": "morphism:isInjective" },
+          "morphism:isSurjective": { "type": "boolean", "x-json-ld-term": "morphism:isSurjective" },
+          "morphism:isIsomorphism": { "type": "boolean", "x-json-ld-term": "morphism:isIsomorphism" },
+          "morphism:morphismType": { "type": "string", "x-json-ld-term": "morphism:morphismType" },
+          "morphism:commutativityProof": { "type": "object", "x-json-ld-term": "morphism:commutativityProof" },
+          "ontology_ref": { "type": "string", "format": "uri" }
+        }
+      },
+      "StateFrameResponse": {
+        "type": "object",
+        "description": "state:Frame — formal agent lifecycle state with category, entry/exit conditions, and all operation transitions. Source: spec/src/namespaces/state.rs",
+        "required": ["@context", "@id", "@type", "summary", "state:binding", "state:entryCondition", "state:exitCondition", "state:transitions", "state:transitionCount"],
+        "properties": {
+          "@context": { "type": "string", "format": "uri", "example": "https://uor.foundation/contexts/uor-v1.jsonld" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "state:Frame" },
+          "summary": {
+            "type": "object",
+            "required": ["value", "component", "stable_entry", "phase_boundary", "transition_count", "critical_identity_holds"],
+            "properties": {
+              "value": { "type": "integer" },
+              "component": { "type": "string" },
+              "stable_entry": { "type": "boolean" },
+              "phase_boundary": { "type": "boolean" },
+              "transition_count": { "type": "integer" },
+              "critical_identity_holds": { "type": "boolean" }
+            }
+          },
+          "state:binding": {
+            "type": "object",
+            "required": ["@type", "state:value", "state:component"],
+            "properties": {
+              "@type": { "type": "string", "const": "state:StateBinding" },
+              "state:value": { "type": "integer" },
+              "state:quantum": { "type": "integer" },
+              "state:component": { "type": "string" },
+              "state:componentReason": { "type": "string" },
+              "state:isIrreducible": { "type": "boolean" }
+            }
+          },
+          "state:entryCondition": {
+            "type": "object",
+            "required": ["@type", "state:isStableEntry"],
+            "properties": {
+              "@type": { "type": "string", "const": "state:EntryCondition" },
+              "state:isStableEntry": { "type": "boolean" },
+              "state:reason": { "type": "string" }
+            }
+          },
+          "state:exitCondition": {
+            "type": "object",
+            "required": ["@type", "state:isPhaseBoundary"],
+            "properties": {
+              "@type": { "type": "string", "const": "state:ExitCondition" },
+              "state:isPhaseBoundary": { "type": "boolean" },
+              "state:isExterior": { "type": "boolean" },
+              "state:reason": { "type": "string" }
+            }
+          },
+          "state:transitions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["@type", "state:operation", "state:fromState", "state:toState", "state:fromComponent", "state:toComponent", "state:componentChanged"],
+              "properties": {
+                "@type": { "type": "string", "const": "state:Transition" },
+                "state:operation": { "type": "string" },
+                "state:formula": { "type": "string" },
+                "state:fromState": { "type": "integer" },
+                "state:toState": { "type": "integer" },
+                "state:fromComponent": { "type": "string" },
+                "state:toComponent": { "type": "string" },
+                "state:componentChanged": { "type": "boolean" }
+              }
+            }
+          },
+          "state:transitionCount": { "type": "integer" },
+          "state:reachableComponents": { "type": "array", "items": { "type": "string" } },
+          "state:criticalIdentityHolds": { "type": "boolean" },
+          "ontology_ref": { "type": "string", "format": "uri" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error", "code"],
+        "properties": {
+          "error": { "type": "string", "description": "Human-readable error description" },
+          "code": {
+            "type": "string",
+            "enum": ["INVALID_PARAMETER", "RATE_LIMITED", "PAYLOAD_TOO_LARGE", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_IMPLEMENTED", "UNSUPPORTED_MEDIA_TYPE", "INTERNAL_ERROR", "GATEWAY_TIMEOUT", "BAD_GATEWAY", "GATEWAY_AUTH_MISSING", "CONFLICT"]
+          },
+          "param": { "type": "string", "description": "The parameter that caused the error (for 400 responses)" },
+          "docs": { "type": "string", "format": "uri", "description": "URL to this OpenAPI specification" }
+        }
+      },
+      "StoreStoredObject": {
+        "type": "object",
+        "description": "A UOR object that has been serialised to JSON-LD and stored on IPFS. Carries both a u:Address (semantic identity) and a store:Cid (storage identity).",
+        "properties": {
+          "@context": { "type": "object" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "store:StoredObject" },
+          "store:cid": { "type": "string", "description": "CIDv1, base32lower, dag-json codec, sha2-256." },
+          "store:cidScope": { "type": "string" },
+          "store:uorAddress": { "$ref": "#/components/schemas/UorAddress" },
+          "store:storedType": { "type": "string", "format": "uri" },
+          "store:pinnedAt": { "type": "string", "format": "date-time" },
+          "store:pinRecord": { "$ref": "#/components/schemas/StorePinRecord" },
+          "payload": { "type": "object", "description": "The original UOR object as stored." },
+          "summary": { "type": "object" }
+        }
+      },
+      "StoreRetrievedObject": {
+        "type": "object",
+        "description": "The result of retrieving a stored UOR object from IPFS, with dual verification results.",
+        "properties": {
+          "@context": { "type": "object" },
+          "@id": { "type": "string", "format": "uri" },
+          "@type": { "type": "string", "const": "store:RetrievedObject" },
+          "store:retrievedFrom": { "type": "string", "description": "The CID used for retrieval." },
+          "store:byteLength": { "type": "integer" },
+          "store:verified": {
+            "type": ["boolean", "null"],
+            "description": "true = verified, false = integrity failure, null = indeterminate (no reference address)."
+          },
+          "store:recomputedUorAddress": { "type": "string" },
+          "store:storedUorAddress": { "type": "string" },
+          "verification": { "$ref": "#/components/schemas/DualVerificationResult" },
+          "content": { "description": "The retrieved content. Present on /store/read, absent on /store/verify." }
+        }
+      },
+      "StorePinRecord": {
+        "type": "object",
+        "description": "Gateway-specific pin record. For Storacha: includes directoryCid, gatewayUrl, filename. For Pinata: includes IpfsHash, PinSize, Timestamp.",
+        "properties": {
+          "@type": { "type": "string", "const": "store:PinRecord" },
+          "store:provider": { "type": "string", "description": "Pin service provider name (e.g. 'pinata', 'storacha')." },
+          "store:pinnedAt": { "type": "string", "format": "date-time" },
+          "store:gatewayUrl": { "type": "string", "format": "uri", "description": "Direct HTTPS URL to retrieve the stored file." },
+          "store:pinCertificate": { "$ref": "#/components/schemas/CertTransformCertificate" },
+          "store:directoryCid": { "type": "string", "description": "Storacha only. UnixFS directory CID (bafy...). Append filename to gateway URL for retrieval." },
+          "store:filename": { "type": "string", "description": "Filename used when uploading. Required for Storacha subdomain gateway reads." }
+        }
+      },
+      "UorAddress": {
+        "type": "object",
+        "properties": {
+          "@type": { "type": "string", "const": "u:Address" },
+          "u:glyph": { "type": "string", "description": "Braille string. Each character encodes one byte via U+2800+byte." },
+          "u:length": { "type": "integer", "description": "Number of bytes (= number of Braille glyphs)." },
+          "u:encoding": { "type": "string", "const": "braille_bijection_Z_2n_Z" },
+          "u:quantum": { "type": "integer" }
+        }
+      },
+      "DualVerificationResult": {
+        "type": "object",
+        "properties": {
+          "cid_integrity": {
+            "type": "object",
+            "properties": {
+              "performed": { "type": "boolean" },
+              "expected_cid": { "type": "string" },
+              "computed_cid": { "type": "string" },
+              "match": { "type": ["boolean", "null"] },
+              "note": { "type": "string" }
+            }
+          },
+          "uor_consistency": {
+            "type": "object",
+            "properties": {
+              "performed": { "type": "boolean" },
+              "stored_uor_address": { "type": ["string", "null"] },
+              "recomputed_uor_address": { "type": "string" },
+              "match": { "type": ["boolean", "null"] },
+              "note": { "type": "string" }
+            }
+          },
+          "store_verified": { "type": "boolean" },
+          "verdict": { "type": "string" }
+        }
+      },
+      "CertTransformCertificate": {
+        "type": "object",
+        "properties": {
+          "@type": { "type": "string", "const": "cert:TransformCertificate" },
+          "cert:transformType": { "type": "string" },
+          "cert:verified": { "type": "boolean" },
+          "cert:quantum": { "type": "integer" },
+          "cert:timestamp": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid request parameters",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": {
+              "error": "Parameter 'x' must be an integer in [0, 65535]",
+              "code": "INVALID_PARAMETER",
+              "param": "x",
+              "docs": "https://api.uor.foundation/v1/openapi.json"
+            }
+          }
+        }
+      },
+      "MethodNotAllowed": {
+        "description": "HTTP method not supported for this endpoint. Check the Allow response header for permitted methods.",
+        "headers": {
+          "Allow": {
+            "schema": { "type": "string" },
+            "description": "Comma-separated list of allowed HTTP methods for this path (e.g., GET, OPTIONS)"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": {
+              "error": "Method DELETE not allowed. Allowed: GET, OPTIONS",
+              "code": "METHOD_NOT_ALLOWED",
+              "docs": "https://api.uor.foundation/v1/openapi.json"
+            }
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "description": "Request body must have Content-Type: application/json.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": {
+              "error": "Content-Type must be application/json",
+              "code": "UNSUPPORTED_MEDIA_TYPE",
+              "docs": "https://api.uor.foundation/v1/openapi.json"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Rate limit exceeded. Retry after 60 seconds.",
+        "headers": {
+          "Retry-After": { "schema": { "type": "integer" }, "description": "Seconds to wait before retrying" },
+          "X-RateLimit-Limit": { "$ref": "#/components/headers/X-RateLimit-Limit" },
+          "X-RateLimit-Remaining": { "$ref": "#/components/headers/X-RateLimit-Remaining" },
+          "X-RateLimit-Reset": { "$ref": "#/components/headers/X-RateLimit-Reset" }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": {
+              "error": "Rate limit exceeded",
+              "code": "RATE_LIMITED",
+              "docs": "https://api.uor.foundation/v1/openapi.json"
+            }
+          }
+        }
+      },
+      "PayloadTooLarge": {
+        "description": "Input string exceeds 1000 character limit",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "NotImplemented": {
+        "description": "This endpoint requires the Rust conformance suite (full dihedral factorization) and is not yet available in the cloud API. See https://github.com/UOR-Foundation/UOR-Framework for the local implementation.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": {
+              "error": "Not implemented in v1",
+              "code": "NOT_IMPLEMENTED",
+              "note": "Requires Rust conformance suite",
+              "conformance_suite": "https://github.com/UOR-Foundation/UOR-Framework"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Unexpected server-side error. The UOR kernel computation itself is deterministic; this indicates an infrastructure failure. Retry with exponential backoff.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": {
+              "error": "Internal server error",
+              "code": "INTERNAL_ERROR",
+              "docs": "https://api.uor.foundation/v1/openapi.json"
+            }
+          }
+        }
+      }
+    }
+  }
+}

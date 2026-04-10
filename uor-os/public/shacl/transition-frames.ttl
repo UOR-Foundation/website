@@ -1,0 +1,25 @@
+@prefix sh:        <http://www.w3.org/ns/shacl#> .
+@prefix state:     <https://uor.foundation/state/> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+
+# §3.4 — state:Transition must have state:from and state:to (both state:Frame)
+
+state:TransitionFramesShape
+  a sh:NodeShape ;
+  sh:targetClass state:Transition ;
+  rdfs:comment "state:Transition must have state:from and state:to, both of type state:Frame (§3.4)." ;
+  sh:property [
+    sh:path state:from ;
+    sh:class state:Frame ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:message "state:Transition must have exactly one state:from of type state:Frame (§3.4)." ;
+  ] ;
+  sh:property [
+    sh:path state:to ;
+    sh:class state:Frame ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:message "state:Transition must have exactly one state:to of type state:Frame (§3.4)." ;
+  ] ;
+  sh:severity sh:Violation .

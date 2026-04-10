@@ -1,0 +1,271 @@
+/**
+ * UOR SDK. Barrel export.
+ *
+ * The typed TypeScript bridge to the UOR Framework.
+ * All subsequent app-platform modules (app-identity, app-store, app-compute,
+ * app-trust, app-sdk, app-console) import from this single entry point.
+ *
+ * Three layers:
+ *   1. client . Live API wrapper (remote, verified, JSON-LD responses)
+ *   2. ring   . Local ring arithmetic (offline, unit tests)
+ *   3. canonical. Local content-addressing (URDNA2015 + SHA-256)
+ */
+
+// ── API Client ──────────────────────────────────────────────────────────────
+export { createUorClient } from "./client";
+export type { UorClient } from "./client";
+
+// ── Types ───────────────────────────────────────────────────────────────────
+export type {
+  UorIdentity,
+  CriticalIdentityResult,
+  RingOpsResult,
+  BrailleResult,
+  PartitionResult,
+  TraceResult,
+  TraceStep,
+  StoreWriteResult,
+  StoreReadResult,
+  StoreVerifyResult,
+  ObserverZone,
+  ObserverRegistration,
+  ObserverStatus,
+} from "./types";
+export { UorApiError } from "./types";
+
+// ── Local ring arithmetic (re-export from lib/uor-ring.ts) ──────────────────
+export {
+  neg,
+  bnot,
+  succ,
+  pred,
+  add,
+  sub,
+  mul,
+  xor,
+  and,
+  or,
+  compute,
+  verifyCriticalIdentity,
+  verifyAllCriticalIdentity,
+  modulus,
+  ringConfig,
+  DEFAULT_RING,
+  buildTriad,
+  makeDatum,
+  classifyByte,
+} from "./ring";
+
+// ── Local canonical identity (re-export from lib/uor-canonical.ts) ──────────
+export {
+  singleProofHash,
+  canonicalizeToNQuads,
+  verifySingleProof,
+  computeCid,
+  computeUorAddress,
+  computeIpv6Address,
+  computeModuleIdentity,
+  canonicalJsonLd,
+} from "./canonical";
+
+// ── Hologram Projection Registry (the UOR implementation layer) ─────────────
+export {
+  project,
+  PROJECTIONS,
+} from "./canonical";
+export type {
+  Hologram,
+  HologramProjection,
+  HologramSpec,
+  Fidelity,
+  ProjectionInput,
+} from "./canonical";
+
+// ── Monetization (payment-provider agnostic) ────────────────────────────────
+export { MonetizationEngine, createPaymentGateMiddleware } from "./monetization";
+export type {
+  MonetizationConfig,
+  PaymentProof,
+  PaymentRecord,
+  AccessCertificate,
+  DeveloperBalance,
+  AccessCheckResult,
+  BillingModel,
+  BillingInterval,
+  Currency,
+  RevenueSplit,
+} from "./monetization-types";
+export { DEFAULT_REVENUE_SPLIT } from "./monetization-types";
+
+// ── App Identity (P2. canonical identity for every deployed app) ───────────
+export {
+  createManifest,
+  updateManifest,
+  verifyManifest,
+  buildVersionChain,
+  AppRegistry,
+} from "./app-identity";
+export type { AppManifest, ManifestInput } from "./app-identity";
+
+// ── Import Adapter (P3. one-click deploy from any platform) ────────────────
+export { importApp, refreshApp } from "./import-adapter";
+export type {
+  ImportSource,
+  ImportResult,
+  AppFile,
+} from "./import-adapter";
+
+// ── Sovereign Data (P4. Solid Pod user-owned storage) ──────────────────────
+export {
+  PodManager,
+  connectUser,
+  writeUserData,
+  readUserData,
+  getUserHistory,
+  exportUserData,
+} from "./sovereign-data";
+export type {
+  UserPodContext,
+  DataAccessEvent,
+  WriteResult,
+  ReadResult,
+  BindingCertificate,
+} from "./sovereign-data";
+
+// ── Security Gate (P5. partition analysis + injection detection) ────────────
+export {
+  scanDeployment,
+  partitionGate,
+  checkInjection,
+  rateLimitCheck,
+  appSecurityCheck,
+} from "./security-gate";
+export type {
+  GateVerdict,
+  DeploymentScanResult,
+  InjectionCheckResult,
+  GateRequest,
+  GateResponse,
+} from "./security-gate";
+
+// ── Certified Developer-User Relationship (P6. cert:TransformCertificate) ──
+export {
+  issueCertificate,
+  verifyCertificate,
+  revokeCertificate,
+  getCertificate,
+  exportCertificateChain,
+} from "./relationship";
+export type {
+  RelationshipCertificate,
+  CertificateVerification,
+} from "./relationship";
+
+// ── Runtime Witness (P8. execution tracing for live-coded apps) ────────────
+export { RuntimeWitness } from "./runtime-witness";
+export type {
+  ExecutionTrace,
+  WitnessRequest,
+  WitnessResponse,
+  WitnessHandler,
+} from "./runtime-witness";
+
+// ── Discovery Engine (P9. observer theory & game-resistant reputation) ─────
+export { DiscoveryEngine } from "./discovery";
+export type {
+  AppObserverProfile,
+  ObserverZoneType,
+  NetworkSummary,
+} from "./discovery";
+
+// ── Morphism Router (P10. app-to-app composition layer) ────────────────────
+export { MorphismRouter } from "./morphism-router";
+export type {
+  MorphismType,
+  MorphismInterface,
+  MorphismCall,
+  MorphismResult,
+} from "./morphism-router";
+
+export type {
+  AppCliResult,
+  DeployOptions as CliDeployOptions,
+  UpdateOptions,
+  MonetizeOptions,
+  RollbackOptions,
+  AppRecord,
+  DeveloperIdentity,
+} from "./cli-types";
+
+// ── Deploy Orchestrator (Build→Ship→Run pipeline) ───────────────────────────
+export { deployApp } from "./deploy";
+export type {
+  DeployOptions,
+  DeployResult,
+  DeployStage,
+  DeployProgressCallback,
+} from "./deploy";
+
+// ── Runtime (Image Builder + Registry Ship + WASM Loader) ───────────────────
+export {
+  buildAppImage,
+  shipApp,
+  runApp,
+  listInstances,
+  getInstance,
+  stopAll,
+  getRuntimeStatus,
+} from "./runtime";
+export type {
+  ImageBuildOptions,
+  ImageBuildResult,
+  ShipInput,
+  ShipResult,
+  WasmRuntimeConfig,
+  WasmAppInstance,
+  RuntimeStatus,
+} from "./runtime";
+
+// ── App SDK (P11. five-function developer-facing SDK) ──────────────────────
+export { createUorAppClient, browserAutoInit } from "./app-sdk";
+export type {
+  UorAppClientConfig,
+  AppClient,
+  ConnectUserResult,
+  WriteDataResult,
+  ReadDataResult,
+  PaymentGateResult,
+  VerifyAppResult,
+  CallAppResult,
+  RevenueResult,
+} from "./app-sdk";
+
+// ── Free Tier & Revenue Share (P14. structurally sustainable tiers) ────────
+export { FreeTierManager, TIERS } from "./free-tier";
+export type {
+  TierName,
+  TierConfig,
+  DeveloperAccount as FreeTierDeveloperAccount,
+  LimitCheckResult,
+  PayoutResult,
+} from "./free-tier";
+
+// ── Universal Identity (One Login, All Apps) ────────────────────────────────
+export { UniversalIdentityManager } from "./universal-identity";
+export type {
+  IdentityRecord,
+  UniversalSession,
+  UsageRecord,
+  AppSessionIndex,
+} from "./universal-identity";
+
+// ── Pooled Subscription (YouTube Premium Revenue Model) ─────────────────────
+export { PooledSubscriptionEngine } from "./pooled-subscription";
+export type {
+  PooledSubscription,
+  BillingPeriod,
+  AppPayout,
+  PooledDeveloperBalance,
+  SubscribeInput,
+  PeriodUsageData,
+} from "./pooled-subscription";

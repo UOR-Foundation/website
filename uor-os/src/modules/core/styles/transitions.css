@@ -1,0 +1,100 @@
+/**
+ * Sovereign OS — High-performance CSS transitions.
+ *
+ * These replace simple framer-motion usages with compositor-thread-only
+ * CSS animations (transform + opacity). Zero JS overhead per frame.
+ */
+
+/* ── Fade in ────────────────────────────────────────────────── */
+@keyframes sov-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sov-fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(8px); }
+}
+
+.sov-fade-in {
+  animation: sov-fade-in 0.15s ease-out both;
+}
+
+.sov-fade-out {
+  animation: sov-fade-out 0.12s ease-in both;
+}
+
+/* ── Scale in (modals, popups) ──────────────────────────────── */
+@keyframes sov-scale-in {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes sov-scale-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.95) translateY(8px); }
+}
+
+.sov-scale-in {
+  animation: sov-scale-in 0.15s ease-out both;
+}
+
+.sov-scale-out {
+  animation: sov-scale-out 0.12s ease-in both;
+}
+
+/* ── Slide up ───────────────────────────────────────────────── */
+@keyframes sov-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sov-slide-up {
+  animation: sov-slide-up 0.15s ease-out both;
+}
+
+/* ── Pulse dot (live indicators) ────────────────────────────── */
+@keyframes sov-pulse-ring {
+  0%   { transform: scale(1); opacity: 0.5; }
+  50%  { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 0.5; }
+}
+
+.sov-pulse-ring {
+  animation: sov-pulse-ring 1.2s ease-in-out infinite;
+}
+
+/* ── Coherence bar pulse ────────────────────────────────────── */
+@keyframes sov-coherence-pulse {
+  0%, 100% { opacity: 0.3; }
+  50%      { opacity: 0.6; }
+}
+
+.sov-coherence-pulse {
+  animation: sov-coherence-pulse 4s ease-in-out infinite;
+}
+
+/* ── Overlay fade ───────────────────────────────────────────── */
+.sov-overlay-enter {
+  animation: sov-overlay-in 0.1s ease-out both;
+}
+
+@keyframes sov-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .sov-fade-in,
+  .sov-fade-out,
+  .sov-scale-in,
+  .sov-scale-out,
+  .sov-slide-up,
+  .sov-pulse-ring,
+  .sov-coherence-pulse,
+  .sov-overlay-enter {
+    animation: none !important;
+    transition: none !important;
+  }
+}

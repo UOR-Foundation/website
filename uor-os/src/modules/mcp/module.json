@@ -1,0 +1,21 @@
+{
+  "@context": "https://uor.foundation/contexts/uor-v1.jsonld",
+  "@type": "uor:Module",
+  "name": "mcp",
+  "version": "1.0.0",
+  "description": "UOR MCP Server — Model Context Protocol gateway exposing the 5 canonical agent tools to any LLM client for physically grounded computation.",
+  "uor:specification": "1.0.0",
+  "uor:namespaces": ["mcp:", "tool:"],
+  "exports": [
+    "McpToolName",
+    "McpServerConfig"
+  ],
+  "dependencies": {
+    "agent-tools": "^1.0.0"
+  },
+  "routes": [],
+  "api_endpoints": [
+    "/mcp"
+  ],
+  "assets": []
+}

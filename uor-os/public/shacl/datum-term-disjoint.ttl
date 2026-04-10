@@ -1,0 +1,28 @@
+@prefix sh:        <http://www.w3.org/ns/shacl#> .
+@prefix schema:    <https://uor.foundation/schema/> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:       <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
+
+# §3.2.2 — "Values and syntax are strictly separated. A Literal denotes a Datum without being one."
+# This is a FOUNDATIONAL design principle of the UOR framework.
+
+schema:DatumTermDisjointShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Datum ;
+  rdfs:comment "schema:Datum and schema:Term are owl:disjointWith (§3.2.2). No instance may be both a Datum and a Term. Values and syntax are strictly separated." ;
+  sh:not [
+    sh:class schema:Term ;
+  ] ;
+  sh:severity sh:Violation ;
+  sh:message "An instance cannot be both schema:Datum and schema:Term. These classes are owl:disjointWith per §3.2.2." .
+
+schema:TermNotDatumShape
+  a sh:NodeShape ;
+  sh:targetClass schema:Term ;
+  rdfs:comment "Inverse check: schema:Term must not also be schema:Datum." ;
+  sh:not [
+    sh:class schema:Datum ;
+  ] ;
+  sh:severity sh:Violation ;
+  sh:message "An instance cannot be both schema:Term and schema:Datum (§3.2.2)." .

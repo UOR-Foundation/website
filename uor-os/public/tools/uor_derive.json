@@ -1,0 +1,23 @@
+{
+  "name": "uor_derive",
+  "morphism_type": "morphism:Transform",
+  "description": "Apply a ring operation to input values. Returns a cert:TransformCertificate (Grade A) with SHA-256 derivation_id. Maps source→target via the UOR kernel. All 10 operations available: neg, bnot, succ, pred, add, sub, mul, xor, and, or.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "op": {
+        "type": "string",
+        "enum": ["neg", "bnot", "succ", "pred", "add", "sub", "mul", "xor", "and", "or"]
+      },
+      "args": {
+        "type": "array",
+        "items": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "minItems": 1,
+        "maxItems": 2
+      }
+    },
+    "required": ["op", "args"]
+  },
+  "api_call": "POST https://api.uor.foundation/v1/kernel/derive",
+  "returns": "cert:TransformCertificate with derivation_id"
+}

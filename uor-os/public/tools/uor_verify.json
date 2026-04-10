@@ -1,0 +1,19 @@
+{
+  "name": "uor_verify",
+  "morphism_type": "proof:CoherenceProof",
+  "description": "Verify the UOR critical identity neg(bnot(x)) = succ(x). Optionally verify for all 256 elements. Returns proof:CriticalIdentityProof or proof:CoherenceProof (universal). No computation required for algebraic verification.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "x": { "type": "integer", "minimum": 0, "maximum": 255 },
+      "verify_all": { "type": "boolean", "default": false },
+      "n": {
+        "type": "integer",
+        "default": 8,
+        "description": "Bit width — 8 for Q0, 16 for Q1, 24 for Q2, 32 for Q3"
+      }
+    }
+  },
+  "api_call": "GET https://api.uor.foundation/v1/kernel/op/verify",
+  "returns": "proof:CriticalIdentityProof or proof:CoherenceProof"
+}

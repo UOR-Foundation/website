@@ -1,0 +1,20 @@
+@prefix sh:        <http://www.w3.org/ns/shacl#> .
+@prefix derivation: <https://uor.foundation/derivation/> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
+
+# §3.3 — derivation:DerivationTrace must have derivation_id matching URN pattern
+
+derivation:DerivationIdFormatShape
+  a sh:NodeShape ;
+  sh:targetClass derivation:DerivationTrace ;
+  rdfs:comment "derivation:DerivationTrace must have derivation_id matching urn:uor:derivation:sha256:[a-f0-9]{64} (§3.3)." ;
+  sh:property [
+    sh:path derivation:derivationId ;
+    sh:datatype xsd:string ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:pattern "^urn:uor:derivation:sha256:[a-f0-9]{64}$" ;
+    sh:message "derivation_id must match pattern urn:uor:derivation:sha256:<64 hex chars> (§3.3)." ;
+  ] ;
+  sh:severity sh:Violation .
