@@ -14,6 +14,7 @@ import "./hygiene-gate";
 import "./devops-alignment-gate";
 import "./container-boot-gate";
 import "./rendering-performance-gate";
+import "./pattern-sentinel-gate";
 
 // Ontology gate is registered via the ontology module barrel
 import "../../ontology/gate";
