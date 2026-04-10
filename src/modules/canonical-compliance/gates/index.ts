@@ -18,6 +18,9 @@ import "./rendering-performance-gate";
 // Ontology gate is registered via the ontology module barrel
 import "../../ontology/gate";
 
+// Axioms gate is registered via the axioms module barrel
+import "../../axioms/gate";
+
 // Re-export the runner
 export { runAllGates, exportGatesMarkdown } from "./gate-runner";
 export type { GateResult, GateFinding, GateReport, Gate } from "./gate-runner";
