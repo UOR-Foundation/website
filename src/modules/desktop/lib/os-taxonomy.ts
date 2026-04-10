@@ -58,7 +58,7 @@ export const OS_TAXONOMY: Record<OsCategory, OsCategoryDescriptor> = {
     label: "Resolve",
     description: "Query resolution, search, and knowledge retrieval",
     uorModules: ["query", "resolver", "reduction"],
-    appIds: ["search", "oracle", "library", "app-hub"],
+    appIds: ["search", "oracle", "library", "app-hub", "media"],
     userFacing: true,
   },
   IDENTITY: {

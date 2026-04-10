@@ -1,7 +1,7 @@
 import { lazy, type ComponentType } from "react";
 import {
   Search, Sparkles, BookOpen, MessageCircle, Shield, Activity, FolderOpen,
-  Network, CalendarDays, LayoutGrid, Wallet,
+  Network, CalendarDays, LayoutGrid, Wallet, Play,
 } from "lucide-react";
 import type { OsCategory } from "./os-taxonomy";
 
@@ -131,6 +131,17 @@ export const DESKTOP_APPS: DesktopApp[] = [
     category: "RESOLVE",
     description: "Browse and launch all available applications",
     keywords: ["apps", "hub", "all", "discover", "catalog", "launch"],
+  },
+  {
+    id: "media",
+    label: "Media",
+    icon: Play,
+    component: lazy(() => import("@/modules/media/components/MediaPlayer")),
+    defaultSize: { w: 960, h: 640 },
+    color: "hsl(350 75% 60%)",
+    category: "RESOLVE",
+    description: "Stream curated high-quality video content",
+    keywords: ["video", "watch", "stream", "music", "youtube", "play", "media", "tv"],
   },
 ];
 
