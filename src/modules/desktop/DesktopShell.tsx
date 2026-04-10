@@ -228,6 +228,9 @@ function DesktopShellInner() {
 
         {/* Boot overlay — renders on top, fades away when done. Desktop is interactive underneath. */}
         {!booted && <BootSequence onComplete={() => setBooted(true)} />}
+
+        {/* Local twin welcome — shows once on first Tauri launch, after boot completes */}
+        {booted && !welcomed && <LocalTwinWelcome onComplete={() => setWelcomed(true)} />}
       </div>
     </DesktopContextMenu>
   );
