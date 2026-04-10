@@ -328,4 +328,32 @@ export const STATIC_BLUEPRINTS: AppBlueprint[] = [
     iconName: "ShieldCheck",
     resources: {},
   },
+
+  // ── APP BUILDER ───────────────────────────────────────────────────────
+
+  {
+    "@context": CTX,
+    "@type": TYPE,
+    name: "app-builder",
+    version: "1.0.0",
+    requires: [
+      "build/image", "build/uorfile", "container/create", "container/start",
+      "container/stop", "store/push", "store/pull", "kernel/derive",
+    ],
+    permissions: ["build/", "container/", "store/", "kernel/"],
+    morphisms: [
+      { method: "build/image", description: "Build content-addressed image from Uorfile" },
+      { method: "container/create", description: "Create container from image" },
+      { method: "store/push", description: "Push image to registry" },
+    ],
+    autoStart: false,
+    ui: { component: "@/modules/app-builder/pages/AppBuilderPage", lazy: true },
+    defaultSize: { w: 1060, h: 680 },
+    color: "hsl(30 85% 55%)",
+    category: "COMPUTE",
+    description: "Docker-style Build, Run, and Ship pipeline for native applications",
+    keywords: ["build", "run", "ship", "docker", "container", "image", "registry", "deploy", "app"],
+    iconName: "Hammer",
+    resources: { callBudget: { maxPerSecond: 30 } },
+  },
 ];
