@@ -38,6 +38,7 @@ export default defineConfig(({ mode }) => ({
       injectManifest: {
         globIgnores: ["**/*.wasm", "**/modules/uns/build/**"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        rollupFormat: "iife",
       },
       manifest: {
         name: "The UOR Foundation",
