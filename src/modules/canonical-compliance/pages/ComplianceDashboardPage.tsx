@@ -126,7 +126,7 @@ export default function ComplianceDashboardPage() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
         <div className="flex items-center gap-3 px-5 py-3 border-b border-white/[0.06]">
-          <Breadcrumb path={breadcrumbPath} />
+          <Breadcrumbs path={breadcrumbPath} />
 
           <div className="ml-auto flex items-center gap-2">
             <input
