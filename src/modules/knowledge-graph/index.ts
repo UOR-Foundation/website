@@ -89,6 +89,7 @@ export {
   getGraphStats,
   listGraphs,
   getNamedGraphTripleCount,
+  getNamespaceStats,
 } from "./graph-manager";
 export type { GraphStats } from "./graph-manager";
 
@@ -116,3 +117,22 @@ export type {
 } from "./schema-org";
 
 export { default as KnowledgeGraphPage } from "./pages/KnowledgeGraphPage";
+
+// ── Persistence Provider Layer ──────────────────────────────────────────────
+
+export { getProvider, setProvider, initProvider } from "./persistence";
+export type { PersistenceProvider, ChangeEntry, SovereignBundle } from "./persistence/types";
+export { exportSovereignBundle, importSovereignBundle, downloadBundle } from "./persistence/bundle";
+
+// ── Graph Infrastructure ────────────────────────────────────────────────────
+
+export { adjacencyIndex } from "./lib/adjacency-index";
+export { beginTransaction } from "./lib/transaction-envelope";
+export type { Transaction } from "./lib/transaction-envelope";
+export {
+  queryNamespace,
+  queryAcross,
+  getNamespaceIri,
+  listNamespaces,
+} from "./lib/graph-namespaces";
+export type { GraphNamespace } from "./lib/graph-namespaces";

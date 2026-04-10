@@ -1,11 +1,14 @@
 /**
- * UOR Knowledge Graph Manager. named graph management and stats.
+ * UOR Knowledge Graph Manager — Sovereign (Backend-Agnostic).
+ * ════════════════════════════════════════════════════════════
  *
- * Named graphs are logical partitions of the triple store identified by IRIs.
- * This module manages graph lifecycle and provides aggregate statistics.
+ * Named graph management and stats, routed through GrafeoDB.
+ * NO DIRECT SUPABASE IMPORTS.
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { grafeoStore, sparqlQuery } from "./grafeo-store";
+import type { SparqlBinding } from "./grafeo-store";
+import { getNamespaceStats } from "./lib/graph-namespaces";
 
 // ── Graph stats ─────────────────────────────────────────────────────────────
 
@@ -18,56 +21,69 @@ export interface GraphStats {
 }
 
 /**
- * Get aggregate stats across all KG tables.
+ * Get aggregate stats from GrafeoDB (local-first).
  */
 export async function getGraphStats(): Promise<GraphStats> {
-  const [datums, derivations, certificates, receipts, triples] = await Promise.all([
-    supabase.from("uor_datums").select("iri", { count: "exact", head: true }),
-    supabase.from("uor_derivations").select("derivation_id", { count: "exact", head: true }),
-    supabase.from("uor_certificates").select("certificate_id", { count: "exact", head: true }),
-    supabase.from("uor_receipts").select("receipt_id", { count: "exact", head: true }),
-    supabase.from("uor_triples").select("id", { count: "exact", head: true }),
-  ]);
+  const stats = await grafeoStore.getStats();
+  const derivations = await grafeoStore.getAllDerivations();
+
+  // Count certificates and receipts via SPARQL
+  let certificateCount = 0;
+  let receiptCount = 0;
+
+  try {
+    const certResult = await sparqlQuery(
+      `SELECT (COUNT(*) AS ?count) WHERE { GRAPH <https://uor.foundation/graph/certificates> { ?s ?p ?o } }`
+    ) as SparqlBinding[];
+    certificateCount = certResult[0]?.["?count"] ? parseInt(certResult[0]["?count"]) : 0;
+  } catch { /* empty */ }
+
+  try {
+    const receiptResult = await sparqlQuery(
+      `SELECT (COUNT(*) AS ?count) WHERE { GRAPH <https://uor.foundation/graph/receipts> { ?s ?p ?o } }`
+    ) as SparqlBinding[];
+    receiptCount = receiptResult[0]?.["?count"] ? parseInt(receiptResult[0]["?count"]) : 0;
+  } catch { /* empty */ }
 
   return {
-    datumCount: datums.count ?? 0,
-    derivationCount: derivations.count ?? 0,
-    certificateCount: certificates.count ?? 0,
-    receiptCount: receipts.count ?? 0,
-    tripleCount: triples.count ?? 0,
+    datumCount: stats.nodeCount,
+    derivationCount: derivations.length,
+    certificateCount,
+    receiptCount,
+    tripleCount: stats.edgeCount,
   };
 }
 
 // ── Named graphs ────────────────────────────────────────────────────────────
 
 /**
- * List all distinct named graphs in the triple store.
+ * List all distinct named graphs in GrafeoDB.
  */
 export async function listGraphs(): Promise<string[]> {
-  const { data, error } = await supabase
-    .from("uor_triples")
-    .select("graph_iri")
-    .limit(1000);
+  try {
+    const results = await sparqlQuery(
+      `SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o } }`
+    ) as SparqlBinding[];
 
-  if (error) throw new Error(`listGraphs failed: ${error.message}`);
-
-  // Deduplicate
-  const seen = new Set<string>();
-  for (const row of data ?? []) {
-    seen.add(row.graph_iri);
+    if (!Array.isArray(results)) return [];
+    return results.map(r => r["?g"]).filter(Boolean).sort();
+  } catch {
+    return [];
   }
-  return Array.from(seen).sort();
 }
 
 /**
  * Get triple count for a specific named graph.
  */
 export async function getNamedGraphTripleCount(graphIri: string): Promise<number> {
-  const { count, error } = await supabase
-    .from("uor_triples")
-    .select("id", { count: "exact", head: true })
-    .eq("graph_iri", graphIri);
-
-  if (error) throw new Error(`getNamedGraphTripleCount failed: ${error.message}`);
-  return count ?? 0;
+  try {
+    const results = await sparqlQuery(
+      `SELECT (COUNT(*) AS ?count) WHERE { GRAPH <${graphIri}> { ?s ?p ?o } }`
+    ) as SparqlBinding[];
+    return results[0]?.["?count"] ? parseInt(results[0]["?count"]) : 0;
+  } catch {
+    return 0;
+  }
 }
+
+export { getNamespaceStats };

@@ -3091,6 +3091,36 @@ export type Database = {
         }
         Relationships: []
       }
+      uor_transactions: {
+        Row: {
+          committed_at: string
+          id: string
+          mutation_count: number
+          mutations: Json
+          namespace: string
+          transaction_cid: string
+          user_id: string
+        }
+        Insert: {
+          committed_at?: string
+          id?: string
+          mutation_count?: number
+          mutations?: Json
+          namespace?: string
+          transaction_cid: string
+          user_id: string
+        }
+        Update: {
+          committed_at?: string
+          id?: string
+          mutation_count?: number
+          mutations?: Json
+          namespace?: string
+          transaction_cid?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       uor_transitions: {
         Row: {
           added: number

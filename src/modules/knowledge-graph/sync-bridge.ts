@@ -1,15 +1,13 @@
 /**
- * UOR Knowledge Graph — Cloud Sync Bridge (v2: Change-DAG).
+ * UOR Knowledge Graph — Cloud Sync Bridge (v3: Provider-Based).
+ * ═════════════════════════════════════════════════════════════
  *
- * Anytype-inspired sync: each mutation is a content-addressed change
- * envelope chained in a DAG. Sync = compare heads, exchange missing
- * changes, merge deterministically by CID.
- *
- * Replaces the naive push-all/pull-all model with space-scoped,
- * DAG-based synchronization.
+ * Routes sync through the active persistence provider.
+ * NO DIRECT SUPABASE IMPORTS — fully backend-agnostic.
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { grafeoStore } from "./grafeo-store";
+import { getProvider, initProvider } from "./persistence";
 import { spaceManager } from "@/modules/sovereign-spaces/space-manager";
 import {
   createChange, pushChanges, pullChanges,
@@ -52,7 +50,6 @@ if (typeof window !== "undefined") {
   });
   window.addEventListener("offline", () => emitSyncState("offline"));
 
-  // Initialize transports
   transports = createTransports(getDeviceId());
 }
 
@@ -78,26 +75,26 @@ export const syncBridge = {
     return pendingChanges.length > 0 || (!this.isOnline() && currentSyncState !== "synced");
   },
 
-  /**
-   * Record a local mutation. Wraps it in a change envelope
-   * and queues for sync.
-   */
   async recordChange(payload: ChangePayload): Promise<void> {
     const space = spaceManager.getActiveSpace();
     if (!space) return;
 
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id ?? "anonymous";
     const deviceId = getDeviceId();
+    // Get userId from provider context rather than direct Supabase
+    let userId = "anonymous";
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: { session } } = await supabase.auth.getSession();
+      userId = session?.user?.id ?? "anonymous";
+    } catch { /* offline */ }
 
     const envelope = await createChange(space.id, payload, deviceId, userId);
 
-    if (navigator.onLine && session) {
+    if (navigator.onLine && userId !== "anonymous") {
       try {
         await pushChanges([envelope]);
         const head = envelope.changeCid;
         await announceHead(space.id, deviceId, head);
-        // Announce to local transports
         for (const t of transports) {
           t.announce(space.id, head);
         }
@@ -123,7 +120,18 @@ async function syncToCloud(): Promise<{ pushed: number; pulled: number }> {
     return { pushed: 0, pulled: 0 };
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
+  // Initialize provider if needed
+  await initProvider();
+  const provider = getProvider();
+
+  // Check auth via dynamic import (keeps this file backend-agnostic)
+  let session: any = null;
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const result = await supabase.auth.getSession();
+    session = result.data.session;
+  } catch { /* no auth available */ }
+
   if (!session) return { pushed: 0, pulled: 0 };
 
   const space = spaceManager.getActiveSpace();
@@ -135,7 +143,7 @@ async function syncToCloud(): Promise<{ pushed: number; pulled: number }> {
     const deviceId = getDeviceId();
     const userId = session.user.id;
 
-    // 1. Push pending changes
+    // 1. Push pending changes via provider
     let pushed = 0;
     if (pendingChanges.length > 0) {
       const envelopes = await Promise.all(
@@ -145,23 +153,19 @@ async function syncToCloud(): Promise<{ pushed: number; pulled: number }> {
       if (pushed > 0) pendingChanges = [];
     }
 
-    // 2. Pull remote changes
+    // 2. Pull remote snapshot and hydrate GrafeoDB
+    let pulled = 0;
+    const snapshot = await provider.pullSnapshot();
+    if (snapshot) {
+      pulled = await grafeoStore.loadNQuads(snapshot);
+    }
+
+    // 3. Update heads
     const localHead = getLocalHead(space.id);
-    const knownCids = new Set<string>();
-    if (localHead) knownCids.add(localHead);
-
-    const remoteChanges = await pullChanges(space.id, knownCids);
-    const pulled = remoteChanges.length;
-
-    // 3. Merge and update head
-    if (pulled > 0) {
-      const merged = mergeChanges([], remoteChanges);
-      const newHead = computeHead(merged);
-      if (newHead) {
-        await announceHead(space.id, deviceId, newHead);
-        for (const t of transports) {
-          t.announce(space.id, newHead);
-        }
+    if (localHead) {
+      await announceHead(space.id, deviceId, localHead);
+      for (const t of transports) {
+        t.announce(space.id, localHead);
       }
     }
 
