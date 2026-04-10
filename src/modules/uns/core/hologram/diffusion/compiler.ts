@@ -36,7 +36,53 @@ import type {
 import { DTYPE_BYTE_SIZE } from "../whisper-compiler/types";
 import { sha256hex as sha256Hex } from "@/lib/crypto";
 
-// ── Compiler ───────────────────────────────────────────────────────────────
+// ── Constants ──────────────────────────────────────────────────────────────
+
+const COMPILER_VERSION = "1.0.0-diffusion";
+const SD_MODEL_ID = "sd15-hologram";
+const HF_MODEL_ID = "nmkd/stable-diffusion-1.5-onnx-fp16";
+
+/** SD 1.5 ONNX components */
+const SD_COMPONENTS = {
+  textEncoder: "text_encoder/model.onnx",
+  unet: "unet/model.onnx",
+  vaeDecoder: "vae_decoder/model.onnx",
+} as const;
+
+type SdComponent = keyof typeof SD_COMPONENTS;
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function extractNodeParams(attrs: OnnxAttribute[]): Record<string, unknown> {
+  const params: Record<string, unknown> = {};
+  for (const attr of attrs) {
+    if (attr.f !== undefined) params[attr.name] = attr.f;
+    else if (attr.i !== undefined) params[attr.name] = attr.i;
+    else if (attr.s !== undefined) params[attr.name] = attr.s;
+    else if (attr.ints && attr.ints.length > 0) params[attr.name] = attr.ints;
+    else if (attr.floats && attr.floats.length > 0) params[attr.name] = attr.floats;
+  }
+  return params;
+}
+
+function extractAllTensors(model: OnnxModel): OnnxTensor[] {
+  const tensors: OnnxTensor[] = [];
+  for (const t of model.graph.initializers) {
+    if (t.rawData.byteLength > 0) tensors.push(t);
+  }
+  for (const node of model.graph.nodes) {
+    if (node.opType === "Constant") {
+      for (const attr of node.attributes) {
+        if (attr.t && attr.t.rawData.byteLength > 0) {
+          const name = node.outputs[0] || attr.t.name || node.name;
+          tensors.push({ ...attr.t, name });
+        }
+      }
+    }
+  }
+  return tensors;
+}
+
 
 export interface DiffusionCompileOptions {
   /** Which components to compile */
