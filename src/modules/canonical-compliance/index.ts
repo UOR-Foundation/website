@@ -10,8 +10,8 @@
 export { ALL_ATOMS, ATOM_INDEX, isValidAtom } from "./atoms";
 export type { UorAtom, AtomCategory } from "./atoms";
 
-export { PROVENANCE_REGISTRY, flattenProvenance } from "./provenance-map";
-export type { ProvenanceEntry, ModuleProvenance } from "./provenance-map";
+export { PROVENANCE_REGISTRY, SYSTEM_LAYERS, flattenProvenance } from "./provenance-map";
+export type { ProvenanceEntry, ModuleProvenance, SystemLayer } from "./provenance-map";
 
 export { runAudit, getGroundingScore } from "./audit";
 export type { AuditReport, AuditFinding, AtomCoverage } from "./audit";
