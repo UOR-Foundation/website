@@ -20,11 +20,17 @@ import {
 import { buildAppImage } from "@/modules/uor-sdk/runtime/image-builder";
 import type { ImageBuildResult } from "@/modules/uor-sdk/runtime/image-builder";
 import type { AppFile } from "@/modules/uor-sdk/import-adapter";
-import {
-  createContainer, startContainer, stopContainer,
-  removeContainer, listContainers, inspectContainer,
-} from "@/modules/uns/build/container";
-import type { UorContainer, ContainerInspection } from "@/modules/uns/build/container";
+// Lazy-loaded to avoid PWA Rollup resolution failure
+let _containerMod: typeof import("@/modules/uns/build/container") | null = null;
+async function getContainerMod() {
+  if (!_containerMod) {
+    const path = "@/modules/uns/build/container";
+    _containerMod = await import(/* @vite-ignore */ path);
+  }
+  return _containerMod;
+}
+type UorContainer = import("@/modules/uns/build/container").UorContainer;
+type ContainerInspection = import("@/modules/uns/build/container").ContainerInspection;
 import { shipApp } from "@/modules/uor-sdk/runtime/registry-ship";
 import type { ShipResult } from "@/modules/uor-sdk/runtime/registry-ship";
 import type { AppManifest } from "@/modules/uor-sdk/app-identity";
@@ -175,21 +181,23 @@ export default function AppBuilderPage() {
 
   // ── RUN ────────────────────────────────────────────────────────────────
 
-  const refreshContainers = useCallback(() => {
-    setContainers(listContainers());
+  const refreshContainers = useCallback(async () => {
+    const mod = await getContainerMod();
+    setContainers(mod.listContainers());
   }, []);
 
   const handleCreateAndStart = useCallback(async () => {
     if (!buildResult) { log("RUN", "No image built"); return; }
     try {
-      const container = await createContainer({
+      const mod = await getContainerMod();
+      const container = await mod.createContainer({
         name: `${appName}-${Date.now().toString(36)}`,
         imageId: buildResult.image.canonicalId,
         env: { NODE_ENV: "production" },
         ports: [{ hostPort: 3000, containerPort: 3000, protocol: "tcp" }],
       });
       log("RUN", `Container created: ${container.name}`, container.id);
-      startContainer(container.id);
+      mod.startContainer(container.id);
       log("RUN", `Container started: ${container.name}`);
       refreshContainers();
     } catch (err: any) {
@@ -197,16 +205,19 @@ export default function AppBuilderPage() {
     }
   }, [buildResult, appName, log, refreshContainers]);
 
-  const handleStop = useCallback((id: string, name: string) => {
-    stopContainer(id); log("RUN", `Stopped: ${name}`); refreshContainers();
+  const handleStop = useCallback(async (id: string, name: string) => {
+    const mod = await getContainerMod();
+    mod.stopContainer(id); log("RUN", `Stopped: ${name}`); refreshContainers();
   }, [log, refreshContainers]);
 
-  const handleRemove = useCallback((id: string, name: string) => {
-    removeContainer(id); log("RUN", `Removed: ${name}`); setInspection(null); refreshContainers();
+  const handleRemove = useCallback(async (id: string, name: string) => {
+    const mod = await getContainerMod();
+    mod.removeContainer(id); log("RUN", `Removed: ${name}`); setInspection(null); refreshContainers();
   }, [log, refreshContainers]);
 
-  const handleInspect = useCallback((id: string) => {
-    const info = inspectContainer(id); setInspection(info); log("RUN", `Inspected: ${info.container.name}`);
+  const handleInspect = useCallback(async (id: string) => {
+    const mod = await getContainerMod();
+    const info = mod.inspectContainer(id); setInspection(info); log("RUN", `Inspected: ${info.container.name}`);
   }, [log]);
 
   // ── SHIP ───────────────────────────────────────────────────────────────
