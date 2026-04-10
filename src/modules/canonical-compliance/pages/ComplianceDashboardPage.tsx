@@ -13,6 +13,7 @@ import StatBlock from "@/modules/core/components/StatBlock";
 import Breadcrumbs from "@/modules/core/components/Breadcrumbs";
 
 const HealthGatesPanel = lazy(() => import("../components/HealthGatesPanel"));
+const OntologyPanel = lazy(() => import("../components/OntologyPanel"));
 
 // ── Zoom Context ────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ export default function ComplianceDashboardPage() {
   const report = useMemo<AuditReport>(() => runAudit(), []);
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(3);
   const [zoomContext, setZoomContext] = useState<ZoomContext>({});
-  const [view, setView] = useState<"table" | "graph" | "gates">("table");
+  const [view, setView] = useState<"table" | "graph" | "gates" | "ontology">("table");
   const [search, setSearch] = useState("");
   const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<AtomCategory | null>(null);
