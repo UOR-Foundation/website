@@ -73,7 +73,7 @@ registerGate((): GateResult => {
       altMap.set(key, list);
     }
   }
-  for (const [alt, concepts] of altMap) {
+  for (const [alt, concepts] of Array.from(altMap.entries())) {
     if (concepts.length > 1) {
       score -= 2;
       findings.push({
