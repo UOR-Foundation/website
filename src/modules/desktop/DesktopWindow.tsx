@@ -59,27 +59,40 @@ export default function DesktopWindow({
     onBooted?.(win.id);
   }, [win.id, onBooted]);
 
-  // ── Drag handlers ───────────────────────────────────────────────────────
+  // ── Drag handlers — DOM-direct during move, commit to state on release ──
   const onDragStart = useCallback((e: ReactPointerEvent) => {
     onFocus(win.id);
     dragRef.current = { startX: e.clientX, startY: e.clientY, winX: win.position.x, winY: win.position.y };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
     setIsDragging(true);
+    // GPU-promote the window element for smooth drag
+    if (windowElRef.current) {
+      windowElRef.current.style.willChange = "transform";
+    }
   }, [win.id, win.position, onFocus]);
 
   const onDragMove = useCallback((e: ReactPointerEvent) => {
     if (!dragRef.current) return;
     const dx = e.clientX - dragRef.current.startX;
     const dy = e.clientY - dragRef.current.startY;
-    const newX = dragRef.current.winX + dx;
-    const newY = Math.max(MENU_BAR_H, dragRef.current.winY + dy);
-    onMove(win.id, { x: newX, y: newY });
+    // DOM-direct: apply CSS transform instead of React state update
+    if (windowElRef.current) {
+      windowElRef.current.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+    }
     const zone = detectSnapZone(e.clientX, e.clientY);
     onSnapPreview(zone);
-  }, [win.id, onMove, onSnapPreview]);
+  }, [onSnapPreview]);
 
   const onDragEnd = useCallback((e: ReactPointerEvent) => {
-    if (dragRef.current) {
+    if (dragRef.current && windowElRef.current) {
+      const dx = e.clientX - dragRef.current.startX;
+      const dy = e.clientY - dragRef.current.startY;
+      const newX = dragRef.current.winX + dx;
+      const newY = Math.max(MENU_BAR_H, dragRef.current.winY + dy);
+      // Reset transform and commit final position to React state once
+      windowElRef.current.style.transform = "";
+      windowElRef.current.style.willChange = "auto";
+      onMove(win.id, { x: newX, y: newY });
       const zone = detectSnapZone(e.clientX, e.clientY);
       if (zone) onSnap(win.id, zone);
     }
@@ -87,7 +100,7 @@ export default function DesktopWindow({
     setIsDragging(false);
     onSnapPreview(null);
     onCommit?.();
-  }, [win.id, onSnap, onSnapPreview, onCommit]);
+  }, [win.id, onMove, onSnap, onSnapPreview, onCommit]);
 
   const onResizeStart = useCallback((e: ReactPointerEvent) => {
     e.stopPropagation();
