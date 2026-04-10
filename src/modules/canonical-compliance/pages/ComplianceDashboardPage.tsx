@@ -1,64 +1,36 @@
-/**
- * Compliance Dashboard — Algebrica-style provenance audit UI
- */
-
-import { useMemo, useState } from "react";
-import Layout from "@/modules/core/components/Layout";
-import { runAudit, type AuditFinding, type AuditReport } from "../audit";
-import { ALL_ATOMS } from "../atoms";
-import { exportMarkdown, exportJsonLd, exportNQuads } from "../export";
+import { useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-
-// ── Stat Block ──────────────────────────────────────────────────
-
-function Stat({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
-  return (
-    <div className="flex flex-col items-center gap-1 px-4 py-3 rounded-lg border border-border/30 bg-card/40 min-w-[110px]">
-      <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">{label}</span>
-      <span className="text-2xl font-bold text-foreground tabular-nums">{value}</span>
-      {sub && <span className="text-[10px] text-muted-foreground">{sub}</span>}
-    </div>
-  );
-}
+import { ExternalLink, LayoutGrid, Share2 } from "lucide-react";
+import { runAudit, type AuditFinding, type AuditReport } from "../audit";
+import { ALL_ATOMS, ATOM_INDEX, type AtomCategory, type UorAtom } from "../atoms";
+import { PROVENANCE_REGISTRY } from "../provenance-map";
+import AtomSidebar from "../components/AtomSidebar";
+import NodeDetailPanel, { type SelectedNode } from "../components/NodeDetailPanel";
+import ProvenanceGraph from "../components/ProvenanceGraph";
 
 // ── Status Badge ────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: AuditFinding["status"] }) {
-  const colors = {
-    grounded: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-    partial: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-    ungrounded: "bg-red-500/20 text-red-400 border-red-500/30",
+  const styles = {
+    grounded: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+    partial: "bg-amber-500/15 text-amber-400 border-amber-500/20",
+    ungrounded: "bg-red-500/15 text-red-400 border-red-500/20",
   };
   return (
-    <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${colors[status]}`}>
+    <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${styles[status]}`}>
       {status}
     </span>
   );
 }
 
-// ── Score Ring ───────────────────────────────────────────────────
-
-function ScoreRing({ score }: { score: number }) {
-  const r = 54;
-  const c = 2 * Math.PI * r;
-  const offset = c - (score / 100) * c;
-  const color = score >= 90 ? "hsl(142,71%,45%)" : score >= 70 ? "hsl(38,92%,50%)" : "hsl(0,84%,60%)";
-
-  return (
-    <svg width={140} height={140} className="mx-auto">
-      <circle cx={70} cy={70} r={r} fill="none" stroke="hsl(var(--border))" strokeWidth={6} opacity={0.2} />
-      <motion.circle
-        cx={70} cy={70} r={r} fill="none" stroke={color} strokeWidth={6}
-        strokeDasharray={c} strokeDashoffset={c} strokeLinecap="round"
-        animate={{ strokeDashoffset: offset }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
-        transform="rotate(-90 70 70)"
-      />
-      <text x={70} y={66} textAnchor="middle" fill="currentColor" className="text-foreground text-3xl font-bold" fontSize={32}>{score}</text>
-      <text x={70} y={86} textAnchor="middle" fill="currentColor" className="text-muted-foreground" fontSize={11}>/ 100</text>
-    </svg>
-  );
-}
+const CATEGORY_COLORS: Record<AtomCategory, string> = {
+  PrimitiveOp: "hsl(0 0% 65%)",
+  Space: "hsl(210 15% 60%)",
+  CoreType: "hsl(160 30% 50%)",
+  IdentityPipeline: "hsl(35 60% 55%)",
+  Morphism: "hsl(270 25% 60%)",
+  Algebraic: "hsl(340 30% 55%)",
+};
 
 // ── Main Page ───────────────────────────────────────────────────
 
@@ -66,153 +38,244 @@ export default function ComplianceDashboardPage() {
   const report = useMemo<AuditReport>(() => runAudit(), []);
   const [filter, setFilter] = useState<"all" | "grounded" | "partial" | "ungrounded">("all");
   const [search, setSearch] = useState("");
+  const [view, setView] = useState<"table" | "graph">("table");
+  const [rasVersion, setRasVersion] = useState("v1.0.0");
+  const [componentCount, setComponentCount] = useState(ALL_ATOMS.length);
+  const [selectedCategory, setSelectedCategory] = useState<AtomCategory | null>(null);
+  const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null);
 
   const filtered = useMemo(() => {
     let f = report.findings;
     if (filter !== "all") f = f.filter((x) => x.status === filter);
+    if (selectedCategory) {
+      f = f.filter((x) => x.validAtoms.some((a) => {
+        const atom = ATOM_INDEX.get(a);
+        return atom?.category === selectedCategory;
+      }));
+    }
     if (search) {
       const q = search.toLowerCase();
       f = f.filter((x) => x.module.toLowerCase().includes(q) || x.export.toLowerCase().includes(q));
     }
     return f;
-  }, [report, filter, search]);
+  }, [report, filter, search, selectedCategory]);
 
-  const handleExport = (format: "md" | "jsonld" | "nquads") => {
-    let content: string;
-    let mime: string;
-    let ext: string;
-    if (format === "md") { content = exportMarkdown(report); mime = "text/markdown"; ext = "md"; }
-    else if (format === "jsonld") { content = exportJsonLd(report); mime = "application/ld+json"; ext = "jsonld"; }
-    else { content = exportNQuads(); mime = "application/n-quads"; ext = "nq"; }
+  const filteredAtoms = useMemo(() => {
+    if (!selectedCategory) return ALL_ATOMS;
+    return ALL_ATOMS.filter((a) => a.category === selectedCategory);
+  }, [selectedCategory]);
 
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `uor-compliance-audit.${ext}`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const longestChain = useMemo(() => {
+    let max = 0;
+    for (const f of report.findings) {
+      if (f.validAtoms.length > max) max = f.validAtoms.length;
+    }
+    return max;
+  }, [report]);
+
+  const handleAtomSelect = useCallback((atom: UorAtom) => {
+    setSelectedNode({ type: "atom", atom });
+  }, []);
+
+  const handleNodeNavigate = useCallback((node: SelectedNode) => {
+    setSelectedNode(node);
+  }, []);
+
+  const openNewWindow = () => {
+    window.open("/compliance", "_blank", "width=1400,height=900");
   };
 
   return (
-    <Layout>
-      <div className="max-w-6xl mx-auto px-4 py-12 space-y-10">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Canonical Compliance</h1>
-          <p className="text-sm text-muted-foreground font-mono">
-            Provenance audit · UOR atoms → every module
-          </p>
-        </div>
+    <div className="fixed inset-0 flex bg-[hsl(220_15%_6%)] text-zinc-200 overflow-hidden">
+      {/* Left Sidebar */}
+      <AtomSidebar
+        report={report}
+        rasVersion={rasVersion}
+        onRasVersionChange={setRasVersion}
+        componentCount={componentCount}
+        onComponentCountChange={setComponentCount}
+        selectedCategory={selectedCategory}
+        onCategorySelect={setSelectedCategory}
+        onAtomSelect={handleAtomSelect}
+      />
 
-        {/* Score + Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-8 items-center">
-          <div className="flex flex-wrap justify-center gap-3">
-            <Stat label="Exports" value={report.totalExports} />
-            <Stat label="Atoms" value={ALL_ATOMS.length} />
-          </div>
-          <ScoreRing score={report.groundingScore} />
-          <div className="flex flex-wrap justify-center gap-3">
-            <Stat label="Grounded" value={report.groundedCount} sub="complete" />
-            <Stat label="Partial" value={report.partialCount} sub="incomplete" />
-            <Stat label="Ungrounded" value={report.ungroundedCount} sub="missing" />
-          </div>
-        </div>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Bar */}
+        <div className="flex items-center gap-4 px-5 py-3 border-b border-white/[0.06]">
+          <h1 className="text-sm font-bold tracking-tight text-zinc-100">Compliance</h1>
+          <span className="text-[10px] font-mono text-zinc-500">UOR Canonical Provenance Audit</span>
 
-        {/* Controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            type="text"
-            placeholder="Search modules or exports..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 min-w-[200px] px-3 py-2 text-sm bg-card/60 border border-border/40 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
-          />
-          {(["all", "grounded", "partial", "ungrounded"] as const).map((f) => (
+          <div className="ml-auto flex items-center gap-3">
+            {/* Search */}
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              className="w-48 px-3 py-1.5 text-xs font-mono bg-white/[0.04] border border-white/[0.06] rounded text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-white/15"
+            />
+
+            {/* View Toggle */}
+            <div className="flex bg-white/[0.04] border border-white/[0.06] rounded overflow-hidden">
+              <button
+                onClick={() => setView("table")}
+                className={`px-3 py-1.5 text-xs font-mono flex items-center gap-1.5 transition-colors ${
+                  view === "table" ? "bg-white/[0.08] text-zinc-200" : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                <LayoutGrid size={12} />
+                Table
+              </button>
+              <button
+                onClick={() => setView("graph")}
+                className={`px-3 py-1.5 text-xs font-mono flex items-center gap-1.5 transition-colors ${
+                  view === "graph" ? "bg-white/[0.08] text-zinc-200" : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                <Share2 size={12} />
+                Graph
+              </button>
+            </div>
+
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 text-xs font-mono uppercase rounded-md border transition-colors ${
-                filter === f
-                  ? "bg-primary/20 border-primary/40 text-primary"
-                  : "bg-card/40 border-border/30 text-muted-foreground hover:text-foreground"
-              }`}
+              onClick={openNewWindow}
+              className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+              title="Open in new window"
             >
-              {f}
+              <ExternalLink size={14} />
             </button>
+          </div>
+        </div>
+
+        {/* HUD Stats Bar */}
+        <div className="flex items-center gap-6 px-5 py-2 border-b border-white/[0.04]">
+          {[
+            { label: "Nodes", value: ALL_ATOMS.length + PROVENANCE_REGISTRY.length + report.totalExports },
+            { label: "Relations", value: report.findings.reduce((s, f) => s + f.validAtoms.length, 0) + report.totalExports },
+            { label: "Longest Chain", value: longestChain },
+            { label: "RAS", value: rasVersion },
+          ].map((s) => (
+            <div key={s.label} className="flex items-baseline gap-2">
+              <span className="text-sm font-bold text-zinc-200 tabular-nums">{s.value}</span>
+              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-600">{s.label}</span>
+            </div>
           ))}
-          <div className="flex gap-2 ml-auto">
-            <button onClick={() => handleExport("md")} className="px-3 py-1.5 text-xs font-mono bg-card/60 border border-border/40 rounded-md text-muted-foreground hover:text-foreground transition-colors">
-              .md
-            </button>
-            <button onClick={() => handleExport("jsonld")} className="px-3 py-1.5 text-xs font-mono bg-card/60 border border-border/40 rounded-md text-muted-foreground hover:text-foreground transition-colors">
-              .jsonld
-            </button>
-            <button onClick={() => handleExport("nquads")} className="px-3 py-1.5 text-xs font-mono bg-card/60 border border-border/40 rounded-md text-muted-foreground hover:text-foreground transition-colors">
-              .nq
-            </button>
-          </div>
-        </div>
 
-        {/* Findings Table */}
-        <div className="border border-border/30 rounded-xl overflow-hidden bg-card/20">
-          <div className="grid grid-cols-[1fr_1fr_auto_2fr] gap-2 px-4 py-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground border-b border-border/20">
-            <span>Module</span>
-            <span>Export</span>
-            <span>Status</span>
-            <span>Atom Chain</span>
-          </div>
-          <div className="max-h-[480px] overflow-y-auto">
-            {filtered.map((f, i) => (
-              <motion.div
-                key={`${f.module}-${f.export}`}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.02 }}
-                className="grid grid-cols-[1fr_1fr_auto_2fr] gap-2 px-4 py-2.5 text-xs border-b border-border/10 hover:bg-card/40 transition-colors"
+          {/* Filter pills */}
+          <div className="ml-auto flex gap-1">
+            {(["all", "grounded", "partial", "ungrounded"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-2 py-1 text-[10px] font-mono uppercase rounded transition-colors ${
+                  filter === f
+                    ? "bg-white/[0.08] text-zinc-200"
+                    : "text-zinc-600 hover:text-zinc-400"
+                }`}
               >
-                <span className="font-mono text-muted-foreground truncate">{f.module}</span>
-                <span className="font-mono text-foreground truncate">{f.export}</span>
-                <StatusBadge status={f.status} />
-                <span className="font-mono text-muted-foreground truncate">
-                  {f.validAtoms.join(" → ")}
-                  {f.invalidAtoms.length > 0 && (
-                    <span className="text-red-400 ml-1">[!{f.invalidAtoms.join(",")}]</span>
-                  )}
-                </span>
-              </motion.div>
+                {f}
+              </button>
             ))}
           </div>
         </div>
 
-        {/* Atom Coverage */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-mono uppercase tracking-widest text-muted-foreground">Atom Coverage</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            {report.atomCoverage.map((ac) => (
-              <div
-                key={ac.atom.id}
-                className="flex flex-col items-center gap-1 p-3 rounded-lg border border-border/20 bg-card/30"
-              >
-                <span className="text-[10px] font-mono text-muted-foreground">{ac.atom.category}</span>
-                <span className="text-sm font-bold text-foreground">{ac.atom.label}</span>
-                <div className="w-full bg-muted/20 rounded-full h-1 mt-1">
-                  <div
-                    className="h-1 rounded-full bg-primary/60"
-                    style={{ width: `${Math.min(100, (ac.referencedBy / 10) * 100)}%` }}
-                  />
+        {/* Content Area */}
+        <div className="flex-1 overflow-hidden">
+          {view === "table" ? (
+            <div className="h-full overflow-y-auto p-5 space-y-6">
+              {/* Atom Periodic Grid */}
+              <div>
+                <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 mb-3">
+                  UOR Atom Registry — {filteredAtoms.length} atoms
                 </div>
-                <span className="text-[10px] text-muted-foreground">{ac.referencedBy} refs</span>
+                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-1">
+                  {filteredAtoms.map((atom) => {
+                    const coverage = report.atomCoverage.find((ac) => ac.atom.id === atom.id);
+                    return (
+                      <button
+                        key={atom.id}
+                        onClick={() => handleAtomSelect(atom)}
+                        className="group flex flex-col items-center p-1.5 rounded border border-white/[0.04] hover:border-white/[0.12] bg-white/[0.02] hover:bg-white/[0.05] transition-all"
+                        title={`${atom.id}\n${atom.description}`}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full mb-1"
+                          style={{ background: CATEGORY_COLORS[atom.category] }}
+                        />
+                        <span className="text-[10px] font-mono text-zinc-300 group-hover:text-zinc-100 truncate w-full text-center">
+                          {atom.label}
+                        </span>
+                        <span className="text-[8px] text-zinc-600">{coverage?.referencedBy || 0}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Footer */}
-        <div className="text-center text-[10px] text-muted-foreground font-mono pt-4 border-t border-border/10">
-          UOR Canonical Compliance Engine v1.0.0 · {report.timestamp}
+              {/* Findings Table */}
+              <div className="border border-white/[0.06] rounded-lg overflow-hidden">
+                <div className="grid grid-cols-[1fr_1fr_80px_2fr] gap-2 px-4 py-2 text-[10px] font-mono uppercase tracking-widest text-zinc-600 border-b border-white/[0.04] bg-white/[0.02]">
+                  <span>Module</span>
+                  <span>Export</span>
+                  <span>Status</span>
+                  <span>Atom Chain</span>
+                </div>
+                <div className="max-h-[400px] overflow-y-auto">
+                  {filtered.map((f, i) => (
+                    <motion.div
+                      key={`${f.module}-${f.export}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.01 }}
+                      onClick={() => setSelectedNode({ type: "export", module: f.module, exportName: f.export, finding: f })}
+                      className="grid grid-cols-[1fr_1fr_80px_2fr] gap-2 px-4 py-2 text-xs border-b border-white/[0.03] hover:bg-white/[0.03] cursor-pointer transition-colors"
+                    >
+                      <span className="font-mono text-zinc-500 truncate">{f.module}</span>
+                      <span className="font-mono text-zinc-300 truncate">{f.export}</span>
+                      <StatusBadge status={f.status} />
+                      <div className="font-mono text-zinc-500 truncate flex items-center gap-1">
+                        {f.validAtoms.map((a, j) => {
+                          const atom = ATOM_INDEX.get(a);
+                          return (
+                            <span key={a} className="flex items-center gap-0.5">
+                              {j > 0 && <span className="text-zinc-700">→</span>}
+                              <span
+                                className="inline-block w-1.5 h-1.5 rounded-full"
+                                style={{ background: atom ? CATEGORY_COLORS[atom.category] : "hsl(0 0% 30%)" }}
+                              />
+                              <span className="text-zinc-400">{atom?.label || a}</span>
+                            </span>
+                          );
+                        })}
+                        {f.invalidAtoms.length > 0 && (
+                          <span className="text-red-400/70 ml-1">[!{f.invalidAtoms.join(",")}]</span>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <ProvenanceGraph
+              findings={report.findings}
+              selectedCategory={selectedCategory}
+              search={search}
+              onNodeSelect={handleNodeNavigate}
+            />
+          )}
         </div>
       </div>
-    </Layout>
+
+      {/* Right Detail Panel */}
+      {selectedNode && (
+        <NodeDetailPanel
+          node={selectedNode}
+          findings={report.findings}
+          onClose={() => setSelectedNode(null)}
+          onNavigate={handleNodeNavigate}
+        />
+      )}
+    </div>
   );
 }
