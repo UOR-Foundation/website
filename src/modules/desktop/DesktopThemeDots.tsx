@@ -24,9 +24,9 @@ const DOTS: {
     label: "Earth",
     key: "1",
     colors: {
-      fill: "radial-gradient(circle at 35% 35%, #4db8ff 0%, #1a7a3a 40%, #0d5e2a 70%, #1a3a5e 100%)",
-      glow: "0 0 10px rgba(77,184,255,0.5), 0 0 20px rgba(26,122,58,0.3)",
-      ring: "rgba(77,184,255,0.6)",
+      fill: "radial-gradient(circle at 38% 36%, rgba(140,180,160,0.9) 0%, rgba(90,130,110,0.85) 50%, rgba(60,100,90,0.8) 100%)",
+      glow: "0 0 6px rgba(140,180,160,0.25)",
+      ring: "rgba(140,180,160,0.35)",
     },
   },
   {
@@ -34,9 +34,9 @@ const DOTS: {
     label: "Moon",
     key: "2",
     colors: {
-      fill: "radial-gradient(circle at 40% 38%, #e8e8e0 0%, #c8c8b8 45%, #9a9a8a 80%, #787870 100%)",
-      glow: "0 0 8px rgba(200,200,190,0.35), 0 0 16px rgba(200,200,190,0.15)",
-      ring: "rgba(220,220,210,0.5)",
+      fill: "radial-gradient(circle at 40% 38%, rgba(200,200,195,0.85) 0%, rgba(160,160,155,0.75) 55%, rgba(130,130,125,0.65) 100%)",
+      glow: "0 0 6px rgba(200,200,195,0.2)",
+      ring: "rgba(200,200,195,0.3)",
     },
   },
   {
@@ -44,9 +44,9 @@ const DOTS: {
     label: "Sun",
     key: "3",
     colors: {
-      fill: "radial-gradient(circle at 45% 42%, #fff7d0 0%, #ffcc33 40%, #ff9900 75%, #e07000 100%)",
-      glow: "0 0 12px rgba(255,204,51,0.5), 0 0 24px rgba(255,153,0,0.25)",
-      ring: "rgba(255,204,51,0.6)",
+      fill: "radial-gradient(circle at 42% 40%, rgba(240,210,150,0.9) 0%, rgba(210,170,100,0.8) 55%, rgba(185,145,80,0.7) 100%)",
+      glow: "0 0 6px rgba(220,190,120,0.25)",
+      ring: "rgba(220,190,120,0.35)",
     },
   },
 ];
