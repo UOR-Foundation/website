@@ -16,6 +16,9 @@
  */
 
 import type { KGNode, KGEdge, KGDerivation, KGStats } from "./types";
+import { iriInterner } from "./lib/iri-intern";
+import { initHedgedReader, getHedgedReader } from "./lib/hedged-read";
+import { schemaTemplates } from "./lib/schema-templates";
 
 // ── Lazy GrafeoDB loader (WASM) ────────────────────────────────────────────
 
@@ -202,8 +205,11 @@ async function nodeToQuads(node: KGNode): Promise<void> {
   await insertQuad(s, `${UOR_NS}meta/createdAt`, String(node.createdAt), g, true);
   await insertQuad(s, `${UOR_NS}meta/updatedAt`, String(node.updatedAt), g, true);
 
+  // Schema-template compression: store properties as [schemaCid, values]
   if (Object.keys(node.properties).length > 0) {
-    await insertQuad(s, `${UOR_NS}meta/properties`, JSON.stringify(node.properties), g, true);
+    const compact = await schemaTemplates.compress(node.properties);
+    const compactJson = JSON.stringify({ _s: compact.schemaCid, _v: compact.values });
+    await insertQuad(s, `${UOR_NS}meta/properties`, compactJson, g, true);
   }
 }
 
@@ -219,6 +225,25 @@ async function edgeToQuad(edge: KGEdge): Promise<void> {
 
 // ── Binding → Node ──────────────────────────────────────────────────────────
 
+/**
+ * Reconstruct node properties from stored JSON.
+ * Handles both legacy full-JSON and new schema-template compact format.
+ */
+function parseProperties(raw: string | undefined): Record<string, unknown> {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    // New compact format: { _s: schemaCid, _v: values[] }
+    if (parsed && typeof parsed._s === "string" && Array.isArray(parsed._v)) {
+      return schemaTemplates.expand({ schemaCid: parsed._s, values: parsed._v });
+    }
+    // Legacy full-JSON format
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
 function bindingToNode(r: SparqlBinding, uorAddress: string): KGNode {
   return {
     uorAddress,
@@ -230,7 +255,7 @@ function bindingToNode(r: SparqlBinding, uorAddress: string): KGNode {
     totalStratum: r["?totalStratum"] ? parseInt(r["?totalStratum"]) : undefined,
     uorCid: r["?cid"],
     canonicalForm: r["?canonicalForm"],
-    properties: r["?props"] ? (() => { try { return JSON.parse(r["?props"]); } catch { return {}; } })() : {},
+    properties: parseProperties(r["?props"]),
     createdAt: r["?createdAt"] ? parseInt(r["?createdAt"]) : Date.now(),
     updatedAt: r["?updatedAt"] ? parseInt(r["?updatedAt"]) : Date.now(),
     syncState: (r["?syncState"] as "local" | "synced" | "pending") || "local",
@@ -242,6 +267,12 @@ function bindingToNode(r: SparqlBinding, uorAddress: string): KGNode {
 export const grafeoStore = {
   async init(): Promise<{ quadCount: number }> {
     const db = await getDb();
+
+    // Initialize hedged-read layer (cache-first, WASM fallback)
+    if (!getHedgedReader()) {
+      initHedgedReader((addr) => this._getNodeFromWasm(addr), 500);
+    }
+
     try {
       const result = await db.execute(`SELECT (COUNT(*) AS ?count) WHERE { ?s ?p ?o }`);
       const bindings = normalizeBindings(result);
@@ -262,9 +293,35 @@ export const grafeoStore = {
   // ── Node operations ─────────────────────────────────────────────────────
 
   async putNode(node: KGNode): Promise<void> {
+    // Incremental canonical dedup: if a node with the same canonical form
+    // already exists, skip the insert (prevents unbounded growth).
+    if (node.canonicalForm) {
+      const existing = await this._findByCanonicalForm(node.canonicalForm);
+      if (existing && existing.uorAddress !== node.uorAddress) {
+        // Merge: update the existing node's timestamp instead of duplicating
+        return;
+      }
+    }
+
     await this.removeNode(node.uorAddress);
     await nodeToQuads(node);
+
+    // Populate hedged-read cache
+    const reader = getHedgedReader();
+    if (reader) reader.onWrite(node);
+
     emit();
+  },
+
+  /** Internal: find a node by its canonical form for dedup. */
+  async _findByCanonicalForm(canonicalForm: string): Promise<KGNode | undefined> {
+    const results = await sparqlQuery(`
+      SELECT ?s WHERE {
+        ?s <${UOR_NS}schema/canonicalForm> "${esc(canonicalForm)}" .
+      } LIMIT 1
+    `) as SparqlBinding[];
+    if (!Array.isArray(results) || results.length === 0) return undefined;
+    return this.getNode(results[0]["?s"]);
   },
 
   async putNodes(nodes: KGNode[]): Promise<void> {
@@ -276,6 +333,16 @@ export const grafeoStore = {
   },
 
   async getNode(uorAddress: string): Promise<KGNode | undefined> {
+    // Hedged read: check LRU cache first (zero-latency), fall back to WASM
+    const reader = getHedgedReader();
+    if (reader) {
+      return reader.getNode(uorAddress);
+    }
+    return this._getNodeFromWasm(uorAddress);
+  },
+
+  /** Direct WASM read (used by hedged reader as the slow-path). */
+  async _getNodeFromWasm(uorAddress: string): Promise<KGNode | undefined> {
     const results = await sparqlQuery(`
       SELECT ?label ?nodeType ?rdfType ?qualityScore ?stratumLevel ?totalStratum ?cid ?canonicalForm ?props ?syncState ?createdAt ?updatedAt WHERE {
         <${uorAddress}> <http://www.w3.org/2000/01/rdf-schema#label> ?label .
@@ -377,6 +444,10 @@ export const grafeoStore = {
   },
 
   async removeNode(uorAddress: string): Promise<void> {
+    // Invalidate hedged-read cache
+    const reader = getHedgedReader();
+    if (reader) reader.onDelete(uorAddress);
+
     try {
       await sparqlUpdate(`DELETE WHERE { <${uorAddress}> ?p ?o }`);
     } catch {
@@ -837,6 +908,10 @@ export const grafeoStore = {
   },
 
   async clear(): Promise<void> {
+    // Clear hedged-read cache
+    const reader = getHedgedReader();
+    if (reader) reader.onClear();
+
     dbInstance = null;
     const { GrafeoDB } = await import("@grafeo-db/web");
     dbInstance = await GrafeoDB.create({ persist: "uor-knowledge-graph" });
@@ -845,6 +920,16 @@ export const grafeoStore = {
       await dbInstance.execute(`DELETE WHERE { ?s ?p ?o }`);
     } catch { /* empty store */ }
     emit();
+  },
+
+  // ── Compression Statistics ────────────────────────────────────────────
+
+  compressionStats() {
+    return {
+      iriInterner: iriInterner.stats(),
+      schemaTemplates: schemaTemplates.stats(),
+      hedgedReader: getHedgedReader()?.stats() ?? null,
+    };
   },
 };
 
