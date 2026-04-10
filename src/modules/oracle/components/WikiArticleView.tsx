@@ -524,6 +524,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         >
           {title}
         </BalancedHeading>
+        <ConceptMapHeader topic={title} />
         <SourcesPills sources={sourceMetas} />
 
         {/* ── Two-column grid ── */}
@@ -592,6 +593,8 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         {title}
       </BalancedHeading>
 
+      {/* ── Concept map ── */}
+      <ConceptMapHeader topic={title} />
 
       {/* ── Source pills ── */}
       <SourcesPills sources={sourceMetas} />
