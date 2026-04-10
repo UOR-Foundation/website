@@ -530,25 +530,28 @@ class Orchestrator {
           layers: [],
         };
 
-        createContainer(syntheticImage, {
-          name: bp.name,
-          env: {},
-          resources: {
-            memoryBytes: 0,
-            cpuShares: 0,
-            workerSlots: bp.resources.workers ?? 1,
-          },
-          labels: { "uor.managed-by": "orchestrator", "uor.instance": instanceId },
-          restartPolicy: bp.autoStart !== false ? "always" : "on-failure",
-        })
-          .then((container) => {
-            startContainer(container.id);
-            linkContainerToKernel(container.id, instanceId);
-          })
-          .catch((err) => {
-            // Non-fatal: container bridge is observability, not critical path
-            console.debug(`[Orchestrator] Container bridge skipped for ${bp.name}:`, err?.message);
+        try {
+          const container = createContainer(syntheticImage, {
+            name: bp.name,
+            env: {},
+            resources: {
+              memoryBytes: 0,
+              cpuShares: 0,
+              workerSlots: bp.resources.workers ?? 1,
+            },
+            labels: { "uor.managed-by": "orchestrator", "uor.instance": instanceId },
+            restartPolicy: bp.autoStart !== false ? "always" : "on-failure",
           });
+
+          startContainer(container.id);
+          linkContainerToKernel(container.id, instanceId);
+        } catch (err) {
+          // Non-fatal: container bridge is observability, not critical path
+          console.debug(
+            `[Orchestrator] Container bridge skipped for ${bp.name}:`,
+            err instanceof Error ? err.message : err,
+          );
+        }
       },
     ).catch(() => {
       // Module not available — silent fallback
