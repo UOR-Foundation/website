@@ -30,11 +30,11 @@ export default function ChatList({ conversations, activeId, onSelect, filter, fi
 
   if (filtered.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center text-white/20 text-sm px-6 text-center">
-        {filter ? "No conversations match your search" :
+      <div className="flex-1 flex items-center justify-center text-white/30 text-base px-6 text-center">
+        {filter ? "No results" :
          filterTab === "archived" ? "No archived conversations" :
          filterTab === "unread" ? "No unread conversations" :
-         "No conversations yet — start one!"}
+         "No conversations yet"}
       </div>
     );
   }
@@ -51,8 +51,8 @@ export default function ChatList({ conversations, activeId, onSelect, filter, fi
   const DeliveryStatus = ({ status }: { status?: string }) => {
     switch (status) {
       case "read": return <CheckCheck size={14} className="text-teal-400/70 flex-shrink-0" />;
-      case "delivered": return <CheckCheck size={14} className="text-white/25 flex-shrink-0" />;
-      case "sent": return <Check size={14} className="text-white/25 flex-shrink-0" />;
+      case "delivered": return <CheckCheck size={14} className="text-white/30 flex-shrink-0" />;
+      case "sent": return <Check size={14} className="text-white/30 flex-shrink-0" />;
       default: return null;
     }
   };
@@ -94,19 +94,19 @@ export default function ChatList({ conversations, activeId, onSelect, filter, fi
             <div className="flex-1 min-w-0 border-b border-white/[0.03] pb-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  {convo.pinned && <Pin size={10} className="text-white/20 flex-shrink-0 rotate-45" />}
-                  <span className="text-[15px] text-white/90 truncate font-medium">{displayName}</span>
-                  {convo.muted && <BellOff size={11} className="text-white/15 flex-shrink-0" />}
+                  {convo.pinned && <Pin size={10} className="text-white/25 flex-shrink-0 rotate-45" />}
+                  <span className="text-[16px] text-white/90 truncate font-medium">{displayName}</span>
+                  {convo.muted && <BellOff size={11} className="text-white/20 flex-shrink-0" />}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                   {convo.lastMessage?.sentByMe && <DeliveryStatus status={lastMsgStatus ?? "sent"} />}
-                  <span className={`text-[11px] ${convo.unread > 0 ? "text-teal-400/70 font-medium" : "text-white/25"}`}>
+                  <span className={`text-[12px] ${convo.unread > 0 ? "text-teal-400/70 font-medium" : "text-white/30"}`}>
                     {time}
                   </span>
                 </div>
               </div>
               <div className="flex items-center justify-between mt-0.5">
-                <span className="text-[13px] text-white/30 truncate pr-2">
+                <span className="text-[14px] text-white/40 truncate pr-2">
                   {convo.lastMessage ? (
                     <>
                       {convo.lastMessage.sentByMe ? "You: " : (isGroup && convo.lastMessage.senderName ? `${convo.lastMessage.senderName}: ` : "")}
