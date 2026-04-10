@@ -12,6 +12,7 @@ import "./provenance-coverage-gate";
 import "./duplicate-detection-gate";
 import "./hygiene-gate";
 import "./devops-alignment-gate";
+import "./container-boot-gate";
 
 // Re-export the runner
 export { runAllGates, exportGatesMarkdown } from "./gate-runner";
