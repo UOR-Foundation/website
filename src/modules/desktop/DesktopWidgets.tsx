@@ -13,6 +13,7 @@ import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
 import { ArrowRight, Upload, Sparkles, MessageCircle, BookOpen, FolderOpen, LayoutGrid, Play } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
+import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
 import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
 import { useAuth } from "@/hooks/use-auth";
 import VoiceInput from "@/modules/oracle/components/VoiceInput";
