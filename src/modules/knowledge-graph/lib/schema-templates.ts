@@ -105,7 +105,7 @@ class SchemaTemplateRegistry {
    * Get all registered schemas with usage statistics.
    */
   getSchemas(): SchemaTemplate[] {
-    return [...this._schemas.values()];
+    return Array.from(this._schemas.values());
   }
 
   /**
@@ -159,9 +159,9 @@ class SchemaTemplateRegistry {
     }
 
     // Add schema storage cost (one-time per unique schema)
-    for (const fp of uniqueSchemas) {
+    Array.from(uniqueSchemas).forEach((fp) => {
       compressedBytes += fp.length + 16; // keys + CID
-    }
+    });
 
     return {
       originalBytes,

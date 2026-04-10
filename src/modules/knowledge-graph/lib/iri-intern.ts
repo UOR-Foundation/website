@@ -69,7 +69,7 @@ class IRIInterner {
     this._byId.push({ id, prefix });
     this._byPrefix.set(prefix, id);
     // Re-sort longest-first for greedy matching
-    this._sorted = [...this._byPrefix.keys()].sort((a, b) => b.length - a.length);
+    this._sorted = Array.from(this._byPrefix.keys()).sort((a, b) => b.length - a.length);
     return id;
   }
 
