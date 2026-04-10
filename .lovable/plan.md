@@ -1,143 +1,132 @@
 
 
-# Isolating the UOR OS Into a Self-Contained Folder
+# Cloud-to-Local Handoff via uor:// Deep-Link Protocol
 
-## The Reality
+## What Already Exists
 
-The OS is **not** contained in one folder. It's distributed across ~35 modules, shared libraries, types, hooks, and the Tauri backend. A naive folder copy would break immediately due to hundreds of cross-references using `@/` path aliases.
+- **`session_transfers` table** in the database with token, user_id, target_url, target_lens, used flag, 5-min TTL
+- **`portal-transfer` edge function** — POST creates a token (authenticated), GET redeems it (returns magic link hashed_token + email for `verifyOtp`)
+- **`QrPortalPanel`** — generates QR codes with portal tokens for cross-device transfer (browser-to-browser)
+- **Deep-link handler** — parses `uor://space/`, `uor://resolve/`, `uor://app/`, `uor://search` but **no `handoff` type**
+- **Tauri deep-link plugin** — already registered for `uor://` scheme in `tauri.conf.json`
+- **Session snapshot system** — `createSnapshot()` captures windows, theme, app buffers, scroll positions
 
-The cleanest approach: create a `uor-os/` folder at the repo root that mirrors a complete, standalone Vite+React+Tauri project — with its own `package.json`, `vite.config.ts`, `tsconfig.json`, `tailwind.config.ts`, and a `src/` subtree containing only OS-relevant code. The website-only modules stay behind in the original repo.
+## What's Missing
 
-## What Goes Into `uor-os/` (OS-Required)
+1. No `handoff` action type in the deep-link parser
+2. No desktop-side receiver that redeems a handoff token and signs the user in
+3. No "Transfer to Desktop" button in the browser OS that generates a `uor://handoff/{token}` link
+4. The QR panel currently generates browser URLs (`/search?portal=...`), not `uor://` deep-link URIs
+5. No session snapshot bundling with the transfer token
 
-### Core OS Modules (~30 modules)
-```text
-src/modules/
-├── desktop/          ← Shell, windows, dock, spotlight, themes
-├── boot/             ← Init system, sovereign boot, seal
-├── engine/           ← Ring R₈, WASM adapter, kernel declaration
-├── bus/              ← Service mesh, registry, dispatch
-├── compose/          ← Orchestrator, blueprints, reconciler
-├── oracle/           ← AI assistant, voice, search, library, daily notes
-├── knowledge-graph/  ← GrafeoDB, SPARQL, graph explorer
-├── sovereign-vault/  ← Encrypted storage, context manager
-├── sovereign-spaces/ ← Multi-space, sync, deep-link, clipboard
-├── uns/              ← Universal Name System, DHT, resolver
-├── identity/         ← Identity pages (vault UI)
-├── messenger/        ← Encrypted messaging
-├── certificate/      ← UOR certificates
-├── time-machine/     ← Checkpoints, auto-save
-├── takeout/          ← Data export/import
-├── app-store/        ← App catalog
-├── app-builder/      ← Docker-style build pipeline
-├── canonical-compliance/ ← Conformance dashboard
-├── media/            ← Media player
-├── ontology/         ← SKOS vocabulary
-├── shacl/            ← Conformance tests
-├── ring-core/        ← Ring operations
-├── verify/           ← Verification engine
-├── morphism/         ← Morphism system
-├── observable/       ← Health/metrics
-├── resolver/         ← Resolution engine
-├── state/            ← State management
-├── mcp/              ← Model Context Protocol
-├── uor-sdk/          ← WASM runtime, WebGPU
-├── core/ui/          ← Shared UI primitives (dialog, toast, command, etc.)
-└── core/components/  ← StatBlock and shared components used by OS
+## Implementation Plan
+
+### Step 1 — Extend Deep-Link Parser
+
+Add `handoff` action type to `DeepLinkAction` union in `src/modules/sovereign-spaces/deep-link/handler.ts`:
+```
+| { type: "handoff"; token: string }
+```
+Add parsing for `uor://handoff/{token}` in `parseDeepLink()`.
+
+### Step 2 — Create Handoff Library
+
+New file: `src/modules/desktop/lib/handoff.ts`
+
+**`generateHandoffLink()`** (browser-side):
+- Calls `portal-transfer` POST to create a token
+- Captures current session snapshot via `createSnapshot()`
+- Stores snapshot in `session_transfers` metadata (or a companion row)
+- Returns `uor://handoff/{token}` URI string
+
+**`redeemHandoff(token)`** (desktop-side):
+- Calls `portal-transfer` GET to redeem token, receives `hashed_token` + `email`
+- Signs user in via `supabase.auth.verifyOtp({ token_hash: hashed_token, email, type: 'magiclink' })`
+- Fetches the session snapshot associated with the token
+- Hydrates local sovereign store with the snapshot via `saveSnapshot()`
+- Returns `{ targetUrl, targetLens, snapshot }` for navigation
+
+### Step 3 — Create HandoffReceiver Component
+
+New file: `src/modules/desktop/components/HandoffReceiver.tsx`
+
+- Listens for `handoff` deep-link actions via `onDeepLink()`
+- Shows a full-screen animated overlay: "Receiving session from browser..."
+- Calls `redeemHandoff(token)` 
+- On success: shows module checklist verification, then navigates to `targetUrl`
+- On failure: shows clear error with retry option
+- Auto-dismisses after successful hydration
+
+### Step 4 — Add "Transfer to Desktop" Button
+
+Modify `src/modules/desktop/DesktopWidgets.tsx`:
+
+Below the existing "Go Sovereign — Download Desktop" CTA, add a "Transfer to Desktop" button (only shown when user is authenticated AND desktop app is detected/installed). This button:
+- Calls `generateHandoffLink()`
+- Displays the `uor://handoff/{token}` as a clickable link
+- Also shows a QR code variant for scanning from desktop
+
+### Step 5 — Wire HandoffReceiver into DesktopShell
+
+In `src/modules/desktop/DesktopShell.tsx`:
+- Import and render `<HandoffReceiver />` alongside `<LocalTwinWelcome />`
+- It only activates when a `handoff` deep-link is received
+
+### Step 6 — Update QrPortalPanel for Desktop Deep-Links
+
+In `src/modules/oracle/components/QrPortalPanel.tsx`:
+- Add option to generate `uor://handoff/{token}` URIs instead of browser URLs
+- When the user has the desktop app, the QR code encodes the deep-link URI so scanning opens Tauri directly
+
+## Database Changes
+
+Add a `snapshot_data` JSONB column to `session_transfers` to carry the session snapshot alongside the auth token. This avoids a second table.
+
+```sql
+ALTER TABLE public.session_transfers
+ADD COLUMN snapshot_data jsonb DEFAULT null;
 ```
 
-### Shared Libraries
-```text
-src/lib/
-├── runtime.ts        ← Tauri/browser detection
-├── crypto.ts         ← SHA-256
-├── uor-canonical.ts  ← Single proof hash
-├── uor-address.ts    ← Content addressing
-├── uor-triword.ts    ← Triword encoding
-├── uor-ring.ts       ← Ring engine
-├── uor-codec.ts      ← Codec
-├── uor-certificate.ts
-├── uor-registry.ts
-├── uor-content-registry.ts
-├── uor-receipt.ts
-├── ring-engine.ts
-├── local-llm-engine.ts
-├── utils.ts
-└── wasm/             ← WASM artifacts
-```
+Update the `portal-transfer` edge function to accept and return `snapshot_data`.
 
-### Other Required Pieces
-- `src/types/` — UOR Foundation type declarations
-- `src/hooks/use-auth.tsx`, `use-mobile.tsx` — shared hooks
-- `src/integrations/supabase/` — backend client
-- `src-tauri/` — entire Tauri backend
-- `src/custom-sw.ts` — service worker
-- `public/` — static assets (icons, manifest)
+## Files Created/Modified
 
-## What Stays Behind (Website-Only)
+| File | Action |
+|------|--------|
+| `src/modules/sovereign-spaces/deep-link/handler.ts` | Add `handoff` action type |
+| `src/modules/desktop/lib/handoff.ts` | New: generate + redeem logic |
+| `src/modules/desktop/components/HandoffReceiver.tsx` | New: deep-link receiver overlay |
+| `src/modules/desktop/DesktopShell.tsx` | Wire HandoffReceiver |
+| `src/modules/desktop/DesktopWidgets.tsx` | Add "Transfer to Desktop" CTA |
+| `src/modules/oracle/components/QrPortalPanel.tsx` | Support `uor://` URI generation |
+| `supabase/functions/portal-transfer/index.ts` | Accept/return snapshot_data |
+| Migration | Add `snapshot_data` column to `session_transfers` |
+
+## Flow Summary
 
 ```text
-src/modules/landing/      ← Homepage, hero, features
-src/modules/community/    ← Blog posts, research papers
-src/modules/projects/     ← Project detail pages
-src/modules/donate/       ← Donation page
-src/modules/core/pages/   ← About, Standard, SemanticWeb pages
-src/pages/                ← UnsExplainer
+Browser OS                          Desktop (Tauri)
+─────────                          ────────────────
+User clicks "Transfer to Desktop"
+  ↓
+Capture session snapshot
+  ↓
+POST /portal-transfer
+  → creates token + stores snapshot
+  ↓
+Generate uor://handoff/{token}
+  → show as link + QR code
+                                    User clicks link / scans QR
+                                      ↓
+                                    Tauri receives uor://handoff/{token}
+                                      ↓
+                                    GET /portal-transfer?token=...
+                                      → validates, marks used
+                                      → returns magic link + snapshot
+                                      ↓
+                                    verifyOtp() → user signed in
+                                    saveSnapshot() → state hydrated
+                                      ↓
+                                    Desktop shows identical viewpoint
 ```
-
-## Implementation Approach
-
-Rather than physically moving files (which would break the existing repo), the implementation will:
-
-1. **Create `uor-os/`** at repo root with its own project scaffolding:
-   - `package.json` (same dependencies, OS-only scripts)
-   - `vite.config.ts` (with `@/` alias pointing to `uor-os/src`)
-   - `tsconfig.json`
-   - `tailwind.config.ts`
-   - `index.html`
-
-2. **Create `uor-os/src/`** with a new `App.tsx` containing only OS routes:
-   - `/` → DesktopShell (the OS is the homepage)
-   - `/download` → DownloadPage
-   - `/oracle` → OraclePage
-   - `/resolve` → ResolvePage
-   - `/messenger` → MessengerPage
-   - `/library` → LibraryPage
-   - `/compliance` → ComplianceDashboardPage
-   - `/app-store` → AppStorePage
-
-3. **Copy all OS-required modules** into `uor-os/src/modules/`
-
-4. **Copy shared deps** (`lib/`, `types/`, `hooks/`, `integrations/`, `components/`, `assets/`)
-
-5. **Copy `src-tauri/`** into `uor-os/src-tauri/`
-
-6. **Create a `uor-os/README.md`** with build/deploy instructions
-
-The result: `uor-os/` is a complete, self-contained project. You can `cp -r uor-os/ ../new-repo/` and run `npm install && npm run dev` immediately.
-
-## File Count Estimate
-
-~300+ files will be copied/created. The `uor-os/` folder will be approximately 80-90% of the current `src/` — the OS **is** the bulk of this project. Only the landing/community/projects/donate pages are website-specific.
-
-## Key Decisions
-
-- The `uor-os/` App.tsx will make the desktop shell (`/os`) the root route (`/`)
-- Supabase integration files are copied as-is (same backend)
-- The `@/` alias in the new project points to `uor-os/src/`
-- No import paths need to change inside any module — they all use `@/` which will resolve correctly in the new project
-
-## Steps
-
-| # | Action |
-|---|--------|
-| 1 | Create `uor-os/` scaffolding (package.json, vite.config.ts, tsconfig, tailwind, index.html) |
-| 2 | Create `uor-os/src/App.tsx` with OS-only routes |
-| 3 | Create `uor-os/src/main.tsx` and `uor-os/src/index.css` |
-| 4 | Copy all OS-required modules into `uor-os/src/modules/` |
-| 5 | Copy `src/lib/`, `src/types/`, `src/hooks/`, `src/integrations/`, `src/components/`, `src/assets/` |
-| 6 | Copy `src-tauri/` → `uor-os/src-tauri/` |
-| 7 | Create `uor-os/README.md` |
-
-This is a large operation (~300 files). The implementation will use parallel file creation where possible.
 
