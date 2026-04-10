@@ -220,8 +220,7 @@ export default function ContainerBootOverlay({ appId, appLabel, onReady }: Props
 
       const create = await timedPhase(async () => {
         if (instanceId) {
-          const buildModule = await import("@/modules/uns/build");
-          const { getContainer } = buildModule;
+          const { getContainer } = await import("@/modules/uns/build/container");
           const c = getContainer(instanceId);
           if (c) {
             containerId = c.id;
