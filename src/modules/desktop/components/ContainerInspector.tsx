@@ -6,9 +6,18 @@
  * panel: Overview · Packages · Graph.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import type { BootReceipt } from "./ContainerBootOverlay";
+
+// Module-level cache for orchestrator import — avoids re-resolution on every 2s tick
+let _orchestratorModule: any = null;
+async function getOrchestrator() {
+  if (!_orchestratorModule) {
+    _orchestratorModule = await import("@/modules/compose/orchestrator");
+  }
+  return _orchestratorModule;
+}
 
 interface Props {
   appId: string;
@@ -105,8 +114,8 @@ export default function ContainerInspector({ appId, receipt }: Props) {
 
   const fetchMetrics = useCallback(async () => {
     try {
-      const { orchestrator } = await import("@/modules/compose/orchestrator");
-      const kernel = orchestrator.getKernel(appId);
+      const mod = await getOrchestrator();
+      const kernel = mod.orchestrator.getKernel(appId);
       if (kernel) {
         const inst = kernel.toInstance();
         setMetrics({
@@ -155,7 +164,7 @@ export default function ContainerInspector({ appId, receipt }: Props) {
 
   return (
     <div
-      className="absolute bottom-10 left-2 z-40 w-[300px] rounded-lg overflow-hidden animate-scale-in"
+      className="absolute bottom-10 left-2 z-40 w-[300px] rounded-lg overflow-hidden animate-scale-in container-inspector-panel"
       style={{
         background: bg,
         border: `1px solid ${border}`,

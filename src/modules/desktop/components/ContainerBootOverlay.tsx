@@ -326,7 +326,7 @@ export default function ContainerBootOverlay({ appId, appLabel, onReady }: Props
 
   return (
     <div
-      className="absolute inset-0 z-50 flex flex-col items-center justify-center"
+      className="absolute inset-0 z-50 flex flex-col items-center justify-center container-boot-overlay"
       style={{
         background: bg,
         transition: "opacity 300ms ease-out",

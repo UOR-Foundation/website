@@ -310,7 +310,7 @@ export default function TabBar({
   return (
     <div
       data-tabbar
-      className={`fixed top-0 inset-x-0 z-[200] flex items-center select-none ${isAuthenticated ? "tabbar-sovereign-border" : ""}`}
+      className={`fixed top-0 inset-x-0 z-[200] flex items-center select-none contain-layout ${isAuthenticated ? "tabbar-sovereign-border" : ""}`}
       style={{
         height: TAB_BAR_H,
         background: stripBg,
