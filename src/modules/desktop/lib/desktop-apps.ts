@@ -88,9 +88,13 @@ function deriveDesktopApp(bp: AppBlueprint): DesktopApp {
     console.warn(`[desktop-apps] Unknown component "${bp.ui.component}" for blueprint "${bp.name}"`);
   }
 
+  const LABEL_OVERRIDES: Record<string, string> = {
+    "app-hub": "App Store",
+  };
+
   return {
     id: bp.name,
-    label: bp.name
+    label: LABEL_OVERRIDES[bp.name] ?? bp.name
       .split("-")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" "),
