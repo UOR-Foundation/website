@@ -27,6 +27,9 @@ import "./skos-conformance-gate";
 // Schema.org Conformance gate
 import "./schema-org-conformance-gate";
 
+// Aesthetics gate
+import "./aesthetics-gate";
+
 // Axioms gate is registered via the axioms module barrel
 import "../../axioms/gate";
 

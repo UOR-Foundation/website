@@ -330,6 +330,45 @@ const A13_GRAPH_FIRST: DesignAxiom = {
   version: "1.0.0",
 };
 
+const A14_AESTHETIC_COHERENCE: DesignAxiom = {
+  "@id": "axiom:AestheticCoherence",
+  "@type": "uor:DesignAxiom",
+  code: "A14",
+  label: "Aesthetic Coherence",
+  category: "visual",
+  principle:
+    "The system must be visually coherent, harmonious, and proportioned — generous whitespace, confident typography, chromatic restraint, and φ-derived spatial rhythm.",
+  rationale:
+    "Inspired by Algebrica and Aman design languages: monochrome restraint, extreme content hierarchy, φ-proportioned rhythm, and generous negative space. Beauty is not decoration — it is the absence of noise.",
+  constraint: {
+    rule: "All visual proportions must derive from φ (1.618). Typography, spacing, opacity, and layout follow golden-ratio constants.",
+    forbids: [
+      "body font < 16px",
+      "caption font < 11px",
+      "arbitrary spacing outside φ-scale",
+      "excessive shadow depths (> 4)",
+      "low-contrast text (< 4.5:1)",
+      "content measure > 720px",
+    ],
+    requires: [
+      "φ-progression in spacing scale",
+      "φ⁻¹ opacity decay hierarchy",
+      "φ:1 hero aspect ratio",
+      "optical center at 38.2%",
+    ],
+  },
+  verification: {
+    kind: "constant-check",
+    description:
+      "Verify golden-ratio.ts constants satisfy aesthetic coherence: typography minimums, φ-spacing, opacity decay, proportional layout.",
+    targets: ["src/modules/desktop/lib/golden-ratio.ts"],
+    pattern: "TYPE\\.body.*(?:1[6-9]|[2-9]\\d)",
+  },
+  "uor:derivedFrom": "uor:GoldenRatio",
+  "skos:related": ["uor:VisualDesign", "uor:InformationTheory"],
+  version: "1.0.0",
+};
+
 // ── All Axioms ───────────────────────────────────────────────────────────
 
 export const ALGEBRICA_AXIOMS: readonly DesignAxiom[] = [
@@ -346,6 +385,7 @@ export const ALGEBRICA_AXIOMS: readonly DesignAxiom[] = [
   A11_PROTECTIVE_STILLNESS,
   A12_SELF_DECLARING,
   A13_GRAPH_FIRST,
+  A14_AESTHETIC_COHERENCE,
 ] as const;
 
 // ── CSS Tokens (Algebrica defaults) ──────────────────────────────────────
