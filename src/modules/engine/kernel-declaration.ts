@@ -116,7 +116,7 @@ function buildKernelTable(): readonly KernelFunction[] {
       ringBasis: ["ring_or"],
       framework: "@okikio/observables (TC39 Observable)",
       description: "TC39-aligned event subscription with backpressure and deterministic teardown",
-      governsNamespaces: ["observable/", "stream/", "effect/", "parallel/", "interaction/"],
+      governsNamespaces: ["observable/", "stream/", "effect/", "parallel/", "interaction/", "audio/"],
       verify: () => {
         return engine.or(0, 0) === 0 && engine.or(0xFF, 0) === 0xFF;
       },
