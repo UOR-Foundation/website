@@ -6,6 +6,7 @@ import autoprefixer from "autoprefixer";
 import { VitePWA } from "vite-plugin-pwa";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
+import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
   base: mode === "tauri" ? "./" : "/",
@@ -22,6 +23,7 @@ export default defineConfig(({ mode }) => ({
     wasm(),
     topLevelAwait(),
     react(),
+    mode === "development" && componentTagger(),
     VitePWA({
       strategies: "injectManifest",
       srcDir: "src",
