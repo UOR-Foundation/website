@@ -1,128 +1,86 @@
 
 
-# Master Gate — Coherence Analysis + Comprehensive System Health
+# Aesthetics Conformance Gate
 
-## Overview
+## Concept
 
-Create a **Master Gate** that runs a pre-flight coherence analysis on all registered gates before executing them, then produces a comprehensive markdown-exportable report. The master gate operates in three phases:
+A new gate — `aesthetics-gate.ts` — that codifies your aesthetic sensibilities as **declarative, machine-verifiable constraints** derived from the Algebrica and Aman design languages. Rather than subjective judgment, each preference maps to a measurable property.
 
-1. **Phase 1: Gate Coherence Analysis** — Inspect all gate metadata for conflicts, overlaps, and redundancies using categorical reasoning
-2. **Phase 2: Quality Threshold Check** — Only proceed if coherence score meets minimum threshold (default 70/100)
-3. **Phase 3: Full Execution + Self-Reflection** — Run all gates, then analyze the aggregate results for systemic patterns and improvement proposals
+The gate also registers a new axiom **A14: Aesthetic Coherence** in the existing axiom registry, linking it canonically to the design system so it's swappable like all other axioms.
 
-## Architecture
+## Aesthetic Constraints — Derived from Algebrica + Aman
+
+From studying both reference sites, the shared DNA is: **generous whitespace, large confident typography, monochrome restraint, extreme content hierarchy, and φ-proportioned rhythm**. Each of your stated preferences maps to a testable constraint:
 
 ```text
-┌────────────────────────────────────────────────────┐
-│                   MASTER GATE                      │
-│                                                    │
-│  Phase 1: Coherence Pre-flight                     │
-│  ├─ Overlap Detection (finding intersection)       │
-│  ├─ Contradiction Detection (conflicting verdicts) │
-│  ├─ Redundancy Analysis (subsumption check)        │
-│  ├─ Coverage Gaps (unmapped UOR categories)         │
-│  └─ Consolidation Proposals                        │
-│                                                    │
-│  Phase 2: Threshold Gate (coherence ≥ 70)          │
-│  └─ Abort with report if incoherent                │
-│                                                    │
-│  Phase 3: Full Execution + Reflection              │
-│  ├─ Run all sync + async gates                     │
-│  ├─ Cross-gate pattern analysis                    │
-│  ├─ Self-improvement proposals                     │
-│  └─ Comprehensive markdown report                  │
-└────────────────────────────────────────────────────┘
+PREFERENCE                  CONSTRAINT                                    CHECK
+─────────────────────────── ───────────────────────────────────────────── ──────────────
+Coherence                   Color palette ≤ 5 hues (zinc + 1 accent)     Tailwind config token count
+Harmony                     Spacing scale follows φ-progression           golden-ratio.ts constants
+Golden ratio                Content measure 600-720px, optical center     CONTENT.bodyMaxWidth
+Simplicity                  Max 3 font weights per page                   Tailwind font config
+Clarity                     Body text ≥ 16px                              TYPE.body ≥ 16
+No small font               Caption ≥ 11px, nothing below                 TYPE.caption ≥ 11
+Visible text color           Contrast ratio ≥ 4.5:1 (WCAG AA)            Token pair analysis
+No noise                    Max 2 shadow depths active per view           SHADOW token count
+No excess text              Body max-width ≤ 720px (measure limit)        CONTENT constant
+Proportioned layout         Hero aspect ratio = φ:1                       MEDIA.heroAspectRatio
+Generous whitespace         Section spacing ≥ 2.618em (φ²)               RHYTHM constants
 ```
-
-## Categorical Reasoning Applied
-
-The coherence analysis uses category-theoretic concepts already in the codebase (`graph-morphisms.ts`):
-
-- **Overlap = Pullback**: Two gates share a common sub-domain (same files, same checks). Detected by comparing finding titles and file references across gate pairs.
-- **Contradiction = Non-commutativity**: Gate A says "pass" on a domain that Gate B says "fail". Detected by comparing status verdicts on overlapping domains.
-- **Redundancy = Epimorphism**: Gate A's findings are a strict subset of Gate B's — A is subsumed and can be folded into B.
-- **Coverage gap = Missing arrow**: A UOR namespace or ontology concept has no gate checking it.
-- **Consolidation = Coequalizer**: Two gates with overlapping domains can be merged into one that covers both.
 
 ## Implementation
 
-### File 1: `src/modules/canonical-compliance/gates/master-gate.ts` (new)
+### File 1: `src/modules/canonical-compliance/gates/aesthetics-gate.ts` (new)
 
-**Gate Coherence Analysis (Phase 1):**
-- Enumerate all registered gates by running them once in "dry-run" mode (they're pure functions, so this is safe)
-- Build a **domain matrix**: for each gate, extract the set of files, modules, and ontology IDs it references from its findings
-- Compute pairwise Jaccard similarity on domain sets to detect overlaps
-- Flag contradictions where two gates give opposing verdicts on the same file/module
-- Identify subsumption where one gate's domain is a strict subset of another's
-- Check that every UOR namespace in the ontology has at least one gate covering it
-- Produce consolidation proposals for gates with >60% domain overlap
+The gate runs ~12 declarative checks grouped into four categories:
 
-**Threshold Gate (Phase 2):**
-- Coherence score = 100 minus deductions for contradictions (10 each), high overlaps (3 each), coverage gaps (5 each)
-- If coherence < 70, return early with a detailed report of why the gates are incoherent
-- This prevents running an incoherent gate suite that would produce misleading results
+**Typography Coherence** (3 checks)
+- Body font ≥ 16px (from `TYPE.body`)
+- Caption font ≥ 11px (from `TYPE.caption`)
+- Line height for body text between 1.5-1.9 (from `LINE_HEIGHT.body`)
 
-**Full Execution + Self-Reflection (Phase 3):**
-- Run `runAllGatesAsync()` to get all gate results
-- Cross-gate pattern analysis: cluster findings by file, by severity, by module to find systemic hotspots
-- Self-improvement proposals: for each cluster of 3+ findings on the same file, propose a targeted gate or gate amendment
-- Score distribution analysis: flag gates that always score 100 (potentially too lenient) or always 0 (potentially broken)
+**Spatial Harmony** (3 checks)
+- Spacing scale follows φ-progression (verify each step ≈ previous × 1.618 within 15% tolerance)
+- Content measure between 600-720px
+- Section spacing uses φ² (2.618em)
 
-**Markdown Report:**
-- Executive summary with composite score and coherence score
-- Coherence analysis section with overlap matrix, contradictions, and consolidation proposals
-- Per-gate results (reusing existing `exportGatesMarkdown` format)
-- Systemic hotspot analysis
-- Self-improvement recommendations
-- Footer with timestamp and gate count
+**Chromatic Restraint** (3 checks)
+- Neutral palette uses zinc-scale (verify token names)
+- Opacity hierarchy follows φ-inverse decay (verify 0.90 → 0.56 → 0.34 → 0.21 progression)
+- Shadow scale ≤ 4 levels (no noise)
 
-### File 2: `src/modules/canonical-compliance/gates/index.ts` (update)
+**Proportional Integrity** (3 checks)
+- Hero aspect ratio = φ:1 (1.618)
+- Float width = φ⁻¹ (38.2%)
+- Optical center at 38.2% (φ⁻¹ vertical)
 
-- Add `import "./master-gate"` to register the master gate
-- Export `runMasterGate` and `exportMasterGateMarkdown` from the barrel
+Each failing check produces a finding with severity and a recommendation. The gate reads directly from the existing `golden-ratio.ts` constants and `ALGEBRICA_TOKENS`, making it fully declarative.
 
-### File 3: `src/modules/canonical-compliance/gates/gate-runner.ts` (update)
+### File 2: `src/modules/axioms/registry.ts` (update)
 
-- Export `getRegisteredGateCount()` and `getRegisteredGates()` so the master gate can introspect the registry
-- Add `MasterGateReport` type extending `GateReport` with coherence analysis fields
+Add axiom **A14: Aesthetic Coherence** to the Algebrica design system:
+- Category: `"visual"`
+- Principle: "The system must be visually coherent, harmonious, and proportioned — generous whitespace, confident typography, chromatic restraint, and φ-derived spatial rhythm."
+- Verification kind: `"constant-check"` targeting `golden-ratio.ts`
+- Constraints: forbids small fonts (<11px), low-contrast text, excessive shadow depths, arbitrary spacing outside φ-scale
 
-## Report Structure
+### File 3: `src/modules/canonical-compliance/gates/index.ts` (update)
 
-```text
-# Master Gate Report
-## Executive Summary
-- Composite Score: 84/100
-- Coherence Score: 92/100
-- Gates Executed: 15
-- Systemic Hotspots: 3
+Register the new gate via `import "./aesthetics-gate"`.
 
-## Phase 1: Gate Coherence Analysis
-### Overlap Matrix
-| Gate A | Gate B | Overlap | Action |
-### Contradictions (0 found)
-### Coverage Gaps
-- Namespace "quantum:" has no dedicated gate
-### Consolidation Proposals
-- Merge "SKOS Conformance" + "Ontology Consistency" (72% overlap)
+## What This Catches
 
-## Phase 2: Threshold — PASSED (92/100)
-
-## Phase 3: Gate Results
-[... per-gate detail ...]
-
-## Systemic Analysis
-### Hotspot Files (3+ findings)
-### Score Distribution
-### Self-Improvement Proposals
-- Gate "Canonical Pipeline" has 13 static bypasses — consider auto-resolution
-- Gate "Provenance Coverage" overlaps 40% with "Graph Anchor" — unify domain
-```
+The gate will flag violations like:
+- Someone adds a 10px body font — **error**: "Body text 10px < minimum 16px"
+- A new component uses arbitrary 15px spacing not in the φ-scale — **warning**: "Non-φ spacing detected"
+- Opacity values drift from φ-inverse decay — **warning**: "Opacity hierarchy broken"
+- Content width set to 900px — **warning**: "Content measure 900px exceeds 720px maximum"
 
 ## Files Summary
 
 | File | Action | Purpose |
 |---|---|---|
-| `src/modules/canonical-compliance/gates/master-gate.ts` | Create | Master gate with 3-phase execution |
-| `src/modules/canonical-compliance/gates/gate-runner.ts` | Update | Expose registry introspection + MasterGateReport type |
-| `src/modules/canonical-compliance/gates/index.ts` | Update | Register master gate + export runner |
+| `src/modules/canonical-compliance/gates/aesthetics-gate.ts` | Create | 12-check aesthetic conformance gate |
+| `src/modules/axioms/registry.ts` | Update | Add A14 Aesthetic Coherence axiom |
+| `src/modules/canonical-compliance/gates/index.ts` | Update | Register the new gate |
 
