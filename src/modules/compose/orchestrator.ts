@@ -498,7 +498,7 @@ class Orchestrator {
    */
   private _createContainerForInstance(instanceId: string, bp: AppBlueprint): void {
     // Lazy import to avoid circular dependency
-    import("@/modules/uns/build/container").then(
+    import("@/modules/uns/build/container.ts").then(
       ({ createContainer, startContainer, linkContainerToKernel }) => {
         // Build a synthetic UorImage from the blueprint metadata
         const syntheticImage = {
