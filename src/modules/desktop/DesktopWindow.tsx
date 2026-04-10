@@ -16,6 +16,8 @@ import { RADIUS } from "@/modules/desktop/lib/golden-ratio";
 import ContainerBootOverlay from "@/modules/desktop/components/ContainerBootOverlay";
 import type { BootReceipt } from "@/modules/desktop/components/ContainerBootOverlay";
 import ContainerInspector, { ContainerStatusPill } from "@/modules/desktop/components/ContainerInspector";
+import GraphContextBar from "@/modules/desktop/components/GraphContextBar";
+import GraphQuickView from "@/modules/desktop/components/GraphQuickView";
 import "@/modules/desktop/desktop.css";
 
 interface Props {
