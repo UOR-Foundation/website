@@ -502,7 +502,7 @@ class Orchestrator {
         // Build a synthetic UorImage from the blueprint metadata
         const syntheticImage = {
           canonicalId: bp.canonicalId ?? `bp:${bp.name}`,
-          cid: bp.cid ?? "",
+          cid: bp.canonicalId ?? "",
           ipv6: "",
           spec: {
             directives: [],
@@ -533,7 +533,7 @@ class Orchestrator {
           name: bp.name,
           env: {},
           resources: {
-            memoryBytes: bp.resources.memoryMb ? bp.resources.memoryMb * 1024 * 1024 : 0,
+            memoryBytes: 0,
             cpuShares: 0,
             workerSlots: bp.resources.workers ?? 1,
           },
