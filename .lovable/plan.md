@@ -1,148 +1,95 @@
 
 
-# Health Gate System — Systematic Bypass Detection & Compliance Enforcement
+# DevOps Alignment Gate — Terminology Standardization & Wiring Verification
 
-## Problem Identified
+## Audit Summary
 
-After auditing the codebase, here are the concrete bypass patterns found:
+After evaluating the system from a DevOps perspective, the architecture is remarkably well-mapped to CNCF/K8s patterns. The `cncf-compat/categories.ts` already defines a 22-category mapping. However, there are concrete gaps between the system's *internal terminology* and what a DevOps engineer would expect, plus several wiring issues where subsystems aren't connected to the canonical pipelines they claim to use.
 
-### 1. Raw SHA-256 Bypassing `singleProofHash()` Pipeline
-**21 files** import `sha256hex` from `@/lib/crypto` and use it for direct string hashing, bypassing the canonical URDNA2015 → SHA-256 → UOR identity pipeline. Key offenders:
+### Key Findings
 
-- `diffusion/compiler.ts` — defines its **own local `sha256Hex()` function** (lines 91-97), completely duplicating `@/lib/crypto`
-- `certificate/boundary.ts` — hashes boundary keys with raw `sha256hex()` instead of canonicalization
-- `code-kg/analyzer.ts` + `analyzer-rust.ts` — hashes entities with raw sha256 instead of `singleProofHash()`
-- `data-bank/lib/sync.ts` — content-addresses slots with raw sha256
-- `knowledge-graph/lib/schema-templates.ts` — schema CIDs from raw sha256
-- `knowledge-graph/raw-store.ts` — raw hashes for audit records
-- `boot/tech-stack.ts` — stack fingerprint via raw sha256
-- `boot/reflection-chain.ts` — reflection entries via raw sha256
-- `sovereign-spaces/sync/change-dag.ts` — change CIDs via raw sha256
-- `uns/mesh/triple-dedup.ts` + `sync-protocol.ts` — mesh message CIDs via raw sha256
-- `time-machine/checkpoint-capture.ts` — checkpoint hashes via raw sha256
-- `donate/DonatePopup.tsx` + `community/DonatePopup.tsx` — **duplicate components** both using raw sha256
+**Terminology Misalignments** (confusing for experienced DevOps engineers):
 
-### 2. Duplicate Components
-- `src/modules/donate/components/DonatePopup.tsx` and `src/modules/community/components/DonatePopup.tsx` — identical file, two locations
-- The pruning gate lists `donate` as absorbed into `community`, but the original still exists
+| Current Term | Standard DevOps Term | Impact |
+|---|---|---|
+| `Sovereign Bus` | **Service Mesh / Message Bus** | "Sovereign" is opaque; experienced devs won't find it via search |
+| `AppKernel` | **Container Runtime** / **Sidecar Proxy** | Conflates two concepts — it's actually the isolation + proxy layer |
+| `Sovereign Reconciler` | **Reconciliation Controller** | Fine, but comments say "K8s equivalent" — just call the concepts what they are |
+| `AppBlueprint` | **Pod Spec / Deployment Manifest** | "Blueprint" is fine but comments should cross-reference K8s terms consistently |
+| `Sovereign Boot` | **Init System / systemd** | "Boot" is close, but the init sequence is really systemd-equivalent |
+| `UorContainer` | **Container** | Correct, but no `docker`-style CLI help text in the system monitor |
+| `SealStatus` | **Integrity Attestation** | "Seal" maps to Sigstore/cosign attestation — label it so |
+| `useConnectivity` features | **Liveness Probes / Readiness Probes** | The 6 service checks are exactly K8s health probes — label them |
+| `ComposeEvent` | **Cluster Event** | Matches `kubectl get events` — surface it as such |
+| `error budget` | **SLO Error Budget** | Correct term, but not labeled as SLO anywhere |
 
-### 3. Missing Provenance Registry Entries
-The `PROVENANCE_REGISTRY` in `provenance-map.ts` only covers ~19 modules. Missing modules that exist in the codebase:
-- `knowledge-graph`, `data-bank`, `sovereign-spaces`, `time-machine`, `code-kg`, `certificate`, `verify`, `bus`, `trust-graph`, `atlas`, `quantum`, `mcp`, `hologram-ui`, `audio`, `agent-tools`, `console`, `bitcoin`, `community`, `morphism`, `derivation`, `epistemic`, `sparql`, `state`, `observable`, `resolver`, `sovereign-vault`, `uor-sdk`, `projects`, `qsvg`
+**Wiring Gaps** (subsystems not connected to canonical infrastructure):
 
-## Solution: Health Gate System
+1. **`useConnectivity` features are not registered as bus operations** — The 6 service probes (oracle, kgSync, dataBank, webBridge, voice, auth) are computed client-side but never emit health events to the `SystemEventBus`, meaning the reconciler can't act on them.
 
-### Architecture
+2. **CNCF category maturity claims are unverified** — `categories.ts` marks 14 categories as "complete" but there's no gate checking whether the referenced `uorModules` actually exist and export the claimed interfaces.
 
-A pluggable gate runner that lives in `canonical-compliance`, producing structured reports exportable as Markdown. Each gate is a pure function: `() => GateReport`. New gates can be added over time.
+3. **Observability gap** — The OTLP adapter (`cncf-compat/otlp.ts`) creates spans but nothing collects them. The `SystemEventBus` emits events but they're not formatted as CloudEvents despite the adapter existing.
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│  Compliance Dashboard                                    │
-│  [Provenance Graph]  [Health Gates]     ← new tab        │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│  GATE                        STATUS    SCORE   DETAILS   │
-│  ─────────────────────────── ──────── ─────── ────────   │
-│  Canonical Pipeline Gate      ● PASS   92%    [View]     │
-│    sha256hex bypass: 15 files                            │
-│    local sha256 dupes: 1 file                            │
-│                                                          │
-│  Provenance Coverage Gate     ● WARN   40%    [View]     │
-│    19/48 modules registered                              │
-│    29 modules untraced                                   │
-│                                                          │
-│  Duplicate Detection Gate     ● FAIL   85%    [View]     │
-│    2 duplicate components                                │
-│    1 absorbed module still active                         │
-│                                                          │
-│  Module Hygiene Gate          ● PASS   94%    [View]     │
-│    37 active, 13 absorbed                                │
-│                                                          │
-│  [ Export All Gates as Markdown ]                         │
-└─────────────────────────────────────────────────────────┘
-```
+4. **Pipeline module is "planned" but exists** — `cncf-compat/pipeline.ts` exports `createPipeline` and `executePipeline` but the category registry marks CI/CD as "planned".
 
-### Implementation
+5. **No health endpoint convention** — Each service has its own health check pattern. K8s uses `/healthz`, `/readyz`, `/livez`. The bus should expose `*/healthz` for every registered module.
 
-#### 1. Create Gate Runner Engine (~120 lines)
-**File**: `src/modules/canonical-compliance/gates/gate-runner.ts`
+## Proposal: DevOps Alignment Gate + Terminology Glossary
+
+### 1. New Gate: `devops-alignment-gate.ts` (~100 lines)
+**File**: `src/modules/canonical-compliance/gates/devops-alignment-gate.ts`
+
+A compliance gate that verifies:
+- **CNCF category integrity**: For each category marked "complete", verify that every listed `uorModule` path resolves to a real module with exports
+- **Health probe coverage**: Check that every registered bus module has a healthcheck operation registered (or is explicitly exempt)
+- **Event bus wiring**: Verify that connectivity features emit to `SystemEventBus` (check for `SystemEventBus.emit` calls in connectivity-related modules)
+- **Maturity accuracy**: Flag categories marked "complete" or "partial" where the referenced module paths don't exist
+- **Terminology consistency**: Static list of internal→standard term mappings, flagging any module docstring that uses non-standard terminology without a cross-reference
+
+Scoring: Each missing health probe = -2, each broken module reference = -5, each maturity mismatch = -8.
+
+### 2. DevOps Glossary Registry (~60 lines)
+**File**: `src/modules/canonical-compliance/devops-glossary.ts`
+
+A canonical mapping of internal terms → standard DevOps/CNCF terms, consumed by:
+- The gate (for verification)
+- The System Monitor (for tooltip labels)
+- Future documentation generation
 
 ```typescript
-interface GateResult {
-  id: string;
-  name: string;
-  status: "pass" | "warn" | "fail";
-  score: number;           // 0-100
-  findings: GateFinding[];
-  timestamp: string;
-}
-interface GateFinding {
-  severity: "error" | "warning" | "info";
-  title: string;
-  detail: string;
-  file?: string;
-  recommendation?: string;
-}
-type Gate = () => GateResult;
+const DEVOPS_GLOSSARY: GlossaryEntry[] = [
+  { internal: "Sovereign Bus", standard: "Service Mesh / Message Bus", k8s: "kube-apiserver", cncf: "Istio/Linkerd" },
+  { internal: "AppKernel", standard: "Container Runtime + Sidecar", k8s: "containerd + envoy", cncf: "containerd" },
+  { internal: "Reconciler", standard: "Reconciliation Controller", k8s: "kube-controller-manager", cncf: "Kubernetes" },
+  { internal: "AppBlueprint", standard: "Deployment Manifest", k8s: "Deployment/Pod spec", cncf: "Helm chart" },
+  { internal: "Sovereign Boot", standard: "Init System", k8s: "kubelet bootstrap", cncf: "systemd" },
+  { internal: "UorContainer", standard: "Container", k8s: "Pod/Container", cncf: "containerd/CRI-O" },
+  { internal: "UOR Seal", standard: "Integrity Attestation", k8s: "admission webhook", cncf: "Sigstore/cosign" },
+  { internal: "Connectivity Probes", standard: "Liveness/Readiness Probes", k8s: "livenessProbe/readinessProbe" },
+  { internal: "ComposeEvent", standard: "Cluster Event", k8s: "kubectl get events" },
+  { internal: "Error Budget", standard: "SLO Error Budget", k8s: "N/A", cncf: "OpenSLO" },
+  { internal: "Bus Manifest", standard: "Service Registry", k8s: "endpoints/services", cncf: "CoreDNS/etcd" },
+  { internal: "DHT", standard: "Service Discovery", k8s: "kube-dns", cncf: "CoreDNS" },
+  { internal: "Conduit", standard: "mTLS Tunnel", k8s: "N/A", cncf: "SPIFFE/SPIRE" },
+  { internal: "Shield", standard: "Runtime Security", k8s: "PodSecurityPolicy", cncf: "Falco/OPA" },
+];
 ```
 
-A registry of gates. `runAllGates()` executes them all, returns a combined report. `exportGatesMarkdown()` produces a detailed Markdown file.
+### 3. Update `gates/index.ts` to register the new gate
 
-#### 2. Canonical Pipeline Gate (~80 lines)
-**File**: `src/modules/canonical-compliance/gates/canonical-pipeline-gate.ts`
+Auto-registers via side-effect import, same pattern as existing gates.
 
-Statically detects bypass patterns:
-- Counts modules using `sha256hex` directly vs `singleProofHash`
-- Flags any file that defines its own local hash function
-- Reports ratio of canonical vs raw hash calls
-- Produces per-file findings with recommendations to rewire
+### 4. Fix Maturity Mismatch in `cncf-compat/categories.ts` (~3 lines)
 
-#### 3. Provenance Coverage Gate (~60 lines)
-**File**: `src/modules/canonical-compliance/gates/provenance-coverage-gate.ts`
-
-Compares `ACTIVE_MODULES` list from pruning-gate against `PROVENANCE_REGISTRY` entries. Flags every active module that has no provenance mapping — meaning it can't be traced back to UOR atoms.
-
-#### 4. Duplicate Detection Gate (~70 lines)
-**File**: `src/modules/canonical-compliance/gates/duplicate-detection-gate.ts`
-
-Cross-references `ABSORBED_MODULES` from pruning-gate against actual `PROVENANCE_REGISTRY` and known file paths. Flags:
-- Absorbed modules that still appear in the active registry
-- Known duplicate component paths (donate/DonatePopup vs community/DonatePopup)
-- Multiple files exporting the same function name from different locations
-
-#### 5. Module Hygiene Gate (wrapper) (~30 lines)
-**File**: `src/modules/canonical-compliance/gates/hygiene-gate.ts`
-
-Wraps the existing `pruningGate()` into the standard `Gate` interface so it shows alongside the other gates.
-
-#### 6. Health Gates UI Tab (~180 lines)
-**File**: `src/modules/canonical-compliance/components/HealthGatesPanel.tsx`
-
-A new tab in `ComplianceDashboardPage` (alongside Table/Graph views) showing:
-- Gate list with status dots (green/amber/red), scores, and expandable findings
-- Each finding shows severity icon, title, detail, file path, and recommendation
-- "Export All as Markdown" button generates a comprehensive report
-- Per-gate "View Details" expansion with collapsible finding groups
-- Monochrome Algebrica-style aesthetic consistent with the existing compliance page
-
-#### 7. Update ComplianceDashboardPage (~25 lines changed)
-Add a third view mode `"gates"` alongside `"table"` and `"graph"`, with a Shield icon in the toolbar toggle.
-
-#### 8. Fix Known Bypasses (~40 lines across files)
-- **`diffusion/compiler.ts`**: Replace local `sha256Hex` with import from `@/lib/crypto`
-- **`donate/DonatePopup.tsx`**: Delete the file, ensure the `community/DonatePopup.tsx` version is the canonical one (it already is — donate is absorbed into community)
+Change CI/CD category from `"planned"` to `"partial"` since `pipeline.ts` already exports working functions.
 
 ## Files
 
 | File | Action | Lines |
 |---|---|---|
-| `src/modules/canonical-compliance/gates/gate-runner.ts` | Create | ~120 |
-| `src/modules/canonical-compliance/gates/canonical-pipeline-gate.ts` | Create | ~80 |
-| `src/modules/canonical-compliance/gates/provenance-coverage-gate.ts` | Create | ~60 |
-| `src/modules/canonical-compliance/gates/duplicate-detection-gate.ts` | Create | ~70 |
-| `src/modules/canonical-compliance/gates/hygiene-gate.ts` | Create | ~30 |
-| `src/modules/canonical-compliance/components/HealthGatesPanel.tsx` | Create | ~180 |
-| `src/modules/canonical-compliance/pages/ComplianceDashboardPage.tsx` | Update | ~25 lines |
-| `src/modules/uns/core/hologram/diffusion/compiler.ts` | Update | ~5 lines (fix local sha256 dupe) |
+| `src/modules/canonical-compliance/devops-glossary.ts` | Create | ~60 |
+| `src/modules/canonical-compliance/gates/devops-alignment-gate.ts` | Create | ~100 |
+| `src/modules/canonical-compliance/gates/index.ts` | Update | ~2 lines (add import) |
+| `src/modules/cncf-compat/categories.ts` | Update | ~1 line (fix maturity) |
 
