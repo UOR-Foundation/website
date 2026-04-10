@@ -1,18 +1,29 @@
 
 
-# Fix Build Error: Re-create `container.ts`
+# Priority Fix + Lean Decision
 
-The PWA plugin's `injectManifest` strategy runs a separate Rollup build for the service worker (`custom-sw.ts`). The `globIgnores` config only affects the precache file list — it does NOT prevent Rollup from resolving imports. When the SW build encounters `src/modules/uns/build/index.ts` (via transitive imports), it tries to resolve `"./container"` and fails.
+## Step 1 — Fix the build error (blocking)
 
-The `container.ts` file shows in the directory listing but may not have been properly written to disk in a previous session. The fix is to re-write it cleanly.
+The PWA service worker's Rollup build fails on line 223 of `ContainerBootOverlay.tsx`:
+```
+const { getContainer } = await import("@/modules/uns/build/container");
+```
 
-## Single Change
+The file `container.ts` exists, but Rollup's module resolution in the PWA `injectManifest` pass doesn't append `.ts`. Fix: add explicit extension to the dynamic import path.
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/modules/uns/build/container.ts` | **Re-create** | Ensure the file is valid and resolves all exports declared in `index.ts` |
+| File | Change |
+|------|--------|
+| `src/modules/desktop/components/ContainerBootOverlay.tsx` line 223 | Change import path to `"@/modules/uns/build/container.ts"` |
 
-The file implements an in-memory virtual container runtime with all 14 exported functions (`createContainer`, `startContainer`, `stopContainer`, etc.) and all 11 exported types (`ContainerState`, `UorContainer`, `ContainerConfig`, etc.) that `index.ts` re-exports.
+## Step 2 — Lean implementation (if approved)
 
-No other files need changes.
+Given the honest tradeoffs above, proceed only if you want the formal verification layer for future ring generalization or external audit purposes.
+
+If yes: create `uor-lean/` with Ring, CriticalIdentity, Involution, and Partition proofs as previously planned, plus artifact generation and conformance suite annotations.
+
+If no: the current 256-element exhaustive conformance suite is already mathematically complete for R_8.
+
+## Technical Details
+
+The build error is specifically in the PWA plugin's `injectManifest` strategy, which runs a **separate Rollup build** for the service worker. This second Rollup pass uses different resolution rules than Vite's main build, which is why the main app works but the PWA build fails. The `globIgnores` pattern `**/modules/uns/build/**` only affects precache file listing, not import resolution.
 
