@@ -1,13 +1,13 @@
 /**
- * MediaPlayer — Video streaming via web-proxy for YouTube embeds.
+ * MediaPlayer — Video streaming with blob-URL-based YouTube embed.
  * Thumbnails proxied through video-stream edge function.
- * YouTube embeds proxied through web-proxy to bypass X-Frame-Options.
+ * Playback uses a client-side blob URL to bypass nested iframe restrictions.
  */
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
   ArrowLeft, Search, Play, Clock, User, X, ChevronRight,
-  SkipForward,
+  SkipForward, ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -19,13 +19,68 @@ import {
   type VideoCategory,
 } from "@/modules/media/lib/video-catalog";
 
-/* ── URL builders ────────────────────────────────────────────── */
+/* ── Blob-based YouTube player ───────────────────────────────── */
 
-function getEmbedUrl(videoId: string): string {
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "erwfuxphwcvynxhfbvql";
-  const ytUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&color=white&playsinline=1`;
-  // Route through web-proxy to strip X-Frame-Options
-  return `https://${projectId}.supabase.co/functions/v1/web-proxy?url=${encodeURIComponent(ytUrl)}`;
+function createPlayerBlobUrl(videoId: string): string {
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000}
+iframe{width:100%;height:100%;border:none}
+</style></head><body>
+<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&color=white&playsinline=1"
+  allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share"
+  allowfullscreen></iframe>
+</body></html>`;
+  const blob = new Blob([html], { type: "text/html" });
+  return URL.createObjectURL(blob);
+}
+
+/* ── YouTube Player Component ────────────────────────────────── */
+
+function YouTubePlayer({ video }: { video: CatalogVideo }) {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const url = createPlayerBlobUrl(video.id);
+    setBlobUrl(url);
+    setFailed(false);
+    return () => URL.revokeObjectURL(url);
+  }, [video.id]);
+
+  if (failed || !blobUrl) {
+    return (
+      <div className="w-full aspect-video bg-black flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-center px-4">
+          <Play className="w-12 h-12 text-white/20" />
+          <p className="text-white/40 text-sm">Video playback unavailable in preview</p>
+          <a
+            href={`https://www.youtube.com/watch?v=${video.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 underline"
+          >
+            Watch on YouTube <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full aspect-video bg-black relative">
+      <iframe
+        key={video.id}
+        src={blobUrl}
+        title={video.title}
+        className="w-full h-full absolute inset-0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
 }
 
 /* ── Video Card ──────────────────────────────────────────────── */
@@ -144,6 +199,15 @@ export default function MediaPlayer() {
             <p className="text-sm font-medium text-white/90 truncate">{playing.title}</p>
             <p className="text-[11px] text-white/40 truncate">{playing.channel}</p>
           </div>
+          <a
+            href={`https://www.youtube.com/watch?v=${playing.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/[0.06] transition-colors"
+            title="Open on YouTube"
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-white/40" />
+          </a>
           {queue.length > 0 && (
             <button
               onClick={handleNext}
@@ -157,16 +221,8 @@ export default function MediaPlayer() {
 
         <div className="flex-1 flex overflow-hidden">
           <div className="flex-1 flex flex-col min-w-0">
-            <div className="w-full aspect-video bg-black flex-shrink-0 relative">
-              <iframe
-                key={playing.id}
-                src={getEmbedUrl(playing.id)}
-                title={playing.title}
-                className="w-full h-full absolute inset-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
-              />
+            <div className="flex-shrink-0">
+              <YouTubePlayer video={playing} />
             </div>
             <div className="p-4 flex-shrink-0">
               <h2 className="text-base font-semibold text-white/95 leading-snug">{playing.title}</h2>
