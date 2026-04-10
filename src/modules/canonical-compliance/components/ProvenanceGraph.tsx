@@ -52,7 +52,7 @@ interface ProvenanceGraphProps {
   zoomContext?: { layerId?: string; module?: string; finding?: AuditFinding };
 }
 
-export default function ProvenanceGraph({ findings, selectedCategory, search, onNodeSelect }: ProvenanceGraphProps) {
+export default function ProvenanceGraph({ findings, selectedCategory, search, onNodeSelect, zoomLevel = 3, zoomContext }: ProvenanceGraphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const animRef = useRef<number>(0);
   const [nodes, setNodes] = useState<GraphNode[]>([]);
@@ -61,54 +61,107 @@ export default function ProvenanceGraph({ findings, selectedCategory, search, on
   const [viewBox, setViewBox] = useState({ x: -600, y: -400, w: 1200, h: 800 });
   const dragRef = useRef<{ nodeId: string | null; startX: number; startY: number; panStart?: { x: number; y: number } }>({ nodeId: null, startX: 0, startY: 0 });
 
-  // Build graph data
+  // Build graph data based on zoom level
   const { initialNodes, initialEdges } = useMemo(() => {
     const n: GraphNode[] = [];
     const e: GraphEdge[] = [];
     const nodeSet = new Set<string>();
 
-    // Atoms
-    for (const atom of ALL_ATOMS) {
-      const id = `atom:${atom.id}`;
-      n.push({
-        id, label: atom.label, type: "atom", category: atom.category,
-        x: (Math.random() - 0.5) * 800, y: (Math.random() - 0.5) * 600,
-        vx: 0, vy: 0, r: 6,
-      });
-      nodeSet.add(id);
-    }
-
-    // Modules + exports
-    for (const mod of PROVENANCE_REGISTRY) {
-      const modId = `mod:${mod.module}`;
-      if (!nodeSet.has(modId)) {
+    if (zoomLevel === 3) {
+      // System level: show layers + inter-layer edges
+      for (const layer of SYSTEM_LAYERS) {
         n.push({
-          id: modId, label: mod.module, type: "module",
-          x: (Math.random() - 0.5) * 800, y: (Math.random() - 0.5) * 600,
+          id: `layer:${layer.id}`, label: layer.label, type: "layer", layerId: layer.id,
+          x: (Math.random() - 0.5) * 400, y: (Math.random() - 0.5) * 300,
+          vx: 0, vy: 0, r: 24,
+        });
+      }
+      // Connect layers sequentially (Engine → Names → Build → Services)
+      for (let i = 0; i < SYSTEM_LAYERS.length - 1; i++) {
+        e.push({ source: `layer:${SYSTEM_LAYERS[i].id}`, target: `layer:${SYSTEM_LAYERS[i + 1].id}`, predicate: "feeds" });
+      }
+    } else if (zoomLevel === 2) {
+      // Module level
+      const filterMods = zoomContext?.layerId
+        ? SYSTEM_LAYERS.find((l) => l.id === zoomContext.layerId)?.modules
+        : undefined;
+      for (const mod of PROVENANCE_REGISTRY) {
+        if (filterMods && !filterMods.includes(mod.module)) continue;
+        const modId = `mod:${mod.module}`;
+        const layer = SYSTEM_LAYERS.find((l) => l.modules.includes(mod.module));
+        n.push({
+          id: modId, label: mod.module, type: "module", layerId: layer?.id,
+          x: (Math.random() - 0.5) * 600, y: (Math.random() - 0.5) * 400,
           vx: 0, vy: 0, r: 14,
         });
         nodeSet.add(modId);
       }
-
-      for (const exp of mod.exports) {
-        const expId = `exp:${mod.module}/${exp.export}`;
-        n.push({
-          id: expId, label: exp.export, type: "export",
-          x: (Math.random() - 0.5) * 800, y: (Math.random() - 0.5) * 600,
-          vx: 0, vy: 0, r: 4,
-        });
-        nodeSet.add(expId);
-
-        e.push({ source: expId, target: modId, predicate: "belongsTo" });
-
-        for (const atomId of exp.atoms) {
-          e.push({ source: expId, target: `atom:${atomId}`, predicate: "derivedFrom" });
+      // Connect modules that share atoms
+      const modAtoms = new Map<string, Set<string>>();
+      for (const mod of PROVENANCE_REGISTRY) {
+        if (filterMods && !filterMods.includes(mod.module)) continue;
+        modAtoms.set(mod.module, new Set(mod.exports.flatMap((ex) => ex.atoms)));
+      }
+      const modList = Array.from(modAtoms.keys());
+      for (let i = 0; i < modList.length; i++) {
+        for (let j = i + 1; j < modList.length; j++) {
+          const shared = [...modAtoms.get(modList[i])!].filter((a) => modAtoms.get(modList[j])!.has(a));
+          if (shared.length > 0) {
+            e.push({ source: `mod:${modList[i]}`, target: `mod:${modList[j]}`, predicate: "shares" });
+          }
+        }
+      }
+    } else if (zoomLevel === 1) {
+      // Pipeline level: exports + atoms
+      const filterModule = zoomContext?.module;
+      for (const mod of PROVENANCE_REGISTRY) {
+        if (filterModule && mod.module !== filterModule) continue;
+        for (const exp of mod.exports) {
+          const expId = `exp:${mod.module}/${exp.export}`;
+          n.push({
+            id: expId, label: exp.export, type: "export",
+            x: (Math.random() - 0.5) * 600, y: (Math.random() - 0.5) * 400,
+            vx: 0, vy: 0, r: 8,
+          });
+          for (const atomId of exp.atoms) {
+            const aId = `atom:${atomId}`;
+            if (!nodeSet.has(aId)) {
+              const atom = ATOM_INDEX.get(atomId);
+              if (atom) {
+                n.push({ id: aId, label: atom.label, type: "atom", category: atom.category, x: (Math.random() - 0.5) * 600, y: (Math.random() - 0.5) * 400, vx: 0, vy: 0, r: 6 });
+                nodeSet.add(aId);
+              }
+            }
+            e.push({ source: expId, target: aId, predicate: "derivedFrom" });
+          }
+        }
+      }
+    } else {
+      // Primitive level (L0): full atom + export graph (original behavior)
+      for (const atom of ALL_ATOMS) {
+        const id = `atom:${atom.id}`;
+        n.push({ id, label: atom.label, type: "atom", category: atom.category, x: (Math.random() - 0.5) * 800, y: (Math.random() - 0.5) * 600, vx: 0, vy: 0, r: 6 });
+        nodeSet.add(id);
+      }
+      for (const mod of PROVENANCE_REGISTRY) {
+        const modId = `mod:${mod.module}`;
+        if (!nodeSet.has(modId)) {
+          n.push({ id: modId, label: mod.module, type: "module", x: (Math.random() - 0.5) * 800, y: (Math.random() - 0.5) * 600, vx: 0, vy: 0, r: 14 });
+          nodeSet.add(modId);
+        }
+        for (const exp of mod.exports) {
+          const expId = `exp:${mod.module}/${exp.export}`;
+          n.push({ id: expId, label: exp.export, type: "export", x: (Math.random() - 0.5) * 800, y: (Math.random() - 0.5) * 600, vx: 0, vy: 0, r: 4 });
+          e.push({ source: expId, target: modId, predicate: "belongsTo" });
+          for (const atomId of exp.atoms) {
+            e.push({ source: expId, target: `atom:${atomId}`, predicate: "derivedFrom" });
+          }
         }
       }
     }
 
     return { initialNodes: n, initialEdges: e };
-  }, []);
+  }, [zoomLevel, zoomContext]);
 
   // Init simulation
   useEffect(() => {
