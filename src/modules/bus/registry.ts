@@ -33,6 +33,33 @@ export function register(mod: ModuleRegistration): void {
     }
     _methods.set(key, descriptor);
   }
+
+  // ── KG Sync: write operation descriptors as graph triples ──────────
+  // Fire-and-forget — never block module registration on graph writes
+  _syncModuleToGraph(mod).catch(() => {});
+}
+
+/** Write a module's operations into the Knowledge Graph for SPARQL discoverability */
+async function _syncModuleToGraph(mod: ModuleRegistration): Promise<void> {
+  try {
+    const { anchor } = await import("@/modules/knowledge-graph/anchor");
+    for (const [opName, descriptor] of Object.entries(mod.operations)) {
+      const key = `${mod.ns}/${opName}`;
+      anchor("bus", "operation:registered", {
+        label: `${key}`,
+        nodeType: "uor:Operation",
+        properties: {
+          method: key,
+          namespace: mod.ns,
+          operation: opName,
+          description: descriptor.description ?? "",
+          remote: descriptor.remote ?? false,
+        },
+      }).catch(() => {});
+    }
+  } catch {
+    // Graph not available yet — operations still work via in-memory Map
+  }
 }
 
 /** Resolve a method string ("kernel/derive") to its descriptor */

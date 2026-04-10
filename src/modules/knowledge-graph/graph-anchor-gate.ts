@@ -62,12 +62,22 @@ const EXEMPT_MODULES = new Set([
   "donate",
 ]);
 
+// ── KG Substrate Layers ──────────────────────────────────────────────────────
+
+const SUBSTRATE_LAYERS = [
+  { id: "seed", label: "Static Data Seed", anchorModule: "knowledge-graph" },
+  { id: "boot", label: "Boot Seal Anchor", anchorModule: "boot" },
+  { id: "bus", label: "Bus Registry Sync", anchorModule: "bus" },
+  { id: "ontology", label: "Ontology Materialization", anchorModule: "ontology" },
+] as const;
+
 // ── Gate Implementation ──────────────────────────────────────────────────────
 
 function graphAnchorGate() {
   const findings: GateFinding[] = [];
   const anchored = getAnchoredModules();
 
+  // ── Check 1: User-facing module anchor coverage ────────────────────────
   let requiredCount = 0;
   let coveredCount = 0;
 
@@ -96,10 +106,46 @@ function graphAnchorGate() {
     });
   }
 
-  // Score: base 100, lose 4 points per missing module
+  // ── Check 2: KG Substrate Coverage ─────────────────────────────────────
+  let substrateCovered = 0;
+
+  for (const layer of SUBSTRATE_LAYERS) {
+    const isPresent = layer.anchorModule
+      ? anchored.has(layer.anchorModule)
+      : anchored.has("knowledge-graph"); // seed triggers a KG anchor
+
+    if (isPresent) {
+      substrateCovered++;
+    } else {
+      findings.push({
+        severity: "warning",
+        title: `KG Substrate: "${layer.label}" not materialized`,
+        detail: `The ${layer.label} layer has not been written to the Knowledge Graph. The OS should be projected entirely from the graph substrate.`,
+        recommendation: `Ensure ${layer.id} initialization writes to the KG via anchor() or grafeoStore.putNode().`,
+      });
+    }
+  }
+
+  const substratePct = Math.round((substrateCovered / SUBSTRATE_LAYERS.length) * 100);
+
+  if (substratePct === 100) {
+    findings.push({
+      severity: "info",
+      title: "Full KG substrate coverage",
+      detail: `All ${SUBSTRATE_LAYERS.length} substrate layers (seed, boot, bus, ontology) are materialized in the Knowledge Graph.`,
+    });
+  } else {
+    findings.push({
+      severity: "info",
+      title: `KG substrate coverage: ${substratePct}%`,
+      detail: `${substrateCovered}/${SUBSTRATE_LAYERS.length} substrate layers are materialized.`,
+    });
+  }
+
+  // Score: base 100, lose 4 points per missing module, 5 per missing substrate layer
   return buildGateResult(
     "graph-anchor-coverage",
-    "Knowledge Graph-First Coverage",
+    "Knowledge Graph-First OS Conformance",
     findings,
     { error: 10, warning: 4, info: 0 },
   );
