@@ -2,10 +2,8 @@
  * DesktopMenuBar — Slim top status bar with dropdown menus. Theme-aware.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Search, Volume2 } from "lucide-react";
-import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
-import ConnectivityPopover from "@/modules/desktop/components/ConnectivityPopover";
 import {
   Menubar, MenubarMenu, MenubarTrigger, MenubarContent,
   MenubarItem, MenubarSeparator, MenubarShortcut,
@@ -32,12 +30,8 @@ export default function DesktopMenuBar({
   activeWindowId, windows, onSpotlight, onCloseWindow, onMinimizeWindow, onHideAll, onOpenApp, onShowShortcuts,
 }: Props) {
   const [time, setTime] = useState(new Date());
-  const conn = useConnectivity();
-  const online = conn.online;
   const { isLight, theme, setTheme } = useDesktopTheme();
   const { ringKey } = usePlatform();
-  const [statusOpen, setStatusOpen] = useState(false);
-  const toggleStatus = useCallback(() => setStatusOpen(o => !o), []);
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 30_000);
@@ -163,22 +157,6 @@ export default function DesktopMenuBar({
           <Search className={`w-3 h-3 ${iconMuted}`} />
         </button>
         <Volume2 className={`w-3.5 h-3.5 ${iconMuted}`} />
-        <div className="relative flex items-center">
-          <button
-            onClick={toggleStatus}
-            className={`relative p-1.5 rounded transition-colors ${isLight ? "hover:bg-black/[0.04]" : "hover:bg-white/[0.06]"}`}
-            title={online ? "Online — click for details" : "Offline — click for details"}
-          >
-            <span
-              className={`block w-[7px] h-[7px] rounded-full transition-colors ${
-                online
-                  ? "bg-emerald-500 shadow-[0_0_6px_1px_rgba(16,185,129,0.5)]"
-                  : "bg-red-500 shadow-[0_0_6px_1px_rgba(239,68,68,0.5)]"
-              }`}
-            />
-          </button>
-          <ConnectivityPopover open={statusOpen} onClose={() => setStatusOpen(false)} isLight={isLight} />
-        </div>
         <span className={`text-[12px] ${clockColor} font-medium tabular-nums`}>
           {formatted}&ensp;{clock}
         </span>
