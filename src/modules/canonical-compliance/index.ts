@@ -20,3 +20,6 @@ export { buildProvenanceTriples, buildProvenanceAdjacency } from "./provenance-g
 export type { ProvenanceTriple } from "./provenance-graph";
 
 export { exportMarkdown, exportJsonLd, exportNQuads } from "./export";
+
+export { runAllGates, exportGatesMarkdown } from "./gates";
+export type { GateResult, GateFinding, GateReport } from "./gates";
