@@ -10,6 +10,7 @@
  */
 
 import React, { useMemo, useState, useCallback } from "react";
+import KnowledgeSidebar from "./KnowledgeSidebar";
 import ReactMarkdown from "react-markdown";
 import ConceptMapHeader from "./ConceptMapHeader";
 import BalancedHeading from "./BalancedHeading";
@@ -546,9 +547,13 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
             <style>{`@keyframes blink-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`}</style>
           </div>
 
-          {/* Sidebar infobox column */}
-          <div style={{ position: "sticky", top: 80, alignSelf: "start" }}>
+          {/* Sidebar: infobox + knowledge context */}
+          <div style={{ position: "sticky", top: 80, alignSelf: "start", display: "flex", flexDirection: "column", gap: 12 }}>
             <Infobox title={title} wikidata={wikidata} />
+            <KnowledgeSidebar
+              currentTopic={title}
+              onNavigate={() => {}}
+            />
           </div>
         </div>
 
