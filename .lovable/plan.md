@@ -1,115 +1,128 @@
 
 
-# Knowledge Graph-First OS Conformance — Analysis & Plan
+# Master Gate — Coherence Analysis + Comprehensive System Health
 
-## Current State Assessment
+## Overview
 
-The system is **architecturally sound** but has **execution gaps** between the KG-first aspiration and current reality:
+Create a **Master Gate** that runs a pre-flight coherence analysis on all registered gates before executing them, then produces a comprehensive markdown-exportable report. The master gate operates in three phases:
 
-### What's Already Working (Strengths)
-- **GrafeoDB (WASM)** is the single canonical graph engine with IndexedDB persistence
-- **PersistenceProvider interface** abstracts backend (Supabase, local, bundle) — truly agnostic
-- **anchor()** API exists for fire-and-forget graph writes from any module
-- **Graph Anchor Gate** checks coverage of user-facing modules
-- **UNS Graph** stores ring operations, ontology, and Q0 data as quads
-- **Store module** ingests datums, derivations, certificates as graph triples
-- **Bus module** exposes SPARQL query/update via `graph/sparql`
-- **Sync bridge** handles push/pull between local graph and remote persistence
+1. **Phase 1: Gate Coherence Analysis** — Inspect all gate metadata for conflicts, overlaps, and redundancies using categorical reasoning
+2. **Phase 2: Quality Threshold Check** — Only proceed if coherence score meets minimum threshold (default 70/100)
+3. **Phase 3: Full Execution + Self-Reflection** — Run all gates, then analyze the aggregate results for systemic patterns and improvement proposals
 
-### Gaps — Where the OS Bypasses the Graph
+## Architecture
 
-1. **Static data arrays** (`src/data/`) — 24 files of hardcoded constants (nav items, app store entries, team members, framework layers, etc.) are imported directly by React components. These define what the OS "knows" but exist outside the graph.
+```text
+┌────────────────────────────────────────────────────┐
+│                   MASTER GATE                      │
+│                                                    │
+│  Phase 1: Coherence Pre-flight                     │
+│  ├─ Overlap Detection (finding intersection)       │
+│  ├─ Contradiction Detection (conflicting verdicts) │
+│  ├─ Redundancy Analysis (subsumption check)        │
+│  ├─ Coverage Gaps (unmapped UOR categories)         │
+│  └─ Consolidation Proposals                        │
+│                                                    │
+│  Phase 2: Threshold Gate (coherence ≥ 70)          │
+│  └─ Abort with report if incoherent                │
+│                                                    │
+│  Phase 3: Full Execution + Reflection              │
+│  ├─ Run all sync + async gates                     │
+│  ├─ Cross-gate pattern analysis                    │
+│  ├─ Self-improvement proposals                     │
+│  └─ Comprehensive markdown report                  │
+└────────────────────────────────────────────────────┘
+```
 
-2. **Boot sequence** does NOT anchor its results into the graph — the seal, kernel hash, device provenance, and tech stack verification live in a closure variable (`_receipt`) rather than being written as graph triples.
+## Categorical Reasoning Applied
 
-3. **Bus module registry** — registered operations and their metadata (descriptions, layers, namespaces) live in a `Map<string, OperationDescriptor>` in memory. The graph has no record of what operations exist or their relationships.
+The coherence analysis uses category-theoretic concepts already in the codebase (`graph-morphisms.ts`):
 
-4. **Ontology vocabulary** (`vocabulary.ts`) — SKOS concepts and profile labels are TypeScript objects, not graph quads. The "Ontology Panel" reads from TS arrays, not from a SPARQL query.
+- **Overlap = Pullback**: Two gates share a common sub-domain (same files, same checks). Detected by comparing finding titles and file references across gate pairs.
+- **Contradiction = Non-commutativity**: Gate A says "pass" on a domain that Gate B says "fail". Detected by comparing status verdicts on overlapping domains.
+- **Redundancy = Epimorphism**: Gate A's findings are a strict subset of Gate B's — A is subsumed and can be folded into B.
+- **Coverage gap = Missing arrow**: A UOR namespace or ontology concept has no gate checking it.
+- **Consolidation = Coequalizer**: Two gates with overlapping domains can be merged into one that covers both.
 
-5. **Zero user-facing modules** actually call `anchor()` — the search found 0 imports of `useGraphAnchor` or `anchor` outside the knowledge-graph module itself. The gate would report 0% coverage.
+## Implementation
 
-6. **Ingest bridge** still imports from deprecated `local-store.ts` instead of canonical `grafeo-store`.
+### File 1: `src/modules/canonical-compliance/gates/master-gate.ts` (new)
 
-7. **No graph-projection pattern** — UI components read hardcoded data; there's no `useGraphProjection()` hook that queries the graph and projects results into React state.
+**Gate Coherence Analysis (Phase 1):**
+- Enumerate all registered gates by running them once in "dry-run" mode (they're pure functions, so this is safe)
+- Build a **domain matrix**: for each gate, extract the set of files, modules, and ontology IDs it references from its findings
+- Compute pairwise Jaccard similarity on domain sets to detect overlaps
+- Flag contradictions where two gates give opposing verdicts on the same file/module
+- Identify subsumption where one gate's domain is a strict subset of another's
+- Check that every UOR namespace in the ontology has at least one gate covering it
+- Produce consolidation proposals for gates with >60% domain overlap
 
-## Plan
+**Threshold Gate (Phase 2):**
+- Coherence score = 100 minus deductions for contradictions (10 each), high overlaps (3 each), coverage gaps (5 each)
+- If coherence < 70, return early with a detailed report of why the gates are incoherent
+- This prevents running an incoherent gate suite that would produce misleading results
 
-### Task 1: Graph Seed Layer — Ingest Static Data into KG on Boot
-**File: `src/modules/knowledge-graph/seed.ts`** (new)
+**Full Execution + Self-Reflection (Phase 3):**
+- Run `runAllGatesAsync()` to get all gate results
+- Cross-gate pattern analysis: cluster findings by file, by severity, by module to find systemic hotspots
+- Self-improvement proposals: for each cluster of 3+ findings on the same file, propose a targeted gate or gate amendment
+- Score distribution analysis: flag gates that always score 100 (potentially too lenient) or always 0 (potentially broken)
 
-Create a `seedStaticData()` function that runs once after GrafeoDB init. It imports each `src/data/*.ts` file, wraps each entry in JSON-LD with `@type` from schema.org types registry, runs `singleProofHash()` for content addressing, and writes the result as graph triples via `grafeoStore.putNode()`. This makes nav items, app store entries, team members, etc. all queryable via SPARQL.
+**Markdown Report:**
+- Executive summary with composite score and coherence score
+- Coherence analysis section with overlap matrix, contradictions, and consolidation proposals
+- Per-gate results (reusing existing `exportGatesMarkdown` format)
+- Systemic hotspot analysis
+- Self-improvement recommendations
+- Footer with timestamp and gate count
 
-### Task 2: Boot Anchoring — Write Seal + Provenance into Graph
-**File: `src/modules/boot/sovereign-boot.ts`** (update)
+### File 2: `src/modules/canonical-compliance/gates/index.ts` (update)
 
-After the seal is computed, call `anchor("boot", "seal:created", { ... })` with the full seal data (kernel hash, derivation ID, device provenance, stack components). This makes the boot receipt a first-class graph citizen, queryable and auditable.
+- Add `import "./master-gate"` to register the master gate
+- Export `runMasterGate` and `exportMasterGateMarkdown` from the barrel
 
-### Task 3: Graph Projection Hook — `useGraphProjection()`
-**File: `src/modules/knowledge-graph/hooks/useGraphProjection.ts`** (new)
+### File 3: `src/modules/canonical-compliance/gates/gate-runner.ts` (update)
 
-A React hook that takes a SPARQL query or graph pattern and returns reactive state. Components can progressively migrate from `import { navItems } from "@/data/nav-items"` to `useGraphProjection("SELECT ?item WHERE { ?item a schema:SiteNavigationElement }")`. Includes a fallback to static data if graph isn't ready yet.
+- Export `getRegisteredGateCount()` and `getRegisteredGates()` so the master gate can introspect the registry
+- Add `MasterGateReport` type extending `GateReport` with coherence analysis fields
 
-### Task 4: Bus Registry Graph Sync
-**File: `src/modules/bus/registry.ts`** (update)
+## Report Structure
 
-After each `register()` call, fire-and-forget write the operation descriptor as a graph triple: `<urn:bus:ns/op> a uor:Operation ; rdfs:label "..." ; uor:layer N`. This makes the full API surface discoverable via SPARQL.
+```text
+# Master Gate Report
+## Executive Summary
+- Composite Score: 84/100
+- Coherence Score: 92/100
+- Gates Executed: 15
+- Systemic Hotspots: 3
 
-### Task 5: Ontology Vocabulary Graph Materialization
-**File: `src/modules/ontology/vocabulary.ts`** (update)
+## Phase 1: Gate Coherence Analysis
+### Overlap Matrix
+| Gate A | Gate B | Overlap | Action |
+### Contradictions (0 found)
+### Coverage Gaps
+- Namespace "quantum:" has no dedicated gate
+### Consolidation Proposals
+- Merge "SKOS Conformance" + "Ontology Consistency" (72% overlap)
 
-Add a `materializeToGraph()` function that writes all SKOS concepts as proper `skos:Concept` triples into the ontology named graph. The OntologyPanel can then optionally query the graph instead of reading TS arrays.
+## Phase 2: Threshold — PASSED (92/100)
 
-### Task 6: KG Substrate Conformance Gate
-**File: `src/modules/knowledge-graph/graph-anchor-gate.ts`** (update)
+## Phase 3: Gate Results
+[... per-gate detail ...]
 
-Expand the existing gate with three new checks:
-- **Substrate Coverage**: Verify that static data files have corresponding graph nodes (checks seed completeness)
-- **Boot Anchoring**: Verify that a boot seal triple exists in the graph
-- **Bus Registry Sync**: Verify that registered bus operations have corresponding graph triples
-- **Ontology Materialization**: Verify SKOS concepts exist as graph quads
+## Systemic Analysis
+### Hotspot Files (3+ findings)
+### Score Distribution
+### Self-Improvement Proposals
+- Gate "Canonical Pipeline" has 13 static bypasses — consider auto-resolution
+- Gate "Provenance Coverage" overlaps 40% with "Graph Anchor" — unify domain
+```
 
-Score deductions for each missing substrate layer.
-
-### Task 7: Fix Ingest Bridge Import
-**File: `src/modules/knowledge-graph/ingest-bridge.ts`** (update)
-
-Replace deprecated `local-store.ts` import with canonical `grafeo-store` import.
-
-## File Summary
+## Files Summary
 
 | File | Action | Purpose |
 |---|---|---|
-| `src/modules/knowledge-graph/seed.ts` | Create | Ingest all static data into KG on boot |
-| `src/modules/knowledge-graph/hooks/useGraphProjection.ts` | Create | SPARQL-to-React-state projection hook |
-| `src/modules/boot/sovereign-boot.ts` | Update | Anchor seal into graph post-boot |
-| `src/modules/bus/registry.ts` | Update | Sync registrations to graph |
-| `src/modules/ontology/vocabulary.ts` | Update | Materialize SKOS to graph |
-| `src/modules/knowledge-graph/graph-anchor-gate.ts` | Update | KG Substrate Conformance checks |
-| `src/modules/knowledge-graph/ingest-bridge.ts` | Update | Fix deprecated import |
-
-## Architecture After Implementation
-
-```text
-┌─────────────────────────────────────────────────┐
-│              React UI Components                │
-│    useGraphProjection()  ←──  SPARQL queries     │
-└──────────────────────┬──────────────────────────┘
-                       │
-┌──────────────────────▼──────────────────────────┐
-│           GrafeoDB (WASM + IndexedDB)           │
-│   ┌─────────┬──────────┬──────────┬──────────┐  │
-│   │ Static  │  Boot    │  Bus     │ Ontology │  │
-│   │ Seed    │  Seal    │  Registry│ SKOS     │  │
-│   │ Data    │  Anchors │  Triples │ Concepts │  │
-│   └─────────┴──────────┴──────────┴──────────┘  │
-│              Named Graphs (SPARQL 1.1)          │
-└──────────────────────┬──────────────────────────┘
-                       │
-┌──────────────────────▼──────────────────────────┐
-│         PersistenceProvider (agnostic)           │
-│   Supabase │ Local │ Edge │ Mobile │ Bundle     │
-└─────────────────────────────────────────────────┘
-```
-
-Every piece of data the OS displays originates from or is materialized into the single KG instance. The gate enforces this conformance continuously.
+| `src/modules/canonical-compliance/gates/master-gate.ts` | Create | Master gate with 3-phase execution |
+| `src/modules/canonical-compliance/gates/gate-runner.ts` | Update | Expose registry introspection + MasterGateReport type |
+| `src/modules/canonical-compliance/gates/index.ts` | Update | Register master gate + export runner |
 
