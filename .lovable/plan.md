@@ -1,169 +1,49 @@
 
 
-# Tidy Up uor-os/ — Clean Structure, Clear Labels, Polished README
+# Why the GitHub Repo Is Not Booting — Analysis and Fix Plan
 
-## Current State
+## Root Causes Identified
 
-The `uor-os/` folder has **50 modules** dumped flat under `src/modules/`, mixing foundational kernel logic with UI shells, cloud functions, compliance tools, and experimental research modules. Several modules are "absorbed" (consolidated into others but still present as separate directories): `triad`, `jsonld`, `shacl`, `data-bank`, `qr-cartridge`, `messenger`. The README is functional but generic.
+There are **three independent issues** preventing the repo from booting when deployed standalone.
 
-## Proposed Directory Structure
+### 1. Missing Environment Variables (Primary Boot Blocker)
 
-Reorganize `src/modules/` into **6 labeled subsystem directories**, each with a short `README.md` explaining its purpose. No import paths change — only the physical folder layout shifts, and every `@/modules/...` alias is updated to `@/modules/<subsystem>/...`.
-
-```text
-uor-os/
-├── README.md                    ← Complete rewrite (see below)
-├── LICENSE                      ← Apache 2.0 (already present)
-├── ARCHITECTURE.md              ← Technical deep-dive for contributors
-├── docs/
-│   └── EDGE-FUNCTIONS.md        ← Index of all 47 cloud functions
-│
-├── src/
-│   ├── App.tsx
-│   ├── main.tsx
-│   ├── index.css
-│   ├── custom-sw.ts
-│   │
-│   ├── modules/
-│   │   ├── kernel/              ← "Layer 0 — Computation & Algebra"
-│   │   │   ├── README.md
-│   │   │   ├── engine/          ← Ring R₈ computation engine + WASM
-│   │   │   ├── ring-core/       ← Algebraic ring, proofs, reasoning
-│   │   │   ├── axioms/          ← Axiom registry & verification
-│   │   │   ├── derivation/      ← Auditable derivation chains
-│   │   │   ├── resolver/        ← Entity resolution & partition
-│   │   │   ├── morphism/        ← Structure-preserving transforms
-│   │   │   ├── state/           ← State machine & type system
-│   │   │   └── observable/      ← Observer pattern & event streams
-│   │   │
-│   │   ├── identity/            ← "Layer 1 — Naming & Addressing"
-│   │   │   ├── README.md
-│   │   │   ├── uns/             ← Universal Name System (DNS-equivalent)
-│   │   │   ├── addressing/      ← (current identity/ module)
-│   │   │   ├── certificate/     ← X.509 / DID / Verifiable Credentials
-│   │   │   └── qr-cartridge/    ← QR encoding of UOR addresses
-│   │   │
-│   │   ├── platform/            ← "Layer 2 — OS Shell & Services"
-│   │   │   ├── README.md
-│   │   │   ├── desktop/         ← Desktop shell, dock, windows, themes
-│   │   │   ├── boot/            ← Sovereign boot sequence
-│   │   │   ├── bus/             ← Service mesh / RPC bus
-│   │   │   ├── compose/         ← App orchestrator (Docker-equivalent)
-│   │   │   ├── app-store/       ← Application marketplace
-│   │   │   ├── app-builder/     ← Docker-style build pipeline
-│   │   │   ├── auth/            ← Authentication providers
-│   │   │   ├── core/            ← Design system & UI primitives
-│   │   │   ├── landing/         ← Download / landing page
-│   │   │   └── ontology/        ← SKOS vocabulary registry
-│   │   │
-│   │   ├── data/                ← "Layer 3 — Storage & Knowledge"
-│   │   │   ├── README.md
-│   │   │   ├── knowledge-graph/ ← Local SQLite + GrafeoDB
-│   │   │   ├── sovereign-vault/ ← AES-256-GCM encrypted storage
-│   │   │   ├── sovereign-spaces/← P2P sync & collaboration
-│   │   │   ├── sparql/          ← SPARQL query engine
-│   │   │   ├── jsonld/          ← JSON-LD emission & validation
-│   │   │   ├── code-kg/         ← Code knowledge graph
-│   │   │   ├── takeout/         ← Data export / portability
-│   │   │   └── time-machine/    ← Checkpoint & restore
-│   │   │
-│   │   ├── intelligence/        ← "Layer 4 — AI, Agents & Comms"
-│   │   │   ├── README.md
-│   │   │   ├── oracle/          ← AI assistant + search + library
-│   │   │   ├── agent-tools/     ← 5 canonical MCP agent tools
-│   │   │   ├── mcp/             ← Model Context Protocol gateway
-│   │   │   ├── messenger/       ← Post-quantum encrypted messaging
-│   │   │   ├── epistemic/       ← Knowledge grading engine
-│   │   │   ├── media/           ← Audio/video streaming
-│   │   │   └── audio/           ← Audio engine & voice
-│   │   │
-│   │   ├── research/            ← "Layer 5 — Experimental & Advanced"
-│   │   │   ├── README.md
-│   │   │   ├── quantum/         ← Quantum circuit simulation
-│   │   │   ├── atlas/           ← Mathematical atlas & topology
-│   │   │   ├── qsvg/            ← Quantum SVG / proof-of-thought
-│   │   │   ├── shacl/           ← SHACL conformance testing
-│   │   │   └── canonical-compliance/ ← Compliance dashboard
-│   │   │
-│   │   ├── interoperability/    ← Stays (CNCF compat, API explorer)
-│   │   │   ├── cncf-compat/
-│   │   │   ├── api-explorer/
-│   │   │   └── README.md
-│   │   │
-│   │   ├── uor-sdk/             ← Stays at top level (developer SDK)
-│   │   ├── verify/              ← Stays at top level (audit & verification)
-│   │   └── namespace-registry.ts
-│   │
-│   ├── lib/                     ← Shared utilities (no change)
-│   ├── types/                   ← UOR Foundation types (no change)
-│   ├── hooks/                   ← App-level React hooks (no change)
-│   ├── components/              ← Shared components (no change)
-│   ├── integrations/            ← Backend client (no change)
-│   ├── assets/                  ← Images & icons (no change)
-│   └── test/                    ← Test setup (no change)
-│
-├── supabase/                    ← Cloud functions & migrations (no change)
-├── src-tauri/                   ← Rust desktop backend (no change)
-└── public/                      ← Static assets (no change)
+The `src/integrations/supabase/client.ts` in the GitHub repo has placeholder fallbacks:
+```typescript
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? 'https://placeholder.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? 'placeholder-key';
 ```
 
-## What Gets Removed
+When deployed outside Lovable, there is **no `.env` file** in the repo (it's gitignored). The Supabase client initializes with `placeholder.supabase.co`, and any auth or data call fails silently or throws, which can cascade into a blank screen if the boot sequence or AuthProvider depends on a valid Supabase connection.
 
-The following "absorbed" modules become re-export stubs (1-2 lines pointing to their new home) to avoid breaking any lingering imports:
-- `triad/` → already consolidated into `ring-core/`
-- `data-bank/` → already consolidated into `sovereign-vault/`
-- `ceremony/` → single file, move into `boot/`
+**Fix:** Add a `.env.example` file documenting the required variables, and ensure whoever deploys the repo creates a `.env` with real values — or makes Supabase entirely optional so the app boots without it.
 
-## README.md — Complete Rewrite
+### 2. Supabase Client Hardcoded as Required
 
-The new README follows the Why → How → What narrative structure, targeting experienced open-source developers. Sections:
+The `AuthProvider` (in `use-auth.tsx`) and the `sovereignBoot` sequence both import and use the Supabase client. If Supabase is unreachable (placeholder URL), the boot may hang or error silently, preventing the React tree from rendering.
 
-1. **One-liner** — What UOR OS is in a single sentence
-2. **Why** — The problem it solves (2 paragraphs)
-3. **How It Works** — Architecture overview with the layered diagram above
-4. **Quick Start** — Web and Desktop in 4 lines each
-5. **Module Index** — Table of all subsystems with one-line descriptions
-6. **Cloud Functions** — Reference to `docs/EDGE-FUNCTIONS.md`
-7. **Configuration** — Environment variables, Tauri config
-8. **Contributing** — Where to start, how modules are structured
-9. **License** — Apache 2.0
+**Fix:** Add a guard in the Supabase client that detects placeholder values and skips network calls, or make the AuthProvider resilient to connection failures.
 
-## ARCHITECTURE.md — New File
+### 3. `@/modules/uns/build/container` TypeScript Error (This Repo)
 
-A technical companion document covering:
-- The Tri-Space ontology (Kernel / Bridge / User)
-- Ring R₈ and why it matters
-- Content addressing model (CID → IPv6 → Braille → Glyph)
-- Module lifecycle (boot → bus registration → lazy load)
-- WASM integration strategy
+The build error `Cannot find module '@/modules/uns/build/container'` is in the **parent Lovable project** at `src/modules/app-builder/pages/AppBuilderPage.tsx` (old flat path). This file still uses `@/modules/uns/build/container` instead of `@/modules/identity/uns/build/container`. The `uor-os/` copy was fixed, but the parent repo's copy was not.
 
-## docs/EDGE-FUNCTIONS.md — New File
+**Fix:** Update the parent repo's `src/modules/app-builder/pages/AppBuilderPage.tsx` to use the correct path, or since the `uor-os/` directory has already been ported, simply delete the old flat-path file.
 
-A table of all 47 edge functions with name, purpose, and auth requirements.
+---
 
 ## Implementation Steps
 
-| Step | Description |
-|------|-------------|
-| 1 | Create subsystem directories (`kernel/`, `identity/`, `platform/`, `data/`, `intelligence/`, `research/`) with README.md files |
-| 2 | Move each module into its subsystem directory |
-| 3 | Update every `@/modules/...` import across all source files to reflect new paths |
-| 4 | Convert absorbed modules (`triad`, `data-bank`, `ceremony`) to re-export stubs |
-| 5 | Write the new `README.md` |
-| 6 | Write `ARCHITECTURE.md` |
-| 7 | Write `docs/EDGE-FUNCTIONS.md` |
-| 8 | Update `App.tsx`, `main.tsx`, `namespace-registry.ts`, and `bus/modules/` to use new paths |
-| 9 | Verify build passes |
+| Step | What | Details |
+|------|------|---------|
+| 1 | Fix parent repo build error | Update `src/modules/app-builder/pages/AppBuilderPage.tsx` to reference `@/modules/identity/uns/build/container` (or delete it since it belongs to the old flat structure) |
+| 2 | Add `.env.example` to `uor-os/` | Document `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` |
+| 3 | Make Supabase optional for standalone boot | Guard the Supabase client so it returns a no-op client when env vars are placeholders; make `AuthProvider` and `sovereignBoot` resilient to missing Supabase |
+| 4 | Sync fix to GitHub | Push updated files |
 
-## Risk
+## What the User Needs to Do on GitHub
 
-This is a large-scale path refactor (~200+ files with import changes). The mechanical work is straightforward but volume is high. Every `@/modules/X` import becomes `@/modules/<subsystem>/X`. The `@/` alias resolution in Vite means only the path segment after `modules/` changes.
-
-## What Does NOT Change
-
-- No logic changes to any module
-- No dependency changes
-- No Vite/Tailwind/TypeScript config changes
-- `src/lib/`, `src/types/`, `src/hooks/`, `src/integrations/` stay exactly where they are
-- `supabase/`, `src-tauri/`, `public/` untouched
+After we apply these fixes here:
+1. Set up environment variables in their deployment environment (Vercel, Netlify, etc.) with a real Supabase project's URL and anon key — OR — use the standalone-safe guards we'll add
+2. Run `npm install && npm run build` to verify the build passes
 
