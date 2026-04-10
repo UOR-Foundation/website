@@ -30,6 +30,14 @@ import "./schema-org-conformance-gate";
 // Axioms gate is registered via the axioms module barrel
 import "../../axioms/gate";
 
+// Master gate
+import "./master-gate";
+
 // Re-export the runner
 export { runAllGates, runAllGatesAsync, exportGatesMarkdown } from "./gate-runner";
-export type { GateResult, GateFinding, GateReport, Gate, AsyncGate } from "./gate-runner";
+export { runMasterGate, exportMasterGateMarkdown } from "./master-gate";
+export type {
+  GateResult, GateFinding, GateReport, Gate, AsyncGate,
+  MasterGateReport, CoherenceAnalysis, OverlapPair, Contradiction,
+  ConsolidationProposal, HotspotCluster, SelfImprovementProposal,
+} from "./gate-runner";
