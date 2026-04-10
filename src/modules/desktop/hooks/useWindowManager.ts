@@ -43,6 +43,7 @@ function loadWindows(): WindowState[] {
         return parsed.map(w => ({
           ...w,
           pinned: w.pinned ?? false,
+          booted: w.booted ?? false,
           mergedChildren: w.mergedChildren ?? undefined,
           mergedParent: w.mergedParent ?? undefined,
         }));
