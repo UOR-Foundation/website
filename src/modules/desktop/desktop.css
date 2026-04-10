@@ -209,3 +209,77 @@
     opacity: 0;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   Performance Utility Classes
+   GPU promotion, CSS containment, and CSS-only animations
+   for zero-JS visual transitions
+   ═══════════════════════════════════════════════════════ */
+
+/* ── GPU Compositor Promotion ── */
+.gpu-promote {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* ── CSS Containment ── */
+.contain-strict {
+  contain: layout style paint;
+}
+
+.contain-layout {
+  contain: layout style;
+}
+
+/* ── Boot Sequence CSS Animations (replaces framer-motion) ── */
+
+/* Cursor blink — pure CSS, no JS */
+@keyframes boot-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.boot-cursor-blink {
+  animation: boot-cursor-blink 700ms step-end infinite;
+}
+
+/* Status dot pulse — pure CSS */
+@keyframes boot-pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.boot-pulse-dot {
+  animation: boot-pulse-dot 1s ease-in-out infinite;
+}
+
+/* Fade-in for status bar items */
+@keyframes boot-status-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.boot-fade-in {
+  animation: boot-status-fade-in 300ms ease-out both;
+}
+
+/* "Entering desktop…" pulse */
+@keyframes boot-entering-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+.boot-entering-pulse {
+  animation: boot-entering-pulse 2s ease-in-out infinite;
+}
+
+/* Boot overlay exit — applied via JS class toggle */
+.boot-overlay-root {
+  transition: opacity 800ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Container Boot Overlay GPU promotion ── */
+.container-boot-overlay {
+  will-change: opacity;
+}
+
+/* ── Container Inspector GPU promotion ── */
+.container-inspector-panel {
+  transform: translateZ(0);
+}

@@ -155,7 +155,7 @@ export default function ContainerInspector({ appId, receipt }: Props) {
 
   return (
     <div
-      className="absolute bottom-10 left-2 z-40 w-[300px] rounded-lg overflow-hidden animate-scale-in"
+      className="absolute bottom-10 left-2 z-40 w-[300px] rounded-lg overflow-hidden animate-scale-in container-inspector-panel"
       style={{
         background: bg,
         border: `1px solid ${border}`,

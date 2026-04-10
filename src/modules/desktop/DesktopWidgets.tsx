@@ -235,7 +235,7 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
 
   return (
     <div
-      className="fixed inset-0 z-[5] flex flex-col items-center pointer-events-none"
+      className="fixed inset-0 z-[5] flex flex-col items-center pointer-events-none contain-layout"
       style={{
         opacity: widgetOpacity,
         transition: "opacity 300ms ease-out",

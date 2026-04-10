@@ -9,11 +9,13 @@
  * - CRT scanline aesthetic
  * - Real data from the sovereign boot pipeline
  *
+ * PERFORMANCE: Uses CSS animations exclusively (no framer-motion).
+ * Line replay uses a RAF-driven loop with a single ref for O(1) appends.
+ *
  * @module desktop/BootSequence
  */
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import type { BootProgress, BootReceipt } from "@/modules/boot/types";
 import { sovereignBoot } from "@/modules/boot/sovereign-boot";
 import { isLocal } from "@/lib/runtime";
@@ -140,7 +142,7 @@ function buildBootScript(receipt: BootReceipt): LogLine[] {
   const sab = hasSharedArrayBuffer();
   const isPreview = window.location.hostname.includes("id-preview--");
   const isIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
-  const coiExempt = isPreview || isIframe; // COI structurally unavailable in preview/iframe
+  const coiExempt = isPreview || isIframe;
   lines.push({ tag: "BIOS", text: dotPad(`SharedArrayBuffer`) + ` ${sab ? "active" : coiExempt ? "deferred (preview)" : "unavailable"}`, level: sab ? "ok" : coiExempt ? "info" : "warn", badge: sab ? "  OK  " : coiExempt ? " INFO " : " WARN " });
   const ww = hasWebWorkers();
   lines.push({ tag: "BIOS", text: dotPad(`Web Workers`) + ` ${ww ? "ready" : "unavailable"}`, level: ww ? "ok" : "warn", badge: ww ? "  OK  " : " WARN " });
@@ -155,7 +157,6 @@ function buildBootScript(receipt: BootReceipt): LogLine[] {
   lines.push({ tag: "KERNEL", text: dotPad(`Loading compute engine`) + ` ${receipt.engineType.toUpperCase()}`, level: "ok", badge: "  OK  " });
   lines.push({ tag: "KERNEL", text: dotPad(`Ring R₈ algebra verification`) + ` 256/256 passed`, level: "ok", badge: "  OK  " });
 
-  // Fano primitives
   const fanoLabels = [
     "P₀ — Encode (object → prime coordinates)",
     "P₁ — Decode (coordinates → object)",
@@ -246,7 +247,6 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
   const [error, setError] = useState<string | null>(null);
   const [showDesktop, setShowDesktop] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
-  
 
   // Auto-scroll
   useEffect(() => {
@@ -255,12 +255,10 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
     }
   }, [displayedLines]);
 
-  // Run boot + replay
+  // Run boot + RAF-driven replay
   useEffect(() => {
-    // Use a local cancelled flag (not ref) to avoid strict mode double-mount issues
     let cancelled = false;
 
-    // Reset state on mount
     setDisplayedLines([...ASCII_LOGO]);
     setBootPhase("booting");
     setReplayProgress(0);
@@ -268,9 +266,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
     setError(null);
     setShowDesktop(false);
 
-    sovereignBoot((p: BootProgress) => {
-      // We don't use live progress — we replay afterward
-    })
+    sovereignBoot((_p: BootProgress) => {})
       .then((r) => {
         if (cancelled) return;
         setReceipt(r);
@@ -278,37 +274,43 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
 
         const script = buildBootScript(r);
         let idx = 0;
+        // Pre-allocate the full array: ASCII_LOGO + script
+        const fullLines = [...ASCII_LOGO];
+        let lastTime = performance.now();
 
-        function replayNext() {
+        function replayTick(now: number) {
           if (cancelled) return;
           if (idx >= script.length) {
+            setDisplayedLines(fullLines.slice());
             setReplayProgress(1);
             setBootPhase("done");
-            setTimeout(() => {
-              if (!cancelled) setShowDesktop(true);
-            }, 600);
-            setTimeout(() => {
-              if (!cancelled) onComplete();
-            }, 1000);
+            setTimeout(() => { if (!cancelled) setShowDesktop(true); }, 600);
+            setTimeout(() => { if (!cancelled) onComplete(); }, 1000);
             return;
           }
 
-          const line = script[idx];
-          setDisplayedLines(prev => [...prev, line]);
+          // Target cadence: ~30ms per line, batch multiple lines per frame
+          const elapsed = now - lastTime;
+          const linesToAdd = Math.max(1, Math.floor(elapsed / 30));
+
+          for (let i = 0; i < linesToAdd && idx < script.length; i++) {
+            const line = script[idx];
+            fullLines.push(line);
+            idx++;
+
+            // Headers get a longer pause — break out of batch
+            if (line.level === "header") break;
+          }
+
+          lastTime = now;
+          setDisplayedLines(fullLines.slice());
           setReplayProgress(idx / script.length);
-          idx++;
 
-          let delay: number;
-          if (line.level === "header") delay = 80;
-          else if (line.level === "divider") delay = 20;
-          else if (line.level === "ascii") delay = 12;
-          else if (line.text === "") delay = 30;
-          else delay = 30 + Math.random() * 20;
-
-          setTimeout(replayNext, delay);
+          requestAnimationFrame(replayTick);
         }
 
-        setTimeout(replayNext, 200);
+        // Start replay after a brief pause
+        setTimeout(() => requestAnimationFrame(replayTick), 200);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -376,12 +378,10 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
       return <div key={i} className="h-1" />;
     }
 
-    // Badge colors
     let badgeClass = "text-emerald-400 bg-emerald-400/10";
     if (line.badge?.includes("WARN")) badgeClass = "text-amber-400 bg-amber-400/10";
     if (line.badge?.includes("FAIL")) badgeClass = "text-red-400 bg-red-400/10";
 
-    // Text colors
     let textClass = "text-white/50";
     if (line.level === "ok") textClass = "text-white/60";
     if (line.level === "warn") textClass = "text-amber-300/70";
@@ -404,16 +404,16 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
     );
   }
 
-  // ── Main render ───────────────────────────────────────────────────────
+  // ── Main render — pure CSS animations ─────────────────────────────────
 
   return (
-    <AnimatePresence>
+    <>
       {!showDesktop && (
-        <motion.div
-          className="fixed inset-0 z-[9999] flex flex-col bg-[#0a0a0a] overflow-hidden"
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+        <div
+          className="fixed inset-0 z-[9999] flex flex-col bg-[#0a0a0a] overflow-hidden boot-overlay-root"
+          style={{
+            willChange: "opacity",
+          }}
         >
           {/* CRT Scanline overlay */}
           <div
@@ -444,30 +444,22 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
           >
             {displayedLines.map((line, i) => renderLine(line, i))}
 
-            {/* Blinking cursor */}
+            {/* Blinking cursor — CSS animation */}
             {(bootPhase === "booting" || bootPhase === "replaying") && (
-              <motion.span
-                className="inline-block w-[7px] h-[14px] bg-emerald-400/60 ml-[72px] mt-1"
-                animate={{ opacity: [1, 0, 1] }}
-                transition={{ duration: 0.7, repeat: Infinity }}
+              <span
+                className="inline-block w-[7px] h-[14px] bg-emerald-400/60 ml-[72px] mt-1 boot-cursor-blink"
               />
             )}
           </div>
 
           {/* Bottom status bar */}
           <div className="px-4 sm:px-8 py-4 border-t border-white/5 flex-shrink-0">
-            {/* Progress bar */}
             <ProgressBar progress={bootPhase === "done" ? 1 : replayProgress} />
 
-            {/* Status line */}
             <div className="flex items-center justify-between mt-2">
               {bootPhase === "booting" && (
                 <div className="flex items-center gap-2">
-                  <motion.div
-                    className="w-1.5 h-1.5 rounded-full bg-amber-400"
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  />
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400 boot-pulse-dot" />
                   <span className="text-white/30 text-[10px] tracking-[0.15em] font-mono">
                     INITIALIZING SYSTEM...
                   </span>
@@ -476,11 +468,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
 
               {bootPhase === "replaying" && (
                 <div className="flex items-center gap-2">
-                  <motion.div
-                    className="w-1.5 h-1.5 rounded-full bg-cyan-400"
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 0.6, repeat: Infinity }}
-                  />
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 boot-pulse-dot" />
                   <span className="text-white/30 text-[10px] tracking-[0.15em] font-mono">
                     VERIFYING SYSTEM INTEGRITY...
                   </span>
@@ -488,11 +476,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
               )}
 
               {bootPhase === "done" && receipt && (
-                <motion.div
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-3"
-                >
+                <div className="flex items-center gap-3 boot-fade-in">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   <span className="text-emerald-400/80 text-[10px] tracking-[0.15em] font-mono">
                     ■ SYSTEM SEALED
@@ -509,7 +493,7 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
                   <span className="text-white/40 text-[11px] tracking-widest">
                     {receipt.seal.glyph}
                   </span>
-                </motion.div>
+                </div>
               )}
 
               {bootPhase === "error" && (
@@ -551,20 +535,15 @@ export default function BootSequence({ onComplete }: BootSequenceProps) {
                   </>
                 )}
                 {bootPhase === "done" && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0.3, 0.7, 0.3] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="text-white/30 text-[10px] font-mono tracking-[0.1em]"
-                  >
+                  <span className="text-white/30 text-[10px] font-mono tracking-[0.1em] boot-entering-pulse">
                     Entering desktop...
-                  </motion.span>
+                  </span>
                 )}
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       )}
-    </AnimatePresence>
+    </>
   );
 }

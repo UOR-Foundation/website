@@ -4,6 +4,9 @@
  * DayRingClock centered in the upper region, two corner icons
  * at the bottom (menu + search), theme dots centered between them.
  * Apps and search open via Vaul bottom-sheet drawers.
+ *
+ * PERFORMANCE: Clock tick is isolated in MobileClock component
+ * to prevent full shell re-renders every second.
  */
 
 import { useState, useCallback, useMemo, useEffect, useRef, Suspense } from "react";
@@ -15,6 +18,17 @@ import DesktopImmersiveWallpaper from "@/modules/desktop/DesktopImmersiveWallpap
 import DayRingClock from "@/modules/desktop/components/DayRingClock";
 import { Menu, Search, Mic } from "lucide-react";
 
+// ── Isolated clock component — ticks without re-rendering the shell ──
+function MobileClock({ theme, isLight }: { theme: string; isLight: boolean }) {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return <DayRingClock time={time} theme={theme} isLight={isLight} opacity={1} />;
+}
+
 export default function MobileShell() {
   const { isLight, theme } = useDesktopTheme();
   const [openAppId, setOpenAppId] = useState<string | null>(null);
@@ -23,13 +37,6 @@ export default function MobileShell() {
   const [searchDrawerOpen, setSearchDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  // Live clock
-  const [time, setTime] = useState(new Date());
-  useEffect(() => {
-    const id = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
 
   const openApp = useCallback((appId: string) => {
     setOpenAppId(appId);
@@ -72,16 +79,16 @@ export default function MobileShell() {
       {theme === "immersive" && <DesktopImmersiveWallpaper />}
 
       {/* ── DayRingClock — centered upper area, GPU-promoted ── */}
-      <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col items-center z-10 pointer-events-none" style={{ willChange: "transform" }}>
+      <div className="absolute inset-x-0 top-0 bottom-0 flex flex-col items-center z-10 pointer-events-none gpu-promote">
         {/* Spacer: push clock to ~18% from top */}
         <div className="flex-[0_0_18%]" />
         <div className="pointer-events-auto">
-          <DayRingClock time={time} theme={theme} isLight={isLight} opacity={1} />
+          <MobileClock theme={theme} isLight={isLight} />
         </div>
       </div>
 
       {/* ── Bottom Controls — safe-area aware, GPU-promoted ── */}
-      <div className="absolute inset-x-0 bottom-0 z-20" style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0.5rem))", willChange: "transform" }}>
+      <div className="absolute inset-x-0 bottom-0 z-20 gpu-promote" style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0.5rem))" }}>
         {/* Corner icons + theme dots */}
         <div className="flex items-end justify-between px-6 pb-3">
           {/* Menu icon */}
