@@ -2,7 +2,7 @@
  * DesktopMenuBar — Slim top status bar with dropdown menus. Theme-aware.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Search, Volume2 } from "lucide-react";
 import {
   Menubar, MenubarMenu, MenubarTrigger, MenubarContent,
