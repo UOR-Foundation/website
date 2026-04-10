@@ -1,10 +1,13 @@
 /**
  * MediaPlayer — Native video streaming experience.
  * Curated YouTube catalog with embedded playback, category browsing, and queue.
+ *
+ * Uses youtube-nocookie.com for privacy-enhanced embedding that works
+ * reliably in sandboxed preview environments.
  */
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { ArrowLeft, Search, Play, Clock, User, X, ChevronRight } from "lucide-react";
+import { ArrowLeft, Search, Play, Clock, User, X, ChevronRight, Pause, SkipForward, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   VIDEO_CATEGORIES,
@@ -15,39 +18,66 @@ import {
   type VideoCategory,
 } from "@/modules/media/lib/video-catalog";
 
+/* ── Embed URL builder ───────────────────────────────────────── */
+
+function getEmbedUrl(videoId: string, autoplay = true): string {
+  const params = new URLSearchParams({
+    autoplay: autoplay ? "1" : "0",
+    modestbranding: "1",
+    rel: "0",
+    color: "white",
+    playsinline: "1",
+    enablejsapi: "1",
+    origin: window.location.origin,
+  });
+  return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
+}
+
 /* ── Subcomponent: Video Card ────────────────────────────────── */
 
 function VideoCard({
   video,
   onPlay,
   compact,
+  isActive,
 }: {
   video: CatalogVideo;
   onPlay: (v: CatalogVideo) => void;
   compact?: boolean;
+  isActive?: boolean;
 }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+
   return (
     <button
       onClick={() => onPlay(video)}
       className={cn(
         "group text-left rounded-xl overflow-hidden transition-all duration-150",
         "hover:scale-[1.02] active:scale-[0.98] touch-manipulation select-none",
-        "bg-white/[0.04] border border-white/[0.06] hover:border-white/[0.12]",
+        "border",
         compact ? "flex items-center gap-3 p-2" : "flex flex-col",
+        isActive
+          ? "bg-white/[0.08] border-white/[0.15] ring-1 ring-white/[0.08]"
+          : "bg-white/[0.04] border-white/[0.06] hover:border-white/[0.12]",
       )}
     >
       {/* Thumbnail */}
       <div
         className={cn(
-          "relative overflow-hidden bg-white/[0.03] flex-shrink-0",
+          "relative overflow-hidden flex-shrink-0",
           compact ? "w-40 h-[90px] rounded-lg" : "w-full aspect-video rounded-t-xl",
+          !imgLoaded && "bg-white/[0.03] animate-pulse",
         )}
       >
         <img
           src={getThumbnail(video.id, compact ? "mq" : "hq")}
           alt={video.title}
           loading="lazy"
-          className="w-full h-full object-cover"
+          onLoad={() => setImgLoaded(true)}
+          className={cn(
+            "w-full h-full object-cover transition-opacity duration-300",
+            imgLoaded ? "opacity-100" : "opacity-0",
+          )}
         />
         {/* Duration badge */}
         <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 text-[10px] font-medium rounded bg-black/75 text-white/90 tabular-nums">
@@ -55,7 +85,7 @@ function VideoCard({
         </span>
         {/* Play overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-black/20">
-          <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
             <Play className="w-5 h-5 text-black ml-0.5" fill="currentColor" />
           </div>
         </div>
@@ -87,6 +117,7 @@ export default function MediaPlayer() {
   const [playing, setPlaying] = useState<CatalogVideo | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const [searchFocused, setSearchFocused] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Queue: same-category videos after the current one
   const queue = useMemo(() => {
@@ -108,14 +139,21 @@ export default function MediaPlayer() {
 
   const handleBack = useCallback(() => setPlaying(null), []);
 
-  // Keyboard shortcut: Escape to go back
+  const handleNext = useCallback(() => {
+    if (queue.length > 0) {
+      setPlaying(queue[0]);
+    }
+  }, [queue]);
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape" && playing) handleBack();
+      if (e.key === "n" && e.altKey && playing) handleNext();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [playing, handleBack]);
+  }, [playing, handleBack, handleNext]);
 
   /* ── Player View ──────────────────────────────────────────── */
   if (playing) {
@@ -126,6 +164,7 @@ export default function MediaPlayer() {
           <button
             onClick={handleBack}
             className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/[0.06] active:scale-95 transition-all duration-100 touch-manipulation"
+            title="Back to browse (Esc)"
           >
             <ArrowLeft className="w-4 h-4 text-white/70" />
           </button>
@@ -133,20 +172,32 @@ export default function MediaPlayer() {
             <p className="text-sm font-medium text-white/90 truncate">{playing.title}</p>
             <p className="text-[11px] text-white/40 truncate">{playing.channel}</p>
           </div>
+          {queue.length > 0 && (
+            <button
+              onClick={handleNext}
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/[0.06] active:scale-95 transition-all duration-100 touch-manipulation"
+              title="Next (Alt+N)"
+            >
+              <SkipForward className="w-4 h-4 text-white/50" />
+            </button>
+          )}
         </div>
 
         {/* Content: video + queue */}
         <div className="flex-1 flex overflow-hidden">
           {/* Video embed */}
           <div className="flex-1 flex flex-col min-w-0">
-            <div className="w-full aspect-video bg-black flex-shrink-0">
+            <div className="w-full aspect-video bg-black flex-shrink-0 relative">
               <iframe
-                src={`https://www.youtube.com/embed/${playing.id}?autoplay=1&modestbranding=1&rel=0&color=white`}
+                ref={iframeRef}
+                key={playing.id}
+                src={getEmbedUrl(playing.id)}
                 title={playing.title}
-                className="w-full h-full"
+                className="w-full h-full absolute inset-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
+                referrerPolicy="no-referrer-when-downgrade"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-presentation allow-popups-to-escape-sandbox"
               />
             </div>
             {/* Video info below embed */}
@@ -162,14 +213,14 @@ export default function MediaPlayer() {
 
           {/* Queue sidebar */}
           {queue.length > 0 && (
-            <div className="w-72 border-l border-white/[0.06] flex-shrink-0 flex flex-col overflow-hidden hidden md:flex">
+            <div className="w-72 border-l border-white/[0.06] flex-shrink-0 flex-col overflow-hidden hidden md:flex">
               <div className="px-4 py-3 border-b border-white/[0.04] flex items-center gap-2">
                 <ChevronRight className="w-3.5 h-3.5 text-white/30" />
                 <span className="text-[12px] font-medium text-white/50 uppercase tracking-wider">Up Next</span>
               </div>
               <div className="flex-1 overflow-y-auto overscroll-contain p-2 space-y-1.5" style={{ willChange: "transform" }}>
                 {queue.slice(0, 12).map(v => (
-                  <VideoCard key={v.id} video={v} onPlay={handlePlay} compact />
+                  <VideoCard key={v.id} video={v} onPlay={handlePlay} compact isActive={false} />
                 ))}
               </div>
             </div>
@@ -188,7 +239,7 @@ export default function MediaPlayer() {
         <div className={cn(
           "relative flex items-center rounded-full transition-all duration-150",
           "bg-white/[0.05] border",
-          searchFocused ? "border-white/[0.15]" : "border-white/[0.06]",
+          searchFocused ? "border-white/[0.15] shadow-[0_0_0_2px_rgba(255,255,255,0.04)]" : "border-white/[0.06]",
         )}>
           <Search className="w-4 h-4 text-white/30 ml-3.5 flex-shrink-0" />
           <input
