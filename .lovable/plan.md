@@ -1,127 +1,76 @@
 
 
-# Compliance Zoom Engine — Layered Exploration with Zoom In/Out
+# Fix Video Loading — Replace YouTube Embeds with Piped API Streams
 
-## Terminology Evaluation
+## Problem
 
-The current terms "atoms," "modules," and "applications" are close but have gaps. Here's my assessment and recommendation:
+YouTube videos fail to load in two ways:
+1. **Thumbnails**: `img.youtube.com` returns gray YouTube play-button placeholders for most videos (visible in the screenshot)
+2. **Playback**: `youtube-nocookie.com/embed/` iframes are blocked when nested inside Lovable's preview iframe (YouTube sets `X-Frame-Options: SAMEORIGIN` which prevents double-nesting)
 
-**Current names → Proposed names:**
+These are fundamental restrictions from YouTube's side that cannot be worked around with the current iframe approach.
 
-| Current | Issue | Proposed | Why |
-|---|---|---|---|
-| Atoms | Good — universally understood as "smallest unit" | **Primitives** | More self-descriptive for developers; "atom" overloaded in React/Jotai ecosystems. "Primitive" clearly says "this cannot be decomposed further." |
-| *(no name)* | The atom chains (pipelines) that form individual exports are invisible as a layer | **Pipelines** | Each export is built from a chain of atoms (e.g., `urdna2015 → sha256 → cid`). This is already in the data as the `pipeline` field. Developers know "pipeline" from CI/CD. |
-| Modules | Good — universal term | **Modules** | Keep as-is. Perfect mapping to npm packages, Rust crates, Go modules. |
-| *(no name)* | The provenance map already groups modules into layers (Engine, Name System, Build System, Services) but this isn't surfaced | **System** | The top-level view showing how layers compose into the full system. |
+## Solution: Piped API + Native HTML5 Video
 
-**Resulting 4-level zoom:**
+**Piped** is an open-source, privacy-respecting YouTube proxy with a public API. It provides:
+- Direct video stream URLs (no iframe needed)
+- Working thumbnail URLs (proxied through their CDN)
+- No API key required
 
-```text
-Level 0: Primitives   — 86 atomic operations/types (the periodic table)
-Level 1: Pipelines    — 46 exports, each a chain of primitives
-Level 2: Modules      — 23 modules, each grouping related pipelines  
-Level 3: System       — 4 layers (Engine → Names → Build → Services)
-```
+Instead of embedding YouTube iframes, we'll fetch stream metadata from Piped's API and play videos using a native `<video>` element — completely bypassing YouTube's iframe restrictions.
 
-Zoom in = more granular (System → Modules → Pipelines → Primitives).
-Zoom out = more composed (Primitives → Pipelines → Modules → System).
-
-This maps exactly to the existing data — the provenance map already has all four levels, they're just not navigable as discrete views.
-
-## UI Design
-
-Replace the current Top↓/Bottom↑ toggle with a **zoom slider** (4 discrete stops). Each zoom level shows:
-- A **table view** appropriate to that granularity
-- A **graph view** appropriate to that granularity
-- HUD stats scoped to the current level
-- Click-to-zoom: clicking any row zooms into its children
-
-```text
-┌──────────────────────────────────────────────────────┐
-│  [−]  ●───●───●───●  [+]     Primitives | Pipelines │
-│       P   Pl  M   S          | Modules  | System    │
-│                                                      │
-│  ── SYSTEM VIEW (zoomed all the way out) ──────────  │
-│                                                      │
-│  Layer          Modules  Pipelines  Grounded  Score  │
-│  ───────────────────────────────────────────────────  │
-│  Engine            5        17        17/17    100%  │
-│  Name System       3         5         5/5     100%  │
-│  Build System      5        12        12/12    100%  │
-│  Services          7        12         8/12     67%  │
-│                                                      │
-│  Click "Engine" → zooms to Module view filtered to   │
-│  Engine modules only                                 │
-│                                                      │
-│  ── MODULE VIEW ─────────────────────────────────── │
-│                                                      │
-│  Module              Pipelines  Grounded  Atoms Used │
-│  ───────────────────────────────────────────────────  │
-│  ring-core              4        4/4      Ring, Add  │
-│  uns/core/address        5        5/5      Address…  │
-│  uns/core/ring           4        4/4      Neg, Bnot │
-│                                                      │
-│  Click "ring-core" → zooms to Pipeline view          │
-│                                                      │
-│  ── PIPELINE VIEW ──────────────────────────────── │
-│                                                      │
-│  Export              Status     Atom Chain            │
-│  ───────────────────────────────────────────────────  │
-│  UORRing             GROUNDED   Ring→Add→Mul→Neg→Xor │
-│  Q0/Q1/Q2/Q3        GROUNDED   Ring→Add→Mul          │
-│                                                      │
-│  Click "UORRing" → zooms to Primitive view           │
-│                                                      │
-│  ── PRIMITIVE VIEW ─────────────────────────────── │
-│                                                      │
-│  The periodic table grid, filtered to atoms used by  │
-│  the selected pipeline. Click any atom → detail panel│
-└──────────────────────────────────────────────────────┘
-```
+**Why Piped over alternatives:**
+- Invidious: primarily a frontend, API is less reliable for stream extraction
+- Vimeo/Mux/BunnyCDN: require accounts, API keys, and content uploads
+- Self-hosted proxy: would require significant infrastructure
+- Piped: free, public API, multiple fallback instances, returns direct stream URLs
 
 ## Implementation
 
-### 1. Rewrite `ComplianceDashboardPage.tsx`
+### 1. Create Edge Function: `video-stream` (`supabase/functions/video-stream/index.ts`)
 
-**Replace** the current flat table + Top↓/Bottom↑ toggle with:
+A backend function that calls the Piped API to resolve YouTube video IDs into playable stream URLs and proxied thumbnails. This keeps API calls server-side and provides a stable interface.
 
-- **Zoom state**: `zoomLevel: 0|1|2|3` + `zoomContext: string | null` (which parent you zoomed into)
-- **Zoom controls**: A discrete 4-stop slider in the top bar, plus `[−]` `[+]` buttons. Keyboard: `-` and `+` keys.
-- **Click-to-zoom**: Clicking any row at levels 3/2/1 zooms in and sets `zoomContext` to filter children.
-- **Breadcrumb-as-zoom-out**: The breadcrumb path updates with each zoom. Clicking any breadcrumb segment zooms back to that level.
-- **Level-specific table renderers**: `SystemTable`, `ModuleTable`, `PipelineTable`, `PrimitiveGrid` — four small inline components, each showing the right columns for its level.
-- **Level-specific graph**: Pass zoom level to `ProvenanceGraph` so it renders the appropriate granularity (nodes = layers at L3, modules at L2, exports at L1, atoms at L0).
-
-### 2. Add layer metadata to `provenance-map.ts`
-
-Add a `SYSTEM_LAYERS` constant that groups modules into their 4 layers (already implicit in comments — just formalize):
-
-```typescript
-export const SYSTEM_LAYERS = [
-  { id: "engine", label: "Engine", modules: ["ring-core", "uns/core/address", "uns/core/ring", "uns/core/identity", "uns/core/keypair"] },
-  { id: "names", label: "Name System", modules: ["uns/core/record", "uns/core/resolver", "uns/core/dht"] },
-  { id: "build", label: "Build System", modules: ["uns/build/container", "uns/build/uorfile", "uns/build/registry", "uns/build/compose", "uns/build/secrets", "uns/build/snapshot"] },
-  { id: "services", label: "Services", modules: ["compose/orchestrator", "compose/app-kernel", "oracle", "identity", "messenger", "donate", "landing", "desktop", "app-store"] },
-];
+```
+GET /video-stream?id=VjHMDlAPMUw          → { streamUrl, thumbnailUrl, title }
+GET /video-stream?id=VjHMDlAPMUw&thumb=1  → redirect to proxied thumbnail
 ```
 
-### 3. Update `AtomSidebar.tsx`
+- Tries multiple Piped instances as fallbacks (pipedapi.kavin.rocks, pipedapi.adminforge.de, etc.)
+- Returns the best quality audio+video stream URL
+- Caches responses in-memory for the function's lifetime
 
-Add the zoom level indicator and make the sidebar contextual — at System level show layer stats, at Module level show module list, at Pipeline level show exports, at Primitive level show the atom index (current behavior).
+### 2. Update `video-catalog.ts` — Add Piped Thumbnail Helper
 
-### 4. Update `ProvenanceGraph.tsx`
+Add a `getPipedThumbnail(id)` function that returns a URL through our edge function, falling back to `img.youtube.com` if needed.
 
-Accept a `zoomLevel` prop. At each level, render different node granularities — layer nodes at L3, module nodes at L2, export nodes at L1, atom nodes at L0.
+### 3. Rewrite `MediaPlayer.tsx` — Native Video Player
+
+Replace the YouTube iframe with a native `<video>` element:
+- On video selection, call the `video-stream` edge function to get the direct stream URL
+- Show a loading state while the stream URL resolves
+- Use `<video>` with full HTML5 controls (play/pause, seek, volume, fullscreen)
+- Thumbnails load through the edge function's `?thumb=1` endpoint
+- Keep all existing UI (browse grid, category tabs, search, queue sidebar)
+
+### 4. Add Video Player Controls Component
+
+Since we're moving from iframe (which has YouTube's built-in controls) to native `<video>`, add a minimal custom control bar:
+- Play/Pause, seek bar, volume, fullscreen toggle
+- Styled to match the existing dark cinema aesthetic
 
 ## Files
 
 | File | Action | Purpose |
 |---|---|---|
-| `src/modules/canonical-compliance/pages/ComplianceDashboardPage.tsx` | Rewrite | Zoom engine with 4-level navigation |
-| `src/modules/canonical-compliance/provenance-map.ts` | Update | Add `SYSTEM_LAYERS` constant |
-| `src/modules/canonical-compliance/components/AtomSidebar.tsx` | Update | Context-aware sidebar per zoom level |
-| `src/modules/canonical-compliance/components/ProvenanceGraph.tsx` | Update | Zoom-level-aware graph rendering |
+| `supabase/functions/video-stream/index.ts` | Create | Piped API proxy edge function |
+| `src/modules/media/lib/video-catalog.ts` | Update | Add Piped thumbnail helper |
+| `src/modules/media/components/MediaPlayer.tsx` | Rewrite | Native `<video>` player replacing iframe |
 
-~400 lines rewritten, ~80 lines added/updated in supporting files.
+## Fallback Strategy
+
+If Piped instances are temporarily down:
+1. Try 3 different Piped API instances before failing
+2. Fall back to `youtube-nocookie.com` iframe as last resort (works when not in nested iframe)
+3. Thumbnails fall back to `img.youtube.com`
 
