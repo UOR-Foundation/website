@@ -1,8 +1,17 @@
 import GalaxyAnimation from "@/modules/landing/components/GalaxyAnimation";
 import PrimeGrid from "@/modules/landing/components/PrimeGrid";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Download } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useMemo } from "react";
 
+function useOSDownload() {
+  return useMemo(() => {
+    const ua = navigator.userAgent;
+    if (/Mac/i.test(ua)) return { os: "macOS", file: "UOR-Desktop-darwin-x64.zip" };
+    if (/Win/i.test(ua)) return { os: "Windows", file: "UOR-Desktop-win32-x64.zip" };
+    return { os: "Linux", file: "UOR-Desktop-linux-x64.tar.gz" };
+  }, []);
+}
 const HeroSection = () => {
   const isMobile = useIsMobile();
 
