@@ -370,8 +370,29 @@ serve(async (req) => {
       return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Get single book with full markdown
+    if (action === "get") {
+      const { bookId } = body;
+      if (!bookId) return new Response(JSON.stringify({ error: "bookId required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const { data, error } = await supabaseAdmin
+        .from("book_summaries")
+        .select("*")
+        .eq("id", bookId)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return new Response(JSON.stringify({ error: "Book not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: true, book: data }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // List books
     if (action === "list") {
+      const { data, error } = await supabaseAdmin
+        .from("book_summaries")
+        .select("id, title, author, domain, cover_url, source_url, tags, created_at")
+        .order("domain")
+        .order("title");
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true, books: data }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       const { data, error } = await supabaseAdmin
         .from("book_summaries")
         .select("id, title, author, domain, cover_url, source_url, tags, created_at")
