@@ -73,20 +73,20 @@ export default function ContactHeader({ conversation, onBack, presence, onSearch
       <div className="flex items-center gap-3 text-white/30">
         <button
           onClick={() => onCall?.("video")}
-          className="hover:text-white/60 transition-colors hidden sm:block"
+          className="hover:text-white/60 active:scale-[0.9] transition-all duration-100 hidden sm:block"
         >
           <Video size={18} />
         </button>
         <button
           onClick={() => onCall?.("audio")}
-          className="hover:text-white/60 transition-colors hidden sm:block"
+          className="hover:text-white/60 active:scale-[0.9] transition-all duration-100 hidden sm:block"
         >
           <Phone size={18} />
         </button>
-        <button onClick={onSearch} className="hover:text-white/60 transition-colors">
+        <button onClick={onSearch} className="hover:text-white/60 active:scale-[0.9] transition-all duration-100">
           <Search size={18} />
         </button>
-        <button onClick={onInfo} className="hover:text-white/60 transition-colors">
+        <button onClick={onInfo} className="hover:text-white/60 active:scale-[0.9] transition-all duration-100">
           <Info size={16} />
         </button>
         <ShieldCheck size={16} className="text-teal-400/60" />

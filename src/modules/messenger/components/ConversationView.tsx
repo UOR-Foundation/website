@@ -5,6 +5,8 @@ import MessageInput from "./MessageInput";
 import DateSeparator from "./DateSeparator";
 import SearchMessages from "./SearchMessages";
 import PinnedMessageBar from "./PinnedMessageBar";
+import EditMessageModal from "./EditMessageModal";
+import ConfirmDialog from "./ConfirmDialog";
 import { useMessages } from "../lib/use-messages";
 import { useSendMessage } from "../lib/use-send-message";
 import { usePresence } from "../lib/use-presence";
@@ -35,8 +37,11 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [pinnedMessage, setPinnedMessage] = useState<DecryptedMessage | null>(null);
   const [pinnedDismissed, setPinnedDismissed] = useState(false);
+  const [editingMsg, setEditingMsg] = useState<DecryptedMessage | null>(null);
+  const [deletingMsgId, setDeletingMsgId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
 
   const isGroup = conversation.sessionType === "group";
   const visibleMessages = filterExpiredMessages(messages, conversation.expiresAfterSeconds);
@@ -73,11 +78,16 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
-  const handleScroll = () => {
-    if (!scrollRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    setShowScrollBottom(scrollHeight - scrollTop - clientHeight > 200);
-  };
+  // Throttled scroll handler via rAF
+  const handleScroll = useCallback(() => {
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      if (!scrollRef.current) return;
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      setShowScrollBottom(scrollHeight - scrollTop - clientHeight > 200);
+    });
+  }, []);
 
   const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
@@ -97,13 +107,21 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
   };
 
   const handleEdit = useCallback((msg: DecryptedMessage) => {
-    const newText = prompt("Edit message:", msg.plaintext);
-    if (newText && newText !== msg.plaintext) editMessage(msg.id, newText);
-  }, [editMessage]);
+    setEditingMsg(msg);
+  }, []);
+
+  const handleEditSave = useCallback((newText: string) => {
+    if (editingMsg) editMessage(editingMsg.id, newText);
+  }, [editingMsg, editMessage]);
 
   const handleDelete = useCallback((msgId: string) => {
-    if (confirm("Delete this message for everyone?")) deleteMessage(msgId);
-  }, [deleteMessage]);
+    setDeletingMsgId(msgId);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (deletingMsgId) deleteMessage(deletingMsgId);
+    setDeletingMsgId(null);
+  }, [deletingMsgId, deleteMessage]);
 
   const handlePin = useCallback((msg: DecryptedMessage) => {
     setPinnedMessage(msg);
@@ -111,22 +129,26 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
     toast.success("Message pinned");
   }, []);
 
+  const handleCall = useCallback((type: "audio" | "video") => {
+    toast.info(`Sovereign ${type} calls — coming soon`);
+  }, []);
+
   const findReplyMessage = useCallback((hash: string | null | undefined) => {
     if (!hash) return undefined;
     return messages.find((m) => m.messageHash === hash);
   }, [messages]);
 
-  // Typing indicator
   const showTyping = peerPresence?.typing;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full touch-manipulation">
       <ContactHeader
         conversation={conversation}
         onBack={onBack}
         presence={peerPresence}
         onSearch={() => search.setActive(!search.active)}
         onInfo={onInfo}
+        onCall={handleCall}
       />
 
       {/* Pinned message bar */}
@@ -153,6 +175,7 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto py-3 relative"
         style={{
+          willChange: "transform",
           background: "radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.04) 0%, transparent 60%), linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 47% 4.5%) 100%)",
         }}
       >
@@ -203,13 +226,13 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
           </div>
         ))}
 
-        {/* Typing indicator */}
+        {/* Typing indicator — smooth pulse */}
         {showTyping && (
           <div className="flex justify-start px-[5%] mb-2">
-            <div className="bg-white/[0.07] rounded-2xl px-4 py-2.5 flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: "0ms" }} />
-              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: "150ms" }} />
-              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: "300ms" }} />
+            <div className="bg-white/[0.07] rounded-2xl px-4 py-2.5 flex items-center gap-1.5">
+              <span className="w-[6px] h-[6px] rounded-full bg-white/40 animate-[pulse_1.4s_ease-in-out_infinite]" />
+              <span className="w-[6px] h-[6px] rounded-full bg-white/40 animate-[pulse_1.4s_ease-in-out_0.2s_infinite]" />
+              <span className="w-[6px] h-[6px] rounded-full bg-white/40 animate-[pulse_1.4s_ease-in-out_0.4s_infinite]" />
             </div>
           </div>
         )}
@@ -217,15 +240,15 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
         <div ref={bottomRef} />
       </div>
 
-      {/* Scroll to bottom FAB */}
-      {showScrollBottom && (
-        <button
-          onClick={scrollToBottom}
-          className="absolute bottom-[72px] right-5 w-10 h-10 rounded-full bg-slate-900/90 border border-white/[0.08] flex items-center justify-center text-white/40 hover:text-white/70 hover:bg-slate-800/90 transition-all duration-100 shadow-lg z-10"
-        >
-          <ChevronDown size={20} />
-        </button>
-      )}
+      {/* Scroll to bottom FAB — always rendered, opacity transition */}
+      <button
+        onClick={scrollToBottom}
+        className={`absolute bottom-[72px] right-5 w-10 h-10 rounded-full bg-slate-900/90 border border-white/[0.08] flex items-center justify-center text-white/40 hover:text-white/70 hover:bg-slate-800/90 shadow-lg z-10 transition-all duration-150 active:scale-[0.95] ${
+          showScrollBottom ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-2 pointer-events-none"
+        }`}
+      >
+        <ChevronDown size={20} />
+      </button>
 
       <MessageInput
         onSend={(text, opts) => { send(text, { ...opts, replyToHash: replyTo?.messageHash }); setReplyTo(null); }}
@@ -236,6 +259,25 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
         onFileSelected={handleFileSelected}
         members={conversation.members}
         isGroup={isGroup}
+      />
+
+      {/* Edit modal */}
+      <EditMessageModal
+        open={!!editingMsg}
+        initialText={editingMsg?.plaintext ?? ""}
+        onSave={handleEditSave}
+        onClose={() => setEditingMsg(null)}
+      />
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={!!deletingMsgId}
+        title="Delete Message"
+        message="Delete this message for everyone? This can't be undone."
+        confirmLabel="Delete"
+        danger
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeletingMsgId(null)}
       />
     </div>
   );

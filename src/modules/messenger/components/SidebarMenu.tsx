@@ -3,9 +3,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
 import {
   Bookmark, Users, Megaphone, UserRound, Phone,
-  Settings, Moon, Sun, X, Wallet, ShieldCheck
+  Settings, Moon, Sun, Wallet, ShieldCheck
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -28,7 +29,7 @@ export default function SidebarMenu({ open, onClose, onSavedMessages, onNewGroup
     { icon: Phone, label: "Calls", action: () => { onCalls?.(); onClose(); } },
     { divider: true },
     { icon: Users, label: "New Group", action: () => { onNewGroup?.(); onClose(); } },
-    { icon: Megaphone, label: "New Channel", action: () => onClose() },
+    { icon: Megaphone, label: "New Channel", action: () => { toast.info("Channels — coming soon"); onClose(); } },
     { divider: true },
     { icon: Wallet, label: "Wallet", action: () => { navigate("/identity"); onClose(); } },
     { icon: Settings, label: "Settings", action: () => { onSettings?.(); onClose(); } },
@@ -38,7 +39,6 @@ export default function SidebarMenu({ open, onClose, onSavedMessages, onNewGroup
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -47,15 +47,13 @@ export default function SidebarMenu({ open, onClose, onSavedMessages, onNewGroup
             className="fixed inset-0 bg-black/50 z-[200]"
             onClick={onClose}
           />
-          {/* Drawer */}
           <motion.div
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ type: "tween", duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-            className="fixed left-0 top-0 bottom-0 w-[280px] bg-slate-950 border-r border-white/[0.06] z-[201] flex flex-col"
+            className="fixed left-0 top-0 bottom-0 w-[280px] bg-slate-950 border-r border-white/[0.06] z-[201] flex flex-col touch-manipulation"
           >
-            {/* Profile header */}
             <div className="p-4 pb-3 bg-gradient-to-br from-teal-500/10 to-indigo-500/10">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-500/30 to-indigo-500/30 border border-white/10 flex items-center justify-center text-xl font-medium text-white/70">
@@ -63,7 +61,7 @@ export default function SidebarMenu({ open, onClose, onSavedMessages, onNewGroup
                 </div>
                 <button
                   onClick={() => setDarkMode(!darkMode)}
-                  className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center text-white/40 hover:text-white/60 transition-colors"
+                  className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center text-white/40 hover:text-white/60 active:scale-[0.92] transition-all duration-100"
                 >
                   {darkMode ? <Moon size={18} /> : <Sun size={18} />}
                 </button>
@@ -79,7 +77,6 @@ export default function SidebarMenu({ open, onClose, onSavedMessages, onNewGroup
               </div>
             </div>
 
-            {/* Menu items */}
             <div className="flex-1 overflow-y-auto py-1">
               {menuItems.map((item, i) => {
                 if ('divider' in item && item.divider) {
@@ -90,7 +87,7 @@ export default function SidebarMenu({ open, onClose, onSavedMessages, onNewGroup
                   <button
                     key={i}
                     onClick={(item as any).action}
-                    className="w-full flex items-center gap-4 px-5 py-3 text-white/70 hover:bg-white/[0.04] transition-colors duration-100"
+                    className="w-full flex items-center gap-4 px-5 py-3 text-white/70 hover:bg-white/[0.04] active:bg-white/[0.06] active:scale-[0.98] transition-all duration-100 select-none"
                   >
                     <Icon size={20} className="text-white/40" />
                     <span className="text-[15px]">{(item as any).label}</span>

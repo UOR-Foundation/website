@@ -1,6 +1,7 @@
 import { ArrowLeft, User, Bell, Lock, Palette, Info, ShieldCheck, Plug } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface Props {
   onBack: () => void;
@@ -27,28 +28,20 @@ export default function SettingsPanel({ onBack, onOpenBridges }: Props) {
       title: "Settings",
       items: [
         {
-          icon: Bell,
-          label: "Notifications",
-          toggle: true,
-          value: notifications,
+          icon: Bell, label: "Notifications", toggle: true, value: notifications,
           onToggle: () => setNotifications(!notifications),
         },
         {
-          icon: Bell,
-          label: "Message Sounds",
-          toggle: true,
-          value: sounds,
+          icon: Bell, label: "Message Sounds", toggle: true, value: sounds,
           onToggle: () => setSounds(!sounds),
         },
         {
-          icon: Lock,
-          label: "Privacy & Security",
-          subtitle: "Last seen, profile photo, forwarding",
+          icon: Lock, label: "Privacy & Security", subtitle: "Last seen, profile photo, forwarding",
+          action: () => toast.info("Privacy & Security — coming soon"),
         },
         {
-          icon: Palette,
-          label: "Chat Settings",
-          subtitle: "Background, font size, bubbles",
+          icon: Palette, label: "Chat Settings", subtitle: "Background, font size, bubbles",
+          action: () => toast.info("Chat Settings — coming soon"),
         },
       ],
     },
@@ -56,9 +49,7 @@ export default function SettingsPanel({ onBack, onOpenBridges }: Props) {
       title: "Connections",
       items: [
         {
-          icon: Plug,
-          label: "Bridge Connections",
-          subtitle: "WhatsApp, Telegram, Signal, etc.",
+          icon: Plug, label: "Bridge Connections", subtitle: "WhatsApp, Telegram, Signal, etc.",
           action: onOpenBridges,
         },
       ],
@@ -66,24 +57,16 @@ export default function SettingsPanel({ onBack, onOpenBridges }: Props) {
     {
       title: "About",
       items: [
-        {
-          icon: ShieldCheck,
-          label: "Encryption",
-          subtitle: "Kyber-1024 + AES-256-GCM · Post-quantum",
-        },
-        {
-          icon: Info,
-          label: "Version",
-          subtitle: "Sovereign Messenger v1.0",
-        },
+        { icon: ShieldCheck, label: "Encryption", subtitle: "Kyber-1024 + AES-256-GCM · Post-quantum" },
+        { icon: Info, label: "Version", subtitle: "Sovereign Messenger v1.0" },
       ],
     },
   ];
 
   return (
-    <div className="flex flex-col h-full bg-slate-950/80">
+    <div className="flex flex-col h-full bg-slate-950/80 touch-manipulation">
       <div className="h-[60px] flex items-center gap-3 px-4 border-b border-white/[0.04] flex-shrink-0">
-        <button onClick={onBack} className="text-white/50 hover:text-white/80 transition-colors">
+        <button onClick={onBack} className="text-white/50 hover:text-white/80 active:scale-[0.92] transition-all duration-100">
           <ArrowLeft size={20} />
         </button>
         <h2 className="text-lg text-white/90 font-semibold">Settings</h2>
@@ -101,7 +84,7 @@ export default function SettingsPanel({ onBack, onOpenBridges }: Props) {
                 <button
                   key={i}
                   onClick={'action' in item ? (item as any).action : undefined}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors duration-100"
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] active:bg-white/[0.05] active:scale-[0.99] transition-all duration-100 select-none"
                 >
                   <div className="w-9 h-9 rounded-full bg-white/[0.04] flex items-center justify-center flex-shrink-0">
                     <Icon size={18} className="text-white/40" />

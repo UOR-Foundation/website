@@ -28,7 +28,6 @@ interface Props {
   isLastInGroup?: boolean;
 }
 
-// Deterministic color from userId for group sender names
 function senderColor(userId: string): string {
   let hash = 0;
   for (let i = 0; i < userId.length; i++) hash = ((hash << 5) - hash + userId.charCodeAt(i)) | 0;
@@ -95,7 +94,6 @@ export default function MessageBubble({
     }
   };
 
-  // Bubble border radius — Telegram-style grouping
   const borderRadius = sent
     ? `${isFirstInGroup ? "18px" : "6px"} 6px 6px ${isLastInGroup ? "18px" : "6px"}`
     : `6px ${isFirstInGroup ? "18px" : "6px"} ${isLastInGroup ? "18px" : "6px"} 6px`;
@@ -130,15 +128,15 @@ export default function MessageBubble({
   return (
     <div
       ref={observeRef}
-      className={`flex ${sent ? "justify-end" : "justify-start"} ${isLastInGroup ? "mb-2" : "mb-[2px]"} px-[5%] group relative`}
+      className={`flex ${sent ? "justify-end" : "justify-start"} ${isLastInGroup ? "mb-2" : "mb-[2px]"} px-[5%] group relative animate-fade-in`}
+      style={{ animationDuration: "100ms" }}
       onDoubleClick={() => onReply?.(message)}
     >
       <div className="relative max-w-[70%]">
-        {/* Reply hover button */}
         {onReply && !isEncrypted && (
           <button
             onClick={() => onReply(message)}
-            className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-100 text-white/15 hover:text-white/40 ${
+            className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-75 text-white/15 hover:text-white/40 active:scale-[0.9] ${
               sent ? "-left-8" : "-right-8"
             }`}
           >
@@ -147,7 +145,7 @@ export default function MessageBubble({
         )}
 
         <div
-          className={`relative max-w-full min-w-[72px] px-3 pt-1.5 pb-1.5 ${
+          className={`relative max-w-full min-w-[72px] px-3 pt-1.5 pb-1.5 select-none ${
             sent
               ? "bg-[hsl(237,40%,22%)] text-white/90"
               : "bg-white/[0.07] text-white/87"
@@ -158,7 +156,6 @@ export default function MessageBubble({
             setContextMenu({ show: true, x: e.clientX, y: e.clientY });
           }}
         >
-          {/* Sender name in groups */}
           {isGroup && !sent && isFirstInGroup && message.senderName && (
             <p className={`text-[12px] font-semibold mb-0.5 truncate flex items-center gap-1 ${nameColor}`}>
               {message.sourcePlatform && message.sourcePlatform !== "native" && (
@@ -175,14 +172,13 @@ export default function MessageBubble({
 
           {renderContent()}
 
-          {/* Reactions */}
           {reactionCounts.size > 0 && (
             <div className="flex flex-wrap gap-0.5 mt-1">
               {Array.from(reactionCounts.entries()).map(([emoji, { count, byMe }]) => (
                 <button
                   key={emoji}
                   onClick={() => handleReact(emoji)}
-                  className={`text-xs rounded-full px-1.5 py-0.5 transition-colors duration-100 ${
+                  className={`text-xs rounded-full px-1.5 py-0.5 transition-all duration-75 active:scale-[0.9] ${
                     byMe ? "bg-teal-500/15 border border-teal-500/20" : "bg-white/[0.06] border border-white/[0.04] hover:bg-white/[0.1]"
                   }`}
                 >
@@ -192,7 +188,6 @@ export default function MessageBubble({
             </div>
           )}
 
-          {/* Inline timestamp + status (Telegram-style, floated bottom-right) */}
           <span className="float-right mt-0.5 ml-3 flex items-center gap-1 text-[10px] text-white/25 leading-none translate-y-0.5 select-none">
             {timeRemaining && !timeRemaining.expired && (
               <span className="flex items-center gap-0.5 text-amber-400/50 mr-0.5">

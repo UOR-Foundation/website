@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
-import { Search, Menu, Plus, Users } from "lucide-react";
+import { Search, Menu, Plus } from "lucide-react";
 import ChatList from "./ChatList";
-import SessionBadge from "./SessionBadge";
 import SidebarMenu from "./SidebarMenu";
 import type { Conversation, BridgePlatform } from "../lib/types";
 
@@ -66,8 +65,7 @@ export default function UnifiedInbox({
   const unreadCount = conversations.filter(c => c.unread > 0).length;
 
   return (
-    <div className="flex flex-col h-full bg-slate-950/80 backdrop-blur-sm">
-      {/* Hamburger Menu */}
+    <div className="flex flex-col h-full bg-slate-950/80 backdrop-blur-sm touch-manipulation">
       <SidebarMenu
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
@@ -77,11 +75,10 @@ export default function UnifiedInbox({
         onSettings={onSettings}
       />
 
-      {/* Header — Telegram style */}
       <div className="h-[56px] flex items-center justify-between px-3 flex-shrink-0 border-b border-white/[0.04]">
         {searchExpanded ? (
           <div className="flex-1 flex items-center gap-2">
-            <button onClick={() => { setSearchExpanded(false); setSearchFilter(""); }} className="text-white/50 hover:text-white/80 transition-colors p-1">
+            <button onClick={() => { setSearchExpanded(false); setSearchFilter(""); }} className="text-white/50 hover:text-white/80 active:scale-[0.92] transition-all duration-100 p-1">
               <Search size={18} />
             </button>
             <input
@@ -97,14 +94,14 @@ export default function UnifiedInbox({
           <>
             <button
               onClick={() => setMenuOpen(true)}
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/[0.04] transition-all duration-100"
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/[0.04] active:bg-white/[0.06] active:scale-[0.95] transition-all duration-100"
             >
               <Menu size={22} />
             </button>
             <h1 className="text-[17px] text-white/90 font-semibold tracking-tight">Messages</h1>
             <button
               onClick={() => setSearchExpanded(true)}
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-white/40 hover:text-white/60 hover:bg-white/[0.04] transition-all duration-100"
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-white/40 hover:text-white/60 hover:bg-white/[0.04] active:bg-white/[0.06] active:scale-[0.95] transition-all duration-100"
             >
               <Search size={20} />
             </button>
@@ -112,16 +109,16 @@ export default function UnifiedInbox({
         )}
       </div>
 
-      {/* Filter tabs — All / Unread / Archived */}
+      {/* Filter tabs */}
       <div className="flex px-2 pt-1.5 pb-0.5 gap-1">
         {(["all", "unread", "archived"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setFilterTab(tab)}
-            className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-100 ${
+            className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-100 select-none active:scale-[0.95] ${
               filterTab === tab
                 ? "bg-teal-500/15 text-teal-400/90"
-                : "text-white/35 hover:text-white/55 hover:bg-white/[0.03]"
+                : "text-white/35 hover:text-white/55 hover:bg-white/[0.03] active:bg-white/[0.05]"
             }`}
           >
             {tab === "all" ? "All Chats" : tab === "unread" ? `Unread${unreadCount > 0 ? ` (${unreadCount})` : ""}` : "Archived"}
@@ -138,7 +135,7 @@ export default function UnifiedInbox({
               <button
                 key={filter.id}
                 onClick={() => setPlatformFilter(filter.id)}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] transition-colors duration-100 whitespace-nowrap ${
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] transition-all duration-100 whitespace-nowrap select-none active:scale-[0.93] ${
                   platformFilter === filter.id
                     ? "bg-white/[0.08] text-white/70"
                     : "text-white/25 hover:text-white/45 hover:bg-white/[0.03]"
@@ -171,7 +168,7 @@ export default function UnifiedInbox({
       {/* FAB — New Chat */}
       <button
         onClick={onNewChat}
-        className="absolute bottom-5 right-5 w-14 h-14 rounded-full bg-teal-500/90 hover:bg-teal-500 text-white shadow-lg shadow-teal-500/20 flex items-center justify-center transition-all duration-150 hover:scale-105 z-10"
+        className="absolute bottom-5 right-5 w-14 h-14 rounded-full bg-teal-500/90 hover:bg-teal-500 text-white shadow-lg shadow-teal-500/20 flex items-center justify-center transition-all duration-100 hover:scale-105 active:scale-95 z-10 select-none"
       >
         <Plus size={26} strokeWidth={2.5} />
       </button>
