@@ -1,5 +1,6 @@
 import type { EnrichedReceipt } from "@/modules/oracle/lib/receipt-registry";
 import { getPreferredTier, createTTFTMeasure } from "@/modules/oracle/lib/latency-tracker";
+import { pushReflection } from "@/modules/boot/reflection-chain";
 
 export type Msg = { role: "user" | "assistant"; content: string; proof?: EnrichedReceipt };
 
