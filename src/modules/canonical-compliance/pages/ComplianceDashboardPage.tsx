@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback, useEffect, lazy, Suspense } from "react";
-import { Download, LayoutGrid, Share2, ShieldCheck } from "lucide-react";
+import { Download, LayoutGrid, Share2, ShieldCheck, BookOpen } from "lucide-react";
 import { runAudit, type AuditFinding, type AuditReport } from "../audit";
 import { ALL_ATOMS, ATOM_INDEX, type AtomCategory, type UorAtom, FIRMWARE_VERSION } from "../atoms";
 import { PROVENANCE_REGISTRY, SYSTEM_LAYERS, type SystemLayer } from "../provenance-map";
@@ -13,6 +13,7 @@ import StatBlock from "@/modules/core/components/StatBlock";
 import Breadcrumbs from "@/modules/core/components/Breadcrumbs";
 
 const HealthGatesPanel = lazy(() => import("../components/HealthGatesPanel"));
+const OntologyPanel = lazy(() => import("../components/OntologyPanel"));
 
 // ── Zoom Context ────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ export default function ComplianceDashboardPage() {
   const report = useMemo<AuditReport>(() => runAudit(), []);
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(3);
   const [zoomContext, setZoomContext] = useState<ZoomContext>({});
-  const [view, setView] = useState<"table" | "graph" | "gates">("table");
+  const [view, setView] = useState<"table" | "graph" | "gates" | "ontology">("table");
   const [search, setSearch] = useState("");
   const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<AtomCategory | null>(null);
@@ -193,6 +194,14 @@ export default function ComplianceDashboardPage() {
               >
                 <ShieldCheck size={11} />
               </button>
+              <button
+                onClick={() => setView("ontology")}
+                className={`px-2.5 py-1.5 text-xs font-mono flex items-center gap-1 transition-colors ${
+                  view === "ontology" ? "bg-white/[0.08] text-zinc-200" : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                <BookOpen size={11} />
+              </button>
             </div>
 
             <button
@@ -219,7 +228,11 @@ export default function ComplianceDashboardPage() {
 
         {/* Content Area */}
         <div className="flex-1 overflow-hidden">
-          {view === "gates" ? (
+          {view === "ontology" ? (
+            <Suspense fallback={<div className="p-5 text-xs font-mono text-zinc-500">Loading ontology…</div>}>
+              <OntologyPanel />
+            </Suspense>
+          ) : view === "gates" ? (
             <Suspense fallback={<div className="p-5 text-xs font-mono text-zinc-500">Loading gates…</div>}>
               <HealthGatesPanel />
             </Suspense>
