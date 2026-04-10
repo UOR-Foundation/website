@@ -1,6 +1,6 @@
 /**
- * Sovereign Boot — Barrel Export
- * @module boot
+ * Init System — Barrel Export
+ * @ontology uor:InitSystem
  */
 
 export type {

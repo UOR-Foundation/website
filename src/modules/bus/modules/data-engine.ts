@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Data Engine Module Registration.
+ * Service Mesh — Data Engine Module Registration.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Exposes data engineering pipeline: ingest, profile, quality.

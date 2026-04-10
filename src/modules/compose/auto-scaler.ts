@@ -1,5 +1,6 @@
 /**
- * Sovereign Auto-Scaler — Metric-Driven Worker Slot Scaling.
+ * Horizontal Pod Autoscaler — Metric-Driven Worker Slot Scaling.
+ * @ontology uor:HPA
  * ═════════════════════════════════════════════════════════════════
  *
  * Watches per-kernel call rates and adjusts worker slot allocations

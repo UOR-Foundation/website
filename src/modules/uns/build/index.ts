@@ -1,5 +1,6 @@
 /**
  * UNS Build — Module Barrel Export
+ * @ontology uor:ContainerRuntime
  * ═════════════════════════════════════════════════════════════════
  *
  * Complete Build → Ship → Run system.
@@ -25,11 +26,11 @@
  * └────────────────────────────────────────────────────────────────┘
  *
  * Orchestration (Kubernetes equivalent) lives in @/modules/compose:
- *   - SovereignReconciler  (K8s Controller Manager)
- *   - SovereignAutoScaler  (K8s HPA)
- *   - SovereignRollingUpdate (K8s Deployment rolling update)
- *   - AppKernel             (container isolation + permissions)
- *   - Orchestrator           (kubelet + scheduler)
+ *   - Reconciliation Controller  (K8s Controller Manager)  @ontology uor:Reconciler
+ *   - Horizontal Pod Autoscaler  (K8s HPA)                 @ontology uor:HPA
+ *   - Rolling Update             (K8s Deployment rolling update)
+ *   - Container Runtime          (container isolation + permissions)  @ontology uor:ContainerRuntime
+ *   - Orchestrator               (kubelet + scheduler)     @ontology uor:Scheduler
  *
  * @version 2.0.0
  */

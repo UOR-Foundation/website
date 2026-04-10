@@ -1,9 +1,10 @@
 /**
- * Sovereign Bus — External Client.
+ * Service Mesh — External Client.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * For external consumers (CLI, agents, other apps) that call the
- * sovereign API over HTTP. Constructs JSON-RPC 2.0 requests and
+ * Service Mesh API over HTTP. Constructs JSON-RPC 2.0 requests and
  * sends them to the unified gateway edge function.
  *
  * @version 1.0.0

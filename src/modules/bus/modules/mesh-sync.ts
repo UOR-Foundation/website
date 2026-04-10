@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Mesh Sync Module
+ * Service Mesh — Mesh Sync Module
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Exposes mesh sync operations via the bus API.

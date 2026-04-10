@@ -1,5 +1,6 @@
 /**
- * Sovereign Seal Monitor — Continuous Integrity Verification
+ * Seal Monitor — Continuous Integrity Verification
+ * @ontology uor:InitSystem
  * ═══════════════════════════════════════════════════════════════
  *
  * Re-verifies the UOR seal at jittered intervals (25s + random 0-10s).

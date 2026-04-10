@@ -1,5 +1,6 @@
 /**
- * Sovereign Compose — Blueprint Registry.
+ * Scheduling & Orchestration — Blueprint Registry.
+ * @ontology uor:Scheduler
  * ═════════════════════════════════════════════════════════════════
  *
  * Content-addressed storage for AppBlueprints.

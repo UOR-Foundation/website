@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Module Registrations Barrel.
+ * Service Mesh — Module Registrations Barrel.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Import this file to register all core modules on the bus.

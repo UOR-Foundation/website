@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Audio Module.
+ * Service Mesh — Audio Module.
+ * @ontology uor:ServiceMesh
  * Layer 2 — remote. TTS, transcription, streaming via edge functions.
  * @version 1.0.0
  */

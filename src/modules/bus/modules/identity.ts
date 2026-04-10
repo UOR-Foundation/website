@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Identity Module.
+ * Service Mesh — Identity Module.
+ * @ontology uor:ServiceMesh
  * Layer 0 — local, pure computation. UOR identity derivation.
  * @version 1.0.0
  */

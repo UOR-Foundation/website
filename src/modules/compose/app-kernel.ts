@@ -1,11 +1,12 @@
 /**
- * Sovereign Compose — AppKernel.
+ * Scheduling & Orchestration — Container Runtime (AppKernel).
+ * @ontology uor:ContainerRuntime
  * ═════════════════════════════════════════════════════════════════
  *
  * Unikraft-inspired per-app isolation layer.
  *
- * Each running application receives its own AppKernel instance —
- * a scoped proxy of the Sovereign Bus that enforces least-privilege,
+ * Each running application receives its own Container Runtime instance —
+ * a scoped proxy of the Service Mesh that enforces least-privilege,
  * call-rate budgets, fast-path dispatch, payload accounting,
  * and content-addressed runtime sealing.
  *

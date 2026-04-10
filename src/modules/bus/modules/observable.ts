@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Observable Module.
+ * Service Mesh — Observable Module.
+ * @ontology uor:ServiceMesh
  * Layer 1 — local. Event emission and subscription within the bus.
  *
  * Powered by @okikio/observables — TC39-aligned Observable with

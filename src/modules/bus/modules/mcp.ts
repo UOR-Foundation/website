@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — MCP (Model Context Protocol) Module.
+ * Service Mesh — MCP (Model Context Protocol) Module.
+ * @ontology uor:ServiceMesh
  * Layer 2 — remote. MCP tool discovery and invocation.
  * @version 1.0.0
  */

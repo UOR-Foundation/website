@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Social Module.
+ * Service Mesh — Social Module.
+ * @ontology uor:ServiceMesh
  * Layer 2 — remote. Social messaging via edge functions.
  * @version 1.0.0
  */

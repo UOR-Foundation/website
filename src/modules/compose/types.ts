@@ -1,5 +1,6 @@
 /**
- * Sovereign Compose — Type Definitions.
+ * Scheduling & Orchestration — Type Definitions.
+ * @ontology uor:Scheduler
  * ═════════════════════════════════════════════════════════════════
  *
  * Content-addressed application blueprints, per-app kernels,

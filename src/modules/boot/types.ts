@@ -1,5 +1,6 @@
 /**
- * Sovereign Boot — Type Definitions
+ * Init System — Type Definitions
+ * @ontology uor:InitSystem
  * ═══════════════════════════════════════════════════════════════
  *
  * All types for the self-verifying boot sequence and UOR seal.

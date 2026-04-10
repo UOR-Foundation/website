@@ -1,8 +1,9 @@
 /**
- * Sovereign Reconciler — Declarative Control Plane.
+ * Reconciliation Controller — Declarative Control Plane.
+ * @ontology uor:Reconciler
  * ═════════════════════════════════════════════════════════════════
  *
- * The Kubernetes-equivalent reconciliation engine for Sovereign Compose.
+ * The Kubernetes-equivalent reconciliation engine for Scheduling & Orchestration.
  * Continuously diffs desired state against actual state and emits
  * corrective effects to close any drift.
  *

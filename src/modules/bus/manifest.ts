@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Shared Method Manifest.
+ * Service Mesh — Shared Method Manifest.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Single source of truth for every ns/op registered on the bus.

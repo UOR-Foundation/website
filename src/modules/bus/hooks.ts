@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — React Hooks for Layer 3.
+ * Service Mesh — React Hooks for Layer 3.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Canonical hooks for UI components to interact with the bus.

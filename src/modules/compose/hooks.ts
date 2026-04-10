@@ -1,9 +1,10 @@
 /**
- * Sovereign Compose — React Hooks.
+ * Scheduling & Orchestration — React Hooks.
+ * @ontology uor:Scheduler
  * ═════════════════════════════════════════════════════════════════
  *
- * React bindings for the orchestrator, per-app kernels,
- * and the Sovereign Reconciler (K8s control plane).
+ * React bindings for the orchestrator, per-app Container Runtimes,
+ * and the Reconciliation Controller (K8s control plane).
  *
  * @version 2.0.0
  */

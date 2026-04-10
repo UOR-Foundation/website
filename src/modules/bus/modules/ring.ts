@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Ring Module Registration.
+ * Service Mesh — Ring Module Registration.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Exposes UOR ring operations via the bus API.

@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Trace Module.
+ * Service Mesh — Trace Module.
+ * @ontology uor:ServiceMesh
  * Layer 1 — local. Record, verify, and replay execution traces.
  * @version 1.0.0
  */

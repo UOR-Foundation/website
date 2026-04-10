@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Self-Describing API (Introspection).
+ * Service Mesh — Self-Describing API (Introspection).
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * bus.call("rpc/discover") returns the full method catalog.

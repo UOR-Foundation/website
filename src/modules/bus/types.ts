@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — JSON-RPC 2.0 Types.
+ * Service Mesh — JSON-RPC 2.0 Types.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Canonical envelope for every system call. Follows the JSON-RPC 2.0

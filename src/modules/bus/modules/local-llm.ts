@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Local LLM Module Registration.
+ * Service Mesh — Local LLM Module Registration.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Exposes local LLM operations via the bus API.

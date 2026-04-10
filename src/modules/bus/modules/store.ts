@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Store Module Registration.
+ * Service Mesh — Store Module Registration.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Exposes decentralized storage: write, read, pin.

@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Blueprint Module Registration.
+ * Service Mesh — Blueprint Module Registration.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Exposes object blueprint operations: decompose, materialize, export.

@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Morphism Module.
+ * Service Mesh — Morphism Module.
+ * @ontology uor:ServiceMesh
  * Layer 0 — local, pure computation. Structure-preserving transformations.
  * @version 1.0.0
  */

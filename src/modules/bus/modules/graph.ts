@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Graph Module Registration.
+ * Service Mesh — Graph Module Registration.
+ * @ontology uor:ServiceMesh
  * ═════════════════════════════════════════════════════════════════
  *
  * Exposes Knowledge Graph operations: put, get, query, similar, stats, verify.

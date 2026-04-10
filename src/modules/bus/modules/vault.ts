@@ -1,6 +1,7 @@
 /**
- * Sovereign Bus — Vault Module.
- * Layer 1 — local. Sovereign encryption and secure local storage.
+ * Service Mesh — Vault Module.
+ * @ontology uor:ServiceMesh
+ * Layer 1 — local. Encryption and secure local storage.
  * @version 1.0.0
  */
 import { register } from "../registry";

@@ -1,5 +1,6 @@
 /**
- * Sovereign Bus — Continuity Module.
+ * Service Mesh — Continuity Module.
+ * @ontology uor:ServiceMesh
  * Layer 1 — remote. Session state persistence and chaining.
  * @version 1.0.0
  */
