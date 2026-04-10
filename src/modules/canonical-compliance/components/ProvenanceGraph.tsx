@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { ALL_ATOMS, ATOM_INDEX, type AtomCategory } from "../atoms";
-import { PROVENANCE_REGISTRY } from "../provenance-map";
+import { PROVENANCE_REGISTRY, SYSTEM_LAYERS } from "../provenance-map";
 import { type AuditFinding } from "../audit";
 import { type SelectedNode } from "./NodeDetailPanel";
+import { type ZoomLevel } from "./ZoomControls";
 
 const CATEGORY_COLORS: Record<AtomCategory, string> = {
   PrimitiveOp: "hsl(0 0% 65%)",
@@ -16,11 +17,19 @@ const CATEGORY_COLORS: Record<AtomCategory, string> = {
   Observable: "hsl(180 40% 50%)",
 };
 
+const LAYER_COLORS: Record<string, string> = {
+  engine: "hsl(160 40% 45%)",
+  names: "hsl(210 50% 50%)",
+  build: "hsl(35 60% 50%)",
+  services: "hsl(270 40% 55%)",
+};
+
 interface GraphNode {
   id: string;
   label: string;
-  type: "atom" | "module" | "export";
+  type: "atom" | "module" | "export" | "layer";
   category?: AtomCategory;
+  layerId?: string;
   x: number;
   y: number;
   vx: number;
@@ -39,6 +48,8 @@ interface ProvenanceGraphProps {
   selectedCategory: AtomCategory | null;
   search: string;
   onNodeSelect: (node: SelectedNode) => void;
+  zoomLevel?: ZoomLevel;
+  zoomContext?: { layerId?: string; module?: string; finding?: AuditFinding };
 }
 
 export default function ProvenanceGraph({ findings, selectedCategory, search, onNodeSelect }: ProvenanceGraphProps) {
