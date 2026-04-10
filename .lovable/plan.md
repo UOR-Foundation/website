@@ -1,132 +1,115 @@
 
 
-# Canonical Ontology Module — W3C SKOS-Based Terminology System
+# Design Axioms Module — Declarative System Design Parameters
 
-## Assessment
+## Concept
 
-After auditing from a CNCF developer perspective, the system has strong architectural alignment but suffers from three problems:
+The system already enforces **terminology** (ontology module) and **tech selection** (tech-stack.ts) as declarative, auditable registries. What's missing is a third pillar: **design axioms** — the philosophical and aesthetic constraints that make this system feel like itself.
 
-1. **Terminology fragmentation** — "Sovereign Bus", "Sovereign Boot", "Sovereign Reconciler", "Sovereign Spaces" are opaque to CNCF developers. The word "Sovereign" appears 1,826 times across 157 files but maps to standard concepts (Service Mesh, Init System, Controller, Namespaces).
+Each axiom is a content-addressed JSON-LD blueprint (like an `AppBlueprint` but for design) that declares a constraint, its rationale, enforcement criteria, and how to verify compliance. Axioms are grouped into swappable **design systems** (e.g., "Algebrica", "Foundation", "Custom") so users can eventually switch or extend them.
 
-2. **No single ontology** — terminology mappings exist in three disconnected places: `devops-glossary.ts` (18 entries), `cncf-compat/categories.ts` (22 entries), and `namespace-registry.ts` (16 entries). None are linked. None support multiple audiences.
+## Algebrica Design Axioms (Extracted from Codebase)
 
-3. **No enforcement** — the glossary exists but nothing verifies that docstrings, UI labels, or log messages actually use consistent terminology.
+From the existing implementation, these are the core Algebrica design principles already embedded but never formally declared:
 
-## Solution: W3C SKOS Vocabulary Module
+| # | Axiom | Constraint | Currently Enforced? |
+|---|---|---|---|
+| A1 | **Monochrome Substrate** | All chrome uses zinc-scale (#0c0c0c → #fafafa). Color is reserved for semantic signals only (error=red, success=green, identity=gold). | No — scattered as inline values |
+| A2 | **Golden Ratio Rhythm** | All spacing follows phi-scaled steps (1.618). Already in CSS vars but not enforced. | Partially (CSS vars exist) |
+| A3 | **Prime-Based Spacing** | Micro-spacing uses prime numbers (2,3,5,7,11,13...) for non-repeating visual rhythm. | Partially (holo-space vars) |
+| A4 | **Content-Addressed Identity** | Every renderable object must have a derivable UOR address. No opaque IDs. | Yes (via singleProofHash) |
+| A5 | **Raw Numbers, No Chrome** | Stats display as bold value + tiny label. No cards, no borders, no decorative containers around data. | Informally (StatBlock pattern) |
+| A6 | **Radial Topology** | Knowledge visualizations use radial 1-hop layouts with center-focused composition. No force-directed chaos. | Informally (ConceptMap) |
+| A7 | **Compositor-First Animation** | All animations use `transform` and `opacity` only (GPU-composited). No layout-triggering properties. | Partially (performance gate) |
+| A8 | **Terminal Aesthetic for System Operations** | System-level operations (boot, deploy, inspect) use monospace terminal UI. | Yes (ContainerBootOverlay) |
+| A9 | **One Framework Per Function** | No overlapping responsibilities in the stack. Already in tech-stack.ts. | Yes (selection policy) |
+| A10 | **Declarative Over Imperative** | All system state is described declaratively (JSON-LD blueprints), never constructed imperatively. | Mostly (AppBlueprints) |
+| A11 | **Protective Stillness** | UI reduces visual noise proportional to focus depth. Deep work = less chrome. | Yes (FocusVignette) |
+| A12 | **Self-Declaring System** | The system describes its own architecture at boot. No hidden configuration. | Yes (tech-stack manifest) |
 
-**W3C SKOS** (Simple Knowledge Organization System) is the battle-tested standard for exactly this problem — it was designed by W3C specifically for managing controlled vocabularies with multiple labels per concept, multilingual support, and hierarchical relationships. It's used by the EU, Library of Congress, UNESCO, and most knowledge management systems. It already exists in our JSON-LD context (`skos: "http://www.w3.org/2004/02/skos/core#"`).
-
-The plan: create a **single SKOS-based ontology module** that declares every system concept once, with audience-specific labels (developer, user, ML scientist), canonical links to UOR namespaces, and a compliance gate that enforces consistency.
-
-### Architecture
+## Architecture
 
 ```text
-src/modules/ontology/
+src/modules/axioms/
+├── types.ts              ← DesignAxiom + DesignSystem types
+├── registry.ts           ← The canonical axiom registry (Algebrica defaults)
+├── resolve.ts            ← Lookup, filter, query axioms
+├── gate.ts               ← Compliance gate: verify axiom adherence
 ├── index.ts              ← Barrel export
-├── types.ts              ← SKOS concept types  
-├── vocabulary.ts         ← THE canonical vocabulary (all concepts)
-├── profiles.ts           ← Audience profiles (developer, user, scientist)
-├── resolve.ts            ← Lookup: internal term → profile-specific label
-├── gate.ts               ← Compliance gate: verify terminology consistency
 └── module.json           ← Module manifest
 ```
 
-### SKOS Concept Model
-
-Each concept in the vocabulary is a W3C SKOS Concept with:
+### DesignAxiom Type (the Blueprint)
 
 ```typescript
-interface SkosConcept {
-  "@id": string;                    // e.g. "uor:ServiceMesh"
-  "@type": "skos:Concept";
-  "skos:prefLabel": string;         // Canonical label: "Service Mesh"
-  "skos:altLabel": string[];        // ["Sovereign Bus", "Message Bus"]
-  "skos:definition": string;        // What it IS
-  "skos:scopeNote": string;         // When to use it
-  "skos:inScheme": string;          // "uor:SystemOntology"
-  "skos:broader"?: string;          // Parent concept
-  "skos:narrower"?: string[];       // Child concepts
-  "skos:exactMatch"?: string[];     // External URIs (K8s docs, CNCF)
-  "skos:related"?: string[];        // Related concepts
+interface DesignAxiom {
+  "@id": string;                    // "axiom:MonochromeSubstrate"
+  "@type": "uor:DesignAxiom";
   
-  // UOR extensions
-  "uor:namespace"?: string;         // Canonical UOR namespace prefix
-  "uor:cncfCategory"?: string;      // CNCF landscape category
-  "uor:k8sEquivalent"?: string;     // K8s resource name
-  "uor:cncfProject"?: string;       // CNCF project name
+  // Identity
+  label: string;                    // "Monochrome Substrate"
+  category: AxiomCategory;         // "visual" | "interaction" | "architecture" | "data"
+  
+  // Philosophy  
+  principle: string;               // One-sentence law
+  rationale: string;               // WHY this constraint exists
+  
+  // Enforcement
+  constraint: AxiomConstraint;     // Machine-readable rule
+  verification: VerificationSpec;  // How the gate checks it
+  
+  // Lineage
+  "uor:derivedFrom"?: string;     // Link to UOR axiom
+  "skos:related"?: string[];      // Ontology concept links
+  
+  // Versioning
+  version: string;
+  supersedes?: string;             // Previous axiom @id
 }
 ```
 
-### Audience Profiles
+### DesignSystem (Swappable Axiom Bundle)
 
 ```typescript
-type OntologyProfile = "developer" | "user" | "scientist";
-
-// Developer profile: "Service Mesh", "Container Runtime", "Reconciliation Controller"
-// User profile:      "Message System", "App Engine", "Auto-repair"
-// Scientist profile: "Communication Graph", "Computation Substrate", "Convergence Loop"
+interface DesignSystem {
+  "@id": string;                   // "ds:Algebrica"
+  "@type": "uor:DesignSystem";
+  label: string;
+  version: string;
+  axioms: DesignAxiom[];
+  cssTokens: Record<string, string>;  // Maps to CSS custom properties
+  extends?: string;                   // Parent design system
+}
 ```
 
-Each profile selects which `skos:prefLabel` vs `skos:altLabel` to surface in the UI. The vocabulary is one; the rendering varies.
+### Compliance Gate
 
-### Core Vocabulary (~40 concepts)
+The `axioms-compliance-gate.ts` checks:
+- **Visual axioms**: CSS token coverage (are golden-ratio vars present? are monochrome values used correctly?)
+- **Architecture axioms**: Module patterns (does every module have a manifest? are blueprints declarative?)
+- **Interaction axioms**: Animation property validation (only transform/opacity?)
+- **Data axioms**: Content-addressing coverage
 
-Consolidating the existing glossary + categories + namespace registry into one canonical list:
+Each axiom's `verification` field contains a machine-readable spec that the gate interprets — pattern checks, CSS var presence, import analysis.
 
-| Concept ID | Developer Label | User Label | UOR Namespace | CNCF Match |
-|---|---|---|---|---|
-| `ServiceMesh` | Service Mesh | Message System | `bus/` | Istio, Linkerd |
-| `ContainerRuntime` | Container Runtime | App Engine | `compose/` | containerd |
-| `Reconciler` | Reconciliation Controller | Auto-repair | `compose/` | Kubernetes |
-| `DeploymentManifest` | Deployment Manifest | App Blueprint | `compose/` | Helm |
-| `InitSystem` | Init System | Boot Sequence | `boot/` | systemd |
-| `Container` | Container | App Instance | `uns/build/` | Docker |
-| `IntegrityAttestation` | Integrity Attestation | Security Seal | `cert/` | Sigstore |
-| `HealthProbe` | Liveness Probe | Health Check | `observable/` | K8s probes |
-| `ClusterEvent` | Cluster Event | System Event | `observable/` | K8s events |
-| `ServiceRegistry` | Service Registry | Module Directory | `bus/` | etcd |
-| `ServiceDiscovery` | Service Discovery | Name Lookup | `uns/core/` | CoreDNS |
-| `HPA` | Horizontal Pod Autoscaler | Auto-scaler | `compose/` | KEDA |
-| `RuntimeSecurity` | Runtime Security | Security Shield | `uns/shield/` | Falco, OPA |
-| ... | ... | ... | ... | ... |
+## How It Works End-to-End
 
-### Compliance Gate: `ontology-consistency-gate.ts`
-
-Verifies:
-- Every module docstring header uses a term from the vocabulary (not ad-hoc terminology)
-- No orphaned terms: every `skos:altLabel` resolves to a known concept
-- All CNCF categories have a corresponding ontology concept
-- All namespace registry entries have a corresponding ontology concept
-- Cross-references: `devops-glossary.ts` entries are a strict subset of the ontology
-
-### Integration Points
-
-1. **Replaces `devops-glossary.ts`** — the ontology subsumes it (backward-compat re-export kept)
-2. **Links to `namespace-registry.ts`** — each concept references its UOR namespace
-3. **Links to `cncf-compat/categories.ts`** — each concept references its CNCF category
-4. **Bus operation** — `bus.call("ontology/resolve", { term, profile })` returns the audience-appropriate label
-5. **React hook** — `useOntologyLabel(term, profile)` for UI components
+1. **Define**: Axioms are declared in `registry.ts` as a `DesignSystem` — content-addressed, versioned, swappable
+2. **Store**: Lives in `src/modules/axioms/` as pure TypeScript (serializable to JSON-LD for the knowledge graph)
+3. **Present**: Axioms are queryable via `resolveAxiom()` and renderable via a React hook `useAxiom(id)`
+4. **Enforce**: The compliance gate runs all axiom verification specs and reports violations with specific file + line references
+5. **Extend**: New axioms are added to the registry; new design systems can extend Algebrica or replace it entirely
 
 ## Files
 
 | File | Action | Purpose |
 |---|---|---|
-| `src/modules/ontology/types.ts` | Create | SKOS concept types + profile types |
-| `src/modules/ontology/vocabulary.ts` | Create | ~40 canonical concepts with full SKOS metadata |
-| `src/modules/ontology/profiles.ts` | Create | 3 audience profiles (developer/user/scientist) |
-| `src/modules/ontology/resolve.ts` | Create | Lookup functions + React hook |
-| `src/modules/ontology/gate.ts` | Create | Ontology consistency compliance gate |
-| `src/modules/ontology/index.ts` | Create | Barrel export |
-| `src/modules/ontology/module.json` | Create | Module manifest |
-| `src/modules/canonical-compliance/devops-glossary.ts` | Update | Re-export from ontology for backward compat |
-| `src/modules/canonical-compliance/gates/index.ts` | Update | Register ontology gate |
-| `src/modules/canonical-compliance/index.ts` | Update | Export ontology types |
-
-## Technical Notes
-
-- Uses W3C SKOS, which is already declared in our JSON-LD context (`skos` namespace)
-- Each concept is valid JSON-LD — can be serialized to the knowledge graph
-- The vocabulary is a `skos:ConceptScheme` with a content-addressed CID
-- No external dependencies — pure TypeScript, runs in browser
-- Profiles are composable: a "devops" profile could extend "developer" with K8s-specific labels
+| `src/modules/axioms/types.ts` | Create | DesignAxiom, DesignSystem, AxiomCategory, VerificationSpec types |
+| `src/modules/axioms/registry.ts` | Create | Algebrica design system with 12 axioms |
+| `src/modules/axioms/resolve.ts` | Create | Lookup, filter, React hook |
+| `src/modules/axioms/gate.ts` | Create | Compliance gate verifying axiom adherence |
+| `src/modules/axioms/index.ts` | Create | Barrel export + gate registration |
+| `src/modules/axioms/module.json` | Create | Module manifest |
+| `src/modules/canonical-compliance/gates/index.ts` | Update | Register axiom gate |
+| `src/modules/canonical-compliance/index.ts` | Update | Re-export axiom types |
 
