@@ -13,9 +13,8 @@
  */
 
 import { useState, useCallback, useRef } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/modules/core/ui/tabs";
+import { ScrollArea } from "@/modules/core/ui/scroll-area";
 import {
   Hammer, Play, Rocket, FileText, Download, Square, RotateCcw,
   ChevronDown, ChevronUp, Layers, Box, Tag, CheckCircle2, AlertCircle,
@@ -206,17 +205,16 @@ export default function AppBuilderPage() {
     try {
       const manifest: AppManifest = {
         "@context": {} as any,
-        "@type": "uor:AppManifest",
-        "u:canonicalId": buildResult.image.canonicalId,
+        "@type": "app:Manifest",
         "app:name": appName,
         "app:version": appVersion,
         "app:sourceUrl": "",
-        "app:tech": [],
         "app:entrypoint": "",
-        "app:fileCount": buildResult.fileLayers.length,
-        "app:totalBytes": buildResult.image.sizeBytes,
-        "app:createdAt": new Date().toISOString(),
-        "app:builderCanonicalId": "uor:builder:app-builder-v1",
+        "app:tech": [],
+        "app:deployedAt": new Date().toISOString(),
+        "app:developerCanonicalId": "uor:builder:app-builder-v1",
+        "partition:irreducibleDensity": 1,
+        "u:canonicalId": buildResult.image.canonicalId,
       };
 
       const result = await shipApp({
