@@ -2131,6 +2131,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          snapshot_data: Json | null
           target_lens: string
           target_url: string
           token: string
@@ -2140,6 +2141,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          snapshot_data?: Json | null
           target_lens?: string
           target_url: string
           token: string
@@ -2149,6 +2151,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          snapshot_data?: Json | null
           target_lens?: string
           target_url?: string
           token?: string
