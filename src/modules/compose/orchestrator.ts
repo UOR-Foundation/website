@@ -73,6 +73,10 @@ class Orchestrator {
   // ── Circuit Breaker / Restart State ───────────────────────────────────
   private _restartAttempts = new Map<string, number>(); // blueprintName → attempt count
 
+  // ── Sovereign Reconciler (K8s Control Plane) ─────────────────────────
+  private _reconciler = new SovereignReconciler();
+  private _autoScaler = new SovereignAutoScaler();
+
   // ── Initialization ────────────────────────────────────────────────────
 
   /**
