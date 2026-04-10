@@ -621,8 +621,12 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
               )}
             </div>
           </div>
-          <div style={{ position: "sticky", top: 80, alignSelf: "start" }}>
+          <div style={{ position: "sticky", top: 80, alignSelf: "start", display: "flex", flexDirection: "column", gap: 12 }}>
             <Infobox title={title} wikidata={wikidata} />
+            <KnowledgeSidebar
+              currentTopic={title}
+              onNavigate={() => {}}
+            />
           </div>
         </div>
       ) : (
