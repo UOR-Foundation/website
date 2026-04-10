@@ -59,10 +59,10 @@ export function SystemTable({ report, onLayerClick }: SystemTableProps) {
     <div className="border border-white/[0.06] rounded-lg overflow-hidden">
       <div className="grid grid-cols-[2fr_80px_80px_120px_80px] gap-2 px-4 py-2.5 text-[9px] font-mono uppercase tracking-widest text-zinc-600 border-b border-white/[0.04] bg-white/[0.015]">
         <span>Layer</span>
-        <span className="text-center">Modules</span>
-        <span className="text-center">Pipelines</span>
+        <span className="text-center">Packages</span>
+        <span className="text-center">Exports</span>
         <span>Grounding</span>
-        <span className="text-center">Primitives</span>
+        <span className="text-center">Operations</span>
       </div>
       {layerStats.map((s, i) => (
         <motion.div
@@ -108,10 +108,10 @@ export function ModuleTable({ report, filterModules, onModuleClick }: ModuleTabl
   return (
     <div className="border border-white/[0.06] rounded-lg overflow-hidden">
       <div className="grid grid-cols-[2fr_80px_120px_80px] gap-2 px-4 py-2.5 text-[9px] font-mono uppercase tracking-widest text-zinc-600 border-b border-white/[0.04] bg-white/[0.015]">
-        <span>Module</span>
-        <span className="text-center">Pipelines</span>
+        <span>Package</span>
+        <span className="text-center">Exports</span>
         <span>Grounding</span>
-        <span className="text-center">Primitives</span>
+        <span className="text-center">Operations</span>
       </div>
       {modules.map((m, i) => (
         <motion.div
@@ -151,10 +151,10 @@ export function PipelineTable({ report, filterModule, onPipelineClick }: Pipelin
   return (
     <div className="border border-white/[0.06] rounded-lg overflow-hidden">
       <div className="grid grid-cols-[1fr_1fr_80px_2fr] gap-2 px-4 py-2.5 text-[9px] font-mono uppercase tracking-widest text-zinc-600 border-b border-white/[0.04] bg-white/[0.015]">
-        {!filterModule && <span>Module</span>}
+        {!filterModule && <span>Package</span>}
         <span>Export</span>
         <span>Status</span>
-        <span>Primitive Chain</span>
+        <span>Operation Chain</span>
         {filterModule && <span />}
       </div>
       <div className="max-h-[500px] overflow-y-auto">
@@ -224,7 +224,7 @@ export function PrimitiveGrid({ report, filterAtoms, onAtomClick }: PrimitiveGri
   return (
     <div>
       <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 mb-3">
-        Primitives — {atoms.length} {filterAtoms ? "in scope" : "total"}
+        Operations — {atoms.length} {filterAtoms ? "in scope" : "total"}
       </div>
       <div className="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-12 lg:grid-cols-14 xl:grid-cols-16 gap-1">
         {atoms.map((atom) => {

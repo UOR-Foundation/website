@@ -112,7 +112,7 @@ export default function ContainerBootOverlay({ appId, appLabel, onReady }: Props
       updatePhase("container", { status: "running" });
       const p2 = await runPhase(phases[1], async () => {
         if (instanceId) {
-          const { getContainer } = await import("@/modules/uns/build/container");
+          const { getContainer } = await import("@/modules/uns/build/container.ts");
           const c = getContainer(instanceId);
           if (c) {
             containerId = c.id;

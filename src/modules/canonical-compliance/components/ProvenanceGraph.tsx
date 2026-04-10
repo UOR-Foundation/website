@@ -18,10 +18,11 @@ const CATEGORY_COLORS: Record<AtomCategory, string> = {
 };
 
 const LAYER_COLORS: Record<string, string> = {
-  engine: "hsl(160 40% 45%)",
-  names: "hsl(210 50% 50%)",
-  build: "hsl(35 60% 50%)",
+  kernel: "hsl(160 40% 45%)",
+  protocol: "hsl(210 50% 50%)",
+  runtime: "hsl(35 60% 50%)",
   services: "hsl(270 40% 55%)",
+  applications: "hsl(340 45% 55%)",
 };
 
 interface GraphNode {
@@ -76,7 +77,7 @@ export default function ProvenanceGraph({ findings, selectedCategory, search, on
           vx: 0, vy: 0, r: 24,
         });
       }
-      // Connect layers sequentially (Engine → Names → Build → Services)
+      // Connect layers sequentially (Kernel → Protocol → Runtime → Services → Applications)
       for (let i = 0; i < SYSTEM_LAYERS.length - 1; i++) {
         e.push({ source: `layer:${SYSTEM_LAYERS[i].id}`, target: `layer:${SYSTEM_LAYERS[i + 1].id}`, predicate: "feeds" });
       }
@@ -332,9 +333,9 @@ export default function ProvenanceGraph({ findings, selectedCategory, search, on
         {(zoomLevel === 3
           ? SYSTEM_LAYERS.map((l) => ({ label: l.label, color: LAYER_COLORS[l.id] }))
           : [
-              { label: "Primitive", color: "hsl(160 30% 50%)" },
-              { label: "Module", color: "hsl(210 20% 50%)" },
-              { label: "Pipeline", color: "hsl(0 0% 45%)" },
+              { label: "Operation", color: "hsl(160 30% 50%)" },
+              { label: "Package", color: "hsl(210 20% 50%)" },
+              { label: "Export", color: "hsl(0 0% 45%)" },
             ]
         ).map((l) => (
           <div key={l.label} className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-500">

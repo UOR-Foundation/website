@@ -8,17 +8,17 @@ import { Minus, Plus } from "lucide-react";
 export type ZoomLevel = 0 | 1 | 2 | 3;
 
 export const ZOOM_LABELS: Record<ZoomLevel, string> = {
-  0: "Primitives",
-  1: "Pipelines",
-  2: "Modules",
-  3: "System",
+  0: "Operations",
+  1: "Exports",
+  2: "Packages",
+  3: "Architecture",
 };
 
 const ZOOM_DESCRIPTIONS: Record<ZoomLevel, string> = {
-  0: "Atomic operations & types",
-  1: "Export chains of primitives",
-  2: "Logical module groups",
-  3: "Architectural layers",
+  0: "Atomic ops, types & ring elements",
+  1: "Public API surfaces & function chains",
+  2: "Logical package groups",
+  3: "System-wide architectural tiers",
 };
 
 interface ZoomControlsProps {
