@@ -1,132 +1,126 @@
 
 
-# Time Machine — Continuous Auto-Save & System Rollback
+# Docker Analysis: What We Have, What's Missing, and What Form It Should Take
 
-## Context
+## Current State — We Already Have 90% of Docker
 
-The system already has strong building blocks:
-- **SessionSnapshot** (session-state.ts): captures window layout, app buffers, theme, scroll positions — but only keeps 10 in a ring buffer
-- **GrafeoDB**: persists the knowledge graph to IndexedDB with export/import (N-Quads, JSON-LD)
-- **SovereignStore**: KV persistence (Tauri or localStorage)
-- **Orchestrator**: tracks all running app instances and their state
-- **AppKernel.seal()**: content-addresses runtime state
+After a thorough review, the system already implements virtually every Docker primitive, split across two modules:
 
-What's missing is a **unified checkpoint** that captures *everything* atomically — desktop state, knowledge graph, orchestrator, vault state, and user settings — with configurable auto-save intervals and effortless rollback.
+### `uns/build/` — The "docker build + ship" layer
+| Docker Feature | UOR Equivalent | Status |
+|---|---|---|
+| Dockerfile | `uorfile.ts` — Uorfile parser (identical syntax, full backward compat) | Complete |
+| `docker build` | `buildImage()` — content-addressed layered images | Complete |
+| `docker push/pull` | `registry.ts` — tag, push, pull, inspect, history | Complete |
+| `docker tag` | `tagImage()` / `resolveTag()` | Complete |
+| `docker secret` | `secrets.ts` — AES-256-GCM encrypted secrets | Complete |
+| `docker compose` | `compose.ts` — multi-service spec, topological sort, up/down/ps/scale | Complete |
+| Docker image wrapping | `docker-compat.ts` — wrap Docker refs as UOR images | Complete |
+| Deployment snapshots | `snapshot.ts` — immutable version chain | Complete |
 
-## Architecture
+### `compose/` — The "docker run + orchestrate" layer (our Kubernetes)
+| Docker Feature | UOR Equivalent | Status |
+|---|---|---|
+| Container isolation | `AppKernel` — per-app bus proxy with permission enforcement, rate limits | Complete |
+| Container lifecycle | `orchestrator.ts` — start/stop/restart/healthcheck | Complete |
+| Health checks | Circuit breaker with exponential backoff | Complete |
+| Resource limits | Worker pool governance (`DisjointBudget`) | Complete |
+| Orchestration | `reconciler.ts` + `auto-scaler.ts` + `rolling-update.ts` (just added) | Complete |
+
+## What's Missing — The Gap
+
+There are exactly **3 small gaps** between what Docker provides and what the system currently offers:
+
+1. **No unified "Container" abstraction** — Docker's core mental model is the *container* (a running instance of an image). We have `UorImage` (build artifact) and `AppInstance` (running app), but no explicit `UorContainer` that bridges the two. The image-builder produces images; the orchestrator runs blueprints. The connection between "this image" and "this running instance" is implicit.
+
+2. **No container lifecycle events API** — Docker exposes `docker events` (create, start, die, stop, kill, pause, unpause). We have `ComposeEvent` in the orchestrator, but no equivalent at the container/image level in `uns/build/`.
+
+3. **No `docker exec` equivalent** — We have `uor exec` mapped in the verb table, but the actual implementation (send a message into a running container's context) doesn't exist yet.
+
+## Should We Call It an Application?
+
+**No. Docker should remain a module — specifically, it already is one.**
+
+Here's the reasoning:
+
+- **Docker is infrastructure, not a user-facing window.** Users don't "open Docker" — they build, ship, and run things. Docker is the substrate that makes applications possible, not an application itself.
+- **It's already implemented as `uns/build/`** — the entire Build→Ship pipeline lives there.
+- **The runtime half is `compose/`** — the Run layer (AppKernel + Orchestrator + Reconciler) is already a module.
+- **In traditional systems, Docker is a daemon (background service)**, not a GUI application. Same principle applies here.
+
+However, what *would* be valuable is making the Docker-equivalent capabilities **clearly identifiable and discoverable** — so someone coming from a Docker background immediately recognizes the mapping.
+
+## Recommended Plan
+
+### 1. Formalize the Container Abstraction (small, high-value)
+
+Add a `UorContainer` type to `uns/build/` that explicitly bridges `UorImage` → running instance. This is the missing mental model:
 
 ```text
-┌────────────────────────────────────────────────────────────────┐
-│  Time Machine App (standalone desktop app)                      │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  Visual Timeline · Checkpoint List · Settings Panel      │  │
-│  │  [Rewind Slider] ─────●────────── [Now]                  │  │
-│  │  #14 Today 3:42pm  ●  Auto-save                          │  │
-│  │  #13 Today 3:27pm  ●  Auto-save                          │  │
-│  │  #12 Today 3:12pm  ●  Manual checkpoint                  │  │
-│  │  ...                                                      │  │
-│  │  [Restore]  [Fork from here]  [Compare]                  │  │
-│  └──────────────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────────────┘
+UorImage (immutable artifact)
+    ↓ instantiate
+UorContainer (running instance with state, env, mounts)
+    ↓ managed by
+AppKernel (isolation + permissions)
+    ↓ orchestrated by
+Reconciler (desired-state enforcement)
 ```
 
-## What a Checkpoint Captures (Exhaustive)
+**New file**: `src/modules/uns/build/container.ts`
+- `UorContainer` type: image ref, state, env, mounts, ports, creation time
+- `createContainer()`, `startContainer()`, `stopContainer()`, `removeContainer()`, `execContainer()`
+- Maps to `AppKernel` instantiation under the hood
+- Content-addressed via `singleProofHash`
 
-| Layer | Data Captured | Method |
-|-------|--------------|--------|
-| Desktop | Window positions, sizes, z-order, active window, theme | `useWindowManager` state |
-| App Buffers | Scroll positions, draft content, cursor, active tabs | `AppBufferState[]` from continuity |
-| Knowledge Graph | Full N-Quads dump (all quads, all graphs) | `grafeoStore.dumpNQuads()` |
-| Orchestrator | Running instances, call counts, sealed hashes | `orchestrator.state()` snapshot |
-| User Settings | Theme, autosave interval, preferences | SovereignStore KV dump |
-| Vault Metadata | Encrypted file index (not raw files — those are immutable CID blobs) | Vault slot manifest |
+### 2. Update `uns/build/index.ts` with Clear Docker Section Headers
 
-A checkpoint is content-addressed via `singleProofHash`, producing a verifiable CID. Checkpoints form a chain (each references its parent CID), enabling both linear rollback and forking.
+Reorganize the barrel export with explicit section headers that map to Docker concepts, making the equivalence unmistakable:
 
-## Storage Strategy (Minimizing Overhead)
+```text
+// ── Container Runtime (docker run / docker exec) ───────────
+// ── Image Build (docker build / Dockerfile) ────────────────
+// ── Image Registry (docker push / pull / tag) ──────────────
+// ── Docker Compose (docker compose up/down) ────────────────
+// ── Secrets (docker secret create/ls/rm) ───────────────────
+// ── Docker Compatibility (docker image wrapping) ───────────
+// ── Deployment Snapshots (docker checkpoint) ───────────────
+```
 
-- **Incremental by default**: The first checkpoint stores the full N-Quads dump. Subsequent auto-save checkpoints store only a **delta** — the quads added/removed since the last checkpoint — computed by comparing quad counts and tracking change events.
-- **Full snapshot on demand**: Manual "Create Checkpoint" always stores the full state for maximum safety.
-- **Retention policy**: User-configurable max checkpoints (default 50). Oldest auto-saves are pruned first; manual checkpoints are never auto-pruned.
-- **Storage**: IndexedDB via a dedicated `uor-time-machine` store (separate from the graph DB). Each checkpoint is ~10-50KB for desktop state + delta quads; full snapshots scale with graph size.
+### 3. Wire `container.ts` to `compose/orchestrator.ts`
 
-## Rollback Mechanics
+When the orchestrator starts an app, it creates a `UorContainer` from the blueprint's image reference, then wraps it in an `AppKernel`. This closes the loop:
 
-**Restore** replaces the current system state with the checkpoint:
-1. Pause the auto-save timer
-2. Clear the knowledge graph (`grafeoStore.clear()`)
-3. Reload N-Quads from the checkpoint (reconstructed from base + deltas)
-4. Restore window layout via `useWindowManager` state injection
-5. Restore orchestrator instance states
-6. Resume auto-save timer with a fresh checkpoint as the new head
-
-**Fork** creates a branch: the current state is preserved as a named branch, and the system restores to the selected checkpoint. The user can switch branches later.
-
-## Implementation Plan
+```text
+Blueprint → Image → Container → Kernel → Reconciler
+(what)      (how)   (instance)  (isolation) (control)
+```
 
 ### Files to Create
-
 | File | Purpose |
-|------|---------|
-| `src/modules/time-machine/types.ts` | `SystemCheckpoint`, `CheckpointMeta`, `TimeMachineConfig` types |
-| `src/modules/time-machine/checkpoint-store.ts` | IndexedDB-backed checkpoint storage with retention policy |
-| `src/modules/time-machine/checkpoint-capture.ts` | Captures full system state into a `SystemCheckpoint` |
-| `src/modules/time-machine/checkpoint-restore.ts` | Restores system state from a checkpoint (graph, desktop, orchestrator) |
-| `src/modules/time-machine/auto-save.ts` | Interval-based auto-save engine with user-configurable timing |
-| `src/modules/time-machine/hooks.ts` | `useTimeMachine()`, `useCheckpointList()`, `useAutoSave()` React hooks |
-| `src/modules/time-machine/index.ts` | Barrel export |
-| `src/modules/time-machine/pages/TimeMachinePage.tsx` | Standalone app UI: timeline, restore, fork, settings |
+|---|---|
+| `src/modules/uns/build/container.ts` | Container runtime: create, start, stop, exec, list |
 
 ### Files to Modify
-
 | File | Change |
-|------|--------|
-| `src/modules/compose/static-blueprints.ts` | Add Time Machine blueprint (category OBSERVE, icon Clock) |
-| `src/modules/desktop/lib/desktop-apps.ts` | Add `Clock` to icon map |
+|---|---|
+| `src/modules/uns/build/index.ts` | Add container exports + Docker-mapping section headers |
+| `src/modules/compose/orchestrator.ts` | Create `UorContainer` during `_startInstance()` |
 
-### Key Type: SystemCheckpoint
+### What We Should NOT Do
 
-```typescript
-interface SystemCheckpoint {
-  id: string;                    // Content-addressed CID
-  sequence: number;              // Monotonic sequence number
-  parentId: string | null;       // Previous checkpoint CID (chain)
-  branchName: string;            // "main" or user-defined fork name
-  timestamp: string;             // ISO creation time
-  type: "auto" | "manual";       // How it was created
-  label?: string;                // User-defined label for manual checkpoints
+- **Do not create a new category.** Module is correct.
+- **Do not create a Docker "application" window.** Docker is infrastructure.
+- **Do not duplicate isolation.** AppKernel already provides container-grade isolation (permission enforcement, rate limiting, payload accounting, sealing). Adding Linux-style namespaces/cgroups would be redundant in a browser-based virtual OS.
+- **Do not implement a separate container networking layer.** The Sovereign Bus already provides the inter-service communication substrate (equivalent to Docker's bridge network).
 
-  desktop: SessionSnapshot;      // Full desktop state
-  graphNQuads: string;           // Full or delta N-Quads
-  isDelta: boolean;              // If true, graphNQuads is a delta
-  baseCheckpointId?: string;     // If delta, the full snapshot it's relative to
-  orchestratorState: object;     // Serialized orchestrator instances
-  settings: Record<string, unknown>; // User preferences KV
-  sealHash: string;              // singleProofHash of the entire checkpoint
-}
-```
+### Why This Is Enough
 
-### Auto-Save Engine
+Your system is actually *more sophisticated* than Docker in several ways:
 
-- Default interval: 15 minutes (user-configurable: 5min / 10min / 15min / 30min / 1hr)
-- Only saves if state has actually changed (compares seal hash of current state vs last checkpoint)
-- Skips save during active drag/resize operations to avoid capturing transient state
-- Emits a subtle toast notification ("Checkpoint saved") with no interruption
+1. **Content-addressing is native** — Docker bolted on content-addressing later (image digests). UOR has it from the ground up.
+2. **Isolation is algebraic** — AppKernel enforces permissions via set intersection (And/HypercubeProjection), not OS-level hacks (namespaces/cgroups).
+3. **The build spec is a superset** — Uorfile accepts Dockerfiles *plus* UOR extensions (CANON, TRUST, SHIELD).
+4. **Orchestration is unified** — Docker needs a separate tool (Kubernetes) for orchestration. Your system has it built in (Reconciler).
 
-### Time Machine App UI
-
-A standalone desktop app with:
-- **Timeline view**: Vertical list of checkpoints, newest first, with sequence number, timestamp, and type badge (auto/manual)
-- **Rewind slider**: Drag to scrub through checkpoints visually
-- **Restore button**: One-click rollback with confirmation dialog
-- **Fork button**: Creates a named branch from the selected checkpoint
-- **Compare view**: Side-by-side diff of two checkpoints (quad count changes, window layout changes)
-- **Settings panel**: Auto-save interval, max checkpoints, retention rules
-
-### Performance Guardrails
-
-- Auto-save runs in a `requestIdleCallback` to avoid blocking the UI
-- N-Quads dump is the most expensive operation (~50-200ms for a large graph); only done for full snapshots
-- Delta computation uses a lightweight change counter, not a full diff
-- Checkpoint storage is in a separate IndexedDB database, so it doesn't compete with GrafeoDB I/O
+The container abstraction is the one missing piece that makes this architecture legible to someone coming from Docker. Once it's in place, the full Docker→UOR mapping is explicit and complete.
 
