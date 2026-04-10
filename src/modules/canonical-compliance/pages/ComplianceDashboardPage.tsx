@@ -1,5 +1,5 @@
-import { useMemo, useState, useCallback, useEffect } from "react";
-import { Download, LayoutGrid, Share2 } from "lucide-react";
+import { useMemo, useState, useCallback, useEffect, lazy, Suspense } from "react";
+import { Download, LayoutGrid, Share2, ShieldCheck } from "lucide-react";
 import { runAudit, type AuditFinding, type AuditReport } from "../audit";
 import { ALL_ATOMS, ATOM_INDEX, type AtomCategory, type UorAtom, FIRMWARE_VERSION } from "../atoms";
 import { PROVENANCE_REGISTRY, SYSTEM_LAYERS, type SystemLayer } from "../provenance-map";
@@ -11,6 +11,8 @@ import ZoomControls, { type ZoomLevel, ZOOM_LABELS } from "../components/ZoomCon
 import { SystemTable, ModuleTable, PipelineTable, PrimitiveGrid } from "../components/LevelTables";
 import StatBlock from "@/modules/core/components/StatBlock";
 import Breadcrumbs from "@/modules/core/components/Breadcrumbs";
+
+const HealthGatesPanel = lazy(() => import("../components/HealthGatesPanel"));
 
 // ── Zoom Context ────────────────────────────────────────────────
 
@@ -26,7 +28,7 @@ export default function ComplianceDashboardPage() {
   const report = useMemo<AuditReport>(() => runAudit(), []);
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(3);
   const [zoomContext, setZoomContext] = useState<ZoomContext>({});
-  const [view, setView] = useState<"table" | "graph">("table");
+  const [view, setView] = useState<"table" | "graph" | "gates">("table");
   const [search, setSearch] = useState("");
   const [selectedNode, setSelectedNode] = useState<SelectedNode | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<AtomCategory | null>(null);
@@ -183,6 +185,14 @@ export default function ComplianceDashboardPage() {
               >
                 <Share2 size={11} />
               </button>
+              <button
+                onClick={() => setView("gates")}
+                className={`px-2.5 py-1.5 text-xs font-mono flex items-center gap-1 transition-colors ${
+                  view === "gates" ? "bg-white/[0.08] text-zinc-200" : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                <ShieldCheck size={11} />
+              </button>
             </div>
 
             <button
@@ -209,7 +219,11 @@ export default function ComplianceDashboardPage() {
 
         {/* Content Area */}
         <div className="flex-1 overflow-hidden">
-          {view === "table" ? (
+          {view === "gates" ? (
+            <Suspense fallback={<div className="p-5 text-xs font-mono text-zinc-500">Loading gates…</div>}>
+              <HealthGatesPanel />
+            </Suspense>
+          ) : view === "table" ? (
             <div className="h-full overflow-y-auto p-5">
               {zoomLevel === 3 && (
                 <SystemTable report={report} onLayerClick={handleLayerClick} />

@@ -34,7 +34,7 @@ import type {
   CompileProgress,
 } from "../whisper-compiler/types";
 import { DTYPE_BYTE_SIZE } from "../whisper-compiler/types";
-import { sha256 } from "@noble/hashes/sha2.js";
+import { sha256hex as sha256Hex } from "@/lib/crypto";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -67,13 +67,9 @@ function extractNodeParams(attrs: OnnxAttribute[]): Record<string, unknown> {
 
 function extractAllTensors(model: OnnxModel): OnnxTensor[] {
   const tensors: OnnxTensor[] = [];
-
-  // Initializers
   for (const t of model.graph.initializers) {
     if (t.rawData.byteLength > 0) tensors.push(t);
   }
-
-  // Constant nodes
   for (const node of model.graph.nodes) {
     if (node.opType === "Constant") {
       for (const attr of node.attributes) {
@@ -84,19 +80,9 @@ function extractAllTensors(model: OnnxModel): OnnxTensor[] {
       }
     }
   }
-
   return tensors;
 }
 
-async function sha256Hex(data: string): Promise<string> {
-  const encoded = new TextEncoder().encode(data);
-  const hash = sha256(new Uint8Array(encoded));
-  return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-// ── Compiler ───────────────────────────────────────────────────────────────
 
 export interface DiffusionCompileOptions {
   /** Which components to compile */
