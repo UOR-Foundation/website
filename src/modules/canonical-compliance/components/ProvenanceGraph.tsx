@@ -329,11 +329,14 @@ export default function ProvenanceGraph({ findings, selectedCategory, search, on
 
       {/* Legend */}
       <div className="absolute bottom-4 left-4 flex gap-3 z-10">
-        {[
-          { label: "Atom", color: "hsl(160 30% 50%)", shape: "circle" },
-          { label: "Module", color: "hsl(210 20% 50%)", shape: "square" },
-          { label: "Export", color: "hsl(0 0% 45%)", shape: "diamond" },
-        ].map((l) => (
+        {(zoomLevel === 3
+          ? SYSTEM_LAYERS.map((l) => ({ label: l.label, color: LAYER_COLORS[l.id] }))
+          : [
+              { label: "Primitive", color: "hsl(160 30% 50%)" },
+              { label: "Module", color: "hsl(210 20% 50%)" },
+              { label: "Pipeline", color: "hsl(0 0% 45%)" },
+            ]
+        ).map((l) => (
           <div key={l.label} className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-500">
             <span className="w-2.5 h-2.5 rounded-sm" style={{ background: l.color }} />
             {l.label}
@@ -387,7 +390,14 @@ export default function ProvenanceGraph({ findings, selectedCategory, search, on
               className="cursor-pointer"
               opacity={dimmed ? 0.15 : 1}
             >
-              {node.type === "module" ? (
+              {node.type === "layer" ? (
+                <rect
+                  x={node.x - node.r * 1.5} y={node.y - node.r * 0.8}
+                  width={node.r * 3} height={node.r * 1.6}
+                  rx={6} fill={color} stroke={isHovered ? "white" : "none"} strokeWidth={2}
+                  opacity={isHovered ? 1 : 0.85}
+                />
+              ) : node.type === "module" ? (
                 <rect
                   x={node.x - node.r} y={node.y - node.r * 0.7}
                   width={node.r * 2} height={node.r * 1.4}
