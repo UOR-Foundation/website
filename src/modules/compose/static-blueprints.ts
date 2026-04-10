@@ -305,4 +305,27 @@ export const STATIC_BLUEPRINTS: AppBlueprint[] = [
     iconName: "Clock",
     resources: {},
   },
+
+  // ── COMPLIANCE ─────────────────────────────────────────────────────────
+
+  {
+    "@context": CTX,
+    "@type": TYPE,
+    name: "compliance",
+    version: "2.0.0",
+    requires: [
+      "graph/query", "kernel/derive", "observable/metrics",
+    ],
+    permissions: ["graph/", "kernel/", "observable/"],
+    morphisms: [],
+    autoStart: false,
+    ui: { component: "@/modules/canonical-compliance/pages/ComplianceDashboardPage", lazy: true },
+    defaultSize: { w: 1200, h: 720 },
+    color: "hsl(160 60% 45%)",
+    category: "OBSERVE",
+    description: "UOR atom provenance audit and crate firmware conformance",
+    keywords: ["compliance", "audit", "atoms", "provenance", "crate", "uor", "firmware"],
+    iconName: "ShieldCheck",
+    resources: {},
+  },
 ];
