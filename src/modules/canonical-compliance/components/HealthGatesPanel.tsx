@@ -111,7 +111,13 @@ function GateCard({ gate }: { gate: GateResult }) {
 // ── Main Panel ────────────────────────────────────────────────────────────
 
 export default function HealthGatesPanel() {
-  const report = useMemo(() => runAllGates(), []);
+  const [report, setReport] = useState<GateReport | null>(null);
+
+  useEffect(() => {
+    runAllGatesAsync().then(setReport);
+  }, []);
+
+  if (!report) return <div className="p-4 text-sm text-muted-foreground">Running gates…</div>;
 
   const handleExport = () => {
     const md = exportGatesMarkdown(report);
