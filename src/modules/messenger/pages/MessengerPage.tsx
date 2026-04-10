@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import ChatSidebar from "../components/ChatSidebar";
 import UnifiedInbox from "../components/UnifiedInbox";
 import ConversationView from "../components/ConversationView";
 import ConversationInfo from "../components/ConversationInfo";
@@ -9,6 +8,9 @@ import NewGroupDialog from "../components/NewGroupDialog";
 import SharedFiles from "../components/SharedFiles";
 import BridgeConnectionPanel from "../components/BridgeConnectionPanel";
 import ContactMergeDialog from "../components/ContactMergeDialog";
+import ContactsPanel from "../components/ContactsPanel";
+import CallsPanel from "../components/CallsPanel";
+import SettingsPanel from "../components/SettingsPanel";
 import { useConversations } from "../lib/use-conversations";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthPrompt } from "@/modules/auth/useAuthPrompt";
@@ -16,6 +18,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { startOfflineSync } from "../lib/offline-queue";
 import { requestNotificationPermission } from "../lib/notifications";
 import { ShieldCheck, Lock, MessageSquare } from "lucide-react";
+
+type SidePanel = "inbox" | "contacts" | "calls" | "settings";
 
 export default function MessengerPage() {
   const { user, loading: authLoading } = useAuth();
@@ -28,9 +32,9 @@ export default function MessengerPage() {
   const [showSharedFiles, setShowSharedFiles] = useState(false);
   const [showBridges, setShowBridges] = useState(false);
   const [showMergeDialog, setShowMergeDialog] = useState(false);
+  const [sidePanel, setSidePanel] = useState<SidePanel>("inbox");
   const isMobile = useIsMobile();
 
-  // Start offline sync + request notification permission on mount
   useEffect(() => {
     startOfflineSync();
     requestNotificationPermission();
@@ -77,11 +81,27 @@ export default function MessengerPage() {
     );
   }
 
-  return (
-    <div className="h-screen w-screen bg-slate-950 flex overflow-hidden" style={{ fontFamily: "'DM Sans', -apple-system, sans-serif" }}>
-      {/* Chat sidebar */}
-      {showList && (
-        <div className={`${isMobile ? "w-full" : "w-[320px] min-w-[280px] max-w-[380px]"} h-full flex-shrink-0 border-r border-white/[0.04]`}>
+  const renderSidePanel = () => {
+    switch (sidePanel) {
+      case "contacts":
+        return (
+          <ContactsPanel
+            conversations={conversations}
+            onBack={() => setSidePanel("inbox")}
+            onSelectConversation={(id) => { setActiveConvoId(id); setSidePanel("inbox"); }}
+          />
+        );
+      case "calls":
+        return <CallsPanel onBack={() => setSidePanel("inbox")} />;
+      case "settings":
+        return (
+          <SettingsPanel
+            onBack={() => setSidePanel("inbox")}
+            onOpenBridges={() => { setShowBridges(true); setSidePanel("inbox"); }}
+          />
+        );
+      default:
+        return (
           <UnifiedInbox
             conversations={conversations}
             activeId={activeConvoId}
@@ -89,8 +109,21 @@ export default function MessengerPage() {
             onNewChat={() => setNewChatOpen(true)}
             onNewGroup={() => setNewGroupOpen(true)}
             onOpenBridges={() => setShowBridges(!showBridges)}
+            onContacts={() => setSidePanel("contacts")}
+            onCalls={() => setSidePanel("calls")}
+            onSettings={() => setSidePanel("settings")}
             loading={convosLoading}
           />
+        );
+    }
+  };
+
+  return (
+    <div className="h-screen w-screen bg-slate-950 flex overflow-hidden" style={{ fontFamily: "'DM Sans', -apple-system, sans-serif" }}>
+      {/* Sidebar */}
+      {showList && (
+        <div className={`${isMobile ? "w-full" : "w-[320px] min-w-[280px] max-w-[380px]"} h-full flex-shrink-0 border-r border-white/[0.04] relative`}>
+          {renderSidePanel()}
         </div>
       )}
 
@@ -106,9 +139,7 @@ export default function MessengerPage() {
           ) : (
             <div
               className="h-full flex flex-col items-center justify-center text-center px-8"
-              style={{
-                background: "radial-gradient(ellipse at 50% 40%, rgba(99,102,241,0.04) 0%, transparent 70%)",
-              }}
+              style={{ background: "radial-gradient(ellipse at 50% 40%, rgba(99,102,241,0.04) 0%, transparent 70%)" }}
             >
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-teal-500/10 to-indigo-500/10 border border-white/[0.06] flex items-center justify-center mb-6">
                 <MessageSquare size={32} className="text-white/15" />
@@ -126,19 +157,13 @@ export default function MessengerPage() {
         </div>
       )}
 
-      {/* Info panel (third panel) */}
+      {/* Info panel */}
       {showInfo && activeConvo && !isMobile && (
         <div className="w-[300px] min-w-[280px] h-full flex-shrink-0">
           {isGroupConvo ? (
-            <GroupInfoPanel
-              conversation={activeConvo}
-              onClose={() => setShowInfo(false)}
-            />
+            <GroupInfoPanel conversation={activeConvo} onClose={() => setShowInfo(false)} />
           ) : (
-            <ConversationInfo
-              conversation={activeConvo}
-              onClose={() => setShowInfo(false)}
-            />
+            <ConversationInfo conversation={activeConvo} onClose={() => setShowInfo(false)} />
           )}
         </div>
       )}
@@ -146,10 +171,7 @@ export default function MessengerPage() {
       {/* Shared files panel */}
       {showSharedFiles && activeConvo && !isMobile && (
         <div className="w-[300px] min-w-[280px] h-full flex-shrink-0">
-          <SharedFiles
-            sessionId={activeConvo.id}
-            onClose={() => setShowSharedFiles(false)}
-          />
+          <SharedFiles sessionId={activeConvo.id} onClose={() => setShowSharedFiles(false)} />
         </div>
       )}
 
@@ -160,31 +182,19 @@ export default function MessengerPage() {
         </div>
       )}
 
-      {/* New conversation dialog */}
       <NewConversationDialog
         open={newChatOpen}
         onClose={() => setNewChatOpen(false)}
-        onCreated={(id) => {
-          setActiveConvoId(id);
-          refetch();
-        }}
+        onCreated={(id) => { setActiveConvoId(id); refetch(); }}
       />
 
-      {/* New group dialog */}
       <NewGroupDialog
         open={newGroupOpen}
         onClose={() => setNewGroupOpen(false)}
-        onCreated={(id) => {
-          setActiveConvoId(id);
-          refetch();
-        }}
+        onCreated={(id) => { setActiveConvoId(id); refetch(); }}
       />
 
-      {/* Contact merge dialog */}
-      <ContactMergeDialog
-        open={showMergeDialog}
-        onClose={() => setShowMergeDialog(false)}
-      />
+      <ContactMergeDialog open={showMergeDialog} onClose={() => setShowMergeDialog(false)} />
     </div>
   );
 }

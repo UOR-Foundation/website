@@ -1,9 +1,10 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import ContactHeader from "./ContactHeader";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 import DateSeparator from "./DateSeparator";
 import SearchMessages from "./SearchMessages";
+import PinnedMessageBar from "./PinnedMessageBar";
 import { useMessages } from "../lib/use-messages";
 import { useSendMessage } from "../lib/use-send-message";
 import { usePresence } from "../lib/use-presence";
@@ -32,21 +33,41 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
   const search = useMessageSearch(messages);
   const [replyTo, setReplyTo] = useState<DecryptedMessage | null>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [pinnedMessage, setPinnedMessage] = useState<DecryptedMessage | null>(null);
+  const [pinnedDismissed, setPinnedDismissed] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const isGroup = conversation.sessionType === "group";
-
-  // Filter expired messages
   const visibleMessages = filterExpiredMessages(messages, conversation.expiresAfterSeconds);
 
-  // Group messages by date for separators
-  const messagesByDate = visibleMessages.reduce<Map<string, DecryptedMessage[]>>((acc, msg) => {
-    const dateKey = new Date(msg.createdAt).toDateString();
-    if (!acc.has(dateKey)) acc.set(dateKey, []);
-    acc.get(dateKey)!.push(msg);
-    return acc;
-  }, new Map());
+  // Group messages by date
+  const messagesByDate = useMemo(() => {
+    return visibleMessages.reduce<Map<string, DecryptedMessage[]>>((acc, msg) => {
+      const dateKey = new Date(msg.createdAt).toDateString();
+      if (!acc.has(dateKey)) acc.set(dateKey, []);
+      acc.get(dateKey)!.push(msg);
+      return acc;
+    }, new Map());
+  }, [visibleMessages]);
+
+  // Determine message grouping (consecutive same sender within 60s)
+  const messageGroupInfo = useMemo(() => {
+    const info = new Map<string, { isFirstInGroup: boolean; isLastInGroup: boolean }>();
+    for (let i = 0; i < visibleMessages.length; i++) {
+      const msg = visibleMessages[i];
+      const prev = i > 0 ? visibleMessages[i - 1] : null;
+      const next = i < visibleMessages.length - 1 ? visibleMessages[i + 1] : null;
+      const sameSenderAsPrev = prev && prev.sentByMe === msg.sentByMe &&
+        (prev.senderId === msg.senderId) &&
+        (new Date(msg.createdAt).getTime() - new Date(prev.createdAt).getTime() < 60000);
+      const sameSenderAsNext = next && next.sentByMe === msg.sentByMe &&
+        (next.senderId === msg.senderId) &&
+        (new Date(next.createdAt).getTime() - new Date(msg.createdAt).getTime() < 60000);
+      info.set(msg.id, { isFirstInGroup: !sameSenderAsPrev, isLastInGroup: !sameSenderAsNext });
+    }
+    return info;
+  }, [visibleMessages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -58,47 +79,45 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
     setShowScrollBottom(scrollHeight - scrollTop - clientHeight > 200);
   };
 
-  const scrollToBottom = () => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
   const handleFileSelected = async (file: File) => {
     if (!user) return;
     try {
       const session = getCachedSession(conversation.sessionHash);
       const sessionKey = session?.symmetricKey ?? new Uint8Array(32);
-
       toast.info(`Encrypting ${file.name}…`);
-      const manifest = await uploadEncryptedFile(file, user.id, sessionKey, (p) => {});
-
+      const manifest = await uploadEncryptedFile(file, user.id, sessionKey, () => {});
       const messageType = file.type.startsWith("image/") ? "image" as const :
                           file.type.startsWith("audio/") ? "voice" as const : "file" as const;
-
       await send(`📎 ${file.name}`, { messageType, fileManifest: manifest, replyToHash: replyTo?.messageHash });
       setReplyTo(null);
       toast.success("File sent");
-    } catch (err: any) {
-      toast.error(`Upload failed: ${err.message}`);
-    }
+    } catch (err: any) { toast.error(`Upload failed: ${err.message}`); }
   };
 
   const handleEdit = useCallback((msg: DecryptedMessage) => {
     const newText = prompt("Edit message:", msg.plaintext);
-    if (newText && newText !== msg.plaintext) {
-      editMessage(msg.id, newText);
-    }
+    if (newText && newText !== msg.plaintext) editMessage(msg.id, newText);
   }, [editMessage]);
 
   const handleDelete = useCallback((msgId: string) => {
-    if (confirm("Delete this message for everyone?")) {
-      deleteMessage(msgId);
-    }
+    if (confirm("Delete this message for everyone?")) deleteMessage(msgId);
   }, [deleteMessage]);
+
+  const handlePin = useCallback((msg: DecryptedMessage) => {
+    setPinnedMessage(msg);
+    setPinnedDismissed(false);
+    toast.success("Message pinned");
+  }, []);
 
   const findReplyMessage = useCallback((hash: string | null | undefined) => {
     if (!hash) return undefined;
     return messages.find((m) => m.messageHash === hash);
   }, [messages]);
+
+  // Typing indicator
+  const showTyping = peerPresence?.typing;
 
   return (
     <div className="flex flex-col h-full">
@@ -108,6 +127,14 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
         presence={peerPresence}
         onSearch={() => search.setActive(!search.active)}
         onInfo={onInfo}
+      />
+
+      {/* Pinned message bar */}
+      <PinnedMessageBar
+        show={!!pinnedMessage && !pinnedDismissed}
+        text={pinnedMessage?.plaintext ?? ""}
+        onScrollTo={() => {}}
+        onDismiss={() => setPinnedDismissed(true)}
       />
 
       {/* Search bar */}
@@ -126,14 +153,14 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto py-3 relative"
         style={{
-          background: "radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.06) 0%, transparent 60%), linear-gradient(180deg, hsl(222 47% 7%) 0%, hsl(222 47% 5%) 100%)",
+          background: "radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.04) 0%, transparent 60%), linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 47% 4.5%) 100%)",
         }}
       >
         {/* Encryption notice */}
         <div className="flex justify-center mb-4 px-4">
-          <div className="bg-white/[0.04] border border-white/[0.06] text-white/40 text-[11px] rounded-xl px-3 py-1.5 text-center max-w-[360px] flex items-center gap-2">
-            <ShieldCheck size={12} className="text-teal-400/60" />
-            <span>End-to-end encrypted with UMP · Post-quantum secure</span>
+          <div className="bg-white/[0.03] border border-white/[0.05] text-white/35 text-[11px] rounded-full px-3.5 py-1.5 text-center max-w-[340px] flex items-center gap-1.5">
+            <ShieldCheck size={11} className="text-teal-400/50" />
+            <span>End-to-end encrypted · Post-quantum secure</span>
           </div>
         </div>
 
@@ -145,30 +172,47 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
 
         {!loading && visibleMessages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-white/20 text-sm">
-            <ShieldCheck size={32} className="mb-3 text-teal-400/30" />
+            <ShieldCheck size={32} className="mb-3 text-teal-400/25" />
             <p>No messages yet</p>
-            <p className="text-xs text-white/15 mt-1">Send the first encrypted message</p>
+            <p className="text-xs text-white/12 mt-1">Send the first encrypted message</p>
           </div>
         )}
 
         {Array.from(messagesByDate.entries()).map(([dateKey, msgs]) => (
           <div key={dateKey}>
             <DateSeparator date={msgs[0].createdAt} />
-            {msgs.map((msg) => (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                replyToMessage={findReplyMessage(msg.replyToHash)}
-                onReply={(m) => setReplyTo(m)}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                observeRef={(el) => observeMessage(el, msg)}
-                isGroup={isGroup}
-                expiresAfterSeconds={conversation.expiresAfterSeconds}
-              />
-            ))}
+            {msgs.map((msg) => {
+              const groupInfo = messageGroupInfo.get(msg.id) ?? { isFirstInGroup: true, isLastInGroup: true };
+              return (
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  replyToMessage={findReplyMessage(msg.replyToHash)}
+                  onReply={(m) => setReplyTo(m)}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onPin={handlePin}
+                  observeRef={(el) => observeMessage(el, msg)}
+                  isGroup={isGroup}
+                  expiresAfterSeconds={conversation.expiresAfterSeconds}
+                  isFirstInGroup={groupInfo.isFirstInGroup}
+                  isLastInGroup={groupInfo.isLastInGroup}
+                />
+              );
+            })}
           </div>
         ))}
+
+        {/* Typing indicator */}
+        {showTyping && (
+          <div className="flex justify-start px-[5%] mb-2">
+            <div className="bg-white/[0.07] rounded-2xl px-4 py-2.5 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+          </div>
+        )}
 
         <div ref={bottomRef} />
       </div>
@@ -177,17 +221,14 @@ export default function ConversationView({ conversation, onBack, onInfo }: Props
       {showScrollBottom && (
         <button
           onClick={scrollToBottom}
-          className="absolute bottom-[80px] right-6 w-10 h-10 rounded-full bg-white/[0.08] border border-white/[0.1] flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/[0.12] transition-all shadow-lg z-10"
+          className="absolute bottom-[72px] right-5 w-10 h-10 rounded-full bg-slate-900/90 border border-white/[0.08] flex items-center justify-center text-white/40 hover:text-white/70 hover:bg-slate-800/90 transition-all duration-100 shadow-lg z-10"
         >
           <ChevronDown size={20} />
         </button>
       )}
 
       <MessageInput
-        onSend={(text, opts) => {
-          send(text, { ...opts, replyToHash: replyTo?.messageHash });
-          setReplyTo(null);
-        }}
+        onSend={(text, opts) => { send(text, { ...opts, replyToHash: replyTo?.messageHash }); setReplyTo(null); }}
         onTyping={() => setTyping(true)}
         disabled={sending}
         replyTo={replyTo}

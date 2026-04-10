@@ -1,0 +1,132 @@
+import { useState, useMemo } from "react";
+import { Search, X, Clock } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  onSelect: (emoji: string) => void;
+}
+
+const CATEGORIES = [
+  { id: "recent", icon: "🕐", label: "Recent" },
+  { id: "smileys", icon: "😀", label: "Smileys" },
+  { id: "people", icon: "👋", label: "People" },
+  { id: "animals", icon: "🐱", label: "Animals" },
+  { id: "food", icon: "🍕", label: "Food" },
+  { id: "travel", icon: "✈️", label: "Travel" },
+  { id: "activities", icon: "⚽", label: "Activities" },
+  { id: "objects", icon: "💡", label: "Objects" },
+  { id: "symbols", icon: "❤️", label: "Symbols" },
+  { id: "flags", icon: "🏁", label: "Flags" },
+];
+
+const EMOJI_DATA: Record<string, string[]> = {
+  smileys: ["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","😊","😇","🥰","😍","🤩","😘","😗","😚","😙","🥲","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🫢","🤫","🤔","🫡","🤐","🤨","😐","😑","😶","🫥","😏","😒","🙄","😬","🤥","🫠","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🥵","🥶","🥴","😵","🤯","🤠","🥳","🥸","😎","🤓","🧐","😕","🫤","😟","🙁","😮","😯","😲","😳","🥺","🥹","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖"],
+  people: ["👋","🤚","🖐️","✋","🖖","🫱","🫲","🫳","🫴","👌","🤌","🤏","✌️","🤞","🫰","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","🫵","👍","👎","✊","👊","🤛","🤜","👏","🙌","🫶","👐","🤲","🤝","🙏","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🧠","🫀","🫁","🦷","🦴","👀","👁️","👅","👄","🫦","👶","🧒","👦","👧","🧑","👱","👨","🧔","👩","🧓","👴","👵"],
+  animals: ["🐱","🐶","🐭","🐹","🐰","🦊","🐻","🐼","🐻‍❄️","🐨","🐯","🦁","🐮","🐷","🐽","🐸","🐵","🙈","🙉","🙊","🐒","🐔","🐧","🐦","🐤","🐣","🐥","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🪱","🐛","🦋","🐌","🐞","🐜","🪰","🪲","🪳","🦟","🦗","🕷️","🦂","🐢","🐍","🦎","🦖","🦕","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🦬","🐃","🐂","🐄","🐎","🐖","🐏","🐑","🦙","🐐","🦌","🐕","🐩","🦮"],
+  food: ["🍕","🍔","🍟","🌭","🍿","🧂","🥓","🥚","🍳","🧇","🥞","🧈","🍞","🥐","🥖","🫓","🥨","🥯","🥝","🫐","🍓","🍇","🍉","🍊","🍋","🍌","🍍","🥭","🍎","🍏","🍐","🍑","🍒","🫒","🥑","🍆","🥔","🥕","🌽","🌶️","🫑","🥒","🥬","🥦","🧄","🧅","🍄","🥜","🌰","🍦","🍧","🍨","🎂","🍰","🧁","🥧","🍫","🍬","🍭","🍮","🍯","☕","🫖","🍵","🧃","🥤","🧋","🍶","🍺","🍻","🥂","🍷","🥃","🍸","🍹","🧉","🍾"],
+  travel: ["✈️","🛫","🛬","🪂","💺","🚁","🚀","🛸","🚂","🚃","🚄","🚅","🚆","🚇","🚈","🚉","🚊","🚝","🚞","🚋","🚌","🚍","🚎","🚐","🚑","🚒","🚓","🚔","🚕","🚖","🚗","🚘","🚙","🛻","🚚","🚛","🚜","🏎️","🏍️","🛵","🦽","🦼","🛺","🚲","🛴","🛹","🛼","🚏","🛣️","🛤️","🛢️","⛽","🏁","🚦","🚧","⚓","🛟","⛵","🛶","🚤","🛳️","⛴️","🛥️","🚢"],
+  activities: ["⚽","🏀","🏈","⚾","🥎","🎾","🏐","🏉","🥏","🎱","🪀","🏓","🏸","🏒","🏑","🥍","🏏","🪃","🥅","⛳","🪁","🏹","🎣","🤿","🥊","🥋","🏋️","🤼","🤸","🤺","⛷️","🏂","🪂","🏇","⛸️","🏄","🚣","🏊","🧗","🚴","🚵","🎮","🕹️","🎲","🧩","🎯","🎳","🎪","🎨","🎬","🎤","🎧","🎼","🎹","🥁","🎷","🎺","🎸","🪕","🎻","🪗"],
+  objects: ["💡","🔦","🕯️","💰","💵","💴","💶","💷","💎","⚖️","🪜","🧰","🪛","🔧","🔩","⚙️","🗜️","⚖️","🦯","🔗","⛓️","🪝","🧲","💊","🩹","🩺","🩻","🔬","🔭","📡","💻","🖥️","🖨️","⌨️","🖱️","💾","💿","📀","📱","☎️","📞","📟","📠","📺","📻","🎙️","📷","📸","📹","🎥","📽️","🎞️","📔","📕","📖","📗","📘","📙","📚","📓","📒","📃","📜","📄","📰","🗞️","📑","🔖","🏷️","✉️","📧","📨","📩","📤","📥","📦","📫","📪","📬","📭","🗳️","✏️","✒️","🖋️","🖊️","🖌️","🖍️","📝","🔍","🔎"],
+  symbols: ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","❤️‍🔥","❤️‍🩹","💟","☮️","✝️","☪️","🕉️","☸️","✡️","🔯","🕎","☯️","☦️","🛐","⛎","♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓","🆔","⚛️","🉑","☢️","☣️","📴","📳","🈶","🈚","🈸","🈺","🈷️","✴️","🆚","💮","🉐","㊙️","㊗️","🈴","🈵","🈹","🈲","🅰️","🅱️","🆎","🆑","🅾️","🆘","❌","⭕","🛑","⛔","📛","🚫","💯","💢","♨️","🚷","🚯","🚳","🚱","🔞","📵","🚭","❗","❕","❓","❔","‼️","⁉️","🔅","🔆","〽️","⚠️","🚸","🔱","⚜️","🔰","♻️","✅","🈯","💹","❇️","✳️","❎","🌐","💠","Ⓜ️","🌀","💤","🏧","🚾","♿","🅿️","🛗","🈳","🈂️","🛂","🛃","🛄","🛅","🚹","🚺","🚻","🚼","🚮","🎦","📶","🈁","🔣","ℹ️","🔤","🔡","🔠","🆖","🆗","🆙","🆒","🆕","🆓","0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","🔢","#️⃣","*️⃣","⏏️","▶️","⏸️","⏯️","⏹️","⏺️","⏭️","⏮️","⏩","⏪","⏫","⏬","◀️","🔼","🔽","➡️","⬅️","⬆️","⬇️","↗️","↘️","↙️","↖️","↕️","↔️","↪️","↩️","⤴️","⤵️","🔀","🔁","🔂","🔄","🔃","🎵","🎶","➕","➖","➗","✖️","🟰","♾️","💲","💱","™️","©️","®️","〰️","➰","➿","🔚","🔙","🔛","🔝","🔜","✔️","☑️","🔘","🔴","🟠","🟡","🟢","🔵","🟣","⚫","⚪","🟤","🔺","🔻","🔸","🔹","🔶","🔷","🔳","🔲","▪️","▫️","◾","◽","◼️","◻️","🟥","🟧","🟨","🟩","🟦","🟪","⬛","⬜","🟫","🔈","🔇","🔉","🔊","🔔","🔕","📣","📢"],
+  flags: ["🏳️","🏴","🏁","🚩","🏳️‍🌈","🏳️‍⚧️","🇺🇸","🇬🇧","🇫🇷","🇩🇪","🇯🇵","🇰🇷","🇨🇳","🇮🇳","🇧🇷","🇷🇺","🇮🇹","🇪🇸","🇨🇦","🇦🇺","🇲🇽","🇦🇷","🇨🇴","🇨🇱","🇵🇪","🇻🇪","🇪🇨","🇧🇴","🇵🇾","🇺🇾","🇸🇪","🇳🇴","🇩🇰","🇫🇮","🇳🇱","🇧🇪","🇨🇭","🇦🇹","🇵🇱","🇨🇿","🇷🇴","🇭🇺","🇵🇹","🇬🇷","🇹🇷","🇮🇱","🇪🇬","🇿🇦","🇳🇬","🇰🇪","🇹🇭","🇻🇳","🇮🇩","🇵🇭","🇲🇾","🇸🇬","🇳🇿","🇮🇪","🇺🇦"],
+};
+
+const RECENT_KEY = "emoji_recent";
+
+function getRecent(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]").slice(0, 32);
+  } catch { return []; }
+}
+
+function addRecent(emoji: string) {
+  const recent = getRecent().filter(e => e !== emoji);
+  recent.unshift(emoji);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, 32)));
+}
+
+export default function EmojiPanel({ open, onClose, onSelect }: Props) {
+  const [activeCategory, setActiveCategory] = useState("smileys");
+  const [search, setSearch] = useState("");
+  const recent = getRecent();
+
+  const displayEmojis = useMemo(() => {
+    if (activeCategory === "recent") return recent;
+    return EMOJI_DATA[activeCategory] ?? [];
+  }, [activeCategory, recent]);
+
+  const filteredEmojis = search
+    ? Object.values(EMOJI_DATA).flat().filter(() => true).slice(0, 100)
+    : displayEmojis;
+
+  const handleSelect = (emoji: string) => {
+    addRecent(emoji);
+    onSelect(emoji);
+  };
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 20, opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="absolute bottom-full left-0 right-0 h-[320px] bg-slate-950/98 backdrop-blur-xl border-t border-white/[0.06] z-50 flex flex-col"
+        >
+          {/* Search */}
+          <div className="px-3 py-2 border-b border-white/[0.04]">
+            <div className="relative">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/20" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search emoji…"
+                className="w-full h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] text-white/80 text-[13px] pl-8 pr-3 outline-none placeholder:text-white/20 focus:border-teal-500/30 transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Category tabs */}
+          <div className="flex px-1 py-1 gap-0.5 border-b border-white/[0.04] overflow-x-auto scrollbar-none">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => { setActiveCategory(cat.id); setSearch(""); }}
+                className={`flex-shrink-0 w-9 h-8 flex items-center justify-center rounded-md text-base transition-colors duration-100 ${
+                  activeCategory === cat.id ? "bg-white/[0.08]" : "hover:bg-white/[0.04]"
+                }`}
+                title={cat.label}
+              >
+                {cat.icon}
+              </button>
+            ))}
+          </div>
+
+          {/* Emoji grid */}
+          <div className="flex-1 overflow-y-auto px-2 py-2">
+            <div className="grid grid-cols-8 gap-0.5">
+              {filteredEmojis.map((emoji, i) => (
+                <button
+                  key={`${emoji}-${i}`}
+                  onClick={() => handleSelect(emoji)}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/[0.08] transition-colors duration-75 text-xl"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            {filteredEmojis.length === 0 && (
+              <div className="text-center text-white/20 text-sm py-8">
+                {activeCategory === "recent" ? "No recent emojis" : "No emojis found"}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}

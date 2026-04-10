@@ -1,15 +1,8 @@
-/**
- * UnifiedInbox — Enhanced ChatSidebar with platform filter tabs.
- *
- * Merges native UMP conversations, Matrix rooms, and bridged platform
- * conversations into one unified view with platform badges and filters.
- */
-
 import { useState, useMemo } from "react";
-import { Search, Plus, Users, Settings2 } from "lucide-react";
+import { Search, Menu, Plus, Users } from "lucide-react";
 import ChatList from "./ChatList";
 import SessionBadge from "./SessionBadge";
-import PlatformBadge from "./PlatformBadge";
+import SidebarMenu from "./SidebarMenu";
 import type { Conversation, BridgePlatform } from "../lib/types";
 
 interface Props {
@@ -19,6 +12,9 @@ interface Props {
   onNewChat: () => void;
   onNewGroup?: () => void;
   onOpenBridges?: () => void;
+  onContacts?: () => void;
+  onCalls?: () => void;
+  onSettings?: () => void;
   loading: boolean;
 }
 
@@ -37,18 +33,15 @@ const PLATFORM_FILTERS: Array<{ id: PlatformFilter; label: string }> = [
 ];
 
 export default function UnifiedInbox({
-  conversations,
-  activeId,
-  onSelect,
-  onNewChat,
-  onNewGroup,
-  onOpenBridges,
-  loading,
+  conversations, activeId, onSelect, onNewChat, onNewGroup,
+  onOpenBridges, onContacts, onCalls, onSettings, loading,
 }: Props) {
   const [searchFilter, setSearchFilter] = useState("");
+  const [searchExpanded, setSearchExpanded] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [filterTab, setFilterTab] = useState<"all" | "unread" | "archived">("all");
 
-  // Count conversations per platform
   const platformCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const c of conversations) {
@@ -58,7 +51,6 @@ export default function UnifiedInbox({
     return counts;
   }, [conversations]);
 
-  // Filter conversations by platform
   const filteredConversations = useMemo(() => {
     if (platformFilter === "all") return conversations;
     return conversations.filter((c) => {
@@ -67,85 +59,100 @@ export default function UnifiedInbox({
     });
   }, [conversations, platformFilter]);
 
-  // Only show filters that have conversations
   const activeFilters = PLATFORM_FILTERS.filter(
     (f) => f.id === "all" || (platformCounts.get(f.id) ?? 0) > 0,
   );
 
+  const unreadCount = conversations.filter(c => c.unread > 0).length;
+
   return (
     <div className="flex flex-col h-full bg-slate-950/80 backdrop-blur-sm">
-      {/* Header */}
-      <div className="h-[60px] flex items-center justify-between px-4 flex-shrink-0 border-b border-white/[0.04]">
-        <h1 className="text-lg text-white/90 font-semibold tracking-tight">Messages</h1>
-        <div className="flex items-center gap-2">
-          <SessionBadge status="active" compact />
-          {onOpenBridges && (
-            <button
-              onClick={onOpenBridges}
-              className="w-8 h-8 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 flex items-center justify-center text-purple-400 transition-colors"
-              title="Bridge Connections"
-            >
-              <Settings2 size={16} />
+      {/* Hamburger Menu */}
+      <SidebarMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onNewGroup={onNewGroup}
+        onContacts={onContacts}
+        onCalls={onCalls}
+        onSettings={onSettings}
+      />
+
+      {/* Header — Telegram style */}
+      <div className="h-[56px] flex items-center justify-between px-3 flex-shrink-0 border-b border-white/[0.04]">
+        {searchExpanded ? (
+          <div className="flex-1 flex items-center gap-2">
+            <button onClick={() => { setSearchExpanded(false); setSearchFilter(""); }} className="text-white/50 hover:text-white/80 transition-colors p-1">
+              <Search size={18} />
             </button>
-          )}
-          {onNewGroup && (
+            <input
+              autoFocus
+              type="text"
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              placeholder="Search…"
+              className="flex-1 h-9 bg-transparent text-white/90 text-[15px] outline-none placeholder:text-white/25"
+            />
+          </div>
+        ) : (
+          <>
             <button
-              onClick={onNewGroup}
-              className="w-8 h-8 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 flex items-center justify-center text-indigo-400 transition-colors"
-              title="New Group"
+              onClick={() => setMenuOpen(true)}
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/[0.04] transition-all duration-100"
             >
-              <Users size={16} />
+              <Menu size={22} />
             </button>
-          )}
+            <h1 className="text-[17px] text-white/90 font-semibold tracking-tight">Messages</h1>
+            <button
+              onClick={() => setSearchExpanded(true)}
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-white/40 hover:text-white/60 hover:bg-white/[0.04] transition-all duration-100"
+            >
+              <Search size={20} />
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Filter tabs — All / Unread / Archived */}
+      <div className="flex px-2 pt-1.5 pb-0.5 gap-1">
+        {(["all", "unread", "archived"] as const).map((tab) => (
           <button
-            onClick={onNewChat}
-            className="w-8 h-8 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 flex items-center justify-center text-teal-400 transition-colors"
-            title="New Conversation"
+            key={tab}
+            onClick={() => setFilterTab(tab)}
+            className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-100 ${
+              filterTab === tab
+                ? "bg-teal-500/15 text-teal-400/90"
+                : "text-white/35 hover:text-white/55 hover:bg-white/[0.03]"
+            }`}
           >
-            <Plus size={18} />
+            {tab === "all" ? "All Chats" : tab === "unread" ? `Unread${unreadCount > 0 ? ` (${unreadCount})` : ""}` : "Archived"}
           </button>
-        </div>
+        ))}
       </div>
 
       {/* Platform filter tabs */}
       {activeFilters.length > 2 && (
-        <div className="flex px-3 pt-2 gap-1 overflow-x-auto scrollbar-none">
+        <div className="flex px-2 pt-1 pb-0.5 gap-0.5 overflow-x-auto scrollbar-none">
           {activeFilters.map((filter) => {
             const count = filter.id === "all" ? conversations.length : (platformCounts.get(filter.id) ?? 0);
             return (
               <button
                 key={filter.id}
                 onClick={() => setPlatformFilter(filter.id)}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] transition-colors whitespace-nowrap ${
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] transition-colors duration-100 whitespace-nowrap ${
                   platformFilter === filter.id
                     ? "bg-white/[0.08] text-white/70"
-                    : "text-white/30 hover:text-white/50 hover:bg-white/[0.03]"
+                    : "text-white/25 hover:text-white/45 hover:bg-white/[0.03]"
                 }`}
-                title={filter.id === "all" ? "All platforms" : filter.id}
               >
                 {filter.label}
                 {count > 0 && filter.id !== "all" && (
-                  <span className="text-[9px] text-white/25">{count}</span>
+                  <span className="text-[9px] text-white/20">{count}</span>
                 )}
               </button>
             );
           })}
         </div>
       )}
-
-      {/* Search bar */}
-      <div className="px-3 py-2">
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" />
-          <input
-            type="text"
-            value={searchFilter}
-            onChange={(e) => setSearchFilter(e.target.value)}
-            placeholder="Search across all platforms…"
-            className="w-full h-9 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white/80 text-[13px] pl-8 pr-3 outline-none placeholder:text-white/20 focus:border-teal-500/30 transition-colors"
-          />
-        </div>
-      </div>
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
@@ -157,9 +164,17 @@ export default function UnifiedInbox({
           activeId={activeId}
           onSelect={onSelect}
           filter={searchFilter}
-          filterTab="all"
+          filterTab={filterTab}
         />
       )}
+
+      {/* FAB — New Chat */}
+      <button
+        onClick={onNewChat}
+        className="absolute bottom-5 right-5 w-14 h-14 rounded-full bg-teal-500/90 hover:bg-teal-500 text-white shadow-lg shadow-teal-500/20 flex items-center justify-center transition-all duration-150 hover:scale-105 z-10"
+      >
+        <Plus size={26} strokeWidth={2.5} />
+      </button>
     </div>
   );
 }
