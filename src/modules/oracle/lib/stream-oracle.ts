@@ -65,6 +65,7 @@ export async function streamOracle({
   const reader = resp.body.getReader();
   const decoder = new TextDecoder();
   let carry = "";
+  let accumulated = "";
   let done = false;
 
   while (!done) {
