@@ -1,104 +1,90 @@
 
 
-# App Builder — Docker-Style Build, Run, Ship Application
+# Algebrica-Grade Knowledge Graph Experience — System-Wide Enforcement
 
-## What We're Building
+## Analysis of Algebrica
 
-A standalone desktop application called **App Builder** that presents the full Docker-equivalent pipeline (Build → Run → Ship) in one intuitive interface. Experienced Docker/K8s developers land here and immediately know what to do.
+Algebrica's power comes from three design principles:
 
-The app wires together the existing infrastructure that is already fully built but has no unified UI:
-- **Build**: `image-builder.ts` (Uorfile → content-addressed image)
-- **Run**: `container.ts` + `orchestrator.ts` + `app-kernel.ts` (create → start → running)
-- **Ship**: `registry-ship.ts` (push to registry + deployment snapshot)
+1. **Graph-first hierarchy**: The ontological graph is the primary navigation structure, not a secondary feature. Content exists to serve the graph, not the other way around.
+2. **Brutal restraint**: Monochrome palette, monospace typography for data, generous whitespace, zero decorative elements. Every pixel carries information.
+3. **Contextual discovery**: The left sidebar (Your History, Discover, Most Explored) provides ambient awareness of where you are in the knowledge structure without demanding attention.
 
-## UX Design
+Our system already has the foundational pieces — `KnowledgeSidebar`, `KnowledgeLayout`, `SovereignGraphExplorer`, `ConceptMap`, `NodeDetailSheet` — but they are confined to the graph-explorer app. The rest of the OS (Oracle, App Builder, Vault, Compliance, etc.) operates independently with no graph awareness.
 
-Three-tab layout mirroring the Docker workflow, plus an audit log:
+## What We Will Build
+
+A **system-wide knowledge graph context layer** that makes every application in the OS graph-aware without cluttering any of them. Three components:
+
+### 1. GraphContextBar — Universal Bottom Strip (~120 lines)
+**File**: `src/modules/desktop/components/GraphContextBar.tsx`
+
+A minimal, persistent bar that appears at the bottom of every `DesktopWindow` content area. It shows the current content's position in the knowledge graph:
 
 ```text
-┌──────────────────────────────────────────────────────────┐
-│  App Builder                                              │
-│                                                          │
-│  [ Build ]  [ Run ]  [ Ship ]              [ Audit Log ] │
-├──────────────────────────────────────────────────────────┤
-│                                                          │
-│  BUILD tab:                                              │
-│  ┌─────────────────────────────────┐                     │
-│  │  Uorfile (editable)             │  Image Layers       │
-│  │  FROM scratch                   │  ├─ base     4.2kB  │
-│  │  LABEL app.name="my-app"        │  ├─ env      128B   │
-│  │  ENV NODE_ENV="production"      │  └─ app.tsx  1.8kB  │
-│  │  COPY src/ /app/src/            │                     │
-│  │  EXPOSE 3000                    │  Canonical ID:      │
-│  │  ENTRYPOINT ["serve", "/app"]   │  uor:sha256-a1b2... │
-│  └─────────────────────────────────┘                     │
-│                                                          │
-│  [ Build Image ]                    Status: Ready        │
-│                                                          │
-│  RUN tab:                                                │
-│  Container: my-app-1   State: running   Uptime: 2m 14s  │
-│  Kernel: 3 namespaces · 7 ops · 42 calls · 0 denied     │
-│  [ Start ] [ Stop ] [ Restart ] [ Inspect ]              │
-│                                                          │
-│  SHIP tab:                                               │
-│  Registry: uor://registry/my-app:1.0.0                   │
-│  Snapshot: snap-a1b2c3 (code + image + config)           │
-│  [ Push to Registry ]              [ Export Snapshot ]   │
-│                                                          │
-│  AUDIT LOG (collapsible panel):                          │
-│  12:03:01.234  BUILD   Uorfile parsed: 8 directives      │
-│  12:03:01.289  BUILD   Layer 0: base (sha256:f4e2...)     │
-│  12:03:01.312  BUILD   Image built: uor:sha256-a1b2...   │
-│  12:03:01.450  RUN     Container created: my-app-1       │
-│  12:03:01.462  RUN     Kernel started: 3ns/7ops          │
-│  12:03:01.891  SHIP    Pushed: uor://registry/my-app:1.0 │
-│  [ Export Log as JSON ]  [ Export Log as CSV ]            │
-└──────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  ● 3 nodes   ↔ 7 relations   ◇ graph-explorer          │
+│  [View in Graph]                                        │
+└─────────────────────────────────────────────────────────┘
 ```
 
-## Implementation
+- **24px tall**, monochrome, monospace — Algebrica-style stat strip
+- Shows: node count connected to current context, relation count, current app name
+- Single action: "View in Graph" opens the graph explorer focused on the current node
+- Conditionally visible: only when the current app has produced or resolved graph-addressable content
+- Uses the existing `localGraphStore.queryBySubject()` to check for related nodes
 
-### 1. Create App Builder page component (~350 lines)
-**File**: `src/modules/app-builder/pages/AppBuilderPage.tsx`
+### 2. KnowledgeTrailProvider — Session-Wide Trail Tracking (~80 lines)
+**File**: `src/modules/desktop/hooks/useKnowledgeTrail.ts`
 
-Three tabs plus persistent audit log:
+A React context that wraps `DesktopShell` and tracks every meaningful user action (opening an app, building an image, resolving a query, inspecting a node) as a trail entry. This feeds the existing `KnowledgeSidebar` component so it works system-wide, not just in the knowledge graph app.
 
-- **Build tab**: Uorfile editor (monospace textarea), file source selector (blank template / pick from existing blueprints), "Build Image" button that calls `buildAppImage()` from `image-builder.ts`. Shows resulting layers, canonical ID, and image size.
+- Hooks into `useWindowManager` to track app opens/focuses
+- Exposes `pushTrailEntry(id, label, appId)` to any app that wants to register a graph-relevant action
+- Stores trail in sessionStorage (already implemented in `KnowledgeSidebar.tsx` — we unify it)
 
-- **Run tab**: Shows all containers from the container runtime. Start/stop/restart buttons calling `createContainer()`, `startContainer()`, `stopContainer()`. Live kernel metrics from `AppKernel` (ops, namespaces, call count, denied count, payload bytes). Container inspector inline.
+### 3. GraphQuickView — Inline Graph Preview (~150 lines)
+**File**: `src/modules/desktop/components/GraphQuickView.tsx`
 
-- **Ship tab**: Push built image to registry via `shipApp()` from `registry-ship.ts`. Shows registry URL, tags applied, deployment snapshot with all components (code + image + config). Export snapshot as JSON.
+When a user clicks "View in Graph" from the GraphContextBar, instead of switching to the full graph-explorer app, a compact Algebrica-style overlay appears within the current window:
 
-- **Audit Log**: Every operation appends a timestamped entry. Log is exportable as JSON or CSV via download buttons. Each entry has: timestamp, phase (BUILD/RUN/SHIP), message, and optional canonical ID.
+- **Radial 1-hop concept map** (reuses existing `ConceptMap` component) centered on the current content node
+- Stat block at bottom: Nodes / Relations / Longest Chain (same `StatBlock` pattern from `SovereignGraphExplorer`)
+- Click any neighbor node to navigate to it (opens the relevant app or graph explorer)
+- Click "Full Graph" to open the graph-explorer app with the node pre-selected
+- Monochrome, frosted glass overlay, dismissible with Escape or click-outside
 
-### 2. Register blueprint in static-blueprints.ts (~25 lines)
-Add an `app-builder` blueprint to `STATIC_BLUEPRINTS` with:
-- `requires`: build, container, registry, kernel operations
-- `permissions`: `build/`, `container/`, `store/`, `kernel/`
-- `category`: `"COMPUTE"` (it's a build/compute tool)
-- `iconName`: `"Hammer"` (or `"PackageOpen"`)
+### 4. DesktopWindow Integration (~30 lines changed)
+**File**: `src/modules/desktop/DesktopWindow.tsx`
 
-### 3. Register in desktop-apps.ts (~4 lines)
-- Add `Hammer` to `ICON_MAP`
-- Add the lazy component path to `COMPONENT_MAP`
+After boot completes, render `<GraphContextBar appId={win.appId} />` below the app content. The bar is opt-in per app via a blueprint flag `graphAware: true` (defaulting to true for all apps except system-monitor and settings).
 
-### 4. Update os-taxonomy.ts (~1 line)
-Add `"app-builder"` to the `COMPUTE` category's `appIds` array.
+### 5. App-Specific Graph Emission (~40 lines total across files)
+
+Wire existing apps to emit graph nodes when they produce content:
+
+- **Oracle**: After each response, emit a `uor:Query` node linked to any `uor:Claim` nodes from the neuro-symbolic scaffold (already produces `EnrichedReceipt` with CIDs)
+- **App Builder**: After each build, emit a `uor:Image` node linked to its `uor:Layer` nodes (already produces canonical IDs)
+- **Compliance**: Emit `uor:ComplianceReport` nodes from provenance data
+
+This is lightweight — each app adds 5-10 lines calling `localGraphStore.putNode()` after its primary operation.
 
 ## Files
 
-| File | Action | Size |
+| File | Action | Lines |
 |---|---|---|
-| `src/modules/app-builder/pages/AppBuilderPage.tsx` | **Create** | ~350 lines |
-| `src/modules/compose/static-blueprints.ts` | Update | +25 lines |
-| `src/modules/desktop/lib/desktop-apps.ts` | Update | +4 lines |
-| `src/modules/desktop/lib/os-taxonomy.ts` | Update | +1 line |
+| `src/modules/desktop/components/GraphContextBar.tsx` | **Create** | ~120 |
+| `src/modules/desktop/components/GraphQuickView.tsx` | **Create** | ~150 |
+| `src/modules/desktop/hooks/useKnowledgeTrail.ts` | **Create** | ~80 |
+| `src/modules/desktop/DesktopWindow.tsx` | Update | ~15 lines |
+| `src/modules/desktop/DesktopShell.tsx` | Update | ~5 lines (wrap with trail provider) |
+| `src/modules/oracle/pages/OraclePage.tsx` | Update | ~10 lines (emit graph nodes on response) |
+| `src/modules/app-builder/pages/AppBuilderPage.tsx` | Update | ~10 lines (emit graph nodes on build) |
 
-## Key Design Decisions
+## Design Principles
 
-- **Real operations, not mock**: Build calls `buildAppImage()`, Run calls real container lifecycle, Ship calls `shipApp()` — all existing infrastructure.
-- **Audit log is first-class**: Every single operation is logged with timestamps and canonical IDs. Export to JSON/CSV with one click.
-- **Docker-familiar terminology**: "Image", "Container", "Registry", "Push", "Layers", "Tags" — no UOR jargon in the UI labels. UOR canonical IDs are shown as secondary metadata.
-- **Uorfile editor**: Syntax mirrors Dockerfile exactly (FROM, COPY, ENV, EXPOSE, ENTRYPOINT). Developers see a Dockerfile and instantly know what to do.
-- **No new infrastructure**: The app is pure UI wiring existing modules together into one cohesive workflow.
+- **Algebrica-grade restraint**: The GraphContextBar is 24px. The QuickView is a focused overlay, not a dashboard. No color except the monochrome zinc scale.
+- **Graph-first, not graph-only**: The graph is ambient context, not a mode switch. Users see their position in the knowledge structure at all times.
+- **Zero cognitive overhead**: The bar is informational. One click to see the graph. One more click to go deep. No configuration, no settings.
+- **Standardized across every app**: Same bar, same typography, same interaction pattern. The graph experience is the OS experience.
 
