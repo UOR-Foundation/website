@@ -2,9 +2,10 @@
  * Sovereign Compose — React Hooks.
  * ═════════════════════════════════════════════════════════════════
  *
- * React bindings for the orchestrator and per-app kernels.
+ * React bindings for the orchestrator, per-app kernels,
+ * and the Sovereign Reconciler (K8s control plane).
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -14,6 +15,7 @@ import type {
   AppInstance,
   OrchestratorMetrics,
   ComposeEvent,
+  ReconcilerStatus,
 } from "./types";
 
 // ── useOrchestrator ───────────────────────────────────────────────────────
@@ -123,4 +125,35 @@ export function useComposeEvents(maxEvents = 50): ComposeEvent[] {
   }, [maxEvents]);
 
   return events;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// SOVEREIGN RECONCILER HOOKS — K8s Control Plane Observability
+// ══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Subscribe to the Sovereign Reconciler status.
+ *
+ * Returns the full reconciler pipeline state including:
+ * - Whether the reconciler is active
+ * - Total epochs and corrections
+ * - Whether the system is converged (no drift)
+ * - Recent epoch history
+ * - Current desired-state store
+ *
+ * Polls at `intervalMs` (default 5s) to avoid excessive re-renders.
+ */
+export function useReconcilerStatus(intervalMs = 5000): ReconcilerStatus {
+  const [status, setStatus] = useState<ReconcilerStatus>(
+    orchestrator.reconcilerStatus(),
+  );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setStatus(orchestrator.reconcilerStatus());
+    }, intervalMs);
+    return () => clearInterval(timer);
+  }, [intervalMs]);
+
+  return status;
 }
