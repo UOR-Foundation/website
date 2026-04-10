@@ -1,0 +1,137 @@
+import Layout from "@/modules/core/components/Layout";
+import { Heart, ExternalLink, ChevronDown, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { donationProjects, type DonationProject } from "@/data/donation-projects";
+import { DONATE_URL, DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+const ProjectCard = ({ project }: { project: DonationProject }) => {
+  const [expanded, setExpanded] = useState(false);
+  const progress = Math.min((project.raised / project.target) * 100, 100);
+
+  return (
+    <div className="border border-border rounded-2xl p-6 md:p-8 bg-card transition-all duration-300">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1">
+          <h3 className="font-display text-fluid-card-title font-semibold text-foreground">{project.title}</h3>
+          <div className="mt-3 flex items-center justify-between text-fluid-body text-muted-foreground font-body">
+            <span>{formatCurrency(project.raised)} raised</span>
+            <span>{formatCurrency(project.target)} target</span>
+          </div>
+          <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-700 ease-out" style={{ width: `${progress}%`, background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)))" }} />
+          </div>
+        </div>
+        <button onClick={() => setExpanded(!expanded)} className="mt-1 p-2 rounded-full hover:bg-muted transition-colors" aria-label="Toggle details">
+          <ChevronDown size={20} className={`text-muted-foreground transition-transform duration-300 ${expanded ? "rotate-180" : ""}`} />
+        </button>
+      </div>
+      <div className={`overflow-hidden transition-all duration-400 ease-out ${expanded ? "max-h-96 opacity-100 mt-6" : "max-h-0 opacity-0"}`}>
+        <p className="text-muted-foreground font-body text-fluid-body leading-relaxed">{project.description}</p>
+        <ul className="mt-4 space-y-2">
+          {project.highlights.map((h) => (
+            <li key={h} className="flex items-start gap-3 text-muted-foreground font-body text-fluid-body">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+              {h}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6">
+          <a href={project.donateUrl} target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2">
+            Donate <ExternalLink size={14} />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Donate = () => {
+  return (
+    <Layout>
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground leading-[1.1] text-balance animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
+            Fund open infrastructure
+          </h1>
+          <p className="mt-10 text-fluid-body text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up opacity-0" style={{ animationDelay: "0.25s" }}>
+            Every dollar funds development, infrastructure, and research. We maintain open tools that developers and researchers depend on.
+          </p>
+          <div className="mt-12 flex flex-wrap gap-3 animate-fade-in-up opacity-0" style={{ animationDelay: "0.4s" }}>
+            <a href={DONATE_URL} target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2">
+              <Heart size={16} fill="white" strokeWidth={0} />
+              Donate Now
+            </a>
+            <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="btn-outline inline-flex items-center gap-2">
+              Contribute on GitHub
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Content A: Projects to support */}
+      <section className="py-section-sm bg-background border-b border-border/40">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <h2 className="font-display text-fluid-heading font-semibold text-foreground mb-golden-md animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
+            Projects to support
+          </h2>
+          <div className="space-y-5">
+            {donationProjects.map((project) => (
+              <ProjectCard key={project.title} project={project} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Content B: Ways to donate */}
+      <section className="py-section-sm section-dark">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <h2 className="font-display text-fluid-heading font-semibold mb-golden-md">
+            Ways to donate
+          </h2>
+          <div className="grid md:grid-cols-2 gap-5">
+            <a href={DONATE_URL} target="_blank" rel="noopener noreferrer" className="group block rounded-2xl border border-border/20 p-6 md:p-8 hover:border-primary/30 transition-all duration-300">
+              <h3 className="font-display text-fluid-card-title font-semibold text-section-dark-foreground group-hover:text-primary transition-colors">Credit Card →</h3>
+              <p className="mt-2 text-fluid-body text-muted-foreground font-body leading-relaxed">Make a one-time or recurring donation securely via credit card.</p>
+            </a>
+            <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="group block rounded-2xl border border-border/20 p-6 md:p-8 hover:border-primary/30 transition-all duration-300">
+              <h3 className="font-display text-fluid-card-title font-semibold text-section-dark-foreground group-hover:text-primary transition-colors">Get in Touch →</h3>
+              <p className="mt-2 text-fluid-body text-muted-foreground font-body leading-relaxed">For larger donations, sponsorships, or partnerships, reach out to us on Discord.</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] text-center max-w-6xl mx-auto">
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-4">
+            Every contribution matters
+          </h2>
+          <p className="text-muted-foreground font-body text-fluid-body leading-relaxed max-w-lg mx-auto mb-8">
+            Open infrastructure depends on community support. Thank you for helping us build a more connected, verifiable future.
+          </p>
+          <a
+            href={DONATE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary inline-flex items-center gap-2"
+          >
+            <Heart size={16} fill="white" strokeWidth={0} />
+            Donate Now
+          </a>
+        </div>
+      </section>
+    </Layout>
+  );
+};
+
+export default Donate;
