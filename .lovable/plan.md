@@ -1,67 +1,77 @@
 
 
-# Messenger UX Polish — Crisp, Personal, Full-Screen
+# Pattern Sentinel Gate — Self-Discovering Anti-Pattern Detector
 
-## Issues Identified (from screenshot + code)
+## Concept
 
-1. **Header says "MESSAGES"** — impersonal, all-caps, feels like a system label
-2. **Too many filter rows** — Spaces strip + filter tabs + platform chips = 3 rows of chrome before any content. Cluttered for an empty inbox
-3. **Text too small / low contrast** — filter labels at `text-[11px]`/`text-[12px]` with `text-white/25`-`/30` opacity. Hard to read
-4. **"0 verified" badge** — noise when there are zero conversations
-5. **Empty state has verbose text** — "Kyber-1024 + AES-256-GCM · Dilithium-3" is engineer jargon, not user-facing
-6. **Right panel empty state also verbose** — same crypto spec text repeated
-7. **Scroll needed** — the filter rows push content down unnecessarily
+Today, gates like the Canonical Pipeline Gate exist because you manually spotted the "bypass" pattern. The **Pattern Sentinel Gate** automates that discovery: it scans the codebase for recurring terms, idioms, and anti-patterns that appear across multiple files, then surfaces clusters that warrant their own dedicated gate.
 
-## Changes
+This creates a feedback loop:
 
-### 1. Rename header: "Messages" → "Inbox"
-Short, personal, universally understood. The security is implied by the shield icon already present in the sidebar and conversation view.
+```text
+Codebase → Pattern Sentinel (meta-scan)
+         → Surfaces recurring cluster (e.g. "TODO", "any", "eslint-disable")
+         → You promote cluster → New atomic gate
+         → Pattern Sentinel stops reporting it (handled by dedicated gate)
+```
 
-### 2. Collapse filter chrome when inbox is empty
-- Hide Spaces strip, platform chips, and "verified" badge when `conversations.length === 0`
-- Keep only the All/Unread/Archived tabs (they serve as navigation)
-- Increase filter tab text to `text-[14px]` with `text-white/50` (from `text-[13px]`/`text-white/35`)
+The system becomes self-discovering: the Sentinel finds the patterns, you decide which ones matter, and each promoted pattern becomes an enforceable, auditable gate.
 
-### 3. Improve text sizes and contrast throughout
-- Header title: `text-[18px]` (from `text-[17px]`)
-- Space filter labels: `text-[13px]` with `text-white/40` active → `text-white/60`
-- Filter tabs: `text-[14px]` with improved active/inactive contrast
-- Chat list name: `text-[16px]` (from `text-[15px]`)
-- Chat list preview: `text-[14px] text-white/40` (from `text-[13px] text-white/30`)
-- Empty state text: `text-base text-white/50` (from `text-sm text-white/20`)
+## Architecture
 
-### 4. Clean up empty states
-- **Sidebar empty**: "No conversations yet" (remove "— start one!")
-- **Right panel empty**: Remove crypto spec line ("Kyber-1024 + AES-256-GCM..."). Keep just the icon + "Inbox" + one-liner "Select a conversation or start a new one"
-- **Sign-in screen**: Simplify to "Private, encrypted conversations. Sign in to continue." Remove crypto spec.
+### 1. Pattern Registry (`pattern-registry.ts`)
+A declarative list of anti-pattern signatures to scan for, each with:
+- `id`: unique key (e.g. `"unsafe-any"`)
+- `pattern`: regex or literal string to match
+- `fileGlob`: which files to scan (e.g. `*.ts,*.tsx`)
+- `severity`: `"error" | "warning" | "info"`
+- `threshold`: how many hits before it becomes a finding (e.g. 3+)
+- `description`: why this matters
+- `promotedToGate`: optional — when set, the Sentinel skips it (a dedicated gate now handles it)
 
-### 5. Remove "0 verified" badge
-Only show the verified count badge when `verifiedCount > 0`
+Ships with ~10 starter patterns:
+- `bypass` (already has a gate → pre-promoted)
+- `as any` / `: any` (type safety erosion)
+- `eslint-disable` / `@ts-ignore` (suppressed warnings)
+- `TODO` / `FIXME` / `HACK` (unfinished work)
+- `console.log` in non-debug files (debug leaks)
+- `localStorage.getItem` without try/catch (crash risk)
+- `dangerouslySetInnerHTML` (XSS surface)
+- `setTimeout` / `setInterval` without cleanup (memory leaks)
+- `import.*from ['"]\.\.\/\.\.\/\.\.\/` (deep relative imports)
 
-### 6. Right panel empty state — simpler
-Replace the current verbose empty state with just the icon and a short prompt. Remove the Lock + crypto spec footer.
+### 2. Codebase Scanner (`pattern-scanner.ts`)
+A function that, given the pattern registry, performs an in-memory scan of known module file paths (static list, same approach as other gates) and returns match counts per pattern per file. This is a static registry approach consistent with the existing gate design — no filesystem access at runtime.
 
-### 7. Ensure full-screen fit (no scroll)
-The messenger already uses `h-screen w-screen overflow-hidden`. The fix is reducing the filter chrome rows so the chat list has maximum vertical space.
+### 3. Pattern Sentinel Gate (`pattern-sentinel-gate.ts`)
+Consumes scanner results and produces `GateFinding[]`:
+- Each pattern exceeding its threshold becomes a finding
+- Clusters (3+ patterns co-occurring in the same file) get an additional "hotspot" finding
+- Already-promoted patterns are skipped
+- Score: starts at 100, deducts per finding based on severity
 
-## Testing with Two Users
+### 4. Promotion Workflow
+When you decide a pattern warrants its own gate:
+1. Set `promotedToGate: "gate-id"` in the registry entry
+2. Create the new atomic gate (just like canonical-pipeline-gate)
+3. The Sentinel automatically stops reporting that pattern
 
-To test the messenger with two different users on two devices:
+## Files
 
-1. **Open the published app** on Device A (e.g. your laptop): `https://univeral-coordinate-hub.lovable.app`
-2. **Sign up** with Email A — this creates User A
-3. **Open the same URL** on Device B (e.g. your phone or incognito browser)
-4. **Sign up** with Email B — this creates User B
-5. On Device A, tap the **+** FAB → search for User B's handle → start a conversation
-6. Messages will appear in real-time on both devices via the existing Supabase realtime subscription
+| File | Action | Purpose |
+|---|---|---|
+| `src/modules/canonical-compliance/gates/pattern-registry.ts` | Create | Declarative anti-pattern definitions with ~10 starters |
+| `src/modules/canonical-compliance/gates/pattern-scanner.ts` | Create | Static scanner that counts pattern hits across known files |
+| `src/modules/canonical-compliance/gates/pattern-sentinel-gate.ts` | Create | Gate that surfaces recurring patterns + hotspots as findings |
+| `src/modules/canonical-compliance/gates/index.ts` | Update | Import sentinel gate for side-effect registration |
 
-No code changes needed for testing — the messenger already supports real-time messaging between authenticated users.
+## How It Shows Up
 
-## Files to Modify
+The Pattern Sentinel Gate appears alongside all other gates in the existing **Health Gates Panel** on the Compliance Dashboard — one unified view. Its findings look like:
 
-| File | Changes |
-|---|---|
-| `src/modules/messenger/components/UnifiedInbox.tsx` | Rename header to "Inbox", increase text sizes/contrast, hide empty-state chrome, remove "0 verified" |
-| `src/modules/messenger/pages/MessengerPage.tsx` | Simplify right-panel empty state and sign-in screen text |
-| `src/modules/messenger/components/ChatList.tsx` | Increase text sizes, simplify empty message |
+- **🟡 "as any" appears in 14 files** — Type safety erosion across the codebase. Consider creating a dedicated Type Safety Gate.
+- **🟡 "TODO" appears in 23 files** — 23 unfinished work markers. Track via a dedicated Tech Debt Gate.
+- **🔵 Hotspot: `oracle/bridge.ts`** — 4 different anti-patterns co-occur in this file.
+
+Each finding includes a `recommendation` field suggesting whether to promote to a dedicated gate or resolve inline.
 
