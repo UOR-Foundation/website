@@ -6,18 +6,18 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Graph from "graphology";
 import type { KGNode, KGEdge } from "../types";
 
-/** Node-type → color mapping for the visualizer */
+/** Node-type → color mapping — Algebrica-inspired monochrome palette */
 export const NODE_TYPE_COLORS: Record<string, string> = {
-  entity:      "#10b981", // emerald
-  datum:       "#3b82f6", // blue
-  derivation:  "#a855f7", // purple
-  certificate: "#f59e0b", // amber
-  ceremony:    "#ef4444", // red
-  person:      "#06b6d4", // cyan
-  file:        "#6366f1", // indigo
-  workspace:   "#ec4899", // pink
-  folder:      "#84cc16", // lime
-  default:     "#64748b", // slate
+  entity:      "#d4d4d8", // zinc-300
+  datum:       "#a1a1aa", // zinc-400
+  derivation:  "#e4e4e7", // zinc-200
+  certificate: "#f5f5f4", // stone-100
+  ceremony:    "#d6d3d1", // stone-300
+  person:      "#fafaf9", // stone-50
+  file:        "#a8a29e", // stone-400
+  workspace:   "#e7e5e4", // stone-200
+  folder:      "#c4b5a4", // warm muted
+  default:     "#71717a", // zinc-500
 };
 
 export function colorForType(t: string): string {

@@ -11,6 +11,7 @@
 
 import React, { useMemo, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
+import ConceptMapHeader from "./ConceptMapHeader";
 import BalancedHeading from "./BalancedHeading";
 import CitedMarkdown from "./CitedMarkdown";
 import SourcesPills from "./SourcesPills";
@@ -523,6 +524,7 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         >
           {title}
         </BalancedHeading>
+        <ConceptMapHeader topic={title} />
         <SourcesPills sources={sourceMetas} />
 
         {/* ── Two-column grid ── */}
@@ -591,6 +593,8 @@ const WikiArticleView: React.FC<WikiArticleViewProps> = ({
         {title}
       </BalancedHeading>
 
+      {/* ── Concept map ── */}
+      <ConceptMapHeader topic={title} />
 
       {/* ── Source pills ── */}
       <SourcesPills sources={sourceMetas} />
