@@ -82,8 +82,8 @@ export const OS_TAXONOMY: Record<OsCategory, OsCategoryDescriptor> = {
     label: "Compute",
     description: "Cascade execution, parallel composition, and streaming",
     uorModules: ["cascade", "monoidal", "parallel", "stream"],
-    appIds: [],
-    userFacing: false,
+    appIds: ["app-builder"],
+    userFacing: true,
   },
   OBSERVE: {
     id: "OBSERVE",

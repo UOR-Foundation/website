@@ -2,9 +2,6 @@
  * App Builder — Docker-Style Build, Run, Ship Pipeline
  * ═════════════════════════════════════════════════════════
  *
- * A unified application for building, running, and shipping
- * content-addressed applications using familiar Docker/OCI semantics.
- *
  * Build  → Uorfile → content-addressed image (docker build)
  * Run    → container lifecycle management     (docker run)
  * Ship   → registry push + deployment snapshot (docker push)
@@ -17,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/modules/core/ui/tabs
 import { ScrollArea } from "@/modules/core/ui/scroll-area";
 import {
   Hammer, Play, Rocket, FileText, Download, Square, RotateCcw,
-  ChevronDown, ChevronUp, Layers, Box, Tag, CheckCircle2, AlertCircle,
+  ChevronDown, ChevronUp, Layers, Box, Tag, CheckCircle2,
   Loader2, Eye, Trash2,
 } from "lucide-react";
 import { buildAppImage } from "@/modules/uor-sdk/runtime/image-builder";
@@ -26,7 +23,6 @@ import type { AppFile } from "@/modules/uor-sdk/import-adapter";
 import {
   createContainer, startContainer, stopContainer,
   removeContainer, listContainers, inspectContainer,
-  containerLogs,
 } from "@/modules/uns/build/container";
 import type { UorContainer, ContainerInspection } from "@/modules/uns/build/container";
 import { shipApp } from "@/modules/uor-sdk/runtime/registry-ship";
@@ -70,6 +66,31 @@ EXPOSE 3000
 ENTRYPOINT ["serve", "/app/src/index.tsx"]
 `;
 
+// ── Styled button ──────────────────────────────────────────────────────────
+
+function Btn({
+  children, onClick, disabled, variant = "default", className = "",
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  variant?: "default" | "outline" | "ghost" | "destructive";
+  className?: string;
+}) {
+  const base = "inline-flex items-center justify-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none";
+  const variants: Record<string, string> = {
+    default: "bg-primary text-primary-foreground hover:bg-primary/90",
+    outline: "border border-border bg-transparent hover:bg-muted",
+    ghost: "bg-transparent hover:bg-muted",
+    destructive: "text-destructive hover:bg-destructive/10",
+  };
+  return (
+    <button onClick={onClick} disabled={disabled} className={`${base} ${variants[variant]} ${className}`}>
+      {children}
+    </button>
+  );
+}
+
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function AppBuilderPage() {
@@ -98,36 +119,23 @@ export default function AppBuilderPage() {
     log("BUILD", "Parsing Uorfile…");
 
     try {
-      // Synthesize AppFile[] from Uorfile COPY directives
-      const copyLines = uorfile
-        .split("\n")
-        .filter((l) => l.trim().startsWith("COPY"));
+      const copyLines = uorfile.split("\n").filter((l) => l.trim().startsWith("COPY"));
       const files: AppFile[] = copyLines.map((line) => {
         const parts = line.trim().split(/\s+/);
         const srcPath = parts[1] || "src/index.tsx";
-        const content = `// ${srcPath} — placeholder content\nexport default {};`;
-        return {
-          path: srcPath,
-          bytes: new TextEncoder().encode(content),
-          mimeType: "text/typescript",
-        };
+        const content = `// ${srcPath}\nexport default {};`;
+        return { path: srcPath, bytes: new TextEncoder().encode(content), mimeType: "text/typescript" };
       });
 
       log("BUILD", `${files.length} source files detected`);
 
-      // Extract tech from LABEL
       const techMatch = uorfile.match(/LABEL\s+app\.tech="([^"]+)"/);
       const tech = techMatch ? techMatch[1].split(",") : ["typescript"];
-
-      // Extract entrypoint
       const epMatch = uorfile.match(/ENTRYPOINT\s+\["[^"]*",\s*"([^"]+)"\]/);
       const entrypoint = epMatch ? epMatch[1].replace("/app/", "") : files[0]?.path || "src/index.tsx";
 
       const result = await buildAppImage(files, {
-        name: appName,
-        version: appVersion,
-        tech,
-        entrypoint,
+        name: appName, version: appVersion, tech, entrypoint,
         builderCanonicalId: "uor:builder:app-builder-v1",
         env: { NODE_ENV: "production" },
       });
@@ -152,10 +160,7 @@ export default function AppBuilderPage() {
   }, []);
 
   const handleCreateAndStart = useCallback(async () => {
-    if (!buildResult) {
-      log("RUN", "No image built — run Build first");
-      return;
-    }
+    if (!buildResult) { log("RUN", "No image built"); return; }
     try {
       const container = await createContainer({
         name: `${appName}-${Date.now().toString(36)}`,
@@ -164,7 +169,6 @@ export default function AppBuilderPage() {
         ports: [{ hostPort: 3000, containerPort: 3000, protocol: "tcp" }],
       });
       log("RUN", `Container created: ${container.name}`, container.id);
-
       startContainer(container.id);
       log("RUN", `Container started: ${container.name}`);
       refreshContainers();
@@ -174,34 +178,23 @@ export default function AppBuilderPage() {
   }, [buildResult, appName, log, refreshContainers]);
 
   const handleStop = useCallback((id: string, name: string) => {
-    stopContainer(id);
-    log("RUN", `Container stopped: ${name}`);
-    refreshContainers();
+    stopContainer(id); log("RUN", `Stopped: ${name}`); refreshContainers();
   }, [log, refreshContainers]);
 
   const handleRemove = useCallback((id: string, name: string) => {
-    removeContainer(id);
-    log("RUN", `Container removed: ${name}`);
-    setInspection(null);
-    refreshContainers();
+    removeContainer(id); log("RUN", `Removed: ${name}`); setInspection(null); refreshContainers();
   }, [log, refreshContainers]);
 
   const handleInspect = useCallback((id: string) => {
-    const info = inspectContainer(id);
-    setInspection(info);
-    log("RUN", `Inspected container: ${info.container.name}`);
+    const info = inspectContainer(id); setInspection(info); log("RUN", `Inspected: ${info.container.name}`);
   }, [log]);
 
   // ── SHIP ───────────────────────────────────────────────────────────────
 
   const handleShip = useCallback(async () => {
-    if (!buildResult) {
-      log("SHIP", "No image built — run Build first");
-      return;
-    }
+    if (!buildResult) { log("SHIP", "No image built"); return; }
     setShipping(true);
     log("SHIP", "Pushing to registry…");
-
     try {
       const manifest: AppManifest = {
         "@context": {} as any,
@@ -218,17 +211,15 @@ export default function AppBuilderPage() {
       };
 
       const result = await shipApp({
-        image: buildResult.image,
-        manifest,
-        developerCanonicalId: "uor:dev:local",
-        appName,
-        version: appVersion,
+        image: buildResult.image, manifest,
+        developerCanonicalId: "uor:dev:local", appName, version: appVersion,
       });
 
       setShipResult(result);
+      const snapId = result.snapshot["u:canonicalId"];
       log("SHIP", `Pushed to registry`, result.registryUrl);
       log("SHIP", `Tags: ${result.tags.join(", ")}`);
-      log("SHIP", `Snapshot: ${result.snapshot.snapshotId}`, result.snapshot.snapshotId);
+      log("SHIP", `Snapshot: ${snapId}`, snapId);
     } catch (err: any) {
       log("SHIP", `Ship failed: ${err.message}`);
     } finally {
@@ -241,42 +232,34 @@ export default function AppBuilderPage() {
   const exportLogJSON = useCallback(() => {
     const blob = new Blob([JSON.stringify(auditLog, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `app-builder-audit-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const a = document.createElement("a"); a.href = url;
+    a.download = `app-builder-audit-${Date.now()}.json`; a.click(); URL.revokeObjectURL(url);
     log("SYSTEM", "Audit log exported as JSON");
   }, [auditLog, log]);
 
   const exportLogCSV = useCallback(() => {
     const header = "timestamp,phase,message,canonicalId";
-    const rows = auditLog.map(
-      (e) => `${e.ts},${e.phase},"${e.message.replace(/"/g, '""')}",${e.canonicalId || ""}`,
-    );
+    const rows = auditLog.map((e) => `${e.ts},${e.phase},"${e.message.replace(/"/g, '""')}",${e.canonicalId || ""}`);
     const blob = new Blob([header + "\n" + rows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `app-builder-audit-${Date.now()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const a = document.createElement("a"); a.href = url;
+    a.download = `app-builder-audit-${Date.now()}.csv`; a.click(); URL.revokeObjectURL(url);
     log("SYSTEM", "Audit log exported as CSV");
   }, [auditLog, log]);
 
   // ── Phase badge colors ─────────────────────────────────────────────────
 
   const phaseBg: Record<AuditPhase, string> = {
-    BUILD: "bg-blue-500/20 text-blue-300",
-    RUN: "bg-green-500/20 text-green-300",
-    SHIP: "bg-purple-500/20 text-purple-300",
+    BUILD: "bg-primary/20 text-primary",
+    RUN: "bg-accent/30 text-accent-foreground",
+    SHIP: "bg-secondary/30 text-secondary-foreground",
     SYSTEM: "bg-muted text-muted-foreground",
   };
 
   const stateColor: Record<string, string> = {
     created: "text-muted-foreground",
-    running: "text-green-400",
-    paused: "text-yellow-400",
+    running: "text-primary",
+    paused: "text-accent-foreground",
     stopped: "text-muted-foreground",
     crashed: "text-destructive",
     removed: "text-muted-foreground",
@@ -325,7 +308,6 @@ export default function AppBuilderPage() {
 
         {/* ── BUILD TAB ─────────────────────────────────────────────── */}
         <TabsContent value="build" className="flex-1 flex min-h-0 px-4 pb-2 gap-4">
-          {/* Editor */}
           <div className="flex-1 flex flex-col min-h-0">
             <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5" /> Uorfile
@@ -336,18 +318,12 @@ export default function AppBuilderPage() {
               className="flex-1 bg-muted/30 border border-border rounded p-3 text-xs font-mono resize-none focus:outline-none focus:ring-1 focus:ring-primary"
               spellCheck={false}
             />
-            <Button
-              onClick={handleBuild}
-              disabled={building}
-              className="mt-2 gap-2"
-              size="sm"
-            >
+            <Btn onClick={handleBuild} disabled={building} className="mt-2 self-start">
               {building ? <Loader2 className="w-4 h-4 animate-spin" /> : <Hammer className="w-4 h-4" />}
               {building ? "Building…" : "Build Image"}
-            </Button>
+            </Btn>
           </div>
 
-          {/* Build result */}
           <div className="w-72 flex flex-col min-h-0">
             <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5" /> Image Layers
@@ -356,8 +332,8 @@ export default function AppBuilderPage() {
               <ScrollArea className="flex-1 border border-border rounded p-3 bg-muted/20">
                 <div className="space-y-2">
                   <div className="flex items-center gap-1.5 text-xs">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
-                    <span className="text-green-400">Built successfully</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-primary">Built successfully</span>
                   </div>
                   <div className="text-xs space-y-1">
                     <div className="text-muted-foreground">Canonical ID:</div>
@@ -392,19 +368,18 @@ export default function AppBuilderPage() {
         {/* ── RUN TAB ───────────────────────────────────────────────── */}
         <TabsContent value="run" className="flex-1 flex flex-col min-h-0 px-4 pb-2">
           <div className="flex items-center gap-2 mb-3">
-            <Button size="sm" onClick={handleCreateAndStart} disabled={!buildResult} className="gap-1.5">
+            <Btn onClick={handleCreateAndStart} disabled={!buildResult}>
               <Play className="w-3.5 h-3.5" /> Create & Start
-            </Button>
-            <Button size="sm" variant="outline" onClick={refreshContainers} className="gap-1.5">
+            </Btn>
+            <Btn variant="outline" onClick={refreshContainers}>
               <RotateCcw className="w-3.5 h-3.5" /> Refresh
-            </Button>
+            </Btn>
             {!buildResult && (
               <span className="text-xs text-muted-foreground ml-2">Build an image first</span>
             )}
           </div>
 
           <div className="flex gap-4 flex-1 min-h-0">
-            {/* Container list */}
             <ScrollArea className="flex-1 border border-border rounded bg-muted/20">
               <div className="p-3 space-y-2">
                 {containers.length === 0 ? (
@@ -413,10 +388,7 @@ export default function AppBuilderPage() {
                   </div>
                 ) : (
                   containers.map((c) => (
-                    <div
-                      key={c.id}
-                      className="border border-border rounded p-2.5 bg-background/50 flex items-center gap-3"
-                    >
+                    <div key={c.id} className="border border-border rounded p-2.5 bg-background/50 flex items-center gap-3">
                       <Box className={`w-4 h-4 ${stateColor[c.state] || "text-muted-foreground"}`} />
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-medium truncate">{c.name}</div>
@@ -426,20 +398,17 @@ export default function AppBuilderPage() {
                       </div>
                       <div className="flex gap-1">
                         {c.state === "running" && (
-                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0"
-                            onClick={() => handleStop(c.id, c.name)}>
+                          <Btn variant="ghost" className="h-6 w-6 p-0" onClick={() => handleStop(c.id, c.name)}>
                             <Square className="w-3 h-3" />
-                          </Button>
+                          </Btn>
                         )}
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0"
-                          onClick={() => handleInspect(c.id)}>
+                        <Btn variant="ghost" className="h-6 w-6 p-0" onClick={() => handleInspect(c.id)}>
                           <Eye className="w-3 h-3" />
-                        </Button>
+                        </Btn>
                         {c.state !== "running" && (
-                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive"
-                            onClick={() => handleRemove(c.id, c.name)}>
+                          <Btn variant="destructive" className="h-6 w-6 p-0" onClick={() => handleRemove(c.id, c.name)}>
                             <Trash2 className="w-3 h-3" />
-                          </Button>
+                          </Btn>
                         )}
                       </div>
                     </div>
@@ -448,7 +417,6 @@ export default function AppBuilderPage() {
               </div>
             </ScrollArea>
 
-            {/* Inspector */}
             {inspection && (
               <div className="w-72 border border-border rounded bg-muted/20 p-3 overflow-auto">
                 <div className="text-xs font-medium mb-2">Container Inspector</div>
@@ -463,10 +431,10 @@ export default function AppBuilderPage() {
         {/* ── SHIP TAB ──────────────────────────────────────────────── */}
         <TabsContent value="ship" className="flex-1 flex flex-col min-h-0 px-4 pb-2">
           <div className="flex items-center gap-2 mb-3">
-            <Button size="sm" onClick={handleShip} disabled={!buildResult || shipping} className="gap-1.5">
+            <Btn onClick={handleShip} disabled={!buildResult || shipping}>
               {shipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Rocket className="w-3.5 h-3.5" />}
               {shipping ? "Pushing…" : "Push to Registry"}
-            </Button>
+            </Btn>
             {!buildResult && (
               <span className="text-xs text-muted-foreground ml-2">Build an image first</span>
             )}
@@ -475,8 +443,8 @@ export default function AppBuilderPage() {
           {shipResult ? (
             <div className="border border-border rounded p-4 bg-muted/20 space-y-3 flex-1">
               <div className="flex items-center gap-2 text-xs">
-                <CheckCircle2 className="w-4 h-4 text-green-400" />
-                <span className="text-green-400 font-medium">Shipped successfully</span>
+                <CheckCircle2 className="w-4 h-4 text-primary" />
+                <span className="text-primary font-medium">Shipped successfully</span>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
@@ -499,7 +467,7 @@ export default function AppBuilderPage() {
               <div className="border-t border-border pt-3">
                 <div className="text-xs text-muted-foreground mb-1">Deployment Snapshot</div>
                 <div className="text-[10px] font-mono break-all text-primary">
-                  {shipResult.snapshot.snapshotId}
+                  {shipResult.snapshot["u:canonicalId"]}
                 </div>
                 <div className="text-[10px] text-muted-foreground mt-1">
                   {shipResult.snapshot.components.length} components ·
@@ -508,31 +476,24 @@ export default function AppBuilderPage() {
                 </div>
               </div>
 
-              <Button
-                size="sm"
+              <Btn
                 variant="outline"
-                className="gap-1.5 mt-2"
+                className="mt-2"
                 onClick={() => {
-                  const blob = new Blob([JSON.stringify(shipResult.snapshot, null, 2)], {
-                    type: "application/json",
-                  });
+                  const blob = new Blob([JSON.stringify(shipResult.snapshot, null, 2)], { type: "application/json" });
                   const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `snapshot-${shipResult.snapshot.snapshotId.slice(0, 12)}.json`;
-                  a.click();
-                  URL.revokeObjectURL(url);
+                  const a = document.createElement("a"); a.href = url;
+                  a.download = `snapshot-${shipResult.snapshot["u:canonicalId"].slice(0, 12)}.json`;
+                  a.click(); URL.revokeObjectURL(url);
                   log("SHIP", "Snapshot exported");
                 }}
               >
                 <Download className="w-3.5 h-3.5" /> Export Snapshot
-              </Button>
+              </Btn>
             </div>
           ) : (
             <div className="flex-1 border border-border rounded bg-muted/20 flex items-center justify-center">
-              <span className="text-xs text-muted-foreground">
-                Build an image, then push to the registry
-              </span>
+              <span className="text-xs text-muted-foreground">Build an image, then push to the registry</span>
             </div>
           )}
         </TabsContent>
@@ -551,18 +512,20 @@ export default function AppBuilderPage() {
           <div className="flex items-center gap-2">
             {auditLog.length > 0 && (
               <>
-                <button
+                <span
+                  role="button"
                   onClick={(e) => { e.stopPropagation(); exportLogJSON(); }}
-                  className="hover:text-primary text-[10px] underline"
+                  className="hover:text-primary text-[10px] underline cursor-pointer"
                 >
                   JSON
-                </button>
-                <button
+                </span>
+                <span
+                  role="button"
                   onClick={(e) => { e.stopPropagation(); exportLogCSV(); }}
-                  className="hover:text-primary text-[10px] underline"
+                  className="hover:text-primary text-[10px] underline cursor-pointer"
                 >
                   CSV
-                </button>
+                </span>
               </>
             )}
             {logOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
