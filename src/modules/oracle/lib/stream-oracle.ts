@@ -87,7 +87,7 @@ export async function streamOracle({
       try {
         const parsed = JSON.parse(jsonStr);
         const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (content) { ttft.markFirstToken(); onDelta(content); }
+        if (content) { ttft.markFirstToken(); accumulated += content; onDelta(content); }
       } catch {
         // Incomplete JSON — will be handled in next chunk
       }
