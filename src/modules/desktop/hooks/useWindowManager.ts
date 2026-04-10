@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 
 export interface WindowState {
   id: string;
@@ -23,7 +23,7 @@ export interface SnapZone {
   rowSpan: number;
 }
 
-const STORAGE_KEY = "uor:desktop-windows";
+const STORAGE_PREFIX = "uor:desktop-windows";
 const MIN_W = 360;
 const MIN_H = 280;
 const MENU_BAR_H = 38;
@@ -34,9 +34,13 @@ const GRID_ROWS = 4;
 
 let zCounter = 10;
 
-function loadWindows(): WindowState[] {
+function storageKey(screen: string) {
+  return screen === "immersive" ? STORAGE_PREFIX : `${STORAGE_PREFIX}:${screen}`;
+}
+
+function loadWindows(screen: string): WindowState[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey(screen));
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
@@ -53,18 +57,20 @@ function loadWindows(): WindowState[] {
   return [];
 }
 
-// Debounced persist — only writes to localStorage at most once per 500ms
 let _saveTimer: ReturnType<typeof setTimeout> | null = null;
-function debouncedSave(windows: WindowState[]) {
+let _saveScreen: string = "immersive";
+
+function debouncedSave(windows: WindowState[], screen: string) {
   if (_saveTimer) clearTimeout(_saveTimer);
+  _saveScreen = screen;
   _saveTimer = setTimeout(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(windows)); } catch {}
+    try { localStorage.setItem(storageKey(_saveScreen), JSON.stringify(windows)); } catch {}
   }, 500);
 }
 
-function saveWindowsImmediate(windows: WindowState[]) {
+function saveWindowsImmediate(windows: WindowState[], screen: string) {
   if (_saveTimer) clearTimeout(_saveTimer);
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(windows)); } catch {}
+  try { localStorage.setItem(storageKey(screen), JSON.stringify(windows)); } catch {}
 }
 
 export function detectSnapZone(clientX: number, clientY: number): SnapZone | null {
@@ -111,23 +117,42 @@ export function snapZoneToRectCustom(zone: SnapZone, cols: number, rows: number)
   };
 }
 
-export function useWindowManager() {
-  const [windows, setWindows] = useState<WindowState[]>(loadWindows);
+/**
+ * useWindowManager — now screen-aware.
+ * Each desktop screen (immersive/dark/light) has its own persistent window set.
+ */
+export function useWindowManager(screen: string = "immersive") {
+  const [windows, setWindows] = useState<WindowState[]>(() => loadWindows(screen));
   const nextZ = useRef(zCounter);
+  const screenRef = useRef(screen);
 
-  // RAF gating for drag/resize — only updates state once per animation frame
+  // When screen changes, save current windows then load the new screen's windows
+  useEffect(() => {
+    if (screenRef.current !== screen) {
+      // Save outgoing screen
+      setWindows(prev => {
+        saveWindowsImmediate(prev, screenRef.current);
+        return prev;
+      });
+      screenRef.current = screen;
+      // Load incoming screen
+      const loaded = loadWindows(screen);
+      setWindows(loaded);
+    }
+  }, [screen]);
+
   const rafRef = useRef<number | null>(null);
   const pendingMoveRef = useRef<{ id: string; pos: { x: number; y: number } } | null>(null);
   const pendingResizeRef = useRef<{ id: string; size: { w: number; h: number } } | null>(null);
 
   const persist = useCallback((ws: WindowState[]) => {
     setWindows(ws);
-    debouncedSave(ws);
+    debouncedSave(ws, screenRef.current);
   }, []);
 
   const persistImmediate = useCallback((ws: WindowState[]) => {
     setWindows(ws);
-    saveWindowsImmediate(ws);
+    saveWindowsImmediate(ws, screenRef.current);
   }, []);
 
   const openApp = useCallback((appId: string, title: string, defaultSize?: { w: number; h: number }, options?: { maximized?: boolean }) => {
@@ -138,7 +163,7 @@ export function useWindowManager() {
         const next = prev.map(w =>
           w.id === existing.id ? { ...w, title, minimized: false, zIndex: z, maximized: options?.maximized ?? w.maximized } : w
         );
-        saveWindowsImmediate(next);
+        saveWindowsImmediate(next, screenRef.current);
         return next;
       }
       const offsetIndex = prev.length % 8;
@@ -159,7 +184,7 @@ export function useWindowManager() {
         preSnap: null,
       };
       const next = [...prev, newWin];
-      saveWindowsImmediate(next);
+      saveWindowsImmediate(next, screenRef.current);
       return next;
     });
   }, []);
@@ -167,7 +192,7 @@ export function useWindowManager() {
   const closeWindow = useCallback((id: string) => {
     setWindows(prev => {
       const next = prev.filter(w => w.id !== id);
-      saveWindowsImmediate(next);
+      saveWindowsImmediate(next, screenRef.current);
       return next;
     });
   }, []);
@@ -176,7 +201,7 @@ export function useWindowManager() {
     setWindows(prev => {
       const z = ++nextZ.current;
       const next = prev.map(w => w.id === id ? { ...w, zIndex: z, minimized: false } : w);
-      debouncedSave(next);
+      debouncedSave(next, screenRef.current);
       return next;
     });
   }, []);
@@ -184,7 +209,7 @@ export function useWindowManager() {
   const minimizeWindow = useCallback((id: string) => {
     setWindows(prev => {
       const next = prev.map(w => w.id === id ? { ...w, minimized: true } : w);
-      saveWindowsImmediate(next);
+      saveWindowsImmediate(next, screenRef.current);
       return next;
     });
   }, []);
@@ -194,12 +219,11 @@ export function useWindowManager() {
       const next = prev.map(w =>
         w.id === id ? { ...w, maximized: !w.maximized, zIndex: ++nextZ.current, preSnap: null } : w
       );
-      saveWindowsImmediate(next);
+      saveWindowsImmediate(next, screenRef.current);
       return next;
     });
   }, []);
 
-  // RAF-gated move: batches pointer events to one state update per frame
   const moveWindow = useCallback((id: string, pos: { x: number; y: number }) => {
     pendingMoveRef.current = { id, pos };
     if (rafRef.current === null) {
@@ -208,16 +232,11 @@ export function useWindowManager() {
         const pending = pendingMoveRef.current;
         if (!pending) return;
         pendingMoveRef.current = null;
-        setWindows(prev => {
-          const next = prev.map(w => w.id === pending.id ? { ...w, position: pending.pos, maximized: false } : w);
-          // No localStorage during drag — committed on dragEnd via commitWindowPosition
-          return next;
-        });
+        setWindows(prev => prev.map(w => w.id === pending.id ? { ...w, position: pending.pos, maximized: false } : w));
       });
     }
   }, []);
 
-  // RAF-gated resize
   const resizeWindow = useCallback((id: string, size: { w: number; h: number }) => {
     pendingResizeRef.current = { id, size };
     if (rafRef.current === null) {
@@ -226,22 +245,18 @@ export function useWindowManager() {
         const pending = pendingResizeRef.current;
         if (!pending) return;
         pendingResizeRef.current = null;
-        setWindows(prev => {
-          const next = prev.map(w =>
-            w.id === pending.id
-              ? { ...w, size: { w: Math.max(MIN_W, pending.size.w), h: Math.max(MIN_H, pending.size.h) } }
-              : w
-          );
-          return next;
-        });
+        setWindows(prev => prev.map(w =>
+          w.id === pending.id
+            ? { ...w, size: { w: Math.max(MIN_W, pending.size.w), h: Math.max(MIN_H, pending.size.h) } }
+            : w
+        ));
       });
     }
   }, []);
 
-  // Called on dragEnd/resizeEnd to commit to localStorage
   const commitWindowPosition = useCallback(() => {
     setWindows(prev => {
-      saveWindowsImmediate(prev);
+      saveWindowsImmediate(prev, screenRef.current);
       return prev;
     });
   }, []);
@@ -260,7 +275,7 @@ export function useWindowManager() {
           zIndex: ++nextZ.current,
         };
       });
-      saveWindowsImmediate(next);
+      saveWindowsImmediate(next, screenRef.current);
       return next;
     });
   }, []);
@@ -271,7 +286,7 @@ export function useWindowManager() {
         if (w.id !== id || !w.preSnap) return w;
         return { ...w, position: w.preSnap.position, size: w.preSnap.size, preSnap: null };
       });
-      saveWindowsImmediate(next);
+      saveWindowsImmediate(next, screenRef.current);
       return next;
     });
   }, []);
@@ -281,7 +296,7 @@ export function useWindowManager() {
       const next = [...prev];
       const [moved] = next.splice(fromIndex, 1);
       next.splice(toIndex, 0, moved);
-      saveWindowsImmediate(next);
+      saveWindowsImmediate(next, screenRef.current);
       return next;
     });
   }, []);
@@ -292,7 +307,7 @@ export function useWindowManager() {
       const pinned = next.filter(w => w.pinned);
       const unpinned = next.filter(w => !w.pinned);
       const sorted = [...pinned, ...unpinned];
-      saveWindowsImmediate(sorted);
+      saveWindowsImmediate(sorted, screenRef.current);
       return sorted;
     });
   }, []);
@@ -307,7 +322,7 @@ export function useWindowManager() {
         if (childIds.includes(w.id)) return { ...w, mergedParent: primaryId, minimized: true };
         return w;
       });
-      saveWindowsImmediate(next);
+      saveWindowsImmediate(next, screenRef.current);
       return next;
     });
   }, []);
@@ -322,7 +337,7 @@ export function useWindowManager() {
         if (childIds.includes(w.id)) return { ...w, mergedParent: undefined, minimized: false, zIndex: ++nextZ.current };
         return w;
       });
-      saveWindowsImmediate(next);
+      saveWindowsImmediate(next, screenRef.current);
       return next;
     });
   }, []);
@@ -350,7 +365,7 @@ export function useWindowManager() {
         if (!assignedIds.has(w.id) && !w.minimized) return { ...w, minimized: true };
         return w;
       });
-      saveWindowsImmediate(next);
+      saveWindowsImmediate(next, screenRef.current);
       return next;
     });
   }, []);
@@ -358,12 +373,11 @@ export function useWindowManager() {
   const bootWindow = useCallback((id: string) => {
     setWindows(prev => {
       const next = prev.map(w => w.id === id ? { ...w, booted: true } : w);
-      saveWindowsImmediate(next);
+      saveWindowsImmediate(next, screenRef.current);
       return next;
     });
   }, []);
 
-  // Memoize activeWindowId to avoid recomputing on every render
   const activeWindowId = useMemo(() => {
     let maxZ = -1;
     let activeId: string | null = null;
