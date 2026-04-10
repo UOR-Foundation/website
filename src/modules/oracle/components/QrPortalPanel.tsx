@@ -18,6 +18,8 @@ interface QrPortalPanelProps {
   targetLens: string;
   immersive?: boolean;
   anchorRef?: React.RefObject<HTMLElement>;
+  /** When true, generates a uor://handoff/{token} deep-link URI for desktop apps */
+  desktopDeepLink?: boolean;
 }
 
 const PORTAL_TTL = 5 * 60;
@@ -29,6 +31,7 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
   targetLens,
   immersive = true,
   anchorRef,
+  desktopDeepLink = false,
 }) => {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -85,7 +88,10 @@ const QrPortalPanel: React.FC<QrPortalPanelProps> = ({
           throw new Error(errBody.error || "Failed to create portal");
         }
         const { token } = await res.json();
-        portalUrl = `${origin}/search?portal=${token}`;
+        // Generate either a uor:// deep-link or a browser URL
+        portalUrl = desktopDeepLink
+          ? `uor://handoff/${token}`
+          : `${origin}/search?portal=${token}`;
       }
 
       const dataUrl = await QRCode.toDataURL(portalUrl, {

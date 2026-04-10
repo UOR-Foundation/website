@@ -10,7 +10,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useContextManager } from "@/modules/sovereign-vault/hooks/useContextManager";
 import ContextPills from "@/modules/sovereign-vault/components/ContextPills";
-import { ArrowRight, Upload, Sparkles, MessageCircle, BookOpen, FolderOpen, LayoutGrid, Play, Download } from "lucide-react";
+import { ArrowRight, Upload, Sparkles, MessageCircle, BookOpen, FolderOpen, LayoutGrid, Play, Download, MonitorSmartphone } from "lucide-react";
 import type { WindowState } from "@/modules/desktop/hooks/useWindowManager";
 import { useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { usePlatform } from "@/modules/desktop/hooks/usePlatform";
@@ -25,6 +25,7 @@ import { createSuggestionEngine, type SearchSuggestion } from "@/modules/oracle/
 import { getSearchHistory } from "@/modules/oracle/lib/search-history";
 import { loadProfile as loadAttentionProfile } from "@/modules/oracle/lib/attention-tracker";
 import SearchSuggestions from "@/modules/desktop/SearchSuggestions";
+import { generateHandoffLink } from "@/modules/desktop/lib/handoff";
 
 interface Props {
   windows: WindowState[];
@@ -411,26 +412,39 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
 
         {/* Download desktop app CTA — only in browser, not in Tauri */}
         {!("__TAURI__" in window) && (
-          <a
-            href="/download"
-            className="mt-5 group inline-flex items-center gap-3 px-6 py-3 text-[11px] font-semibold uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-            style={{
-              color: isImmersive ? "hsl(210 100% 80%)" : isLight ? "hsl(210 80% 45%)" : "hsl(210 100% 75%)",
-              border: isImmersive
-                ? "1px solid hsl(210 100% 72% / 0.20)"
-                : isLight ? "1px solid hsl(210 80% 45% / 0.15)" : "1px solid hsl(210 100% 72% / 0.15)",
-              borderRadius: isMac ? "9999px" : "0.75rem",
-              background: isImmersive
-                ? "linear-gradient(135deg, hsl(210 100% 72% / 0.08), hsl(220 80% 60% / 0.05))"
-                : isLight
-                  ? "linear-gradient(135deg, hsl(210 80% 45% / 0.06), hsl(210 80% 45% / 0.02))"
-                  : "linear-gradient(135deg, hsl(210 100% 72% / 0.06), hsl(220 80% 60% / 0.03))",
-              boxShadow: "0 2px 12px -4px hsl(210 100% 50% / 0.1)",
-            }}
-          >
-            <Download className="w-4 h-4 transition-transform duration-300 group-hover:-translate-y-0.5" />
-            <span>Go Sovereign — Download Desktop</span>
-          </a>
+          <div className="flex items-center gap-3 mt-5" style={{ opacity: clockOpacity, transition: "opacity 300ms ease-out" }}>
+            <a
+              href="/download"
+              className="group inline-flex items-center gap-3 px-6 py-3 text-[11px] font-semibold uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                color: isImmersive ? "hsl(210 100% 80%)" : isLight ? "hsl(210 80% 45%)" : "hsl(210 100% 75%)",
+                border: isImmersive
+                  ? "1px solid hsl(210 100% 72% / 0.20)"
+                  : isLight ? "1px solid hsl(210 80% 45% / 0.15)" : "1px solid hsl(210 100% 72% / 0.15)",
+                borderRadius: isMac ? "9999px" : "0.75rem",
+                background: isImmersive
+                  ? "linear-gradient(135deg, hsl(210 100% 72% / 0.08), hsl(220 80% 60% / 0.05))"
+                  : isLight
+                    ? "linear-gradient(135deg, hsl(210 80% 45% / 0.06), hsl(210 80% 45% / 0.02))"
+                    : "linear-gradient(135deg, hsl(210 100% 72% / 0.06), hsl(220 80% 60% / 0.03))",
+                boxShadow: "0 2px 12px -4px hsl(210 100% 50% / 0.1)",
+              }}
+            >
+              <Download className="w-4 h-4 transition-transform duration-300 group-hover:-translate-y-0.5" />
+              <span>Go Sovereign — Download Desktop</span>
+            </a>
+
+            {/* Transfer to Desktop — only when authenticated */}
+            {profile && (
+              <TransferToDesktopButton
+                windows={windows}
+                theme={theme}
+                isImmersive={isImmersive}
+                isLight={isLight}
+                isMac={isMac}
+              />
+            )}
+          </div>
         )}
       </div>
 
@@ -454,6 +468,111 @@ export default function DesktopWidgets({ windows, onSearch, onOpenApp }: Props) 
           color: ${placeholderColor};
         }
       `}</style>
+    </div>
+  );
+}
+
+// ── Transfer to Desktop Button ──────────────────────────────────────────
+
+function TransferToDesktopButton({
+  windows,
+  theme,
+  isImmersive,
+  isLight,
+  isMac,
+}: {
+  windows: WindowState[];
+  theme: string;
+  isImmersive: boolean;
+  isLight: boolean;
+  isMac: boolean;
+}) {
+  const [handoffUri, setHandoffUri] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleTransfer = async () => {
+    setGenerating(true);
+    setError(null);
+    try {
+      const { uri } = await generateHandoffLink({
+        windows,
+        activeWindowId: null,
+        theme,
+      });
+      setHandoffUri(uri);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to generate link");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={handleTransfer}
+        disabled={generating}
+        className="group inline-flex items-center gap-2 px-4 py-3 text-[11px] font-semibold uppercase tracking-widest transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+        style={{
+          color: isImmersive ? "hsl(160 70% 70%)" : isLight ? "hsl(160 60% 35%)" : "hsl(160 70% 65%)",
+          border: isImmersive
+            ? "1px solid hsl(160 70% 60% / 0.20)"
+            : isLight ? "1px solid hsl(160 60% 35% / 0.15)" : "1px solid hsl(160 70% 60% / 0.15)",
+          borderRadius: isMac ? "9999px" : "0.75rem",
+          background: isImmersive
+            ? "linear-gradient(135deg, hsl(160 70% 60% / 0.08), hsl(160 50% 50% / 0.05))"
+            : isLight
+              ? "linear-gradient(135deg, hsl(160 60% 35% / 0.06), hsl(160 60% 35% / 0.02))"
+              : "linear-gradient(135deg, hsl(160 70% 60% / 0.06), hsl(160 50% 50% / 0.03))",
+        }}
+        title="Transfer your current session to the desktop app"
+      >
+        <MonitorSmartphone className="w-4 h-4" />
+        <span>{generating ? "Generating…" : "Transfer"}</span>
+      </button>
+
+      {/* Handoff link popup */}
+      {handoffUri && (
+        <div
+          className="absolute bottom-full left-0 mb-2 p-3 rounded-xl text-xs w-64"
+          style={{
+            background: "hsl(220 15% 12%)",
+            border: "1px solid hsl(0 0% 100% / 0.1)",
+            boxShadow: "0 8px 32px -8px hsl(0 0% 0% / 0.5)",
+          }}
+        >
+          <p className="mb-2" style={{ color: "hsl(0 0% 70%)" }}>
+            Open this link on your desktop:
+          </p>
+          <a
+            href={handoffUri}
+            className="block font-mono text-[10px] break-all p-2 rounded-lg"
+            style={{
+              color: "hsl(210 100% 72%)",
+              background: "hsl(210 100% 72% / 0.06)",
+              border: "1px solid hsl(210 100% 72% / 0.15)",
+            }}
+          >
+            {handoffUri}
+          </a>
+          <button
+            onClick={() => {
+              navigator.clipboard?.writeText(handoffUri);
+            }}
+            className="mt-2 text-[10px] uppercase tracking-wider font-semibold"
+            style={{ color: "hsl(0 0% 50%)" }}
+          >
+            Copy Link
+          </button>
+        </div>
+      )}
+
+      {error && (
+        <p className="absolute bottom-full left-0 mb-2 text-[10px]" style={{ color: "hsl(0 70% 60%)" }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }

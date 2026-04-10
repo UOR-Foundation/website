@@ -23,6 +23,7 @@ import RingIndicator from "@/modules/desktop/components/RingIndicator";
 import ShortcutCheatSheet from "@/modules/desktop/components/ShortcutCheatSheet";
 import BootSequence from "@/modules/desktop/BootSequence";
 import LocalTwinWelcome, { shouldShowLocalTwinWelcome } from "@/modules/desktop/components/LocalTwinWelcome";
+import HandoffReceiver from "@/modules/desktop/components/HandoffReceiver";
 import { DesktopThemeProvider, useDesktopTheme } from "@/modules/desktop/hooks/useDesktopTheme";
 import { PlatformProvider, usePlatform } from "@/modules/desktop/hooks/usePlatform";
 import { ConnectivityProvider } from "@/modules/desktop/hooks/useConnectivity";
@@ -232,6 +233,15 @@ function DesktopShellInner() {
 
         {/* Local twin welcome — shows once on first Tauri launch, after boot completes */}
         {booted && !welcomed && <LocalTwinWelcome onComplete={() => setWelcomed(true)} />}
+
+        {/* Cloud-to-local handoff receiver — listens for uor://handoff deep-links */}
+        <HandoffReceiver
+          onHandoffComplete={(result) => {
+            if (result.targetUrl && result.targetUrl !== "/") {
+              handleOpenApp("search");
+            }
+          }}
+        />
       </div>
     </DesktopContextMenu>
   );

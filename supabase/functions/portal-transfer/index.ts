@@ -41,6 +41,7 @@ Deno.serve(async (req) => {
       const body = await req.json();
       const targetUrl = typeof body.target_url === "string" ? body.target_url : "/search";
       const targetLens = typeof body.target_lens === "string" ? body.target_lens : "overview";
+      const snapshotData = body.snapshot_data ?? null;
 
       const token = crypto.randomUUID();
 
@@ -48,7 +49,7 @@ Deno.serve(async (req) => {
       const admin = createClient(supabaseUrl, serviceKey);
       const { error: insertErr } = await admin
         .from("session_transfers")
-        .insert({ token, user_id: userId, target_url: targetUrl, target_lens: targetLens });
+        .insert({ token, user_id: userId, target_url: targetUrl, target_lens: targetLens, snapshot_data: snapshotData });
 
       if (insertErr) {
         return new Response(JSON.stringify({ error: "Failed to create token" }), {
@@ -142,6 +143,7 @@ Deno.serve(async (req) => {
         JSON.stringify({
           target_url: transfer.target_url,
           target_lens: transfer.target_lens,
+          snapshot_data: transfer.snapshot_data ?? null,
           // The hashed_token is what the client uses with verifyOtp
           hashed_token: linkData.properties?.hashed_token,
           email: userData.user.email,

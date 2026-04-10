@@ -20,6 +20,7 @@ export type DeepLinkAction =
   | { type: "resolve"; canonicalId: string }
   | { type: "open-app"; appId: string; args?: string }
   | { type: "search"; query: string }
+  | { type: "handoff"; token: string }
   | { type: "unknown"; raw: string };
 
 // ── Parser ──────────────────────────────────────────────────────────────
@@ -55,6 +56,9 @@ export function parseDeepLink(url: string): DeepLinkAction {
     }
     if (segments[0] === "search") {
       return { type: "search", query: parsed.searchParams.get("q") ?? "" };
+    }
+    if (segments[0] === "handoff" && segments[1]) {
+      return { type: "handoff", token: segments[1] };
     }
 
     return { type: "unknown", raw: url };
