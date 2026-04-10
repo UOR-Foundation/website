@@ -104,7 +104,7 @@ export default function ComplianceDashboardPage() {
   }, []);
 
   const breadcrumbPath = useMemo(() => {
-    const base = [{ label: "Compliance", action: () => setSelectedNode(null) }];
+    const base: { label: string; action?: () => void }[] = [{ label: "Compliance", action: () => setSelectedNode(null) }];
     if (selectedCategory) {
       base.push({ label: selectedCategory });
     }
