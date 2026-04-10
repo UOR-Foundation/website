@@ -4,8 +4,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Search, Volume2 } from "lucide-react";
-import { useConnectivity } from "@/modules/desktop/hooks/useConnectivity";
-import ConnectivityPopover from "@/modules/desktop/components/ConnectivityPopover";
 import {
   Menubar, MenubarMenu, MenubarTrigger, MenubarContent,
   MenubarItem, MenubarSeparator, MenubarShortcut,
@@ -32,12 +30,8 @@ export default function DesktopMenuBar({
   activeWindowId, windows, onSpotlight, onCloseWindow, onMinimizeWindow, onHideAll, onOpenApp, onShowShortcuts,
 }: Props) {
   const [time, setTime] = useState(new Date());
-  const conn = useConnectivity();
-  const online = conn.online;
   const { isLight, theme, setTheme } = useDesktopTheme();
   const { ringKey } = usePlatform();
-  const [statusOpen, setStatusOpen] = useState(false);
-  const toggleStatus = useCallback(() => setStatusOpen(o => !o), []);
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 30_000);
