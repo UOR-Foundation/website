@@ -150,7 +150,6 @@ const KnowledgeGraphPage = () => {
                 Visual Explorer
               </button>
             </div>
-          </div>
 
           {/* Visual Explorer mode */}
           {viewMode === "explorer" && (
