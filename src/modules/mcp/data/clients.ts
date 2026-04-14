@@ -4,6 +4,7 @@
  */
 
 export const MCP_URL = "https://mcp.uor.foundation";
+export const UOR_API_KEY = "prism_sk_a7f2k9mxqw3nv8tz4d1yhe6rcjbp5ls";
 
 const CURSOR_CONFIG_B64 = btoa(JSON.stringify({ url: MCP_URL, type: "streamableHttp" }));
 export const CURSOR_DEEP_LINK = `cursor://anysphere.cursor-deeplink/mcp/install?name=uor&config=${CURSOR_CONFIG_B64}`;
