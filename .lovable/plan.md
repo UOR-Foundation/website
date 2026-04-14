@@ -1,120 +1,139 @@
 
 
-# Standardize All Pages to Match Home Page Format
+# Copy & Clarity Pass: Replace Jargon, Sharpen Wording Site-Wide
 
-## Problem
+## Summary
 
-The site has ~17 pages using 3 different incompatible header/section formats. The well-formatted pages (About, Projects, Community, Framework, MCP, Donate) follow a clear pattern. The remaining pages break visual continuity.
+After reviewing every page component and data file, I found ~40 instances of technical jargon, vague phrasing, or insider terminology that can be replaced with clearer, more intuitive language. The changes are purely textual — no layout or logic changes.
 
-## The Standard Pattern (from Home Page / About / Projects / Framework)
+## Findings by Area
 
-Every page follows this structure:
+### 1. Landing Page Sections
 
-```text
-┌──────────────────────────────────────────────┐
-│ hero-gradient  pt-44 md:pt-56  pb-16 md:pb-24│
-│                                              │
-│ H1: font-display text-fluid-page-title       │
-│ Subtitle: text-fluid-body text-foreground/70 │
-│ CTA buttons (if applicable)                  │
-├──────────────────────────────────────────────┤
-│ SECTION (py-section-sm border-b border/40)   │
-│                                              │
-│ PRE-LABEL: uppercase tracking-[0.2em]        │
-│            text-primary/70 text-fluid-lead   │
-│ H2: font-display text-fluid-heading font-bold│
-│ Content...                                   │
-├──────────────────────────────────────────────┤
-│ SECTION (repeat pattern)                     │
-│ ...                                          │
-└──────────────────────────────────────────────┘
-```
+**IntroSection / WhatIsUorSection**
+- "No coordination protocol" → unclear to most readers
+- Current: "No central registry, no coordination protocol, no single point of failure"
+- Better: "No central registry. No middleman. No single point of failure."
+- "References that survive migration, replication, and federation" → technical triad
+- Better: "Addresses that survive when data moves between systems, gets copied, or spans organizations."
 
-Key tokens:
-- **Hero**: `hero-gradient pt-44 md:pt-56 pb-16 md:pb-24`
-- **H1**: `font-display text-fluid-page-title font-bold text-foreground`
-- **Subtitle**: `mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl`
-- **Section**: `py-section-sm bg-background border-b border-border/40`
-- **Pre-label**: `font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md`
-- **H2**: `font-display text-fluid-heading font-bold text-foreground mb-8`
-- **Container**: `container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]`
+**ApplicationsSection**
+- "middleware" → jargon
+- Current: "…without custom translations or middleware"
+- Better: "…without custom adapters or glue code"
+- "Proof-Based Computation" → abstract
+- Better: "Verifiable Computation"
+- "produce a receipt anyone can check" → good, keep
+- "composable across institutions, disciplines, and borders without special tooling" → slightly verbose
+- Better: "composable across institutions and disciplines — no special tooling required"
 
-## Pages to Update
+**CodeExampleSection**
+- "Every UOR address is a prime factorization. The address IS the proof." → assume math knowledge
+- Better: "The address is computed directly from the content. If the content matches, the address matches. No lookup required."
 
-### Group A: "Module N" header style → standard hero (6 pages)
-These use `py-20 md:py-28` with raw `text-3xl` headings and "Module N" labels.
+**EcosystemSection / ProjectsShowcase**
+- "UOR Ecosystem" pre-label → "Our Projects" is clearer (already used in EcosystemSection, but ProjectsShowcase still says "UOR Ecosystem")
 
-| Page | Current Title | New Title |
-|------|--------------|-----------|
-| `RingExplorerPage.tsx` | "Module 1. Ring Arithmetic Core" + "Ring Explorer" | "Ring Explorer" |
-| `DerivationLabPage.tsx` | "Module 4. Derivation & Certificate Engine" + "Derivation Lab" | "Derivation Lab" |
-| `KnowledgeGraphPage.tsx` | "Module 6. Knowledge Graph Store" + "Knowledge Graph" | "Knowledge Graph" |
-| `SparqlEditorPage.tsx` | "Module 8. SPARQL Query Interface" + "SPARQL Editor" | "SPARQL Editor" |
-| `AgentConsolePage.tsx` | (inline header) | "Agent Console" |
-| `CodeKnowledgeGraphPage.tsx` | (Module label) | "Code Knowledge Graph" |
+### 2. Developer Tool Pages (Heroes)
 
-**Changes**: Replace the `<section className="py-20 md:py-28">` + `<div className="mb-12">` pattern with the standard hero section. Remove "Module N." prefixes. Apply fluid typography tokens. Wrap content sections in `py-section-sm` with pre-labels and H2s.
+**RingExplorerPage**
+- "Explore the algebraic foundation of the UOR Framework. Z/(2^n)Z ring operations with live coherence verification and API cross-validation."
+- Better: "Explore how UOR computes addresses. Test every operation, verify correctness across all values, and compare results against the live API."
 
-### Group B: Primary-colored header → standard hero (4 pages)
-These use `bg-[hsl(var(--primary))] py-12 md:py-16` for a colored banner.
+**DerivationLabPage**
+- "Every computation produces an auditable derivation record, a verifiable certificate, and a self-verifying canonical receipt."
+- Better: "Run any operation and get three things back: a step-by-step record of what happened, a certificate proving it was done correctly, and a receipt anyone can independently verify."
 
-| Page | Current Title |
-|------|--------------|
-| `VerifyPage.tsx` | "UOR Critical Identity Verifier" → "Identity Verifier" |
-| `EpistemicPage.tsx` | "Epistemic Grading Console" → "Epistemic Grading" |
-| `CertificatesPage.tsx` | (primary banner) → "Certificates" |
-| `SparqlPage.tsx` | (primary banner) → "SPARQL Console" |
+**KnowledgeGraphPage**
+- "Persistent dual-addressed storage. Every datum has a UOR IRI for identity and a database record for querying. JSON-LD remains the canonical format."
+- Better: "A searchable store where every piece of data has a permanent address. Look up any value by its content or by its identifier."
 
-**Changes**: Replace the primary-colored `<section>` with `hero-gradient` hero. Move quantum selector pills into the first content section if needed. Wrap content cards in standard section dividers.
+**SparqlEditorPage**
+- "Query the UOR triple store using SPARQL-like syntax. Every result is enriched with an epistemic grade from the derivation chain."
+- Better: "Search the knowledge graph using structured queries. Every result includes a trust grade showing how it was verified."
 
-### Group C: Full-screen / custom layouts → standard hero + sections (7 pages)
-These use `min-h-screen bg-background` or similar custom wrappers.
+**CodeKnowledgeGraphPage**
+- "Transform TypeScript/JavaScript source code into a UOR-grounded knowledge graph. Every code entity receives a canonical derivation and IRI."
+- Better: "Turn source code into a searchable graph. Every function, class, and variable gets a permanent, verifiable address."
 
-| Page | New Title |
-|------|-----------|
-| `UnsPage.tsx` | "Name Service" |
-| `AppStorePage.tsx` | "App Store" |
-| `ToolRegistryPage.tsx` | "Tool Registry" |
-| `CartridgePage.tsx` | "QR Cartridge" |
-| `PrismPipelinePage.tsx` | "Prism Pipeline" |
-| `TrustScorePreview.tsx` | "Trust Score" |
-| `MessengerPage.tsx` | "Messenger" |
+**EpistemicPage**
+- "Submit claims with evidence to receive certificates from Grade A (algebraically proven) to Grade D (unverified)."
+- Better: "Submit any claim with its evidence. The system assigns a trust grade from A (mathematically proven) to D (unverified)."
 
-**Changes**: Add standard hero section at top. Move existing content into properly sectioned containers with pre-labels and H2s.
+**CertificatesPage**
+- "Issue and verify metric-preserving transform certificates. Confirm that transforms preserve ring or Hamming metrics across partition classes."
+- Better: "Test whether an operation preserves the mathematical properties it should. The system issues a certificate with the result."
 
-### Group D: Minor alignment fixes (3 pages)
-| Page | Issue |
-|------|-------|
-| `StandardPage.tsx` | Hero uses `pt-48 md:pt-64 pb-20 md:pb-32` instead of standard `pt-44 md:pt-56 pb-16 md:pb-24` |
-| `ClaimIdentityPage.tsx` | Hero uses `pt-28 md:pt-52` — align to standard |
-| `SandboxPage.tsx` | Hero uses `pt-28 md:pt-52` — align to standard |
+### 3. Infrastructure Pages
 
-### Pages NOT touched
-- `IndexPage.tsx` (home page — the reference model)
-- `OraclePage.tsx` (full-screen chat interface — unique by nature)
-- `ResolvePage.tsx` (full-screen chat interface)
-- `AtlasVisualizationPage.tsx` (full-screen 3D visualization)
-- `QuantumDashboardPage.tsx` (full-screen research dashboard)
-- `ComplianceDashboardPage.tsx` (full-screen dashboard)
-- `DailyNotesPage.tsx`, `LibraryPage.tsx` (Oracle sub-pages)
-- Blog posts (article format, different by design)
-- Already-standard pages (About, Projects, Community, Donate, Framework, MCP, SemanticWeb, Interoperability)
+**AppStorePage**
+- "Every CNCF landscape category — implemented natively with content-addressed isolation, algebraic verification, and unified knowledge graph integration."
+- Better: "Every cloud-native category, reimagined with built-in verification, content-based identity, and a unified data layer."
+- "Algebraic Isolation" → "Permission Isolation"
+- "AppKernel enforces permissions via set intersection — no OS-level hacks needed." → "Permissions are enforced mathematically. No OS-level workarounds needed."
+- "Knowledge Graph Native" → "Graph-Native"
 
-## Label Guidelines
+**UnsPage** — already clean, minor tweak:
+- "A naming system where addresses come from the content itself." — good
 
-- Remove all "Module N." prefixes — they add noise
-- Use short, self-explanatory page titles (1-3 words)
-- Pre-labels describe the category, not the module number
-- Example: pre-label "Developer Tools" + H2 "Ring Explorer", not "Module 1. Ring Arithmetic Core"
+**InteroperabilityPage**
+- "Every external standard is a deterministic projection of a single UOR identity. Explore how they compose into cross-protocol synergy chains."
+- Better: "Every standard is a different view of the same underlying identity. See how they connect and translate between each other."
 
-## Implementation Approach
+### 4. Verify Page Internal Sections
 
-Each page update follows the same mechanical pattern:
-1. Replace header section with standard hero
-2. Wrap content blocks in `py-section-sm` sections with `border-b`
-3. Add gold pre-label + H2 to each section
-4. Apply fluid typography tokens throughout
-5. Ensure `max-w-4xl` constraint where content is prose-heavy (tool pages keep full width for tables/grids)
+**VerifyPage sections** (internal section titles and descriptions):
+- "Universal Coherence Proof" → "Full-Range Verification"
+- "Verify the critical identity holds for every element in Z/256Z" → "Verify that this property holds for all 256 possible values"
+- "Triadic Coordinates" → "Three Views of a Value"
+- "Dihedral Group" → "Symmetry Group" with simplified explanation
+- "Ergodicity" → "Full Reachability"
+- "schema:Datum ⊥ schema:Term" → simplified to "Values vs. Expressions"
 
-Estimated: ~20 files modified, no new files created, no logic changes — purely presentational alignment.
+### 5. Prism Pipeline Page
+
+**Stage descriptions** are pure math notation:
+- "Declare T ∈ 𝒯ₙ. verify ring coherence at quantum level n" → "Check the input and confirm the system is ready"
+- "Construct query: CoordinateQuery | MetricQuery | RepresentationQuery" → "Decide what to ask about this value"
+- "Select Resolver ρ; compute Π(T) = ρ(T, n, K)" → "Choose a method and compute the result"
+- "Produce P=(Irr, Red, Unit, Ext); enforce |I|+|R|+|U|+|E| = 2ⁿ" → "Classify the result into four groups that must add up correctly"
+- "Compute observables from 7 observable categories (§5.2)" → "Measure properties like distance, density, and symmetry"
+- "Emit Certificate C (Transform | Isometry | Involution)" → "Issue a certificate proving the result is correct"
+- "Construct ComputationTrace τ; τ carries trace:certifiedBy → C" → "Record every step so anyone can replay and verify"
+- "Snapshot Frame; record Transition; create new Frame with Binding" → "Save the final state for future reference"
+
+### 6. Data Files
+
+**closure-modes.ts** — already clear
+**signature-ops.ts** — already clear
+**canonicalization-rules.ts** — already clear
+**pillars.ts** — "Add the canonical Rust crate — cargo add uor-foundation — and implement the ontology traits" → "Install the core library and start building with the UOR tools"
+
+### 7. Tool Registry Page
+
+Tool descriptions use heavy jargon like "cert:TransformCertificate (Grade A)", "morphism:Transform", "SHA-256 derivation_id". These should be simplified in the user-facing descriptions while keeping the technical detail in expandable sections.
+
+## Implementation
+
+~20 files modified. All changes are string replacements in JSX/TSX — no logic, no layout, no structural changes. Each file gets 1-5 text edits.
+
+Files to modify:
+1. `src/modules/landing/components/WhatIsUorSection.tsx` (2 edits)
+2. `src/modules/landing/components/IntroSection.tsx` (2 edits)
+3. `src/modules/landing/components/ApplicationsSection.tsx` (3 edits)
+4. `src/modules/landing/components/CodeExampleSection.tsx` (1 edit)
+5. `src/modules/landing/components/ProjectsShowcase.tsx` (1 edit)
+6. `src/modules/ring-core/pages/RingExplorerPage.tsx` (1 edit)
+7. `src/modules/derivation/pages/DerivationLabPage.tsx` (1 edit)
+8. `src/modules/knowledge-graph/pages/KnowledgeGraphPage.tsx` (1 edit)
+9. `src/modules/sparql/pages/SparqlEditorPage.tsx` (1 edit)
+10. `src/modules/code-kg/pages/CodeKnowledgeGraphPage.tsx` (1 edit)
+11. `src/modules/epistemic/pages/EpistemicPage.tsx` (1 edit)
+12. `src/modules/certificate/pages/CertificatesPage.tsx` (1 edit)
+13. `src/modules/app-store/pages/AppStorePage.tsx` (3 edits)
+14. `src/modules/interoperability/pages/InteroperabilityPage.tsx` (1 edit)
+15. `src/modules/verify/pages/VerifyPage.tsx` (5 edits)
+16. `src/modules/projects/pages/PrismPipelinePage.tsx` (8 edits — stage descriptions)
+17. `src/data/pillars.ts` (1 edit)
+18. `src/modules/agent-tools/pages/ToolRegistryPage.tsx` (tool descriptions)
 
