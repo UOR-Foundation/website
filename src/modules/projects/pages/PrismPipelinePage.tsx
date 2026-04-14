@@ -316,7 +316,7 @@ export default function PrismPipelinePage() {
             </details>
           )}
         </div>
-      </div>
+      </section>
     </Layout>
   );
 }

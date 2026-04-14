@@ -353,8 +353,8 @@ const CartridgePage = () => {
               </div>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </Layout>
   );
 };

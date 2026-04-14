@@ -280,7 +280,6 @@ export default function AppStorePage() {
             </div>
           </div>
         </section>
-      </div>
     </Layout>
   );
 }
