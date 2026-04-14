@@ -1,49 +1,100 @@
 
 
-# Why the GitHub Repo Is Not Booting — Analysis and Fix Plan
+# Redesign UOR MCP Page to Match Stripe MCP Documentation Style
 
-## Root Causes Identified
+## What Changes
 
-There are **three independent issues** preventing the repo from booting when deployed standalone.
+Replace the current `ProjectUorMcp` page (which uses the generic `ProjectDetailLayout` wrapper with hero image, category tags, and narrative sections) with a dedicated **documentation-style page** modeled directly on Stripe's MCP page structure.
 
-### 1. Missing Environment Variables (Primary Boot Blocker)
+The current page buries the setup guide inside a project detail card. The new page leads with the connection instructions, exactly like Stripe does.
 
-The `src/integrations/supabase/client.ts` in the GitHub repo has placeholder fallbacks:
-```typescript
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? 'https://placeholder.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? 'placeholder-key';
+## Page Structure (Matching Stripe)
+
+```text
+┌─────────────────────────────────────────────────────┐
+│  Navbar (existing site nav)                         │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  # Model Context Protocol (MCP)                     │
+│  Let your AI agents interact with the UOR API       │
+│  by using our MCP server.                           │
+│                                                     │
+│  One-line intro paragraph                           │
+│                                                     │
+│  ## Connect to UOR's MCP server                     │
+│  ┌─────────────────────────────────┐                │
+│  │ Cursor | VS Code | Claude | …  │  ← tab bar     │
+│  ├─────────────────────────────────┤                │
+│  │ [Install in Cursor] button      │                │
+│  │                                 │                │
+│  │ Or add to ~/.cursor/mcp.json:   │                │
+│  │ ┌─────────────────────────┐     │                │
+│  │ │ { "mcpServers": { … } } │     │  ← code block │
+│  │ └─────────────────────────┘     │                │
+│  │                                 │                │
+│  │ ▸ Verify it works               │  ← collapsible │
+│  │ ▸ Troubleshooting               │                │
+│  └─────────────────────────────────┘                │
+│                                                     │
+│  ## Tools                                           │
+│  Table: Tool name | Description | API link          │
+│                                                     │
+│  ## Resources                                       │
+│  Table: URI | Description                           │
+│                                                     │
+│  ## See also                                        │
+│  Links to related pages                             │
+│                                                     │
+├─────────────────────────────────────────────────────┤
+│  ON THIS PAGE (right sidebar, sticky)               │
+│  - Connect to UOR's MCP server                      │
+│  - Tools                                            │
+│  - Resources                                        │
+│  - See also                                         │
+└─────────────────────────────────────────────────────┘
 ```
 
-When deployed outside Lovable, there is **no `.env` file** in the repo (it's gitignored). The Supabase client initializes with `placeholder.supabase.co`, and any auth or data call fails silently or throws, which can cascade into a blank screen if the boot sequence or AuthProvider depends on a valid Supabase connection.
+## Key Design Decisions
 
-**Fix:** Add a `.env.example` file documenting the required variables, and ensure whoever deploys the repo creates a `.env` with real values — or makes Supabase entirely optional so the app boots without it.
+1. **No hero image, no category tags, no `ProjectDetailLayout`.** The page becomes a clean docs page with the site's existing Navbar/Footer.
 
-### 2. Supabase Client Hardcoded as Required
+2. **Client tabs** — reuse the existing `MCP_CLIENTS` data and `SetupGuide` component, but restructure SetupGuide to match Stripe's layout:
+   - Underlined tab bar (not pill buttons)
+   - "Install in {Client}" as a prominent blue/primary button
+   - Manual config as secondary path below a divider
+   - Collapsible sections for advanced topics
 
-The `AuthProvider` (in `use-auth.tsx`) and the `sovereignBoot` sequence both import and use the Supabase client. If Supabase is unreachable (placeholder URL), the boot may hang or error silently, preventing the React tree from rendering.
+3. **Tools table** — a clean table showing all 10 tools with name, description, and link to docs. Data from `types.ts` tool list, enriched with descriptions.
 
-**Fix:** Add a guard in the Supabase client that detects placeholder values and skips network calls, or make the AuthProvider resilient to connection failures.
+4. **Resources table** — `uor://llms.md` and `uor://openapi.json` with descriptions.
 
-### 3. `@/modules/uns/build/container` TypeScript Error (This Repo)
+5. **Right sidebar** — "ON THIS PAGE" sticky nav with anchor links (like Stripe's).
 
-The build error `Cannot find module '@/modules/uns/build/container'` is in the **parent Lovable project** at `src/modules/app-builder/pages/AppBuilderPage.tsx` (old flat path). This file still uses `@/modules/uns/build/container` instead of `@/modules/identity/uns/build/container`. The `uor-os/` copy was fixed, but the parent repo's copy was not.
+6. **No trust score preview on this page.** The trust stamp section becomes a single collapsible FAQ item, not a separate visual.
 
-**Fix:** Update the parent repo's `src/modules/app-builder/pages/AppBuilderPage.tsx` to use the correct path, or since the `uor-os/` directory has already been ported, simply delete the old flat-path file.
+## Files to Create/Modify
 
----
+| File | Action |
+|------|--------|
+| `src/modules/mcp/pages/McpDocsPage.tsx` | **Create** — new standalone docs page |
+| `src/modules/mcp/components/McpClientTabs.tsx` | **Create** — underlined tab bar + install button + code block (replaces current SetupGuide styling) |
+| `src/modules/mcp/components/McpToolsTable.tsx` | **Create** — tools reference table |
+| `src/modules/mcp/components/McpPageNav.tsx` | **Create** — sticky "On this page" sidebar |
+| `src/modules/mcp/data/tools.ts` | **Create** — tool metadata (name, description, docs URL) |
+| `src/modules/projects/pages/ProjectUorMcp.tsx` | **Modify** — render `McpDocsPage` instead of `ProjectDetailLayout` |
+| `src/modules/mcp/components/SetupGuide.tsx` | **Keep** — may still be used elsewhere; the new page uses `McpClientTabs` instead |
 
-## Implementation Steps
+## Visual Style
 
-| Step | What | Details |
-|------|------|---------|
-| 1 | Fix parent repo build error | Update `src/modules/app-builder/pages/AppBuilderPage.tsx` to reference `@/modules/identity/uns/build/container` (or delete it since it belongs to the old flat structure) |
-| 2 | Add `.env.example` to `uor-os/` | Document `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` |
-| 3 | Make Supabase optional for standalone boot | Guard the Supabase client so it returns a no-op client when env vars are placeholders; make `AuthProvider` and `sovereignBoot` resilient to missing Supabase |
-| 4 | Sync fix to GitHub | Push updated files |
+- White/dark background matching existing site theme (not Stripe's light theme — we keep the dark UOR aesthetic)
+- Clean typography: large H1, medium H2 section headings
+- Tab bar uses underline indicator (not filled pills)
+- Code blocks with line numbers, copy button, dark background
+- Tables with subtle row borders, no outer border
+- Collapsible sections use chevron + bold text (like Stripe's accordion)
+- "Install in {Client}" button uses the site's primary color
 
-## What the User Needs to Do on GitHub
+## Build Error
 
-After we apply these fixes here:
-1. Set up environment variables in their deployment environment (Vercel, Netlify, etc.) with a real Supabase project's URL and anon key — OR — use the standalone-safe guards we'll add
-2. Run `npm install && npm run build` to verify the build passes
+The `npm:openai@^4.52.5` error in the build output is unrelated to this page change — it comes from `@supabase/functions-js` type resolution in the edge function runtime. Will not affect this frontend work.
 
