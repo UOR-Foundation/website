@@ -89,8 +89,8 @@ const CodeKnowledgeGraphPage = () => {
             Code Knowledge Graph
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
-            Transform TypeScript/JavaScript source code into a UOR-grounded knowledge graph.
-            Every code entity receives a canonical derivation and IRI.
+            Turn source code into a searchable graph. Every function, class,
+            and variable gets a permanent, verifiable address.
           </p>
         </div>
       </section>

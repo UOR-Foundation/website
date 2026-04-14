@@ -119,8 +119,8 @@ const KnowledgeGraphPage = () => {
             Knowledge Graph
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
-            Persistent dual-addressed storage. Every datum has a UOR IRI for identity
-            and a database record for querying. JSON-LD remains the canonical format.
+            A searchable store where every piece of data has a permanent address.
+            Look up any value by its content or by its identifier.
           </p>
         </div>
       </section>

@@ -111,8 +111,8 @@ const RingExplorerPage = () => {
             Ring Explorer
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
-            Explore the algebraic foundation of the UOR Framework. Z/(2<sup>n</sup>)Z ring
-            operations with live coherence verification and API cross-validation.
+            Explore how UOR computes addresses. Test every operation, verify correctness
+            across all values, and compare results against the live API.
           </p>
         </div>
       </section>

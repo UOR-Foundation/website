@@ -31,7 +31,7 @@ const CodeExampleSection = () => {
             </pre>
           </div>
           <p className="mt-5 text-muted-foreground font-body leading-relaxed" style={{ fontSize: 'clamp(14px, 0.9vw, 16px)' }}>
-            Every UOR address is a prime factorization. The address IS the proof. No lookup table, no external authority.
+            The address is computed directly from the content. If the content matches, the address matches. No lookup required.
           </p>
         </div>
         <div className="h-px w-full bg-border/60" />

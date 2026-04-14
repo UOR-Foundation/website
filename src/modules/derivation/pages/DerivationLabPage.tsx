@@ -101,8 +101,8 @@ const DerivationLabPage = () => {
             Derivation Lab
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
-            Every computation produces an auditable derivation record, a verifiable certificate,
-            and a self-verifying canonical receipt. The system proves its own correctness.
+            Run any operation and get three things back: a step-by-step record of what happened,
+            a certificate proving it was done correctly, and a receipt anyone can independently verify.
           </p>
         </div>
       </section>
