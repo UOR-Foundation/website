@@ -81,7 +81,6 @@ const Footer = () => {
             Open Standard
           </a>
           <div className="flex items-center gap-4">
-            <SoundCloudFab />
             <p className="text-foreground/40 text-fluid-caption font-body uppercase tracking-[0.1em]">
               © {new Date().getFullYear()} The UOR Foundation
             </p>
