@@ -27,16 +27,7 @@ const McpDocsPage = () => (
           className="mt-6 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-3xl animate-fade-in-up"
           style={{ animationDelay: "0.12s" }}
         >
-          A server that connects AI models to the UOR verification engine via the Model Context Protocol. Every response is graded, traceable, and independently verifiable.
-        </p>
-        <p
-          className="mt-4 text-sm text-foreground/50 font-body animate-fade-in-up opacity-0"
-          style={{ animationDelay: "0.2s" }}
-        >
-          Server URL:{" "}
-          <code className="bg-muted/50 px-1.5 py-0.5 rounded font-mono text-xs text-foreground">
-            {MCP_URL}
-          </code>
+          Let your AI agents interact with the UOR verification engine using our MCP server.
         </p>
       </div>
     </section>
@@ -51,7 +42,7 @@ const McpDocsPage = () => (
           Connect to UOR's MCP server
         </h2>
         <p className="text-fluid-body text-foreground/70 font-body leading-relaxed max-w-2xl mb-10">
-          Choose your AI client below. No API keys, no accounts required.
+          No API keys required. Choose your AI client below to get started.
         </p>
         <McpClientTabs />
       </div>

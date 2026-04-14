@@ -25,6 +25,31 @@ export interface McpClientInfo {
 
 export const MCP_CLIENTS: McpClientInfo[] = [
   {
+    name: "Cursor",
+    deepLink: CURSOR_DEEP_LINK,
+    configPath: {
+      mac: "~/.cursor/mcp.json",
+      win: "%USERPROFILE%\\.cursor\\mcp.json",
+    },
+    steps: [
+      "Open Settings → MCP → Add new global MCP server.",
+      "Paste the config below and save.",
+    ],
+    docsUrl: "https://docs.cursor.com/context/model-context-protocol",
+  },
+  {
+    name: "VS Code",
+    configPath: {
+      mac: ".vscode/mcp.json (in your project)",
+      win: ".vscode/mcp.json (in your project)",
+    },
+    steps: [
+      "Open Command Palette → MCP: Add Server → HTTP.",
+      'Enter the URL below, name it "uor".',
+    ],
+    docsUrl: "https://code.visualstudio.com/docs/copilot/chat/mcp-servers",
+  },
+  {
     name: "Claude Desktop",
     configPath: {
       mac: "~/.config/claude/claude_desktop_config.json",
@@ -38,17 +63,12 @@ export const MCP_CLIENTS: McpClientInfo[] = [
     docsUrl: "https://modelcontextprotocol.io/quickstart/user",
   },
   {
-    name: "Cursor",
-    deepLink: CURSOR_DEEP_LINK,
-    configPath: {
-      mac: "~/.cursor/mcp.json",
-      win: "%USERPROFILE%\\.cursor\\mcp.json",
-    },
+    name: "ChatGPT",
     steps: [
-      "Open Settings → MCP → Add new global MCP server.",
-      "Paste the config below and save.",
+      "Open ChatGPT → Settings → Connected apps → Add MCP server.",
+      "Enter the server URL below and connect.",
     ],
-    docsUrl: "https://docs.cursor.com/context/model-context-protocol",
+    docsUrl: "https://platform.openai.com/docs/guides/tools-mcp",
   },
   {
     name: "Windsurf",
@@ -63,15 +83,11 @@ export const MCP_CLIENTS: McpClientInfo[] = [
     docsUrl: "https://docs.windsurf.com/windsurf/mcp",
   },
   {
-    name: "VS Code",
-    configPath: {
-      mac: ".vscode/mcp.json (in your project)",
-      win: ".vscode/mcp.json (in your project)",
-    },
+    name: "Other",
     steps: [
-      "Open Command Palette → MCP: Add Server → HTTP.",
-      'Enter the URL below, name it "uor".',
+      "Add the server URL to your MCP client's configuration.",
+      "Use Streamable HTTP as the transport type.",
     ],
-    docsUrl: "https://code.visualstudio.com/docs/copilot/chat/mcp-servers",
+    docsUrl: "https://modelcontextprotocol.io/docs/concepts/transports",
   },
 ];
