@@ -79,15 +79,24 @@ const CodeKnowledgeGraphPage = () => {
 
   return (
     <Layout>
-      <section className="py-20 px-4">
-        <div className="max-w-[1800px] mx-auto">
-          <h1 className="text-3xl md:text-4xl font-display font-bold mb-2">
-            Code → Knowledge Graph
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Developer Tools
+          </p>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
+            Code Knowledge Graph
           </h1>
-          <p className="text-muted-foreground mb-8 max-w-2xl">
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
             Transform TypeScript/JavaScript source code into a UOR-grounded knowledge graph.
             Every code entity receives a canonical derivation and IRI.
           </p>
+        </div>
+      </section>
+
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
 
           {/* Code Editor */}
           <div className="mb-6">

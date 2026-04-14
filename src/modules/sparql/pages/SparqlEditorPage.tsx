@@ -52,21 +52,24 @@ const SparqlEditorPage = () => {
 
   return (
     <Layout>
-      <section className="py-20 md:py-28">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-6xl mx-auto px-6">
-          {/* Header */}
-          <div className="mb-12">
-            <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
-              Module 8. SPARQL Query Interface
-            </p>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              SPARQL Editor
-            </h1>
-            <p className="text-base md:text-lg text-muted-foreground max-w-2xl">
-              Query the UOR triple store using SPARQL-like syntax.
-              Every result is enriched with an epistemic grade from the derivation chain.
-            </p>
-          </div>
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Developer Tools
+          </p>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
+            SPARQL Editor
+          </h1>
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
+            Query the UOR triple store using SPARQL-like syntax.
+            Every result is enriched with an epistemic grade from the derivation chain.
+          </p>
+        </div>
+      </section>
+
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-6xl">
 
           {/* Example queries */}
           <div className="flex flex-wrap gap-1.5 mb-4">
