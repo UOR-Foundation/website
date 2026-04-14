@@ -1,100 +1,120 @@
 
 
-# Redesign UOR MCP Page to Match Stripe MCP Documentation Style
+# Standardize All Pages to Match Home Page Format
 
-## What Changes
+## Problem
 
-Replace the current `ProjectUorMcp` page (which uses the generic `ProjectDetailLayout` wrapper with hero image, category tags, and narrative sections) with a dedicated **documentation-style page** modeled directly on Stripe's MCP page structure.
+The site has ~17 pages using 3 different incompatible header/section formats. The well-formatted pages (About, Projects, Community, Framework, MCP, Donate) follow a clear pattern. The remaining pages break visual continuity.
 
-The current page buries the setup guide inside a project detail card. The new page leads with the connection instructions, exactly like Stripe does.
+## The Standard Pattern (from Home Page / About / Projects / Framework)
 
-## Page Structure (Matching Stripe)
+Every page follows this structure:
 
 ```text
-┌─────────────────────────────────────────────────────┐
-│  Navbar (existing site nav)                         │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│  # Model Context Protocol (MCP)                     │
-│  Let your AI agents interact with the UOR API       │
-│  by using our MCP server.                           │
-│                                                     │
-│  One-line intro paragraph                           │
-│                                                     │
-│  ## Connect to UOR's MCP server                     │
-│  ┌─────────────────────────────────┐                │
-│  │ Cursor | VS Code | Claude | …  │  ← tab bar     │
-│  ├─────────────────────────────────┤                │
-│  │ [Install in Cursor] button      │                │
-│  │                                 │                │
-│  │ Or add to ~/.cursor/mcp.json:   │                │
-│  │ ┌─────────────────────────┐     │                │
-│  │ │ { "mcpServers": { … } } │     │  ← code block │
-│  │ └─────────────────────────┘     │                │
-│  │                                 │                │
-│  │ ▸ Verify it works               │  ← collapsible │
-│  │ ▸ Troubleshooting               │                │
-│  └─────────────────────────────────┘                │
-│                                                     │
-│  ## Tools                                           │
-│  Table: Tool name | Description | API link          │
-│                                                     │
-│  ## Resources                                       │
-│  Table: URI | Description                           │
-│                                                     │
-│  ## See also                                        │
-│  Links to related pages                             │
-│                                                     │
-├─────────────────────────────────────────────────────┤
-│  ON THIS PAGE (right sidebar, sticky)               │
-│  - Connect to UOR's MCP server                      │
-│  - Tools                                            │
-│  - Resources                                        │
-│  - See also                                         │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│ hero-gradient  pt-44 md:pt-56  pb-16 md:pb-24│
+│                                              │
+│ H1: font-display text-fluid-page-title       │
+│ Subtitle: text-fluid-body text-foreground/70 │
+│ CTA buttons (if applicable)                  │
+├──────────────────────────────────────────────┤
+│ SECTION (py-section-sm border-b border/40)   │
+│                                              │
+│ PRE-LABEL: uppercase tracking-[0.2em]        │
+│            text-primary/70 text-fluid-lead   │
+│ H2: font-display text-fluid-heading font-bold│
+│ Content...                                   │
+├──────────────────────────────────────────────┤
+│ SECTION (repeat pattern)                     │
+│ ...                                          │
+└──────────────────────────────────────────────┘
 ```
 
-## Key Design Decisions
+Key tokens:
+- **Hero**: `hero-gradient pt-44 md:pt-56 pb-16 md:pb-24`
+- **H1**: `font-display text-fluid-page-title font-bold text-foreground`
+- **Subtitle**: `mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl`
+- **Section**: `py-section-sm bg-background border-b border-border/40`
+- **Pre-label**: `font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md`
+- **H2**: `font-display text-fluid-heading font-bold text-foreground mb-8`
+- **Container**: `container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]`
 
-1. **No hero image, no category tags, no `ProjectDetailLayout`.** The page becomes a clean docs page with the site's existing Navbar/Footer.
+## Pages to Update
 
-2. **Client tabs** — reuse the existing `MCP_CLIENTS` data and `SetupGuide` component, but restructure SetupGuide to match Stripe's layout:
-   - Underlined tab bar (not pill buttons)
-   - "Install in {Client}" as a prominent blue/primary button
-   - Manual config as secondary path below a divider
-   - Collapsible sections for advanced topics
+### Group A: "Module N" header style → standard hero (6 pages)
+These use `py-20 md:py-28` with raw `text-3xl` headings and "Module N" labels.
 
-3. **Tools table** — a clean table showing all 10 tools with name, description, and link to docs. Data from `types.ts` tool list, enriched with descriptions.
+| Page | Current Title | New Title |
+|------|--------------|-----------|
+| `RingExplorerPage.tsx` | "Module 1. Ring Arithmetic Core" + "Ring Explorer" | "Ring Explorer" |
+| `DerivationLabPage.tsx` | "Module 4. Derivation & Certificate Engine" + "Derivation Lab" | "Derivation Lab" |
+| `KnowledgeGraphPage.tsx` | "Module 6. Knowledge Graph Store" + "Knowledge Graph" | "Knowledge Graph" |
+| `SparqlEditorPage.tsx` | "Module 8. SPARQL Query Interface" + "SPARQL Editor" | "SPARQL Editor" |
+| `AgentConsolePage.tsx` | (inline header) | "Agent Console" |
+| `CodeKnowledgeGraphPage.tsx` | (Module label) | "Code Knowledge Graph" |
 
-4. **Resources table** — `uor://llms.md` and `uor://openapi.json` with descriptions.
+**Changes**: Replace the `<section className="py-20 md:py-28">` + `<div className="mb-12">` pattern with the standard hero section. Remove "Module N." prefixes. Apply fluid typography tokens. Wrap content sections in `py-section-sm` with pre-labels and H2s.
 
-5. **Right sidebar** — "ON THIS PAGE" sticky nav with anchor links (like Stripe's).
+### Group B: Primary-colored header → standard hero (4 pages)
+These use `bg-[hsl(var(--primary))] py-12 md:py-16` for a colored banner.
 
-6. **No trust score preview on this page.** The trust stamp section becomes a single collapsible FAQ item, not a separate visual.
+| Page | Current Title |
+|------|--------------|
+| `VerifyPage.tsx` | "UOR Critical Identity Verifier" → "Identity Verifier" |
+| `EpistemicPage.tsx` | "Epistemic Grading Console" → "Epistemic Grading" |
+| `CertificatesPage.tsx` | (primary banner) → "Certificates" |
+| `SparqlPage.tsx` | (primary banner) → "SPARQL Console" |
 
-## Files to Create/Modify
+**Changes**: Replace the primary-colored `<section>` with `hero-gradient` hero. Move quantum selector pills into the first content section if needed. Wrap content cards in standard section dividers.
 
-| File | Action |
-|------|--------|
-| `src/modules/mcp/pages/McpDocsPage.tsx` | **Create** — new standalone docs page |
-| `src/modules/mcp/components/McpClientTabs.tsx` | **Create** — underlined tab bar + install button + code block (replaces current SetupGuide styling) |
-| `src/modules/mcp/components/McpToolsTable.tsx` | **Create** — tools reference table |
-| `src/modules/mcp/components/McpPageNav.tsx` | **Create** — sticky "On this page" sidebar |
-| `src/modules/mcp/data/tools.ts` | **Create** — tool metadata (name, description, docs URL) |
-| `src/modules/projects/pages/ProjectUorMcp.tsx` | **Modify** — render `McpDocsPage` instead of `ProjectDetailLayout` |
-| `src/modules/mcp/components/SetupGuide.tsx` | **Keep** — may still be used elsewhere; the new page uses `McpClientTabs` instead |
+### Group C: Full-screen / custom layouts → standard hero + sections (7 pages)
+These use `min-h-screen bg-background` or similar custom wrappers.
 
-## Visual Style
+| Page | New Title |
+|------|-----------|
+| `UnsPage.tsx` | "Name Service" |
+| `AppStorePage.tsx` | "App Store" |
+| `ToolRegistryPage.tsx` | "Tool Registry" |
+| `CartridgePage.tsx` | "QR Cartridge" |
+| `PrismPipelinePage.tsx` | "Prism Pipeline" |
+| `TrustScorePreview.tsx` | "Trust Score" |
+| `MessengerPage.tsx` | "Messenger" |
 
-- White/dark background matching existing site theme (not Stripe's light theme — we keep the dark UOR aesthetic)
-- Clean typography: large H1, medium H2 section headings
-- Tab bar uses underline indicator (not filled pills)
-- Code blocks with line numbers, copy button, dark background
-- Tables with subtle row borders, no outer border
-- Collapsible sections use chevron + bold text (like Stripe's accordion)
-- "Install in {Client}" button uses the site's primary color
+**Changes**: Add standard hero section at top. Move existing content into properly sectioned containers with pre-labels and H2s.
 
-## Build Error
+### Group D: Minor alignment fixes (3 pages)
+| Page | Issue |
+|------|-------|
+| `StandardPage.tsx` | Hero uses `pt-48 md:pt-64 pb-20 md:pb-32` instead of standard `pt-44 md:pt-56 pb-16 md:pb-24` |
+| `ClaimIdentityPage.tsx` | Hero uses `pt-28 md:pt-52` — align to standard |
+| `SandboxPage.tsx` | Hero uses `pt-28 md:pt-52` — align to standard |
 
-The `npm:openai@^4.52.5` error in the build output is unrelated to this page change — it comes from `@supabase/functions-js` type resolution in the edge function runtime. Will not affect this frontend work.
+### Pages NOT touched
+- `IndexPage.tsx` (home page — the reference model)
+- `OraclePage.tsx` (full-screen chat interface — unique by nature)
+- `ResolvePage.tsx` (full-screen chat interface)
+- `AtlasVisualizationPage.tsx` (full-screen 3D visualization)
+- `QuantumDashboardPage.tsx` (full-screen research dashboard)
+- `ComplianceDashboardPage.tsx` (full-screen dashboard)
+- `DailyNotesPage.tsx`, `LibraryPage.tsx` (Oracle sub-pages)
+- Blog posts (article format, different by design)
+- Already-standard pages (About, Projects, Community, Donate, Framework, MCP, SemanticWeb, Interoperability)
+
+## Label Guidelines
+
+- Remove all "Module N." prefixes — they add noise
+- Use short, self-explanatory page titles (1-3 words)
+- Pre-labels describe the category, not the module number
+- Example: pre-label "Developer Tools" + H2 "Ring Explorer", not "Module 1. Ring Arithmetic Core"
+
+## Implementation Approach
+
+Each page update follows the same mechanical pattern:
+1. Replace header section with standard hero
+2. Wrap content blocks in `py-section-sm` sections with `border-b`
+3. Add gold pre-label + H2 to each section
+4. Apply fluid typography tokens throughout
+5. Ensure `max-w-4xl` constraint where content is prose-heavy (tool pages keep full width for tables/grids)
+
+Estimated: ~20 files modified, no new files created, no logic changes — purely presentational alignment.
 
