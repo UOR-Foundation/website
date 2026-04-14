@@ -24,8 +24,7 @@ const TOOLS: ToolDef[] = [
     name: "uor_derive",
     label: "Derive",
     fields: [
-      { key: "op", label: "Operation", type: "select", default: "neg", options: ["neg", "bnot", "succ", "pred", "add", "sub", "mul", "xor", "and", "or"] },
-      { key: "args", label: "Arguments (comma-separated)", type: "text", default: "42", placeholder: "42 or 10,20" },
+      { key: "term", label: "Expression", type: "text", default: "neg(42)", placeholder: 'e.g. neg(42), add(10,20)' },
     ],
   },
   {
@@ -62,37 +61,44 @@ const TOOLS: ToolDef[] = [
     name: "uor_resolve",
     label: "Resolve",
     fields: [
-      { key: "address", label: "UOR Address", type: "text", default: "", placeholder: "Paste a UOR content address" },
+      { key: "value", label: "Value (0–255)", type: "number", default: "42", placeholder: "0–255" },
     ],
   },
   {
     name: "uor_certify",
     label: "Certify",
     fields: [
-      { key: "cert_type", label: "Certificate type", type: "select", default: "TransformCertificate", options: ["TransformCertificate", "IsometryCertificate", "InvolutionCertificate", "EmpiricalAttestation", "UnverifiedAssertion"] },
-      { key: "claim", label: "Claim", type: "text", default: "neg(neg(42)) = 42", placeholder: "Enter a claim to certify" },
+      { key: "derivation_id", label: "Derivation ID", type: "text", default: "", placeholder: "Paste a derivation_id to certify" },
     ],
   },
   {
     name: "uor_trace",
     label: "Trace",
     fields: [
-      { key: "proof_id", label: "Proof ID", type: "text", default: "", placeholder: "Paste a proof_id" },
+      { key: "x", label: "Starting value", type: "number", default: "42" },
+      { key: "ops", label: "Operations (comma-separated)", type: "text", default: "neg,bnot,succ", placeholder: "neg,bnot,succ" },
+    ],
+  },
+  {
+    name: "uor_grade",
+    label: "Grade",
+    fields: [
+      { key: "claim", label: "Claim to grade", type: "text", default: "The sky is blue", placeholder: "Enter any claim" },
     ],
   },
   {
     name: "uor_schema_bridge",
     label: "Schema Bridge",
     fields: [
-      { key: "source_schema", label: "Source schema", type: "text", default: "JSON-LD", placeholder: "e.g. JSON-LD" },
-      { key: "target_schema", label: "Target schema", type: "text", default: "RDF/XML", placeholder: "e.g. RDF/XML" },
+      { key: "schema_type", label: "Schema.org type", type: "text", default: "Person", placeholder: "e.g. Person, Event, Product" },
+      { key: "mode", label: "Mode", type: "select", default: "type", options: ["type", "instance", "catalog"] },
     ],
   },
   {
     name: "uor_schema_coherence",
     label: "Schema Coherence",
     fields: [
-      { key: "mapping", label: "Schema mapping (JSON)", type: "json", default: '{"source": "JSON-LD", "target": "RDF/XML"}', placeholder: '{"source": "...", "target": "..."}' },
+      { key: "instances", label: "Instances (JSON array)", type: "json", default: '[{"@type":"Person","name":"Alice","worksFor":"Acme"},{"@type":"Organization","name":"Acme"}]', placeholder: '[{"@type":"Person",...},{"@type":"Organization",...}]' },
     ],
   },
 ];
