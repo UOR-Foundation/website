@@ -139,32 +139,25 @@ const CartridgePage = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-background">
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Tools
+          </p>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
+            QR Cartridge
+          </h1>
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
+            Turn any content into a QR code that works with every phone camera.
+            The address is permanent, tamper-proof, and needs no special app to scan.
+          </p>
+        </div>
+      </section>
 
-        {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <section className="relative pt-40 pb-16 md:pt-52 md:pb-20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-4 relative z-10">
-            <div className="max-w-2xl mx-auto text-center space-y-5">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-sm text-primary">
-                <QrCode className="w-4 h-4" />
-                <span>QR Cartridge v{CARTRIDGE_VERSION}</span>
-              </div>
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground leading-tight">
-                Give anything a<br />scannable address
-              </h1>
-              <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-                Turn any content into a QR code that works with every phone camera.
-                The address is permanent, tamper-proof, and needs no special app to scan.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Generator ────────────────────────────────────────────────── */}
-        <section className="pb-16">
-          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-4">
-            <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-6xl">
+            <div className="grid md:grid-cols-2 gap-8">
 
               {/* Left: Input */}
               <div className="space-y-5">
@@ -332,30 +325,32 @@ const CartridgePage = () => {
                   </div>
                 ))}
               </div>
-            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ── How It Works ─────────────────────────────────────────────── */}
-        <section className="py-16 border-t border-border">
-          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold text-foreground text-center mb-10">How It Works</h2>
-              <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
-                {STEPS.map((s, i) => (
-                  <div key={i} className="text-center space-y-3">
-                    <div className="mx-auto w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                      {s.num}
-                    </div>
-                    <h3 className="font-semibold text-foreground text-sm">{s.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
-                  </div>
-                ))}
+      {/* How It Works */}
+      <section className="py-section-sm bg-background border-t border-border/40">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Process
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
+            How It Works
+          </h2>
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {STEPS.map((s, i) => (
+              <div key={i} className="text-center space-y-3">
+                <div className="mx-auto w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                  {s.num}
+                </div>
+                <h3 className="font-semibold text-foreground text-sm">{s.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
               </div>
-            </div>
+            ))}
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </Layout>
   );
 };

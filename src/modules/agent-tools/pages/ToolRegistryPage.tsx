@@ -484,16 +484,24 @@ export default function ToolRegistryPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-background">
-        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-16">
-          <h1 className="font-['Playfair_Display'] text-4xl md:text-5xl font-bold text-foreground mb-3">
-            Agent Tool Registry
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Developer Tools
+          </p>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
+            Tool Registry
           </h1>
-          <p className="text-muted-foreground text-lg mb-12">
-            Four LLM-callable tools grounded in the UOR morphism hierarchy (§3.4).
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
+            Four LLM-callable tools grounded in the UOR morphism hierarchy.
             Each tool maps to a whitepaper-defined type and returns JSON-LD certificates.
           </p>
+        </div>
+      </section>
 
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <MorphismHierarchy />
           <ToolCards onTry={(name) => {
             const map: Record<string, TabKey> = { uor_derive: "derive", uor_verify: "verify", uor_resolve: "resolve", uor_certify: "certify" };
@@ -505,7 +513,7 @@ export default function ToolRegistryPage() {
           </div>
           <IntegrationGuide />
         </div>
-      </div>
+      </section>
     </Layout>
   );
 }

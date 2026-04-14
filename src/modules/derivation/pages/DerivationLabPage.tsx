@@ -91,19 +91,24 @@ const DerivationLabPage = () => {
 
   return (
     <Layout>
-      <section className="py-20 md:py-28">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-6">
-          {/* Header */}
-          <div className="mb-12">
-            <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground mb-3">
-              Module 4. Derivation & Certificate Engine
-            </p>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Derivation Lab</h1>
-            <p className="text-base md:text-lg text-muted-foreground max-w-2xl">
-              Every computation produces an auditable derivation record, a verifiable certificate,
-              and a self-verifying canonical receipt. The system proves its own correctness.
-            </p>
-          </div>
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Developer Tools
+          </p>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
+            Derivation Lab
+          </h1>
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
+            Every computation produces an auditable derivation record, a verifiable certificate,
+            and a self-verifying canonical receipt. The system proves its own correctness.
+          </p>
+        </div>
+      </section>
+
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
 
           {/* Controls */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

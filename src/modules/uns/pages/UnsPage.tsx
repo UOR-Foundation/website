@@ -3,24 +3,31 @@ import { Layout } from "@/modules/core";
 const UnsPage = () => {
   return (
     <Layout>
-      <div className="min-h-screen bg-background pt-28 md:pt-52 pb-16">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-4 max-w-4xl">
-          {/* Header */}
-          <div className="mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              Module v0.1.0
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              UoR Name Service
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              A naming system where addresses come from the content itself.
-              Look up any name, verify it independently, no central authority required.
-            </p>
-          </div>
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Infrastructure
+          </p>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
+            Name Service
+          </h1>
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
+            A naming system where addresses come from the content itself.
+            Look up any name, verify it independently, no central authority required.
+          </p>
+        </div>
+      </section>
 
-          {/* Architecture Overview */}
+      <section className="py-section-sm bg-background border-b border-border/40">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
+
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Architecture
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
+            Core Capabilities
+          </h2>
           <div className="grid gap-6 md:grid-cols-2 mb-12">
             {[
               {
@@ -64,12 +71,18 @@ const UnsPage = () => {
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          {/* Record Types */}
-          <div className="rounded-lg border border-border bg-card p-6 mb-12">
-            <h2 className="text-xl font-semibold text-foreground mb-4">
-              UNS Record Types
-            </h2>
+      <section className="py-section-sm bg-background border-b border-border/40">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Reference
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
+            Record Types
+          </h2>
+          <div className="rounded-lg border border-border bg-card p-6">
             <div className="grid gap-3">
               {[
                 { type: "UAAA", analog: "A/AAAA", desc: "Name → address" },
@@ -95,27 +108,31 @@ const UnsPage = () => {
               ))}
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Dependencies */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-xl font-semibold text-foreground mb-4">
-              Module Dependencies
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {["ring-core", "identity", "derivation", "resolver", "self-verify"].map(
-                (dep) => (
-                  <span
-                    key={dep}
-                    className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm font-mono"
-                  >
-                    {dep}
-                  </span>
-                )
-              )}
-            </div>
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Dependencies
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
+            Module Dependencies
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {["ring-core", "identity", "derivation", "resolver", "self-verify"].map(
+              (dep) => (
+                <span
+                  key={dep}
+                  className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm font-mono"
+                >
+                  {dep}
+                </span>
+              )
+            )}
           </div>
         </div>
-      </div>
+      </section>
     </Layout>
   );
 };

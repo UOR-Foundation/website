@@ -510,21 +510,22 @@ const SparqlPage = () => {
 
   return (
     <Layout>
-      <section className="bg-[hsl(var(--primary))] py-12 md:py-16">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
-          <div className="flex items-center gap-3 mb-3">
-            <Database size={28} className="text-primary-foreground/80" />
-            <h1 className="font-display text-2xl md:text-3xl font-bold text-primary-foreground">
-              SPARQL Query Interface
-            </h1>
-          </div>
-          <p className="text-sm md:text-base text-primary-foreground/70 font-body max-w-2xl">
-            Query UOR named graphs. partition classes, fiber bundles, canonical forms. via SPARQL over the live Q0 instance graph.
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Developer Tools
+          </p>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
+            SPARQL Console
+          </h1>
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
+            Query UOR named graphs — partition classes, fiber bundles, canonical forms —
+            via SPARQL over the live Q0 instance graph.
           </p>
         </div>
       </section>
 
-      <section className="py-10 md:py-14">
+      <section className="py-section-sm bg-background">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl space-y-8">
           <QueryEditorControlled
             key={editorKey}

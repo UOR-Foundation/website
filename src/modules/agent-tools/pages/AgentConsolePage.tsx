@@ -449,16 +449,24 @@ const AgentConsolePage = () => {
 
   return (
     <Layout>
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-display font-bold mb-2">
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Developer Tools
+          </p>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
             Agent Console
           </h1>
-          <p className="text-muted-foreground mb-8 max-w-2xl">
-            The 5 canonical tool functions plus the 8-stage resolution cycle: the "system calls" of the Semantic Web.
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
+            The 5 canonical tool functions plus the 8-stage resolution cycle.
             Each tool produces a self-verified canonical receipt.
           </p>
+        </div>
+      </section>
 
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
           {/* Tabs */}
           <div className="flex gap-1 mb-6 border-b border-border overflow-x-auto">
             {TABS.map((tab) => (
