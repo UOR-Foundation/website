@@ -364,35 +364,38 @@ function OperationsTable() {
 const VerifyPage = () => {
   return (
     <Layout>
-      {/* Header */}
-      <section className="bg-[hsl(var(--primary))] py-12 md:py-16">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-primary-foreground mb-3">
-            UOR Critical Identity Verifier
-          </h1>
-          <p className="font-mono text-base md:text-lg text-primary-foreground/80">
-            neg(bnot(x)) = succ(x). verify it yourself, from first principles.
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Identity
           </p>
-          <div className="flex flex-wrap items-center gap-2 mt-5">
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
+            Identity Verifier
+          </h1>
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
+            neg(bnot(x)) = succ(x). Verify it yourself, from first principles.
+          </p>
+          <div className="flex flex-wrap items-center gap-2 mt-8">
             {["Q0 · n=8 · 256", "Q1 · n=16 · 65 536", "Q2 · n=24 · 16.7M", "Q3 · n=32 · 4.3B"].map((q, i) => (
               <span
                 key={q}
                 className={`px-3 py-1.5 rounded-full text-xs font-mono font-medium border transition-colors ${
                   i === 0
-                    ? "bg-primary-foreground text-primary border-primary-foreground"
-                    : "text-primary-foreground/50 border-primary-foreground/20 cursor-not-allowed"
+                    ? "bg-foreground text-background border-foreground"
+                    : "text-foreground/40 border-border cursor-not-allowed"
                 }`}
               >
                 {q}
               </span>
             ))}
           </div>
-          <p className="text-xs text-primary-foreground/50 font-body mt-2">Live verification uses Q0 (n=8, 256 elements).</p>
+          <p className="text-xs text-foreground/40 font-body mt-2">Live verification uses Q0 (n=8, 256 elements).</p>
         </div>
       </section>
 
       {/* Content */}
-      <section className="py-10 md:py-14 bg-background">
+      <section className="py-section-sm bg-background">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl space-y-6">
           <CriticalIdentityVerifier />
           <UniversalCoherence />
