@@ -88,16 +88,31 @@ const McpClientTabs = () => {
             </>
           )}
 
-          {/* Code block */}
-          <div className="relative rounded-lg bg-muted/60 border border-border overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/40">
-              <span className="text-xs font-mono text-muted-foreground">mcp.json</span>
-              <CopyButton text={MCP_CONFIG} label="Copy" />
+          {/* Server URL for clients without config files */}
+          {!c.configPath && (
+            <div className="relative rounded-lg bg-muted/60 border border-border overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/40">
+                <span className="text-xs font-mono text-muted-foreground">Server URL</span>
+                <CopyButton text={MCP_URL} label="Copy" />
+              </div>
+              <pre className="p-4 text-sm font-mono text-foreground leading-relaxed overflow-x-auto">
+                {MCP_URL}
+              </pre>
             </div>
-            <pre className="p-4 text-sm font-mono text-foreground leading-relaxed overflow-x-auto">
-              {MCP_CONFIG}
-            </pre>
-          </div>
+          )}
+
+          {/* JSON config block for clients with config files */}
+          {c.configPath && (
+            <div className="relative rounded-lg bg-muted/60 border border-border overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/40">
+                <span className="text-xs font-mono text-muted-foreground">mcp.json</span>
+                <CopyButton text={MCP_CONFIG} label="Copy" />
+              </div>
+              <pre className="p-4 text-sm font-mono text-foreground leading-relaxed overflow-x-auto">
+                {MCP_CONFIG}
+              </pre>
+            </div>
+          )}
         </div>
 
         {/* Collapsible: Verify it works */}
