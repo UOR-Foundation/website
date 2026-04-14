@@ -2,6 +2,7 @@ import Layout from "@/modules/core/components/Layout";
 import { ExternalLink, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import McpClientTabs from "../components/McpClientTabs";
+import McpPlayground from "../components/McpPlayground";
 import McpToolsTable from "../components/McpToolsTable";
 import { MCP_URL } from "../data/clients";
 
