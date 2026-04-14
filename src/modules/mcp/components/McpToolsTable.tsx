@@ -1,12 +1,24 @@
 import { MCP_TOOLS, MCP_RESOURCE_LIST } from "../data/tools";
+import { MCP_URL } from "../data/clients";
 
 const McpToolsTable = () => (
   <div className="space-y-10">
     {/* Tools */}
     <div id="tools">
-      <h2 className="text-xl font-semibold text-foreground font-body mb-4">Tools</h2>
-      <p className="text-sm text-muted-foreground font-body mb-4">
-        These tools are automatically available to your AI client when connected.
+      <h2 className="font-display text-fluid-heading font-bold text-foreground mb-3">
+        Tools
+      </h2>
+      <p className="text-fluid-body text-foreground/70 font-body leading-relaxed max-w-3xl mb-6">
+        The server exposes the following{" "}
+        <a
+          href="https://modelcontextprotocol.io/docs/concepts/tools"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline"
+        >
+          MCP tools
+        </a>
+        . All tools are available to your AI client automatically after connecting.
       </p>
       <div className="rounded-lg border border-border overflow-hidden">
         <table className="w-full text-sm">
@@ -38,9 +50,11 @@ const McpToolsTable = () => (
 
     {/* Resources */}
     <div id="resources">
-      <h2 className="text-xl font-semibold text-foreground font-body mb-4">Resources</h2>
-      <p className="text-sm text-muted-foreground font-body mb-4">
-        Resources are read-only data endpoints exposed by the MCP server.
+      <h2 className="font-display text-fluid-heading font-bold text-foreground mb-3">
+        Resources
+      </h2>
+      <p className="text-fluid-body text-foreground/70 font-body leading-relaxed max-w-3xl mb-6">
+        Read-only data endpoints delivered to your AI client on connection.
       </p>
       <div className="rounded-lg border border-border overflow-hidden">
         <table className="w-full text-sm">
@@ -68,6 +82,16 @@ const McpToolsTable = () => (
           </tbody>
         </table>
       </div>
+    </div>
+
+    {/* Server URL */}
+    <div>
+      <p className="text-sm text-foreground/50 font-body">
+        Server URL:{" "}
+        <code className="bg-muted/50 px-1.5 py-0.5 rounded font-mono text-xs text-foreground">
+          {MCP_URL}
+        </code>
+      </p>
     </div>
   </div>
 );
