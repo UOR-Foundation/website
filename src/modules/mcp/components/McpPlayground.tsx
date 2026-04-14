@@ -111,9 +111,7 @@ function buildArgs(tool: ToolDef, values: Record<string, string>): Record<string
     const raw = values[f.key] ?? f.default;
     if (!raw) continue;
 
-    if (f.key === "args") {
-      args[f.key] = raw.split(",").map((s) => parseInt(s.trim(), 10));
-    } else if (f.key === "seed_set") {
+    if (f.key === "seed_set") {
       args[f.key] = raw.split(",").map((s) => parseInt(s.trim(), 10));
     } else if (f.type === "number") {
       args[f.key] = parseInt(raw, 10);
