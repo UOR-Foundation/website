@@ -12,14 +12,14 @@ const STAGE_KEYS = [
 ] as const;
 
 const STAGE_DESCS = [
-  "Declare T ∈ 𝒯ₙ. verify ring coherence at quantum level n",
-  "Construct query: CoordinateQuery | MetricQuery | RepresentationQuery",
-  "Select Resolver ρ; compute Π(T) = ρ(T, n, K)",
-  "Produce P=(Irr, Red, Unit, Ext); enforce |I|+|R|+|U|+|E| = 2ⁿ",
-  "Compute observables from 7 observable categories (§5.2)",
-  "Emit Certificate C (Transform | Isometry | Involution)",
-  "Construct ComputationTrace τ; τ carries trace:certifiedBy → C",
-  "Snapshot Frame; record Transition; create new Frame with Binding",
+  "Check the input and confirm the system is ready",
+  "Decide what to ask about this value",
+  "Choose a method and compute the result",
+  "Classify the result into four groups that must add up correctly",
+  "Measure properties like distance, density, and symmetry",
+  "Issue a certificate proving the result is correct",
+  "Record every step so anyone can replay and verify",
+  "Save the final state for future reference",
 ];
 
 type Status = "pending" | "running" | "pass" | "fail";

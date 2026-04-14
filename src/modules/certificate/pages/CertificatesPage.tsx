@@ -388,8 +388,8 @@ const CertificatesPage = () => (
           Certificates
         </h1>
         <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
-          Issue and verify metric-preserving transform certificates.
-          Confirm that transforms preserve ring or Hamming metrics across partition classes.
+          Test whether an operation preserves the mathematical properties it should.
+          The system issues a certificate with the result.
         </p>
       </div>
     </section>

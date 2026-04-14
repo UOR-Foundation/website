@@ -62,8 +62,8 @@ const SparqlEditorPage = () => {
             SPARQL Editor
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
-            Query the UOR triple store using SPARQL-like syntax.
-            Every result is enriched with an epistemic grade from the derivation chain.
+            Search the knowledge graph using structured queries.
+            Every result includes a trust grade showing how it was verified.
           </p>
         </div>
       </section>

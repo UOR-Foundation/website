@@ -121,7 +121,7 @@ const WhatIsUorSection = () => {
               <span className="text-foreground/70 font-normal">UOR eliminates this by deriving each address directly from the content it represents. Same data, same address, everywhere, permanently.</span>
             </p>
             <p className="mt-golden-md text-foreground/70 font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
-              No central registry. No coordination overhead. No single point of failure. Data carries its own identity, making it verifiable and discoverable across any system, protocol, or network boundary.
+              No central registry. No middleman. No single point of failure. Data carries its own identity, making it verifiable and discoverable across any system, protocol, or network boundary.
             </p>
             <div className="mt-golden-lg">
               <a

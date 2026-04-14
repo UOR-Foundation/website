@@ -18,12 +18,12 @@ const applications: Application[] = [
     icon: Globe,
     title: "Semantic Web",
     description:
-      "Make data understandable by both people and machines, so systems can work together without custom translations or middleware.",
+      "Make data understandable by both people and machines, so systems can work together without custom adapters or glue code.",
     systemId: "sys.semantic-web.v1",
   },
   {
     icon: ShieldCheck,
-    title: "Proof-Based Computation",
+    title: "Verifiable Computation",
     description:
       "Run a computation once and produce a receipt anyone can check. No need to re-run it, no need to trust the person who ran it.",
     systemId: "sys.proof-compute.v1",
@@ -39,7 +39,7 @@ const applications: Application[] = [
     icon: Microscope,
     title: "Open Science",
     description:
-      "Make research data findable, reproducible, and composable across institutions, disciplines, and borders without special tooling.",
+      "Make research data findable, reproducible, and composable across institutions and disciplines — no special tooling required.",
     systemId: "sys.open-science.v1",
   },
 ];

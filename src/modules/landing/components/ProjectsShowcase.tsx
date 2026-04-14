@@ -16,7 +16,7 @@ const ProjectsShowcase = () => {
           <div>
             <div className="flex items-center gap-3 mb-golden-sm">
               <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead">
-                UOR Ecosystem
+                Our Projects
               </p>
             </div>
             <h2 className="font-display font-bold text-foreground text-fluid-heading">

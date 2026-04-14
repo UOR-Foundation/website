@@ -10,7 +10,7 @@ const TOOLS = [
     badge: "Transform",
     badgeColor: "bg-primary/15 text-primary",
     description:
-      "Apply a ring operation to input values. Returns a cert:TransformCertificate (Grade A) with SHA-256 derivation_id. Maps source→target via the UOR kernel. All 10 operations available: neg, bnot, succ, pred, add, sub, mul, xor, and, or.",
+      "Apply any of 10 operations to input values and receive a verified certificate with a unique derivation ID. Operations: neg, bnot, succ, pred, add, sub, mul, xor, and, or.",
     params: [
       { name: "op", type: "string", desc: 'One of: neg, bnot, succ, pred, add, sub, mul, xor, and, or' },
       { name: "args", type: "integer[]", desc: "1–2 values in [0,255]" },
@@ -25,7 +25,7 @@ const TOOLS = [
     badge: "CoherenceProof",
     badgeColor: "bg-green-500/15 text-green-700 dark:text-green-400",
     description:
-      "Verify the UOR critical identity neg(bnot(x)) = succ(x). Optionally verify for all 256 elements. Returns proof:CriticalIdentityProof or proof:CoherenceProof (universal).",
+      "Verify that the core identity neg(bnot(x)) = succ(x) holds for any value, or check all 256 values at once. Returns a proof certificate.",
     params: [
       { name: "x", type: "integer", desc: "Value in [0,255]" },
       { name: "verify_all", type: "boolean", desc: "Check all 256 elements" },
@@ -41,7 +41,7 @@ const TOOLS = [
     badge: "Isometry",
     badgeColor: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
     description:
-      "Execute the full PRISM pipeline (Polymorphic Resolution and Isometric Symmetry Machine, §4). Resolves a type declaration through all 8 stages: Type→Query→Resolve→Partition→Observe→Certify→Trace→State. Returns a certified Partition with four components summing to 2ⁿ.",
+      "Run the full 8-stage resolution pipeline: validate the input, compute its canonical form, classify it into four groups, measure its properties, and issue a verified certificate.",
     params: [
       { name: "x", type: "integer", desc: "Value in [0,255]" },
       { name: "resolver", type: "string", desc: "DihedralFactorizationResolver | CanonicalFormResolver | EvaluationResolver" },
@@ -57,7 +57,7 @@ const TOOLS = [
     badge: "Certificate",
     badgeColor: "bg-purple-500/15 text-purple-700 dark:text-purple-400",
     description:
-      "Issue a UOR certificate. Three whitepaper-defined types: TransformCertificate (Grade A), IsometryCertificate (Grade B), InvolutionCertificate (Grade A). Two extensions: EmpiricalAttestation (Grade C), UnverifiedAssertion (Grade D).",
+      "Issue a trust certificate for a claim. Five levels available: Transform (Grade A), Isometry (Grade B), Involution (Grade A), Empirical (Grade C), and Unverified (Grade D).",
     params: [
       { name: "cert_type", type: "string", desc: "TransformCertificate | IsometryCertificate | InvolutionCertificate | EmpiricalAttestation | UnverifiedAssertion" },
       { name: "claim", type: "string", desc: "The claim to certify" },
@@ -82,8 +82,8 @@ function copyText(t: string) {
 function MorphismHierarchy() {
   return (
     <section className="mb-16">
-      <h2 className="font-['Playfair_Display'] text-2xl font-semibold text-foreground mb-2">Morphism Hierarchy</h2>
-      <p className="text-muted-foreground text-sm mb-6">Whitepaper §3.4: exact ontological structure</p>
+      <h2 className="font-['Playfair_Display'] text-2xl font-semibold text-foreground mb-2">Operation Types</h2>
+      <p className="text-muted-foreground text-sm mb-6">How the four tools relate to each other</p>
       <div className="bg-card border border-border rounded-lg p-6 font-mono text-sm leading-relaxed">
         <div className="text-foreground">
           <span className="text-primary font-bold">morphism:Transform</span> <span className="text-muted-foreground">(root, maps between UOR objects)</span>
@@ -494,8 +494,8 @@ export default function ToolRegistryPage() {
             Tool Registry
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
-            Four LLM-callable tools grounded in the UOR morphism hierarchy.
-            Each tool maps to a whitepaper-defined type and returns JSON-LD certificates.
+            Four tools that any AI agent can call. Each one performs a verified operation
+            and returns a certificate proving the result is correct.
           </p>
         </div>
       </section>

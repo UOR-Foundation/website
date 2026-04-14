@@ -177,8 +177,8 @@ export default function AppStorePage() {
             App Store
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
-            Every CNCF landscape category — implemented natively with content-addressed
-            isolation, algebraic verification, and unified knowledge graph integration.
+            Every cloud-native category, reimagined with built-in verification,
+            content-based identity, and a unified data layer.
           </p>
 
           {/* Stats */}
@@ -206,7 +206,7 @@ export default function AppStorePage() {
                 Developer Categories
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                CNCF landscape categories mapped to UOR-native modules
+                Cloud-native categories with their UOR implementations
               </p>
             </div>
 

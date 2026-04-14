@@ -136,9 +136,9 @@ function UniversalCoherence() {
 
   return (
     <Card>
-      <SectionTitle>Universal Coherence Proof</SectionTitle>
+      <SectionTitle>Full-Range Verification</SectionTitle>
       <p className="text-sm font-body text-muted-foreground mb-4">
-        Verify the critical identity holds for every element in Z/256Z. <Ref label="Thm 2.5" tip="If neg(bnot(x)) = succ(x) holds ∀x, the ring is coherent and succ generates the full cyclic group." />
+        Verify that this property holds for all 256 possible values. <Ref label="Thm 2.5" tip="If neg(bnot(x)) = succ(x) holds ∀x, the ring is coherent and succ generates the full cyclic group." />
       </p>
       <button
         onClick={run}
@@ -184,7 +184,7 @@ function TriadExplorer() {
   return (
     <Card>
       <div className="flex items-start justify-between mb-4">
-        <SectionTitle>Triadic Coordinates</SectionTitle>
+        <SectionTitle>Three Views of a Value</SectionTitle>
         <Ref label="Def 2.8" tip="Every x ∈ Rn has coordinates (d, σ, ς): datum, stratum (Hamming weight), spectrum (set of 1-bit positions)." />
       </div>
       <div className="flex flex-wrap items-end gap-3 mb-5">
@@ -229,7 +229,7 @@ function DihedralPanel() {
   return (
     <Card>
       <div className="flex items-start justify-between mb-4">
-        <SectionTitle>Dihedral Group</SectionTitle>
+        <SectionTitle>Symmetry Group</SectionTitle>
         <Ref label="Thm 2.6" tip="⟨neg, bnot⟩ = D_{2ⁿ}, dihedral group of order 2ⁿ⁺¹. r = succ (rotation), s = neg (reflection)." />
       </div>
       <p className="text-sm font-body text-muted-foreground leading-relaxed mb-4">
@@ -237,7 +237,7 @@ function DihedralPanel() {
         <span className="text-foreground font-medium"> r = succ</span> (rotation), <span className="text-foreground font-medium">s = neg</span> (reflection).
       </p>
       <p className="text-sm font-body text-muted-foreground leading-relaxed mb-4">
-        <span className="text-foreground font-medium">Ergodicity</span> <Ref label="Thm 2.7" tip="No nonempty proper subset of Z/2ⁿZ is closed under both neg and bnot." />: no nonempty proper subset is closed under both neg and bnot. Every state reaches every other state.
+        <span className="text-foreground font-medium">Full Reachability</span> <Ref label="Thm 2.7" tip="No nonempty proper subset of Z/2ⁿZ is closed under both neg and bnot." />: no subset is closed under both operations. Every value can reach every other value.
       </p>
       <div className="flex flex-wrap items-center gap-1 font-mono text-sm">
         <span className="text-muted-foreground">Orbit of 42:</span>
@@ -261,10 +261,10 @@ function DisjointnessNote() {
         <Info size={16} className="text-primary/60 shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-body font-medium text-foreground mb-1">
-            schema:Datum ⊥ schema:Term <Ref label="§3.2.2" tip="Disjointness invariant: schema:Datum owl:disjointWith schema:Term. A Datum is a value, a Term is syntax." />
+            Values vs. Expressions <Ref label="§3.2.2" tip="Disjointness invariant: schema:Datum owl:disjointWith schema:Term. A Datum is a value, a Term is syntax." />
           </p>
           <p className="text-sm font-body text-muted-foreground leading-relaxed">
-            A Datum is a value (42). A Term is syntax (Literal or Application). A Literal <em>denotes</em> a Datum without being one. This invariant is enforced throughout the framework.
+            A value (like 42) and an expression (like "42") are always kept separate. An expression <em>refers to</em> a value without being one. This rule is enforced throughout the framework.
           </p>
         </div>
       </div>

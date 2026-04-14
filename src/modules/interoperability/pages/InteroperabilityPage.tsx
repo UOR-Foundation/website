@@ -31,8 +31,8 @@ export default function InteroperabilityPage() {
                   Universal Interoperability Map
                 </h1>
                 <p className="mt-3 text-fluid-body text-foreground/70 leading-relaxed">
-                  Every external standard is a deterministic projection of a single UOR identity.
-                  Explore how they compose into cross-protocol synergy chains.
+                  Every standard is a different view of the same underlying identity.
+                  See how they connect and translate between each other.
                 </p>
               </div>
               {/* View toggle */}

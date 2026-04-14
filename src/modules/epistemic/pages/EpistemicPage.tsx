@@ -401,8 +401,8 @@ const EpistemicPage = () => (
           Epistemic Grading
         </h1>
         <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
-          Every fact carries a trust level. Submit claims with evidence to receive certificates
-          from Grade A (algebraically proven) to Grade D (unverified).
+          Submit any claim with its evidence. The system assigns a trust grade
+          from A (mathematically proven) to D (unverified).
         </p>
       </div>
     </section>
