@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Layout from "@/modules/core/components/Layout";
 
 const EXAMPLES = [
   {

@@ -12,12 +12,12 @@ const ClaimIdentityPage = () => {
 
   return (
     <Layout>
-      <section className="hero-gradient pt-28 md:pt-52 pb-20 md:pb-28">
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-2xl text-center">
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Claim UOR Identity
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground mb-4">
+            Claim Identity
           </h1>
-          <p className="text-muted-foreground font-body">
+          <p className="text-fluid-body text-foreground/70 font-body">
             Your identity claim is being processed…
           </p>
         </div>
