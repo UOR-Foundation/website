@@ -57,6 +57,22 @@ const McpDocsPage = () => (
       </div>
     </section>
 
+    {/* Live Demo */}
+    <section className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
+      <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+        <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+          Live Demo
+        </p>
+        <h2 className="font-display text-fluid-heading font-bold text-foreground mb-3">
+          Try it in the browser
+        </h2>
+        <p className="text-fluid-body text-foreground/70 font-body leading-relaxed max-w-2xl mb-10">
+          Call any tool on the live server. No setup required.
+        </p>
+        <McpPlayground />
+      </div>
+    </section>
+
     {/* Tools & Resources */}
     <section className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
