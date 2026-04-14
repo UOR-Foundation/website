@@ -71,12 +71,18 @@ const UnsPage = () => {
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          {/* Record Types */}
-          <div className="rounded-lg border border-border bg-card p-6 mb-12">
-            <h2 className="text-xl font-semibold text-foreground mb-4">
-              UNS Record Types
-            </h2>
+      <section className="py-section-sm bg-background border-b border-border/40">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Reference
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
+            Record Types
+          </h2>
+          <div className="rounded-lg border border-border bg-card p-6">
             <div className="grid gap-3">
               {[
                 { type: "UAAA", analog: "A/AAAA", desc: "Name → address" },
@@ -102,27 +108,31 @@ const UnsPage = () => {
               ))}
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Dependencies */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-xl font-semibold text-foreground mb-4">
-              Module Dependencies
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {["ring-core", "identity", "derivation", "resolver", "self-verify"].map(
-                (dep) => (
-                  <span
-                    key={dep}
-                    className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm font-mono"
-                  >
-                    {dep}
-                  </span>
-                )
-              )}
-            </div>
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Dependencies
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
+            Module Dependencies
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {["ring-core", "identity", "derivation", "resolver", "self-verify"].map(
+              (dep) => (
+                <span
+                  key={dep}
+                  className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm font-mono"
+                >
+                  {dep}
+                </span>
+              )
+            )}
           </div>
         </div>
-      </div>
+      </section>
     </Layout>
   );
 };
