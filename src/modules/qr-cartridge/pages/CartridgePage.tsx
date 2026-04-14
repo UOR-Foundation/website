@@ -139,25 +139,24 @@ const CartridgePage = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-background">
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Tools
+          </p>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
+            QR Cartridge
+          </h1>
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
+            Turn any content into a QR code that works with every phone camera.
+            The address is permanent, tamper-proof, and needs no special app to scan.
+          </p>
+        </div>
+      </section>
 
-        {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <section className="relative pt-40 pb-16 md:pt-52 md:pb-20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-4 relative z-10">
-            <div className="max-w-2xl mx-auto text-center space-y-5">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-sm text-primary">
-                <QrCode className="w-4 h-4" />
-                <span>QR Cartridge v{CARTRIDGE_VERSION}</span>
-              </div>
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground leading-tight">
-                Give anything a<br />scannable address
-              </h1>
-              <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-                Turn any content into a QR code that works with every phone camera.
-                The address is permanent, tamper-proof, and needs no special app to scan.
-              </p>
-            </div>
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
           </div>
         </section>
 

@@ -167,54 +167,39 @@ export default function AppStorePage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-background">
-        {/* Hero */}
-        <section className="relative overflow-hidden border-b border-border/30">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-          <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-28">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="max-w-3xl"
-            >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[12px] font-medium mb-6">
-                <Globe className="w-3.5 h-3.5" />
-                CNCF-Compatible Infrastructure
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Infrastructure
+          </p>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
+            App Store
+          </h1>
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
+            Every CNCF landscape category — implemented natively with content-addressed
+            isolation, algebraic verification, and unified knowledge graph integration.
+          </p>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-10 max-w-2xl">
+            {[
+              { label: "Categories", value: stats.total, color: "text-foreground" },
+              { label: "Complete", value: stats.complete, color: "text-emerald-400" },
+              { label: "Partial", value: stats.partial, color: "text-amber-400" },
+              { label: "Planned", value: stats.planned, color: "text-muted-foreground" },
+            ].map((s) => (
+              <div key={s.label} className="text-center p-3 rounded-xl bg-card/40 border border-border/30">
+                <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{s.label}</p>
               </div>
-              <h1 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4 tracking-tight">
-                App Store
-              </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
-                Every CNCF landscape category — implemented natively with content-addressed
-                isolation, algebraic verification, and unified knowledge graph integration.
-              </p>
-            </motion.div>
-
-            {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-10 max-w-2xl"
-            >
-              {[
-                { label: "Categories", value: stats.total, color: "text-foreground" },
-                { label: "Complete", value: stats.complete, color: "text-emerald-400" },
-                { label: "Partial", value: stats.partial, color: "text-amber-400" },
-                { label: "Planned", value: stats.planned, color: "text-muted-foreground" },
-              ].map((s) => (
-                <div key={s.label} className="text-center p-3 rounded-xl bg-card/40 border border-border/30">
-                  <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{s.label}</p>
-                </div>
-              ))}
-            </motion.div>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Developer Section */}
-        <section className="max-w-7xl mx-auto px-6 py-16">
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div>
               <h2 className="text-xl font-display font-bold text-foreground">

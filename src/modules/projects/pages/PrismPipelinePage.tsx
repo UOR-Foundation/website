@@ -145,14 +145,23 @@ export default function PrismPipelinePage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto px-4 py-16">
-          {/* Header */}
-          <h1 className="font-['Playfair_Display'] text-4xl md:text-5xl font-bold text-foreground mb-2">PRISM</h1>
-          <p className="text-lg text-muted-foreground mb-10">
-            Polymorphic Resolution and Isometric Symmetry Machine (§4).
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Developer Tools
+          </p>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
+            Prism Pipeline
+          </h1>
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
             The canonical 8-stage pipeline for resolving UOR types into certified partitions.
           </p>
+        </div>
+      </section>
+
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
 
           {/* Input Area */}
           <div className="bg-card border border-border rounded-lg p-5 mb-10">

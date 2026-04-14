@@ -200,23 +200,34 @@ function TrustScoreCard({ example }: { example: typeof EXAMPLES[0] }) {
 
 export default function TrustScorePreview() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="max-w-4xl mx-auto px-4 py-12 space-y-8">
-        <div className="text-center space-y-2 mb-10">
-          <h1 className="text-3xl font-bold">UOR PRISM Trust Score. Preview</h1>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            This is how the trust report appears at the bottom of every MCP response. Each grade level is shown below.
+    <Layout>
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Trust & Verification
+          </p>
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground">
+            Trust Score
+          </h1>
+          <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed max-w-4xl">
+            How the trust report appears at the bottom of every MCP response.
+            Each grade level is shown below.
           </p>
         </div>
+      </section>
 
-        {EXAMPLES.map((ex, i) => (
-          <TrustScoreCard key={i} example={ex} />
-        ))}
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl space-y-8">
+          {EXAMPLES.map((ex, i) => (
+            <TrustScoreCard key={i} example={ex} />
+          ))}
 
-        <p className="text-center text-xs text-muted-foreground pt-6">
-          This is a preview page. The actual trust score is rendered as markdown in your LLM client (Cursor, Claude Desktop, etc.).
-        </p>
-      </div>
-    </div>
+          <p className="text-center text-xs text-muted-foreground pt-6">
+            This is a preview page. The actual trust score is rendered as markdown in your LLM client.
+          </p>
+        </div>
+      </section>
+    </Layout>
   );
 }
