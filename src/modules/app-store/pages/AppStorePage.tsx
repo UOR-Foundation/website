@@ -252,34 +252,38 @@ export default function AppStorePage() {
               <p className="text-muted-foreground">No categories match your search.</p>
             </div>
           )}
-        </section>
+        </div>
+      </section>
 
-        {/* Interoperability Section */}
-        <section className="max-w-7xl mx-auto px-6 pb-20">
-          <div className="rounded-2xl border border-border/40 bg-card/40 p-8 md:p-12">
-            <h2 className="text-xl font-display font-bold text-foreground mb-3">
-              Universal Interoperability
-            </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-3xl mb-6">
-              Every application in this catalog is instantiated within a unified knowledge graph,
-              powered by the UOR Framework. Content-addressing ensures that any object —
-              container image, secret, pipeline, or trace — has a single, verifiable identity
-              across all environments: local, cloud, hybrid, or agentic AI.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                { title: "Content-Addressed", desc: "Every artifact has a unique SHA-256 identity. Same hash = same object, anywhere." },
-                { title: "Algebraic Isolation", desc: "AppKernel enforces permissions via set intersection — no OS-level hacks needed." },
-                { title: "Knowledge Graph Native", desc: "All objects live in the graph. Query, compose, and reason across the entire stack." },
-              ].map((item) => (
-                <div key={item.title} className="p-4 rounded-xl bg-background/50 border border-border/30">
-                  <p className="text-[14px] font-semibold text-foreground mb-1">{item.title}</p>
-                  <p className="text-[12px] text-muted-foreground leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
-            </div>
+      {/* Interoperability Section */}
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Architecture
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
+            Universal Interoperability
+          </h2>
+          <p className="text-fluid-body text-foreground/70 font-body leading-relaxed max-w-3xl mb-8">
+            Every application in this catalog is instantiated within a unified knowledge graph,
+            powered by the UOR Framework. Content-addressing ensures that any object —
+            container image, secret, pipeline, or trace — has a single, verifiable identity
+            across all environments.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { title: "Content-Addressed", desc: "Every artifact has a unique SHA-256 identity. Same hash = same object, anywhere." },
+              { title: "Algebraic Isolation", desc: "AppKernel enforces permissions via set intersection — no OS-level hacks needed." },
+              { title: "Knowledge Graph Native", desc: "All objects live in the graph. Query, compose, and reason across the entire stack." },
+            ].map((item) => (
+              <div key={item.title} className="p-4 rounded-xl bg-card border border-border/30">
+                <p className="text-sm font-semibold text-foreground mb-1">{item.title}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
     </Layout>
   );
 }

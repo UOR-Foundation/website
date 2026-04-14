@@ -156,14 +156,8 @@ const CartridgePage = () => {
       </section>
 
       <section className="py-section-sm bg-background">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
-          </div>
-        </section>
-
-        {/* ── Generator ────────────────────────────────────────────────── */}
-        <section className="pb-16">
-          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-4">
-            <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-6xl">
+            <div className="grid md:grid-cols-2 gap-8">
 
               {/* Left: Input */}
               <div className="space-y-5">
