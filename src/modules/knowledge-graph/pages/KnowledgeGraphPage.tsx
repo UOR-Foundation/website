@@ -122,8 +122,13 @@ const KnowledgeGraphPage = () => {
             Persistent dual-addressed storage. Every datum has a UOR IRI for identity
             and a database record for querying. JSON-LD remains the canonical format.
           </p>
+        </div>
+      </section>
+
+      <section className="py-section-sm bg-background">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
             {/* View mode toggle */}
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-2 mb-8">
               <button
                 onClick={() => setViewMode("data")}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
