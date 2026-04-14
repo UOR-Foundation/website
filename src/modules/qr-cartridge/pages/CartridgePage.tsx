@@ -325,27 +325,29 @@ const CartridgePage = () => {
                   </div>
                 ))}
               </div>
-            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ── How It Works ─────────────────────────────────────────────── */}
-        <section className="py-16 border-t border-border">
-          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold text-foreground text-center mb-10">How It Works</h2>
-              <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
-                {STEPS.map((s, i) => (
-                  <div key={i} className="text-center space-y-3">
-                    <div className="mx-auto w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                      {s.num}
-                    </div>
-                    <h3 className="font-semibold text-foreground text-sm">{s.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
-                  </div>
-                ))}
+      {/* How It Works */}
+      <section className="py-section-sm bg-background border-t border-border/40">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Process
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
+            How It Works
+          </h2>
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {STEPS.map((s, i) => (
+              <div key={i} className="text-center space-y-3">
+                <div className="mx-auto w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                  {s.num}
+                </div>
+                <h3 className="font-semibold text-foreground text-sm">{s.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{s.desc}</p>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
