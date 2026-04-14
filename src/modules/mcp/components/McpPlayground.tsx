@@ -166,7 +166,6 @@ const McpPlayground = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json, text/event-stream",
           apikey: UOR_API_KEY,
         },
         body: JSON.stringify(body),
