@@ -9,7 +9,7 @@ export const featuredProjects = [
     slug: "uor-foundation",
     category: "Core",
     description: "The canonical Rust implementation. Every ontology class as a trait, every property as a method, every named individual as a constant. cargo add uor-foundation.",
-    maturity: "Graduated" as MaturityLevel,
+    maturity: "Sandbox" as MaturityLevel,
     license: "Apache-2.0",
     url: "https://crates.io/crates/uor-foundation",
   },
@@ -30,14 +30,5 @@ export const featuredProjects = [
     maturity: "Sandbox" as MaturityLevel,
     license: "MIT",
     url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
-  },
-  {
-    name: "UOR MCP",
-    slug: "uor-mcp",
-    category: "Developer Tools",
-    description: "A server that connects AI models to the UOR kernel. Every response is cryptographically verified, auditable, and fully reproducible.",
-    maturity: "Sandbox" as MaturityLevel,
-    license: "Apache-2.0",
-    url: "https://github.com/UOR-Foundation/uor-mcp",
   },
 ];
