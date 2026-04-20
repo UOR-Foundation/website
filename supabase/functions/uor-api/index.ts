@@ -10395,6 +10395,15 @@ const SPEC_PATHS_V0_3: string[] = [
   '/store/write', '/store/write-context', '/test/e2e', '/tools/correlate', '/tools/derive',
   '/tools/partition', '/tools/query', '/tools/verify', '/user/morphism/transforms',
   '/user/state', '/user/type/primitives',
+  // ── v0.3.1 additions: principal pipeline + named resolvers + replay/host discovery ──
+  '/pipeline/run',
+  '/resolver/inhabitance',
+  '/resolver/tower-completeness',
+  '/resolver/incremental-completeness',
+  '/resolver/grounding-aware',
+  '/kernel/host-types',
+  '/bridge/trace/replay',
+  '/observability/stream',
 ];
 
 function conformanceReport(rl: RateLimitResult): Response {
