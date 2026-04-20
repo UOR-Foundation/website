@@ -132,5 +132,5 @@ export function verifyRoundTrip(bytes: ByteTuple): boolean {
 
 /** Build the live API datum URL for a value at a given bit width. */
 export function datumApiUrl(value: number, bits: number): string {
-  return `https://api.uor.foundation/v1/kernel/schema/datum?value=${value}&n=${bits}`;
+  return `https://uor.foundation/api/v1/kernel/schema/datum?value=${value}&n=${bits}`;
 }

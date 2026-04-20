@@ -4,8 +4,20 @@
  */
 import type { Endpoint, V2Stub, DiscoveryEndpoint } from "@/modules/api-explorer/types";
 
-/** Display URL used in curl snippets and documentation */
-export const API_BASE_URL = "https://api.uor.foundation/v1";
+/** Display URL used in curl snippets and documentation.
+ * Canonical first-party mirror, pinned to uor-foundation@0.3.0.
+ * Runtime callers use a transport-specific base (the Supabase edge function URL)
+ * because Lovable hosting does not rewrite arbitrary paths.
+ */
+export const API_BASE_URL = "https://uor.foundation/api/v1";
+
+/** Upstream federated mirror — kept for SPARQL federation and as a documented secondary server */
+export const API_BASE_URL_UPSTREAM = "https://api.uor.foundation/v1";
+
+/** Conformance pin — every endpoint maps 1:1 to this Rust crate release */
+export const API_CRATE_VERSION = "0.3.0";
+export const API_CRATE_URL = "https://crates.io/crates/uor-foundation";
+export const API_CRATE_DOCS_URL = "https://docs.rs/uor-foundation/0.3.0";
 
 const BASE = API_BASE_URL;
 

@@ -21,6 +21,18 @@ export default defineConfig(({ mode }) => ({
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "credentialless",
     },
+    proxy: {
+      // First-party canonical mirror for the UOR REST API (dev only).
+      // In production, callers go directly to the Supabase edge function;
+      // the /api/v1 path here lets local dev match the documented base URL.
+      "/api/v1": {
+        target:
+          "https://erwfuxphwcvynxhfbvql.supabase.co/functions/v1/uor-api",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p: string) => p.replace(/^\/api\/v1/, ""),
+      },
+    },
   },
   plugins: [
     wasm(),

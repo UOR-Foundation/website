@@ -3,7 +3,7 @@
   "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
   "info": {
     "title": "UOR Framework Agent API",
-    "version": "1.0.0",
+    "version": "0.3.0",
     "summary": "A complete, agent-navigable REST API for the Universal Object Reference (UOR) Framework — strictly mapped to the formal ontology at github.com/UOR-Foundation/UOR-Framework.",
     "description": "## Overview\n\nThis API exposes the full UOR kernel as REST operations. Every endpoint, schema field, and enum value maps 1:1 to a named class, property, or individual in the Rust ontology source under `spec/src/namespaces/`.\n\nThe UOR Framework is structured in three spaces:\n\n| Space  | Namespaces                                         | API group        |\n|--------|----------------------------------------------------|------------------|\n| Kernel | `u:`, `schema:`, `op:`                             | `/kernel`        |\n| Bridge | `resolver:`, `partition:`, `observable:`, `proof:`,| `/bridge`        |\n|        | `derivation:`, `trace:`, `cert:`                   |                  |\n| User   | `type:`, `morphism:`, `state:`                     | `/user`          |\n\nThe end-to-end resolution cycle (test7_end_to_end.rs) is:\n```\nContext → Type → Resolver → Partition → Observable → Cert → Trace → Transform\n```\n\n## Quick Start\n\nGET /kernel/op/verify?x=42 — verify neg(bnot(42)) = succ(42) = 43\n\n## Security\n\nAll GET endpoints require no authentication. POST endpoints accept optional `X-UOR-Agent-Key` header for rate-limit tier elevation. Rate limits (unauthenticated): 120 req/min for kernel GET, 60 req/min for bridge POST.\n\n## POST Semantics\n\nAll POST endpoints return `200 OK` (not `201`) because they compute deterministic artifacts on-the-fly — same inputs always produce the same output. No resource is persisted.",
     "contact": {
@@ -23,12 +23,19 @@
     "x-conformance-suite": "cargo run --bin uor-conformance",
     "x-source-crate": "https://crates.io/crates/uor-foundation",
     "x-source-docs": "https://docs.rs/uor-foundation",
-    "x-source-install": "cargo add uor-foundation"
+    "x-source-install": "cargo add uor-foundation@0.3.0",
+    "x-source-crate-version": "0.3.0",
+    "x-conformance": "uor-foundation = \"0.3.0\""
   },
   "servers": [
     {
+      "url": "https://uor.foundation/api/v1",
+      "description": "Canonical first-party mirror (this website) — pinned to uor-foundation@0.3.0",
+      "x-server-status": "active"
+    },
+    {
       "url": "https://api.uor.foundation/v1",
-      "description": "Live API — active endpoint (all requests go here)",
+      "description": "Upstream live API — federated mirror",
       "x-server-status": "active"
     }
   ],

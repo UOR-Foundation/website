@@ -157,6 +157,6 @@ describe("UOR SDK. Type System", () => {
     expect(typeof client.storeVerify).toBe("function");
     expect(typeof client.registerObserver).toBe("function");
     expect(typeof client.getObserverZone).toBe("function");
-    expect(client.baseUrl).toBe("https://api.uor.foundation/v1");
+    expect(client.baseUrl).toBe("https://uor.foundation/api/v1");
   });
 });

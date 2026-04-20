@@ -125,6 +125,10 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/graph/q0/stats':                     ['GET', 'OPTIONS'],
   '/sparql':                             ['GET', 'POST', 'OPTIONS'],
   '/sparql/verify':                      ['GET', 'OPTIONS'],
+  // v0.3 conformance + missing static paths
+  '/conformance':                        ['GET', 'OPTIONS'],
+  '/q0/instance-graph':                  ['GET', 'OPTIONS'],
+  '/shapes/uor-shapes.ttl':              ['GET', 'OPTIONS'],
 };
 
 // ── Rate Limiting (in-memory sliding window) ────────────────────────────────
@@ -10356,6 +10360,146 @@ async function observerConvergenceCheck(url: URL, rl: RateLimitResult): Promise<
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// v0.3 CONFORMANCE — live diff between this implementation and uor-foundation@0.3.0
+// ════════════════════════════════════════════════════════════════════════════
+const SPEC_PATHS_V0_3: string[] = [
+  '/', '/.well-known/void', '/attribution/register', '/attribution/royalty-report',
+  '/attribution/verify', '/bridge/cert/involution', '/bridge/derivation', '/bridge/emit',
+  '/bridge/gnn/graph', '/bridge/gnn/ground', '/bridge/graph/query', '/bridge/morphism/coerce',
+  '/bridge/morphism/isometry', '/bridge/morphism/transform', '/bridge/observable/curvature',
+  '/bridge/observable/holonomy', '/bridge/observable/metric', '/bridge/observable/metrics',
+  '/bridge/observable/path', '/bridge/observable/stratum', '/bridge/observable/stream',
+  '/bridge/partition', '/bridge/proof/coherence', '/bridge/proof/critical-identity',
+  '/bridge/resolver', '/bridge/resolver/entity', '/bridge/shacl/shapes', '/bridge/shacl/validate',
+  '/bridge/sparql', '/bridge/trace', '/cert/issue', '/cert/portability',
+  '/graph/q0.jsonld', '/graph/q0/datum/{value}', '/graph/q0/stats',
+  '/kernel/address/encode', '/kernel/derive', '/kernel/ontology', '/kernel/op/compute',
+  '/kernel/op/correlate', '/kernel/op/operations', '/kernel/op/verify', '/kernel/op/verify/all',
+  '/kernel/schema/datum', '/kernel/schema/triad', '/navigate', '/observer/assess',
+  '/observer/convergence-check', '/observer/network/summary', '/observer/register',
+  '/observer/{id}', '/observer/{id}/history', '/observer/{id}/remediate', '/observer/{id}/zone',
+  '/openapi.json', '/oracle/ledger', '/oracle/stats', '/q0/instance-graph',
+  '/schema-org/coherence', '/schema-org/extend', '/schema-org/pin-all',
+  '/shapes/uor-shapes.ttl', '/sparql', '/sparql/federation-plan', '/sparql/verify',
+  '/store/gateways', '/store/pod-context', '/store/pod-list', '/store/pod-read',
+  '/store/pod-write', '/store/read/{cid}', '/store/resolve', '/store/verify/{cid}',
+  '/store/write', '/store/write-context', '/test/e2e', '/tools/correlate', '/tools/derive',
+  '/tools/partition', '/tools/query', '/tools/verify', '/user/morphism/transforms',
+  '/user/state', '/user/type/primitives',
+];
+
+function conformanceReport(rl: RateLimitResult): Response {
+  // Implemented = KNOWN_PATHS plus the dynamic routes that aren't keyed there
+  const implementedSet = new Set<string>([
+    ...Object.keys(KNOWN_PATHS),
+    '/store/read/{cid}',
+    '/store/verify/{cid}',
+    '/graph/q0/datum/{value}',
+    '/observer/{id}',
+    '/observer/{id}/zone',
+    '/observer/{id}/history',
+    '/observer/{id}/remediate',
+  ]);
+  const specSet = new Set(SPEC_PATHS_V0_3);
+  const missing = SPEC_PATHS_V0_3.filter(p => !implementedSet.has(p));
+  const extra = [...implementedSet].filter(p => !specSet.has(p)).sort();
+
+  const body = {
+    "@context": UOR_CONTEXT_URL,
+    "@id": "https://uor.foundation/api/v1/conformance",
+    "@type": "schema:ConformanceReport",
+    spec_version: "0.3.0",
+    crate: "uor-foundation",
+    crate_version: "0.3.0",
+    crate_url: "https://crates.io/crates/uor-foundation/0.3.0",
+    docs_url: "https://docs.rs/uor-foundation/0.3.0",
+    spec_paths: SPEC_PATHS_V0_3.length,
+    implemented_paths: implementedSet.size,
+    missing,
+    extra,
+    fully_conformant: missing.length === 0,
+    checked_at: new Date().toISOString(),
+  };
+  return jsonResp(body, CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SHACL shapes — Turtle serialisation (W3C text/turtle)
+// ════════════════════════════════════════════════════════════════════════════
+function shaclShapesTurtle(rl: RateLimitResult): Response {
+  const ttl = `@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix u: <https://uor.foundation/u/> .
+@prefix op: <https://uor.foundation/op/> .
+@prefix schema: <https://uor.foundation/schema/> .
+@prefix partition: <https://uor.foundation/partition/> .
+@prefix state: <https://uor.foundation/state/> .
+@prefix cert: <https://uor.foundation/cert/> .
+@prefix derivation: <https://uor.foundation/derivation/> .
+@prefix shacl: <https://uor.foundation/shacl/> .
+
+# UOR SHACL Shapes — uor-foundation v0.3.0
+# Canonical Turtle serialisation of the 7 conformance shapes.
+# Ontology source: https://crates.io/crates/uor-foundation/0.3.0
+
+shacl:RingShape a sh:NodeShape ;
+  sh:targetClass schema:Ring ;
+  sh:description "Ring configuration: quantum >= 0, width = quantum + 1, bits = 8 * width, cycle = 2^bits" ;
+  sh:property [ sh:path schema:quantum ; sh:minInclusive 0 ; sh:datatype xsd:integer ] ,
+              [ sh:path schema:width ] , [ sh:path schema:bits ] , [ sh:path schema:cycle ] .
+
+shacl:PrimitivesShape a sh:NodeShape ;
+  sh:targetClass op:Operation ;
+  sh:description "5 primitive operations produce correct-length output; neg and bnot are involutions" ;
+  sh:property [ sh:path op:output ] , [ sh:path op:involution ] .
+
+shacl:TermGraphShape a sh:NodeShape ;
+  sh:targetClass schema:Triad ;
+  sh:description "Triadic coordinates: datum, stratum, spectrum each have length = ring width" ;
+  sh:property [ sh:path schema:datum ; sh:minCount 1 ] ,
+              [ sh:path schema:stratum ; sh:minCount 1 ] ,
+              [ sh:path schema:spectrum ; sh:minCount 1 ] .
+
+shacl:StateLifecycleShape a sh:NodeShape ;
+  sh:targetClass state:Frame ;
+  sh:description "State transitions are invertible: succ(pred(x)) = x and pred(succ(x)) = x" ;
+  sh:property [ sh:path state:succPred ] , [ sh:path state:predSucc ] .
+
+shacl:PartitionShape a sh:NodeShape ;
+  sh:targetClass partition:Partition ;
+  sh:description "Four disjoint sets (Unit, Exterior, Irreducible, Reducible) summing to 2^bits" ;
+  sh:property [ sh:path partition:cardinality ] , [ sh:path partition:disjoint ] .
+
+shacl:CriticalIdentityShape a sh:NodeShape ;
+  sh:targetClass schema:Datum ;
+  sh:description "neg(bnot(x)) = succ(x) holds for all x in Z/(2^n)Z" ;
+  sh:property [ sh:path op:criticalIdentity ] .
+
+shacl:DerivationShape a sh:NodeShape ;
+  sh:targetClass derivation:Derivation ;
+  sh:description "Every derivation has a content-addressed derivationId matching ^uor:[0-9a-f]{64}$" ;
+  sh:property [ sh:path derivation:derivationId ; sh:datatype xsd:string ; sh:pattern "^uor:[0-9a-f]+$" ] .
+
+shacl:CertificateShape a sh:NodeShape ;
+  sh:targetClass cert:Certificate ;
+  sh:description "Certificates must reference what they certify" ;
+  sh:property [ sh:path cert:certifies ; sh:minCount 1 ] .
+`;
+  return new Response(ttl, {
+    status: 200,
+    headers: {
+      ...CORS_HEADERS,
+      'Content-Type': 'text/turtle; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600',
+      'X-UOR-Space': 'bridge',
+      'X-RateLimit-Limit': String(rl.limit),
+      'X-RateLimit-Remaining': String(rl.remaining),
+      'X-RateLimit-Reset': String(rl.reset),
+    },
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // ROUTER
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -10366,7 +10510,12 @@ Deno.serve(async (req: Request) => {
   }
 
   const url = new URL(req.url);
-  let path = url.pathname.replace(/^\/functions\/v1\/uor-api/, '').replace(/^\/uor-api/, '').replace(/^\/v1/, '') || '/';
+  let path = url.pathname
+    .replace(/^\/functions\/v1\/uor-api/, '')
+    .replace(/^\/uor-api/, '')
+    .replace(/^\/api\/v1/, '')   // first-party mirror prefix
+    .replace(/^\/v1/, '')        // upstream prefix
+    || '/';
 
   const ip = getIP(req);
   const isPost = req.method === 'POST';
@@ -10928,6 +11077,24 @@ Deno.serve(async (req: Request) => {
     if (path === '/sparql/verify') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
       return await sparqlVerify(rl);
+    }
+
+    // ── v0.3 conformance: live diff between spec and implementation ──
+    if (path === '/conformance') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return conformanceReport(rl);
+    }
+
+    // ── Q0 instance graph alias (spec-canonical path) ──
+    if (path === '/q0/instance-graph') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await graphQ0Jsonld(rl);
+    }
+
+    // ── SHACL shapes — Turtle serialisation ──
+    if (path === '/shapes/uor-shapes.ttl') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return shaclShapesTurtle(rl);
     }
 
     // ── 405 for known paths with wrong method ──
