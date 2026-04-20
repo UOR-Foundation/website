@@ -125,6 +125,10 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/graph/q0/stats':                     ['GET', 'OPTIONS'],
   '/sparql':                             ['GET', 'POST', 'OPTIONS'],
   '/sparql/verify':                      ['GET', 'OPTIONS'],
+  // v0.3 conformance + missing static paths
+  '/conformance':                        ['GET', 'OPTIONS'],
+  '/q0/instance-graph':                  ['GET', 'OPTIONS'],
+  '/shapes/uor-shapes.ttl':              ['GET', 'OPTIONS'],
 };
 
 // ── Rate Limiting (in-memory sliding window) ────────────────────────────────
@@ -10366,7 +10370,12 @@ Deno.serve(async (req: Request) => {
   }
 
   const url = new URL(req.url);
-  let path = url.pathname.replace(/^\/functions\/v1\/uor-api/, '').replace(/^\/uor-api/, '').replace(/^\/v1/, '') || '/';
+  let path = url.pathname
+    .replace(/^\/functions\/v1\/uor-api/, '')
+    .replace(/^\/uor-api/, '')
+    .replace(/^\/api\/v1/, '')   // first-party mirror prefix
+    .replace(/^\/v1/, '')        // upstream prefix
+    || '/';
 
   const ip = getIP(req);
   const isPost = req.method === 'POST';
@@ -10928,6 +10937,24 @@ Deno.serve(async (req: Request) => {
     if (path === '/sparql/verify') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
       return await sparqlVerify(rl);
+    }
+
+    // ── v0.3 conformance: live diff between spec and implementation ──
+    if (path === '/conformance') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return conformanceReport(rl);
+    }
+
+    // ── Q0 instance graph alias (spec-canonical path) ──
+    if (path === '/q0/instance-graph') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await graphQ0Jsonld(rl);
+    }
+
+    // ── SHACL shapes — Turtle serialisation ──
+    if (path === '/shapes/uor-shapes.ttl') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return shaclShapesTurtle(rl);
     }
 
     // ── 405 for known paths with wrong method ──
