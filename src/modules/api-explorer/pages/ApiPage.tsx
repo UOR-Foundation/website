@@ -22,7 +22,15 @@ import {
   Globe,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { API_BASE_URL, LAYERS, DISCOVERY_ENDPOINTS } from "@/data/api-layers";
+import {
+  API_BASE_URL,
+  API_BASE_URL_UPSTREAM,
+  API_CRATE_VERSION,
+  API_CRATE_URL,
+  API_CRATE_DOCS_URL,
+  LAYERS,
+  DISCOVERY_ENDPOINTS,
+} from "@/data/api-layers";
 import type { LayerData } from "@/data/api-layers";
 import type { Endpoint as EndpointType } from "@/modules/api-explorer/types";
 import { CopyButton } from "@/modules/api-explorer/components/CopyButton";
@@ -401,6 +409,39 @@ const ApiPage = () => {
               <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mb-6">
                 A content-addressed computation substrate you can call from any language. Every endpoint is deterministic. Same input, same output, every time, on any machine. No account required. No API key needed.
               </p>
+
+              {/* ── v0.3 conformance provenance ────────────────── */}
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 mb-6">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold tracking-wide font-mono">
+                    CONFORMS TO v{API_CRATE_VERSION}
+                  </span>
+                  <span className="text-sm font-semibold text-foreground">
+                    uor-foundation = "{API_CRATE_VERSION}"
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                  Every endpoint maps 1:1 to a class, property, or named individual in the Rust ontology source. The website is the canonical first-party mirror of the live API; the spec, the implementation, and the crate share one explicit version.
+                </p>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+                  <a href={API_CRATE_URL} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-primary hover:underline font-medium">
+                    crates.io <ExternalLink size={10} />
+                  </a>
+                  <a href={API_CRATE_DOCS_URL} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-primary hover:underline font-medium">
+                    docs.rs <ExternalLink size={10} />
+                  </a>
+                  <a href="/openapi.json" target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-primary hover:underline font-medium">
+                    openapi.json <ExternalLink size={10} />
+                  </a>
+                  <span className="text-muted-foreground/60">·</span>
+                  <span className="text-muted-foreground">
+                    Upstream mirror: <code className="font-mono">{API_BASE_URL_UPSTREAM}</code>
+                  </span>
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
                 <div className="rounded-xl border border-border/40 bg-card/20 p-5">
