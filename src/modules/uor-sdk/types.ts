@@ -124,3 +124,64 @@ export class UorApiError extends Error {
     this.name = "UorApiError";
   }
 }
+
+// ── v0.3.1: Principal pipeline ──────────────────────────────────────────────
+
+/** Result of POST /pipeline/run — the canonical Datum→Validated→…→Certified envelope */
+export interface PipelineResult {
+  "@type": "schema:PipelineResult";
+  "schema:phase": string;
+  "schema:targetType": string;
+  "schema:hostBytes": number[];
+  datum: Record<string, unknown>;
+  validated: Record<string, unknown>;
+  grounded: Record<string, unknown>;
+  triad: Record<string, unknown>;
+  certified: Record<string, unknown>;
+  "derivation:derivationId": string;
+  epistemic_grade: "A" | "B" | "C" | "D";
+  epistemic_grade_label: string;
+  epistemic_grade_reason: string;
+}
+
+// ── v0.3.1: Named resolvers ─────────────────────────────────────────────────
+
+/** Mirror of Rust `Result<Certified<Cert>, Witness>` */
+export interface NamedResolverResult {
+  "@type": "resolver:Resolution";
+  "resolver:name": string;
+  "resolver:input": number;
+  "resolver:quantum": number;
+  verdict: "Certified" | "Witness";
+  result: Record<string, unknown>;
+}
+
+// ── v0.3.1: Trace replay + observability ────────────────────────────────────
+
+export interface TraceReplay {
+  "@type": "trace:Trace";
+  "trace:formatVersion": string;
+  "trace:replayOf": string;
+  "trace:eventCount": number;
+  events: Array<Record<string, unknown>>;
+}
+
+export interface HostTypesBinding {
+  "@type": "schema:HostTypes";
+  source: "DefaultHostTypes";
+  crate: "uor-foundation";
+  crate_version: string;
+  bindings: Record<string, string>;
+}
+
+export interface ConformanceReport {
+  "@type": "schema:ConformanceReport";
+  spec_version: string;
+  crate_version: string;
+  spec_paths: number;
+  implemented_paths: number;
+  missing: string[];
+  extra: string[];
+  fully_conformant: boolean;
+  checked_at: string;
+}
