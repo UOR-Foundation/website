@@ -130,6 +130,15 @@ const KNOWN_PATHS: Record<string, string[]> = {
   '/conformance':                        ['GET', 'OPTIONS'],
   '/q0/instance-graph':                  ['GET', 'OPTIONS'],
   '/shapes/uor-shapes.ttl':              ['GET', 'OPTIONS'],
+  // ── v0.3.1: principal pipeline + 4 named resolvers + replay/host discovery ──
+  '/pipeline/run':                       ['POST', 'OPTIONS'],
+  '/resolver/inhabitance':               ['GET', 'OPTIONS'],
+  '/resolver/tower-completeness':        ['GET', 'OPTIONS'],
+  '/resolver/incremental-completeness':  ['GET', 'OPTIONS'],
+  '/resolver/grounding-aware':           ['GET', 'OPTIONS'],
+  '/kernel/host-types':                  ['GET', 'OPTIONS'],
+  '/bridge/trace/replay':                ['GET', 'OPTIONS'],
+  '/observability/stream':               ['GET', 'OPTIONS'],
 };
 
 // ── Rate Limiting (in-memory sliding window) ────────────────────────────────
