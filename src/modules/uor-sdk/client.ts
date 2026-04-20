@@ -27,14 +27,26 @@ import type {
   StoreVerifyResult,
   ObserverRegistration,
   ObserverStatus,
+  PipelineResult,
+  NamedResolverResult,
+  TraceReplay,
+  HostTypesBinding,
+  ConformanceReport,
 } from "./types";
 import { UorApiError } from "./types";
 
-// ── Runtime base (calls Supabase edge function directly) ────────────────────
+// ── Runtime base ────────────────────────────────────────────────────────────
+// Prefer the first-party `/api/v1` mirror (works in dev via Vite proxy and in
+// production via the same first-party path). Falls back to the Supabase edge
+// function URL for non-browser callers (Node tests, server-side).
 
-const RUNTIME_BASE = `https://${
-  import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "erwfuxphwcvynxhfbvql"
-}.supabase.co/functions/v1/uor-api`;
+const isBrowser = typeof window !== "undefined";
+const SUPABASE_PROJECT_ID =
+  (typeof import.meta !== "undefined" && (import.meta as { env?: { VITE_SUPABASE_PROJECT_ID?: string } }).env?.VITE_SUPABASE_PROJECT_ID) ||
+  "erwfuxphwcvynxhfbvql";
+const RUNTIME_BASE = isBrowser
+  ? "/api/v1"
+  : `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/uor-api`;
 
 // ── Retry-capable fetch ─────────────────────────────────────────────────────
 
@@ -105,12 +117,27 @@ export interface UorClient {
 
   // ── Kernel: content addressing ──────────────────────────────
   encodeAddress(input: string | object): Promise<UorIdentity>;
+  hostTypes(): Promise<HostTypesBinding>;
 
   // ── Bridge: partition analysis ──────────────────────────────
   analyzePartition(input: string): Promise<PartitionResult>;
 
   // ── Bridge: trace & injection detection ─────────────────────
   traceHammingDrift(x: number, ops: string, n?: number): Promise<TraceResult>;
+  traceReplay(opts: { id?: string; x?: number; ops?: string; n?: number }): Promise<TraceReplay>;
+
+  // ── v0.3.1: principal pipeline (canonical entry point) ──────
+  pipelineRun(opts: { host_bytes: number | number[]; target_type?: string; phase?: string; n?: number }): Promise<PipelineResult>;
+
+  // ── v0.3.1: four named resolvers ────────────────────────────
+  resolverInhabitance(x: number, n?: number): Promise<NamedResolverResult>;
+  resolverTowerCompleteness(x: number, n?: number): Promise<NamedResolverResult>;
+  resolverIncrementalCompleteness(x: number, n?: number): Promise<NamedResolverResult>;
+  resolverGroundingAware(x: number, n?: number): Promise<NamedResolverResult>;
+
+  // ── Conformance + spec introspection ────────────────────────
+  conformance(): Promise<ConformanceReport>;
+  openapi(): Promise<Record<string, unknown>>;
 
   // ── Store: IPFS persistence ─────────────────────────────────
   storeWrite(obj: object, pin?: boolean): Promise<StoreWriteResult>;
@@ -211,6 +238,42 @@ export function createUorClient(): UorClient {
 
     storeVerify(cid) {
       return apiGet<StoreVerifyResult>(`/store/verify/${cid}`);
+    },
+
+    // ── v0.3.1: principal pipeline ─────────────────────────────
+    pipelineRun(opts) {
+      return apiPost<PipelineResult>("/pipeline/run", opts);
+    },
+
+    // ── v0.3.1: named resolvers ────────────────────────────────
+    resolverInhabitance(x, n = 8) {
+      return apiGet<NamedResolverResult>(`/resolver/inhabitance?x=${x}&n=${n}`);
+    },
+    resolverTowerCompleteness(x, n = 8) {
+      return apiGet<NamedResolverResult>(`/resolver/tower-completeness?x=${x}&n=${n}`);
+    },
+    resolverIncrementalCompleteness(x, n = 8) {
+      return apiGet<NamedResolverResult>(`/resolver/incremental-completeness?x=${x}&n=${n}`);
+    },
+    resolverGroundingAware(x, n = 8) {
+      return apiGet<NamedResolverResult>(`/resolver/grounding-aware?x=${x}&n=${n}`);
+    },
+
+    // ── v0.3.1: trace replay + host-types + conformance + openapi ─
+    traceReplay({ id, x = 42, ops = "neg,bnot", n = 8 } = {}) {
+      const idQs = id ? `&id=${encodeURIComponent(id)}` : "";
+      return apiGet<TraceReplay>(
+        `/bridge/trace/replay?x=${x}&n=${n}&ops=${encodeURIComponent(ops)}${idQs}`,
+      );
+    },
+    hostTypes() {
+      return apiGet<HostTypesBinding>("/kernel/host-types");
+    },
+    conformance() {
+      return apiGet<ConformanceReport>("/conformance");
+    },
+    openapi() {
+      return apiGet<Record<string, unknown>>("/openapi.json");
     },
 
     // ── Observer ────────────────────────────────────────────────
