@@ -4195,6 +4195,14 @@ async function getStorachaClient() {
       'Generate via: storacha key create && storacha delegation create <did> --base64'
     )
   }
+  // Lazy-load Storacha SDK — only the /store/* hot path pays this cost.
+  // Kernel calls (the hottest path) skip the entire bundle.
+  const [StorachaClient, { StoreMemory }, StorachaProof, { Signer }] = await Promise.all([
+    import('npm:@storacha/client'),
+    import('npm:@storacha/client/stores/memory'),
+    import('npm:@storacha/client/proof'),
+    import('npm:@storacha/client/principal/ed25519'),
+  ]);
   console.log('[storacha] KEY prefix:', STORACHA_KEY.substring(0, 8), 'length:', STORACHA_KEY.length)
   console.log('[storacha] PROOF prefix:', STORACHA_PROOF.substring(0, 8), 'length:', STORACHA_PROOF.length)
 
