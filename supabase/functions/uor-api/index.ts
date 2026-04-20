@@ -11474,6 +11474,44 @@ Deno.serve(async (req: Request) => {
       return conformanceReport(rl);
     }
 
+    // ── v0.3.1: principal pipeline (the canonical entry point) ──
+    if (path === '/pipeline/run') {
+      if (req.method !== 'POST') return error405(path, KNOWN_PATHS[path]);
+      return await pipelineRun(req, rl);
+    }
+
+    // ── v0.3.1: four named resolvers (1:1 with Rust signatures) ──
+    if (path === '/resolver/inhabitance') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return resolverInhabitance(url, rl);
+    }
+    if (path === '/resolver/tower-completeness') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return resolverTowerCompleteness(url, rl);
+    }
+    if (path === '/resolver/incremental-completeness') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return resolverIncrementalCompleteness(url, rl);
+    }
+    if (path === '/resolver/grounding-aware') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return resolverGroundingAware(url, rl);
+    }
+
+    // ── v0.3.1: HostTypes discovery + replayable trace + SSE stream ──
+    if (path === '/kernel/host-types') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return kernelHostTypes(rl);
+    }
+    if (path === '/bridge/trace/replay') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return await bridgeTraceReplay(url, rl);
+    }
+    if (path === '/observability/stream') {
+      if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
+      return observabilityStream(req, rl);
+    }
+
     // ── Q0 instance graph alias (spec-canonical path) ──
     if (path === '/q0/instance-graph') {
       if (req.method !== 'GET') return error405(path, KNOWN_PATHS[path]);
