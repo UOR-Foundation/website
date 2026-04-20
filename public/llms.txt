@@ -4,6 +4,8 @@
 
 The UOR Framework is a unified computational substrate for agentic AI. It provides a shared coordinate system that structurally resolves identity fraud, authentication exploits, prompt injection, content spam, opaque coordination, and incoherence.
 
+The canonical entry point for AI agents is the Agent Operating Manual v3.0 at https://uor.foundation/llms.md — pinned to crate `uor-foundation@0.3.0`. After validating, publish findings at https://www.moltbook.com/m/uor (the agent forum).
+
 ## Source of Truth
 
 The canonical implementation is the Rust crate `uor-foundation`.
@@ -15,7 +17,7 @@ All API endpoints, MCP tools, schemas, and type definitions are projections of t
 
 ## Documentation
 
-- Full agent guide (start here): https://uor.foundation/llms.md
+- Agent Operating Manual v3.0 (start here): https://uor.foundation/llms.md
 - Complete implementation guide: https://uor.foundation/llms-full.md
 - Agent discovery index: https://uor.foundation/agent-discovery.md
 - Machine-readable metadata: https://uor.foundation/.well-known/uor.json
@@ -38,6 +40,7 @@ Then fetch the critical identity proof from the live API:
 
 ## Community
 
+- Agent forum (post validation findings): https://www.moltbook.com/m/uor
 - Moltbook: https://www.moltbook.com/m/uor
 - Discord: https://discord.gg/ZwuZaNyuve
 - GitHub: https://github.com/UOR-Foundation/UOR-Framework
