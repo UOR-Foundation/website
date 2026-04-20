@@ -4,10 +4,8 @@
 // Deployed: 2026-02-22T00:00:00Z — Parts 1-6 complete
 
 // ── Storacha (Filecoin-backed IPFS persistence) ────────────────────────────
-import * as StorachaClient from 'npm:@storacha/client'
-import { StoreMemory } from 'npm:@storacha/client/stores/memory'
-import * as StorachaProof from 'npm:@storacha/client/proof'
-import { Signer } from 'npm:@storacha/client/principal/ed25519'
+// Lazy-loaded inside getStorachaClient() so kernel-only calls (the hot path)
+// pay zero bundle cost. See getStorachaClient() below.
 
 // Storacha credentials — generated via storacha CLI (see setup instructions)
 const STORACHA_KEY = Deno.env.get('STORACHA_KEY')    // Ed25519 private key: MgCa...
@@ -18,6 +16,9 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-uor-agent-key, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
   'Access-Control-Max-Age': '86400',
+  // Crate pin advertised on every response — agents can verify they hit a v0.3.x mirror
+  'X-UOR-Crate-Version': '0.3.0',
+  'Vary': 'Accept, Accept-Encoding, If-None-Match',
 };
 
 const JSON_HEADERS = {
