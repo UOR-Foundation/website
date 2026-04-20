@@ -48,6 +48,34 @@ export const DISCOVERY_ENDPOINTS: DiscoveryEndpoint[] = [
     explanation: "Machine-readable spec with all paths, schemas, and response types. Also available at uor.foundation/openapi.json.",
     example: `${BASE}/openapi.json`,
   },
+  {
+    method: "GET",
+    path: "/conformance",
+    label: "Live spec ↔ implementation conformance report",
+    explanation: "Diffs OpenAPI 0.3.1 spec paths against deployed handlers. fully_conformant:true means every spec path is wired.",
+    example: `${BASE}/conformance`,
+  },
+  {
+    method: "POST",
+    path: "/pipeline/run",
+    label: "Canonical entry point — Datum → Validated → Grounded → Triad → Certified",
+    explanation: "One call returns the full crate flow envelope with derivation_id and epistemic_grade. Use this instead of stitching individual endpoints.",
+    example: `curl -X POST ${BASE}/pipeline/run -H 'Content-Type: application/json' -d '{"host_bytes":42}'`,
+  },
+  {
+    method: "GET",
+    path: "/kernel/host-types",
+    label: "HostTypes binding discovery",
+    explanation: "Returns the Primitives trait host slot bindings (Decimal:f64, HostString:str, …) so agents can introspect the runtime.",
+    example: `${BASE}/kernel/host-types`,
+  },
+  {
+    method: "GET",
+    path: "/bridge/trace/replay",
+    label: "Replayable trace with TRACE_REPLAY_FORMAT_VERSION",
+    explanation: "Returns trace:Trace with formatVersion + events[]. External verifiers can pin to the format version constant.",
+    example: `${BASE}/bridge/trace/replay?x=42&ops=neg,bnot`,
+  },
 ];
 
 export const LAYERS: LayerData[] = [
