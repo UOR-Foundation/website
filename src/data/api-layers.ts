@@ -56,13 +56,6 @@ export const DISCOVERY_ENDPOINTS: DiscoveryEndpoint[] = [
     example: `${BASE}/conformance`,
   },
   {
-    method: "POST",
-    path: "/pipeline/run",
-    label: "Canonical entry point — Datum → Validated → Grounded → Triad → Certified",
-    explanation: "One call returns the full crate flow envelope with derivation_id and epistemic_grade. Use this instead of stitching individual endpoints.",
-    example: `curl -X POST ${BASE}/pipeline/run -H 'Content-Type: application/json' -d '{"host_bytes":42}'`,
-  },
-  {
     method: "GET",
     path: "/kernel/host-types",
     label: "HostTypes binding discovery",
