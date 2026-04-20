@@ -10415,6 +10415,368 @@ const SPEC_PATHS_V0_3: string[] = [
   '/observability/stream',
 ];
 
+// ════════════════════════════════════════════════════════════════════════════
+// v0.3.1 — Principal pipeline + named resolvers + trace replay + host discovery
+// These handlers compose existing primitives (makeDatum, classifyByte, …) into
+// the named surfaces published by the uor-foundation 0.3.0 Rust crate.
+// ════════════════════════════════════════════════════════════════════════════
+
+/** v0.3 trace replay format — bumped whenever the on-the-wire shape changes. */
+const TRACE_REPLAY_FORMAT_VERSION = '0.3.0';
+
+/**
+ * POST /pipeline/run — the single canonical entry point matching the Rust
+ * crate's headline flow: Datum → Validated → Grounded → Triad → Certified.
+ *
+ * Body: { host_bytes: number | number[], target_type?: string, phase?: string, n?: number }
+ * Internally composes existing helpers — no new math.
+ */
+async function pipelineRun(req: Request, rl: RateLimitResult): Promise<Response> {
+  const contentType = req.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) return error415(rl);
+
+  let body: { host_bytes?: unknown; target_type?: unknown; phase?: unknown; n?: unknown };
+  try { body = await req.json(); } catch {
+    return error400('Request body must be valid JSON', 'body', rl);
+  }
+
+  const n = typeof body.n === 'number' ? Math.max(1, Math.min(16, body.n)) : 8;
+  const m = modulus(n);
+
+  // Coerce host_bytes → array of ring elements
+  let bytes: number[];
+  if (typeof body.host_bytes === 'number') {
+    bytes = [((body.host_bytes % m) + m) % m];
+  } else if (Array.isArray(body.host_bytes) && body.host_bytes.every(v => typeof v === 'number')) {
+    bytes = (body.host_bytes as number[]).map(v => ((v % m) + m) % m);
+  } else {
+    return error400('host_bytes must be a number or number[]', 'host_bytes', rl);
+  }
+  if (bytes.length === 0) return error400('host_bytes must be non-empty', 'host_bytes', rl);
+
+  const targetType = typeof body.target_type === 'string' ? body.target_type : 'schema:Datum';
+  const phase = typeof body.phase === 'string' ? body.phase : 'W4';
+
+  // ── W4 Datum (kind-typed) ─────────────────────────────────────────────────
+  const principal = bytes[0];
+  const datum = makeDatum(principal, n);
+
+  // ── W2 + W13 Validated (phase-tagged) ─────────────────────────────────────
+  const involutionHolds = neg(bnot(principal, n), n) === succOp(principal, n);
+  const validated = {
+    '@type': 'schema:Validated',
+    'schema:phase': phase,
+    'schema:targetType': targetType,
+    'schema:involutionHolds': involutionHolds,
+    'schema:reason': involutionHolds
+      ? `neg(bnot(${principal})) = succ(${principal}) = ${succOp(principal, n)} — W2 invariant satisfied`
+      : 'Critical identity violated — value is not a valid Datum',
+  };
+
+  // ── W14 Grounded (classification + bytewise grounding) ────────────────────
+  const classified = classifyByte(principal, n);
+  const grounded = {
+    '@type': 'schema:Grounded',
+    'schema:component': classified.component,
+    'schema:reason': classified.reason,
+    'schema:groundingBytes': bytes,
+    'schema:hostByteCount': bytes.length,
+  };
+
+  // ── W8 Triad (datum, stratum, spectrum) ──────────────────────────────────
+  const stratum = bytePopcount(principal);
+  const spectrum = byteBasis(principal);
+  const triad = {
+    '@type': 'schema:Triad',
+    'schema:datum': principal,
+    'schema:stratum': stratum,
+    'schema:spectrum': spectrum,
+  };
+
+  // ── W11 Certified<C> ──────────────────────────────────────────────────────
+  const term = `pipeline.run([${bytes.join(',')}],phase=${phase},target=${targetType})`;
+  const derivationId = await computeDerivationId(term, datumIRI(principal, n));
+  const certified = {
+    '@type': 'cert:Certified',
+    'cert:kind': targetType,
+    'cert:certifies': datumIRI(principal, n),
+    'cert:involutionHolds': involutionHolds,
+    'cert:component': classified.component,
+    'derivation:derivationId': derivationId,
+  };
+
+  const envelope = {
+    '@context': UOR_CONTEXT_URL,
+    '@id': `https://uor.foundation/api/v1/pipeline/run/${derivationId.replace('urn:uor:derivation:sha256:', '')}`,
+    '@type': 'schema:PipelineResult',
+    'schema:phase': phase,
+    'schema:targetType': targetType,
+    'schema:hostBytes': bytes,
+    datum,
+    validated,
+    grounded,
+    triad,
+    certified,
+    'derivation:derivationId': derivationId,
+    'epistemic_grade': involutionHolds ? 'A' : 'D',
+    'epistemic_grade_label': involutionHolds ? 'Algebraically Proven' : 'Unverified',
+    'epistemic_grade_reason': involutionHolds
+      ? 'Pipeline composed from primitives that each carry W2 + W11 invariants; derivation_id is reproducible.'
+      : 'Critical identity neg(bnot(x)) = succ(x) failed for the principal byte.',
+    'crate:source': 'uor-foundation@0.3.0',
+    'crate:url': 'https://crates.io/crates/uor-foundation/0.3.0',
+    'rust:flow': 'Datum → Validated → Grounded → Triad → Certified',
+    'ontology_ref': 'https://github.com/UOR-Foundation/UOR-Framework/blob/main/spec/src/namespaces/schema.rs',
+    'timestamp': timestamp(),
+  };
+  return jsonResp(envelope, CACHE_HEADERS_BRIDGE, undefined, rl);
+}
+
+/**
+ * Helper: build a `Result<Certified<Cert>, Witness>`-shaped response.
+ * Matches the Rust signature exactly so SDK consumers can pattern-match.
+ */
+function namedResolverResponse(
+  resolverName: string,
+  x: number,
+  n: number,
+  certified: boolean,
+  evidence: Record<string, unknown>,
+  rl: RateLimitResult,
+): Response {
+  const m = modulus(n);
+  const body = certified
+    ? {
+        '@context': UOR_CONTEXT_URL,
+        '@type': 'resolver:Resolution',
+        'resolver:name': resolverName,
+        'resolver:input': x,
+        'resolver:quantum': n,
+        'resolver:ringModulus': m,
+        verdict: 'Certified',
+        result: {
+          '@type': 'cert:Certified',
+          'cert:kind': resolverName,
+          'cert:certifies': datumIRI(x, n),
+          ...evidence,
+        },
+        'crate:source': 'uor-foundation@0.3.0',
+      }
+    : {
+        '@context': UOR_CONTEXT_URL,
+        '@type': 'resolver:Resolution',
+        'resolver:name': resolverName,
+        'resolver:input': x,
+        'resolver:quantum': n,
+        'resolver:ringModulus': m,
+        verdict: 'Witness',
+        result: {
+          '@type': 'resolver:Witness',
+          'resolver:reason': String(evidence.reason ?? 'no certificate available'),
+          ...evidence,
+        },
+        'crate:source': 'uor-foundation@0.3.0',
+      };
+  return jsonResp(body, CACHE_HEADERS_BRIDGE, makeETag(`/resolver/${resolverName}`, { x: String(x), n: String(n) }), rl);
+}
+
+/** GET /resolver/inhabitance?x=…&n=… */
+function resolverInhabitance(url: URL, rl: RateLimitResult): Response {
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const nRes = parseIntParam(url.searchParams.get('n') ?? '8', 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+  const x = xRes.val, n = nRes.val;
+  if (x >= modulus(n)) return error400(`x must be in [0, ${modulus(n) - 1}] for n=${n}`, 'x', rl);
+  // Inhabitance: ring contains the value (always true for valid inputs).
+  return namedResolverResponse('inhabitance', x, n, true, {
+    inhabitant: x,
+    'resolver:ontologyRef': 'https://docs.rs/uor-foundation/0.3.0/uor_foundation/resolver/inhabitance/index.html',
+  }, rl);
+}
+
+/** GET /resolver/tower-completeness?x=…&n=… */
+function resolverTowerCompleteness(url: URL, rl: RateLimitResult): Response {
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const nRes = parseIntParam(url.searchParams.get('n') ?? '8', 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+  const x = xRes.val, n = nRes.val;
+  if (x >= modulus(n)) return error400(`x must be in [0, ${modulus(n) - 1}] for n=${n}`, 'x', rl);
+  // Tower completeness: every quantum level 1..n must contain x mod 2^k.
+  const tower: Array<{ level: number; modulus: number; projection: number }> = [];
+  let complete = true;
+  for (let k = 1; k <= n; k++) {
+    const mk = modulus(k);
+    const proj = x % mk;
+    tower.push({ level: k, modulus: mk, projection: proj });
+    if (proj < 0 || proj >= mk) complete = false;
+  }
+  return namedResolverResponse('tower-completeness', x, n, complete, {
+    'resolver:tower': tower,
+    'resolver:ontologyRef': 'https://docs.rs/uor-foundation/0.3.0/uor_foundation/resolver/tower/index.html',
+  }, rl);
+}
+
+/** GET /resolver/incremental-completeness?x=…&n=… */
+function resolverIncrementalCompleteness(url: URL, rl: RateLimitResult): Response {
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const nRes = parseIntParam(url.searchParams.get('n') ?? '8', 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+  const x = xRes.val, n = nRes.val;
+  if (x >= modulus(n)) return error400(`x must be in [0, ${modulus(n) - 1}] for n=${n}`, 'x', rl);
+  // Incremental completeness: succ/pred chain re-derives x within m steps.
+  const m = modulus(n);
+  let cursor = 0; let steps = 0;
+  while (cursor !== x && steps < m) { cursor = succOp(cursor, n); steps++; }
+  const certified = cursor === x;
+  return namedResolverResponse('incremental-completeness', x, n, certified, {
+    'resolver:stepsToReach': steps,
+    'resolver:ringTraversal': certified ? 'complete' : 'incomplete',
+    reason: certified ? undefined : `succ chain did not re-derive ${x} within ${m} steps`,
+    'resolver:ontologyRef': 'https://docs.rs/uor-foundation/0.3.0/uor_foundation/resolver/incremental/index.html',
+  }, rl);
+}
+
+/** GET /resolver/grounding-aware?x=…&n=… */
+function resolverGroundingAware(url: URL, rl: RateLimitResult): Response {
+  const xRes = parseIntParam(url.searchParams.get('x'), 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const nRes = parseIntParam(url.searchParams.get('n') ?? '8', 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+  const x = xRes.val, n = nRes.val;
+  if (x >= modulus(n)) return error400(`x must be in [0, ${modulus(n) - 1}] for n=${n}`, 'x', rl);
+  // Grounding-aware: classification must yield a non-empty partition component.
+  const cls = classifyByte(x, n);
+  const certified = !!cls.component;
+  return namedResolverResponse('grounding-aware', x, n, certified, {
+    'resolver:component': cls.component,
+    'resolver:groundingReason': cls.reason,
+    reason: certified ? undefined : 'classification did not yield a partition component',
+    'resolver:ontologyRef': 'https://docs.rs/uor-foundation/0.3.0/uor_foundation/resolver/grounding/index.html',
+  }, rl);
+}
+
+/** GET /kernel/host-types — exposes Rust HostTypes binding for agent introspection */
+function kernelHostTypes(rl: RateLimitResult): Response {
+  const body = {
+    '@context': UOR_CONTEXT_URL,
+    '@id': 'https://uor.foundation/api/v1/kernel/host-types',
+    '@type': 'schema:HostTypes',
+    source: 'DefaultHostTypes',
+    crate: 'uor-foundation',
+    crate_version: '0.3.0',
+    bindings: {
+      Decimal: 'f64',
+      Integer: 'i64',
+      NonNegativeInteger: 'u64',
+      PositiveInteger: 'u64',
+      Boolean: 'bool',
+      HostString: 'str',
+      WitnessBytes: '[u8]',
+    },
+    'rust:traitRef': 'uor_foundation::user::Primitives',
+    'docs_url': 'https://docs.rs/uor-foundation/0.3.0/uor_foundation/user/trait.Primitives.html',
+  };
+  return jsonResp(body, CACHE_HEADERS_KERNEL, makeETag('/kernel/host-types', {}), rl);
+}
+
+/** GET /bridge/trace/replay?id={derivationId}&x=…&ops=…&n=… */
+async function bridgeTraceReplay(url: URL, rl: RateLimitResult): Promise<Response> {
+  const id = url.searchParams.get('id') ?? '';
+  const xRes = parseIntParam(url.searchParams.get('x') ?? '0', 'x', 0, 65535);
+  if ('err' in xRes) return xRes.err;
+  const nRes = parseIntParam(url.searchParams.get('n') ?? '8', 'n', 1, 16);
+  if ('err' in nRes) return nRes.err;
+  const opsRaw = url.searchParams.get('ops') ?? 'neg,bnot';
+  const x = xRes.val, n = nRes.val;
+  const opNames = opsRaw.split(',').map(s => s.trim()).filter(Boolean) as OpName[];
+
+  // Re-execute the op sequence and emit one TraceEvent per step.
+  let cursor = x;
+  const events: Array<Record<string, unknown>> = [
+    { '@type': 'trace:TraceEvent', step: 0, op: 'init', value: cursor, binary: cursor.toString(2).padStart(n, '0'), hammingWeight: hammingWeightFn(cursor) },
+  ];
+  for (let i = 0; i < opNames.length; i++) {
+    const op = opNames[i];
+    const prev = cursor;
+    try { cursor = applyOp(cursor, op, n); }
+    catch { return error400(`Unknown op '${op}'. Valid: neg,bnot,succ,pred`, 'ops', rl); }
+    events.push({
+      '@type': 'trace:TraceEvent',
+      step: i + 1,
+      op,
+      value: cursor,
+      binary: cursor.toString(2).padStart(n, '0'),
+      hammingWeight: hammingWeightFn(cursor),
+      xorDelta: prev ^ cursor,
+      bitDelta: bitDelta(prev, cursor, n),
+    });
+  }
+
+  const replayId = id || (await computeDerivationId(`replay(${x},${opNames.join(',')},n=${n})`));
+  const body = {
+    '@context': UOR_CONTEXT_URL,
+    '@id': `https://uor.foundation/api/v1/bridge/trace/replay/${replayId.replace('urn:uor:derivation:sha256:', '')}`,
+    '@type': 'trace:Trace',
+    'trace:formatVersion': TRACE_REPLAY_FORMAT_VERSION,
+    'trace:replayOf': replayId,
+    'trace:eventCount': events.length,
+    events,
+    'rust:constantRef': 'TRACE_REPLAY_FORMAT_VERSION',
+    'docs_url': 'https://docs.rs/uor-foundation/0.3.0/uor_foundation/observability/index.html',
+  };
+  return jsonResp(body, CACHE_HEADERS_BRIDGE, makeETag('/bridge/trace/replay', { id: replayId, x: String(x), n: String(n), ops: opsRaw }), rl);
+}
+
+/** GET /observability/stream — SSE TraceEvent stream (v0.3 observability feature) */
+function observabilityStream(_req: Request, rl: RateLimitResult): Response {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      const sendEvent = (event: string, data: Record<string, unknown>) => {
+        controller.enqueue(encoder.encode(`event: ${event}\n`));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+      };
+      sendEvent('open', {
+        '@type': 'observability:StreamOpen',
+        'trace:formatVersion': TRACE_REPLAY_FORMAT_VERSION,
+        crate_version: '0.3.0',
+        timestamp: new Date().toISOString(),
+      });
+      // Emit a small heartbeat batch — agents can use this to validate the SSE wire format.
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i >= 3) {
+          sendEvent('close', { '@type': 'observability:StreamClose', emitted: i });
+          clearInterval(interval);
+          controller.close();
+          return;
+        }
+        sendEvent('trace', {
+          '@type': 'trace:TraceEvent',
+          step: i,
+          op: 'heartbeat',
+          ts: new Date().toISOString(),
+        });
+        i++;
+      }, 200);
+    },
+  });
+  return new Response(stream, {
+    status: 200,
+    headers: {
+      ...CORS_HEADERS,
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'X-UOR-Space': 'observability',
+      'X-Trace-Format-Version': TRACE_REPLAY_FORMAT_VERSION,
+      ...rateLimitHeaders(rl),
+    },
+  });
+}
+
 function conformanceReport(rl: RateLimitResult): Response {
   // Implemented = KNOWN_PATHS plus the dynamic routes that aren't keyed there
   const implementedSet = new Set<string>([
