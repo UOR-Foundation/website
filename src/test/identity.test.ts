@@ -161,7 +161,7 @@ describe("contentAddress", () => {
 describe("datumApiUrl", () => {
   it("builds correct URL", () => {
     expect(datumApiUrl(42, 8)).toBe(
-      "https://api.uor.foundation/v1/kernel/schema/datum?value=42&n=8"
+      "https://uor.foundation/api/v1/kernel/schema/datum?value=42&n=8"
     );
   });
 });
