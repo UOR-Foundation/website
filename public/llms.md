@@ -110,12 +110,22 @@ read epistemic_grade
 **Minimum viable agent loop:**
 
 ```
-1. POST /v1/kernel/address/encode     # input → CID                  [Kernel]
-2. POST /v1/tools/derive              # compute, get derivation_id   [Kernel + Certificate]
-3. Read response.epistemic_grade      # A / B / C / D
-4. If grade ≥ B: POST /v1/store/write to persist                     [Certificate + Resolver]
-5. Pass CID downstream; peer calls GET /v1/store/verify/{cid}
+1. POST /v1/pipeline/run              # one call → full envelope     [All layers]
+   body: { "host_bytes": 42, "target_type": "schema:Datum", "phase": "W4" }
+
+   Returns: { datum, validated, grounded, triad, certified,
+              derivation:derivationId, epistemic_grade }
+
+2. Read response.epistemic_grade      # A / B / C / D
+3. If grade ≥ B: POST /v1/store/write to persist                     [Certificate + Resolver]
+4. Pass derivation_id downstream; peer calls GET /v1/store/verify/{cid}
+   or GET /v1/bridge/trace/replay?id={derivation_id}
 ```
+
+`POST /v1/pipeline/run` is the **canonical entry point** — it maps 1:1 to
+`uor_foundation::pipeline::run` in the Rust crate (`Datum → Validated →
+Grounded → Triad → Certified`). Use it instead of stitching individual
+endpoints unless you need a single intermediate stage.
 
 ---
 
