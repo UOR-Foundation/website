@@ -2565,6 +2565,153 @@
           "429": { "$ref": "#/components/responses/RateLimited" }
         }
       }
+    },
+    "/pipeline/run": {
+      "post": {
+        "operationId": "pipelineRun",
+        "tags": ["pipeline"],
+        "summary": "Principal data path — Datum → Validated → Grounded → Triad → Certified",
+        "description": "The single canonical entry point for v0.3.0. Composes the full crate flow into one envelope, returning every intermediate stage plus a `derivation:derivationId` and an `epistemic_grade`. Maps 1:1 to `uor_foundation::pipeline::run` in the Rust crate.",
+        "security": [{}, {"AgentKey": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["host_bytes"],
+                "properties": {
+                  "host_bytes":   { "oneOf": [{"type":"integer","minimum":0,"maximum":65535}, {"type":"array","items":{"type":"integer","minimum":0,"maximum":65535}}] },
+                  "target_type":  { "type": "string", "default": "schema:Datum" },
+                  "phase":        { "type": "string", "default": "W4" },
+                  "n":            { "type": "integer", "minimum": 1, "maximum": 16, "default": 8 }
+                }
+              },
+              "example": { "host_bytes": 42, "target_type": "schema:Datum", "phase": "W4" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "schema:PipelineResult — full pipeline envelope with grade A/D" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "415": { "description": "Unsupported media type — body must be application/json" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/resolver/inhabitance": {
+      "get": {
+        "operationId": "resolverInhabitance",
+        "tags": ["resolver"],
+        "summary": "Named resolver — inhabitance (Result<Certified<Cert>, Witness>)",
+        "description": "1:1 mapping to `uor_foundation::resolver::inhabitance`. Returns either `verdict:'Certified'` with a `Certified<Cert>` payload or `verdict:'Witness'` with a `Witness` reason.",
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": { "description": "resolver:Resolution with verdict ∈ {Certified, Witness}" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/resolver/tower-completeness": {
+      "get": {
+        "operationId": "resolverTowerCompleteness",
+        "tags": ["resolver"],
+        "summary": "Named resolver — tower-completeness",
+        "description": "1:1 mapping to `uor_foundation::resolver::tower`. Verifies the value projects cleanly through every quantum level 1..n.",
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": { "description": "resolver:Resolution with full tower projection" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/resolver/incremental-completeness": {
+      "get": {
+        "operationId": "resolverIncrementalCompleteness",
+        "tags": ["resolver"],
+        "summary": "Named resolver — incremental-completeness",
+        "description": "1:1 mapping to `uor_foundation::resolver::incremental`. Verifies succ-chain re-derives x within ring modulus.",
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": { "description": "resolver:Resolution with succ-chain step count" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/resolver/grounding-aware": {
+      "get": {
+        "operationId": "resolverGroundingAware",
+        "tags": ["resolver"],
+        "summary": "Named resolver — grounding-aware",
+        "description": "1:1 mapping to `uor_foundation::resolver::grounding`. Verifies value yields a valid partition component (W14 grounding).",
+        "parameters": [
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" }
+        ],
+        "responses": {
+          "200": { "description": "resolver:Resolution with partition component" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/kernel/host-types": {
+      "get": {
+        "operationId": "kernelHostTypes",
+        "tags": ["kernel"],
+        "summary": "HostTypes binding discovery — DefaultHostTypes",
+        "description": "Exposes the `Primitives` trait host slot bindings ({Decimal: f64, HostString: str, WitnessBytes: [u8], …}) so agents can introspect the runtime without reading the crate source.",
+        "responses": {
+          "200": { "description": "schema:HostTypes binding map" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/bridge/trace/replay": {
+      "get": {
+        "operationId": "bridgeTraceReplay",
+        "tags": ["bridge-trace"],
+        "summary": "Replayable execution trace with TRACE_REPLAY_FORMAT_VERSION",
+        "description": "Returns a `trace:Trace` carrying `trace:formatVersion` (= `TRACE_REPLAY_FORMAT_VERSION` constant from the crate) plus a list of `trace:TraceEvent`s. External verifiers can pin to the format version.",
+        "parameters": [
+          { "name": "id",  "in": "query", "required": false, "schema": { "type": "string" }, "description": "Optional derivation_id to replay; otherwise computed from x+ops." },
+          { "$ref": "#/components/parameters/x" },
+          { "$ref": "#/components/parameters/n" },
+          { "name": "ops", "in": "query", "required": false, "schema": { "type": "string", "default": "neg,bnot" } }
+        ],
+        "responses": {
+          "200": { "description": "trace:Trace with formatVersion + events[]" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/observability/stream": {
+      "get": {
+        "operationId": "observabilityStream",
+        "tags": ["observability"],
+        "summary": "Server-Sent Events stream of TraceEvents",
+        "description": "Implements the v0.3 `observability` crate feature over HTTP. `text/event-stream` connection emitting `trace:TraceEvent` JSON payloads.",
+        "responses": {
+          "200": {
+            "description": "SSE stream with events: open, trace, close",
+            "content": { "text/event-stream": { "schema": { "type": "string" } } }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
     }
   },
   "components": {
