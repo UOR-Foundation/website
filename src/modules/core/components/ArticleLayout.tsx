@@ -142,16 +142,16 @@ const ArticleLayout = ({
       <FloatingShareRail />
       <article className="pt-24 md:pt-28 pb-16 md:pb-24 bg-background">
         {/* TechCrunch-style edge-to-edge masthead */}
-        <header className="mx-auto w-full max-w-[1600px] 2xl:border-x 2xl:border-border/60">
+        <header className="mx-auto w-full max-w-[1920px] 2xl:border-x 2xl:border-border/60">
           {!hideHero && (heroOverride || heroImage) ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] items-stretch">
               {/* Image — full bleed left */}
               <div className="order-1 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
                 {heroOverride ? (
                   heroOverride
                 ) : (
                   <figure className="h-full">
-                    <div className="bg-muted/40 aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[520px] xl:min-h-[600px] w-full overflow-hidden">
+                    <div className="bg-muted/40 aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[560px] xl:min-h-[680px] 2xl:min-h-[780px] w-full overflow-hidden">
                       <img
                         src={heroImage}
                         alt={title}
@@ -169,7 +169,10 @@ const ArticleLayout = ({
               </div>
 
               {/* Right panel */}
-              <div className="order-2 bg-card flex flex-col justify-between p-8 md:p-12 lg:p-14 xl:p-16 2xl:p-20 lg:min-h-[520px] xl:min-h-[600px] animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
+              <div
+                className="order-2 bg-card flex flex-col justify-between lg:min-h-[560px] xl:min-h-[680px] 2xl:min-h-[780px] animate-fade-in-up"
+                style={{ animationDelay: "0.04s", padding: "clamp(2rem, 3.6vw, 5rem)" }}
+              >
                 <div className="flex items-start justify-between gap-6">
                   <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-foreground/80 font-body">
                     {kicker}
@@ -178,13 +181,13 @@ const ArticleLayout = ({
                 </div>
 
                 <h1
-                  className="font-display font-bold tracking-tight text-foreground text-balance normal-case my-10 max-w-[14ch] xl:max-w-[16ch]"
-                  style={{ fontSize: "clamp(2rem, 3.2vw, 4rem)", lineHeight: 1.05, letterSpacing: "-0.02em", textTransform: "none" }}
+                  className="font-display font-bold tracking-tight text-foreground text-balance normal-case my-10 max-w-[14ch] xl:max-w-[16ch] 2xl:max-w-[18ch]"
+                  style={{ fontSize: "clamp(2rem, 3.6vw, 5.5rem)", lineHeight: 1.05, letterSpacing: "-0.02em", textTransform: "none" }}
                 >
                   {title}
                 </h1>
 
-                <div className="text-sm text-muted-foreground font-body">
+                <div className="text-sm xl:text-base 2xl:text-lg text-muted-foreground font-body">
                   <span className="text-foreground font-semibold">{author}</span>
                   {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
                 </div>
@@ -216,23 +219,23 @@ const ArticleLayout = ({
         </header>
 
         {/* Body — generous reading column that scales with viewport */}
-        <div className="px-4 sm:px-6 md:px-10 lg:px-12 mt-10 md:mt-14">
-          <div className="mx-auto prose-article" style={{ maxWidth: "min(1040px, 80ch)" }}>
+        <div className="px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24 2xl:px-32 mt-10 md:mt-14 xl:mt-20">
+          <div className="mx-auto prose-article" style={{ maxWidth: "clamp(680px, 62vw, 1280px)" }}>
             {deck && <p>{deck}</p>}
             {children}
           </div>
 
           {afterBody && (
-            <div className="mx-auto mt-12" style={{ maxWidth: "min(1040px, 80ch)" }}>
+            <div className="mx-auto mt-12" style={{ maxWidth: "clamp(680px, 62vw, 1280px)" }}>
               {afterBody}
             </div>
           )}
 
           {/* Footer: source + related strip */}
           {(sourceUrl || (related && related.length > 0)) && (
-            <footer className="mx-auto mt-16 pt-8 border-t border-border" style={{ maxWidth: "min(1320px, 90vw)" }}>
+            <footer className="mx-auto mt-16 pt-8 border-t border-border" style={{ maxWidth: "clamp(680px, 70vw, 1480px)" }}>
               {sourceUrl && (
-                <p className="text-sm text-muted-foreground font-body mb-8" style={{ maxWidth: "min(1040px, 80ch)" }}>
+                <p className="text-sm xl:text-base text-muted-foreground font-body mb-8" style={{ maxWidth: "clamp(680px, 62vw, 1280px)" }}>
                   Source:{" "}
                   <a
                     href={sourceUrl}

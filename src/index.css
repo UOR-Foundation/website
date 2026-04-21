@@ -23,14 +23,14 @@
      * Single source of truth for all text sizes across the site.
      * clamp(min, preferred, max) ensures legibility at every viewport.
      */
-    --text-page-title:       clamp(2.5rem, 4.5vw, 4.5rem);
-    --text-section-heading:  clamp(2rem, 3vw, 3.75rem);
-    --text-card-title:       clamp(1.2rem, 1.3vw, 1.65rem);
-    --text-lead:             clamp(19px, 1.4vw, 26px);
-    --text-body:             clamp(16px, 1.1vw, 20px);
-    --text-body-sm:          clamp(15px, 1vw, 18px);
-    --text-label:            clamp(14px, 1vw, 18px);
-    --text-caption:          clamp(13px, 0.85vw, 16px);
+    --text-page-title:       clamp(2.5rem, 4.8vw, 5.75rem);
+    --text-section-heading:  clamp(2rem, 3.4vw, 4.25rem);
+    --text-card-title:       clamp(1.2rem, 1.5vw, 1.9rem);
+    --text-lead:             clamp(19px, 1.55vw, 28px);
+    --text-body:             clamp(16px, 1.25vw, 23px);
+    --text-body-sm:          clamp(15px, 1.1vw, 20px);
+    --text-label:            clamp(14px, 1.05vw, 19px);
+    --text-caption:          clamp(13px, 0.9vw, 17px);
 
     /* ── Golden Ratio Spacing System ─────────────────────────────────
      * φ = 1.618. All section and content spacing follows φ-scaled steps.
@@ -1627,20 +1627,31 @@
   .prose-article section + section { margin-top: 2.25em; }
 }
 
+/* Wide desktop (≥ 1280px) */
+@media (min-width: 1280px) {
+  .prose-article { font-size: 20px; }
+  .prose-article p,
+  .prose-article li { font-size: 20px; line-height: 1.62; }
+  .prose-article > p:first-of-type { font-size: 22px; margin-bottom: 1.45em; }
+}
+
 /* Large desktop (≥ 1440px) */
 @media (min-width: 1440px) {
-  .prose-article { font-size: 19px; }
+  .prose-article { font-size: 21px; }
   .prose-article p,
-  .prose-article li { font-size: 19px; line-height: 1.62; }
-  .prose-article > p:first-of-type { font-size: 22px; margin-bottom: 1.5em; }
+  .prose-article li { font-size: 21px; line-height: 1.62; }
+  .prose-article > p:first-of-type { font-size: 24px; margin-bottom: 1.5em; }
+  .prose-article h2 { font-size: clamp(2rem, 2.6vw, 2.9rem); }
+  .prose-article h3 { font-size: clamp(1.4rem, 1.7vw, 1.85rem); }
 }
 
 /* Ultra-wide (≥ 1920px) */
 @media (min-width: 1920px) {
-  .prose-article { font-size: 20px; }
+  .prose-article { font-size: 23px; }
   .prose-article p,
-  .prose-article li { font-size: 20px; line-height: 1.62; }
-  .prose-article > p:first-of-type { font-size: 24px; }
+  .prose-article li { font-size: 23px; line-height: 1.6; }
+  .prose-article > p:first-of-type { font-size: 26px; line-height: 1.5; }
+  .prose-article h2 { font-size: clamp(2.4rem, 2.8vw, 3.25rem); }
 }
 .prose-article p strong,
 .prose-article li strong { color: hsl(var(--foreground)); font-weight: 600; }
