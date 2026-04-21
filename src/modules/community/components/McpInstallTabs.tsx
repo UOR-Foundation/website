@@ -19,6 +19,21 @@ const CLAUDE_CMD = `claude mcp add --transport http uor-passport https://mcp.uor
 
 const VERIFY_PROMPT = `Use the uor.encode_address tool to fingerprint 'hello' and show me the full response including _meta.`;
 
+const VERIFY_RESPONSE = `"_meta": {
+  "uor.passport": {
+    "fingerprint": "5c8f96c88a648178c09bd73764639bb2cf4d8d5c8f72f077f0e872cab6a6be6f",
+    "algorithm": "uor-sha256-v1",
+    "length": 438,
+    "timestamp": "2026-04-21T19:59:02Z"
+  },
+  "uor.mcps.receipt": {
+    "signature": "3FB+nfc9Fy2er4ThCaBfXuMoyzahO1ZcZlaftiRp...",
+    "public_key": "Y/JdKNj9CIhpSBPBJ0I9oKBXDJnCwZ5/xtvpsjIc8PY=",
+    "algorithm": "ed25519",
+    "trust_level": "L1"
+  }
+}`;
+
 type TabId = "cursor" | "vscode" | "claude" | "chatgpt" | "other";
 
 const TABS: { id: TabId; label: string }[] = [
@@ -263,6 +278,7 @@ const McpInstallTabs = () => {
           Verify it works
         </p>
         <CodeBlock code={VERIFY_PROMPT} language="ask your agent" />
+        <CodeBlock code={VERIFY_RESPONSE} language="response · excerpt" />
         <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">
           The response carries <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.passport</code> — a 256-bit SHA-256 fingerprint of the canonicalized response — and{" "}
           <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.mcps.receipt</code>, an Ed25519 signature that verifies locally with its embedded public key. <strong>No PKI, no registry, no third party.</strong>
