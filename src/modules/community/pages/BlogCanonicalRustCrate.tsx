@@ -81,6 +81,77 @@ const BlogCanonicalRustCrate = () => {
       </section>
 
       <section>
+        <h2>Architecture</h2>
+        <p>
+          One pipeline runs on both ends. The sender derives a fingerprint from the object; the receiver re-derives it from whatever bytes arrived and compares. No third party sits between them.
+        </p>
+        <figure className="not-prose my-8 rounded-xl border border-border bg-card p-6 md:p-8">
+          <svg
+            viewBox="0 0 760 280"
+            role="img"
+            aria-label="Sender derives a 256-bit fingerprint from a structured object via canonical form and SHA-256; the receiver re-runs the same pipeline on arrival and compares."
+            className="w-full h-auto text-foreground"
+          >
+            <defs>
+              <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="currentColor" className="text-muted-foreground" />
+              </marker>
+            </defs>
+
+            {/* Sender lane */}
+            <text x="20" y="28" className="fill-muted-foreground" style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Sender</text>
+            <g>
+              <rect x="20" y="44" width="150" height="56" rx="8" className="fill-background stroke-border" strokeWidth="1.25" />
+              <text x="95" y="70" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 600 }}>Object</text>
+              <text x="95" y="88" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11 }}>typed structure</text>
+
+              <line x1="170" y1="72" x2="210" y2="72" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.25" markerEnd="url(#arr)" />
+
+              <rect x="210" y="44" width="170" height="56" rx="8" className="fill-background stroke-border" strokeWidth="1.25" />
+              <text x="295" y="70" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 600 }}>Canonical form</text>
+              <text x="295" y="88" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11 }}>ℤ/256ℤ reduction</text>
+
+              <line x1="380" y1="72" x2="420" y2="72" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.25" markerEnd="url(#arr)" />
+
+              <rect x="420" y="44" width="150" height="56" rx="8" className="fill-background stroke-border" strokeWidth="1.25" />
+              <text x="495" y="70" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 600 }}>SHA-256</text>
+              <text x="495" y="88" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11 }}>pluggable hash</text>
+
+              <line x1="570" y1="72" x2="610" y2="72" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.25" markerEnd="url(#arr)" />
+
+              <rect x="610" y="44" width="130" height="56" rx="8" className="fill-primary/10 stroke-primary" strokeWidth="1.25" />
+              <text x="675" y="70" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 600 }}>Fingerprint</text>
+              <text x="675" y="88" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11 }}>256-bit</text>
+            </g>
+
+            {/* Transport */}
+            <line x1="675" y1="106" x2="675" y2="150" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.25" strokeDasharray="3 3" markerEnd="url(#arr)" />
+            <text x="685" y="132" className="fill-muted-foreground" style={{ fontSize: 11, fontFamily: "ui-monospace, monospace" }}>travels with object</text>
+
+            <line x1="95" y1="106" x2="95" y2="180" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.25" strokeDasharray="3 3" />
+            <line x1="95" y1="180" x2="610" y2="180" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.25" strokeDasharray="3 3" markerEnd="url(#arr)" />
+            <text x="340" y="172" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11, fontFamily: "ui-monospace, monospace" }}>MCP / A2A / queue / re-serializer</text>
+
+            {/* Receiver lane */}
+            <text x="20" y="216" className="fill-muted-foreground" style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Receiver</text>
+
+            <rect x="420" y="190" width="190" height="56" rx="8" className="fill-background stroke-border" strokeWidth="1.25" />
+            <text x="515" y="216" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 600 }}>Re-run pipeline</text>
+            <text x="515" y="234" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11 }}>same canonical form + hash</text>
+
+            <line x1="610" y1="218" x2="650" y2="218" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.25" markerEnd="url(#arr)" />
+
+            <rect x="650" y="190" width="90" height="56" rx="8" className="fill-primary/10 stroke-primary" strokeWidth="1.25" />
+            <text x="695" y="216" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 600 }}>Compare</text>
+            <text x="695" y="234" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11 }}>match / refuse</text>
+          </svg>
+          <figcaption className="mt-4 text-[12px] text-muted-foreground font-body text-center">
+            One pipeline, two ends. The fingerprint is re-derived on arrival — no keys, no registry.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section>
         <h2>The Rust pipeline</h2>
         <p>
           In the reference implementation, the pipeline is enforced as a typestate. <code>Grounded</code> and <code>Certified</code> are sealed types with <code>pub(crate)</code> constructors. Downstream code cannot fabricate them — they can only be produced by running the sanctioned pipeline. If an agent hands you a <code>Certified</code>, the Rust compiler has already checked that the object passed the canonical reduction.
