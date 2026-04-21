@@ -49,7 +49,7 @@ const BlogCanonicalRustCrate = () => {
           </span>
           <span className="h-px flex-1 bg-border/60" />
         </div>
-        <p className="font-body text-[16px] md:text-[18px] leading-[1.65] text-foreground/85 m-0">
+        <p className="font-body leading-[1.75] text-foreground/85 m-0">
           When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>meaning</em>, not its bytes, so the same data hashes to the same address in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman.
         </p>
       </aside>
@@ -157,7 +157,7 @@ const BlogCanonicalRustCrate = () => {
               no PKI · no registry · no third party
             </text>
           </svg>
-          <figcaption className="mt-4 text-[13px] text-muted-foreground font-body text-center">
+          <figcaption className="mt-4 text-muted-foreground font-body text-center">
             UOR Identity rides inside every MCP / A2A message. Both agents derive the same seal from the same bytes. Trust is local, instant, and needs no authority.
           </figcaption>
         </figure>
