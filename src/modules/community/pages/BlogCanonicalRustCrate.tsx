@@ -2,6 +2,7 @@ import ArticleLayout from "@/modules/core/components/ArticleLayout";
 import { Link } from "react-router-dom";
 import { CRATE_URL, CRATE_DOCS_URL, GITHUB_ORG_URL } from "@/data/external-links";
 import { blogPosts } from "@/data/blog-posts";
+import McpInstallTabs from "../components/McpInstallTabs";
 import heroImage from "@/assets/project-uor-identity.jpg";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
@@ -262,22 +263,17 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>Try it</h2>
         <p>
-          One curl. <strong>No install, no auth, no config.</strong>
+          Connect any MCP-compatible agent to UOR's hosted server in under a minute. <strong>No install, no auth, no config.</strong> Pick your client below — the same canonical endpoint works everywhere:{" "}
+          <code>https://mcp.uor.foundation/mcp</code>.
         </p>
-        <pre>{`curl -s https://api.uor.foundation/v1/kernel/address/encode -H "content-type: application/json" -d '{"input":"hello, uor"}'`}</pre>
-        <p>
-          Trimmed response — <code>u:glyph</code> is the content-derived address, encoded as Braille glyphs (U+2800–U+28FF):
-        </p>
-        <pre>{`{
-  "u:glyph": "⠓⠑⠇⠇⠕⠂⠀⠥⠕⠗",
-  "u:length": 10
-}`}</pre>
-        <p>
-          Same bytes in → same address out. Deterministic, content-derived for any UTF-8 input (≤1000 chars), in any runtime, any language.
-        </p>
+        <McpInstallTabs />
         <p>
           <small>
-            Structural addressing for typed JSON objects (re-serialization-safe) ships next; this endpoint addresses UTF-8 bytes. Roadmap at <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">github.com/uor-foundation</a>.
+            Roadmap and reference Rust implementation at{" "}
+            <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">
+              github.com/uor-foundation
+            </a>
+            .
           </small>
         </p>
       </section>
