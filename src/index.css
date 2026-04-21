@@ -1629,29 +1629,29 @@
 
 /* Wide desktop (≥ 1280px) */
 @media (min-width: 1280px) {
-  .prose-article { font-size: 20px; }
+  .prose-article { font-size: 21px; }
   .prose-article p,
-  .prose-article li { font-size: 20px; line-height: 1.62; }
-  .prose-article > p:first-of-type { font-size: 22px; margin-bottom: 1.45em; }
+  .prose-article li { font-size: 21px; line-height: 1.65; }
+  .prose-article > p:first-of-type { font-size: 24px; margin-bottom: 1.45em; }
 }
 
 /* Large desktop (≥ 1440px) */
 @media (min-width: 1440px) {
-  .prose-article { font-size: 21px; }
+  .prose-article { font-size: 23px; }
   .prose-article p,
-  .prose-article li { font-size: 21px; line-height: 1.62; }
-  .prose-article > p:first-of-type { font-size: 24px; margin-bottom: 1.5em; }
-  .prose-article h2 { font-size: clamp(2rem, 2.6vw, 2.9rem); }
-  .prose-article h3 { font-size: clamp(1.4rem, 1.7vw, 1.85rem); }
+  .prose-article li { font-size: 23px; line-height: 1.62; }
+  .prose-article > p:first-of-type { font-size: 27px; margin-bottom: 1.5em; }
+  .prose-article h2 { font-size: clamp(2.1rem, 2.7vw, 3rem); }
+  .prose-article h3 { font-size: clamp(1.5rem, 1.8vw, 1.95rem); }
 }
 
 /* Ultra-wide (≥ 1920px) */
 @media (min-width: 1920px) {
-  .prose-article { font-size: 23px; }
+  .prose-article { font-size: 25px; }
   .prose-article p,
-  .prose-article li { font-size: 23px; line-height: 1.6; }
-  .prose-article > p:first-of-type { font-size: 26px; line-height: 1.5; }
-  .prose-article h2 { font-size: clamp(2.4rem, 2.8vw, 3.25rem); }
+  .prose-article li { font-size: 25px; line-height: 1.6; }
+  .prose-article > p:first-of-type { font-size: 30px; line-height: 1.45; }
+  .prose-article h2 { font-size: clamp(2.6rem, 3vw, 3.5rem); }
 }
 .prose-article p strong,
 .prose-article li strong { color: hsl(var(--foreground)); font-weight: 600; }
