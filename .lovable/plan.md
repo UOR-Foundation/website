@@ -1,70 +1,77 @@
 
 
-# TechCrunch-Style Split Hero for Articles
+# Plasma-Inspired Polish Pass: Focus, Clarity, Delight
 
-Restructure the article hero so every blog post and project page opens with a two-column layout: **hero image on the left, headline block on the right**. Body content below stays in the wide single-column reading format we already have.
+A focused cleanup of the home page and global chrome to remove redundancy, sharpen language, and bring the site closer to the calm, high-signal feel of plasma.to — without losing the UOR identity.
 
-## The new hero (desktop ≥ lg)
+## Principles applied
 
-```text
-┌─────────────────────────────┬──────────────────────────────┐
-│                             │  KICKER · DATE · READ TIME   │
-│                             │                              │
-│      [ HERO IMAGE 4:5 ]     │  Big editorial headline      │
-│                             │  spanning two or three lines │
-│                             │                              │
-│                             │  Standfirst deck paragraph,  │
-│                             │  muted, comfortable measure. │
-│       caption italic        │                              │
-│                             │  ← Back to Research          │
-└─────────────────────────────┴──────────────────────────────┘
-                  ───────── body column 820px ─────────
-```
+- **One job per section.** No section repeats what another already said.
+- **Verdict headlines.** 2–4 word section titles that state the point.
+- **Numbers over adjectives.** Stat strips replace soft "feature" copy.
+- **One CTA per surface.** Every screen has a single primary action.
+- **Quiet chrome.** Remove decorative chips, badges, and duplicate links.
 
-- Grid: `lg:grid-cols-12`, image `col-span-6`, text `col-span-6`, gap `lg:gap-14`, vertically centered.
-- Image: `aspect-[4/5]` portrait on desktop, `aspect-[16/10]` on mobile. Rounded `rounded-2xl`, soft border, subtle shadow. Caption sits directly under the image in italic muted text.
-- Text column: kicker meta row at top (tag · date · read time), then large headline (`clamp(2.25rem, 4.4vw, 3.5rem)`, tight tracking, weight 700), then deck paragraph (`1.25rem`, muted, leading 1.55), then a small "Back" link at the bottom of the column so the eye returns to navigation naturally.
-- Mobile (<lg): stacks — image first (16:10), then meta, headline, deck. Same component, same data.
+## Changes
 
-## Body, afterBody, and footer
+### 1. Navbar — single primary action
+**File:** `src/modules/core/components/Navbar.tsx`
+- Drop the trailing "Contribute" CTA from the desktop right cluster. Keep the three social icons (Discord, GitHub, LinkedIn) as the only right-side elements.
+- Remove the "Contribute" item from `src/data/nav-items.ts` so it no longer appears in the mobile drawer's primary nav or the secondary "Contribute →" link.
+- The single primary site-wide action becomes the hero's "Explore Projects" button. Contribute lives on the Projects page (`/projects#submit`) where it belongs.
+- Mobile drawer: remove the secondary `Contribute →` row (now redundant).
 
-Unchanged from current `ArticleLayout`:
-- Body: centered `max-w-[820px]`, `.prose-article` (20px / 1.75).
-- afterBody (used for project sidebars / certificate receipts): same 820px column.
-- Footer: source line + "Related" cards, same 820px column.
+### 2. Hero — tighter, fewer words
+**File:** `src/modules/landing/components/HeroSection.tsx`
+- Headline stays: `MAKE DATA IDENTITY UNIVERSAL`.
+- Replace the deck with a single, sharper sentence: *"A permanent, verifiable address for every piece of data."* (down from two sentences).
+- Keep one CTA: `Explore Projects →`. No secondary link.
+- Stats strip stays but drops the "Research Areas" cell — keep the three with the strongest signal: **11 Projects · 150+ Contributors · Open Governance**. The grid becomes a clean 3-up on desktop, matching mobile.
+- Remove the unused `Download` import.
 
-This keeps the reading experience we just tuned and only changes the opening.
+### 3. Section headlines — verdicts
+Rewrite the H2 of the next sections to short verdicts. No body copy changes, only the headline.
 
-## Uniformity
+- `WhatIsUorSection` → **"One address. Everywhere."**
+- `EcosystemSection` → **"Built in the open."**
+- `HighlightsSection` → **"Proof, not promises."**
+- `CommunitySection` → **"Built by many."**
+- `ClosingCTASection` → **"Make it universal."**
+- `ReadyToBuildCTA` → remove this section entirely (duplicates the closing CTA — see below).
 
-All surfaces using `ArticleLayout` inherit the new hero automatically:
-- All blog posts (`BlogPost1`, `BlogPost2`, `BlogPost3`, `BlogCanonicalRustCrate`).
-- All project pages via `ProjectDetailLayout`.
+### 4. Remove the duplicate closing CTA
+**File:** `src/modules/landing/pages/IndexPage.tsx`
+- Remove the `ReadyToBuildCTA` lazy section. The page already ends with `ClosingCTASection`; two back-to-back CTAs is the single biggest source of noise on the home page.
+- Final home order: Hero → Community → WhatIsUor → Ecosystem → Highlights → ClosingCTA.
 
-No per-page edits needed — same template, same rhythm, every article.
+### 5. Standardize action arrows
+- Every primary text link/button across the home sections uses a trailing `→` (lucide `ArrowRight`, `size={14}`). No mixed `>`, no `›`, no plain text. Sweep `HeroSection`, `WhatIsUorSection`, `EcosystemSection`, `HighlightsSection`, `CommunitySection`, `ClosingCTASection` for any inconsistencies.
 
-## TechCrunch cues we borrow (subtly)
+### 6. Tighten section dividers
+**File:** `src/index.css` (small addition) and the six landing sections
+- Establish one shared vertical rhythm: each section uses `py-20 md:py-28` (replaces today's mix of paddings). This eliminates the visible "tall, short, tall" cadence between sections.
 
-- Compact uppercase kicker meta row with a small tag dot.
-- Headline takes priority over image weight — image is portrait, not banner, so the title leads.
-- Italic caption directly under the image.
-- Hairline divider under the hero before the body begins.
-- Generous whitespace between hero and first paragraph (`mt-12 md:mt-16`).
+## What we are NOT changing
 
-We don't copy TechCrunch's exact serif, colors, or chrome — we keep the site's display font, tokens, and dark surface, so it reads as "ours, polished" rather than a clone.
-
-## Files to change
-
-- `src/modules/core/components/ArticleLayout.tsx` — replace the current header + hero blocks with the split-hero grid described above. The `heroOverride`, `hideHero`, `heroCaption`, `backHref`, `backLabel`, `kicker`, `date`, `readTime`, `title`, `deck` props all keep their current names and behavior.
-- `src/index.css` — minor: ensure `.prose-article` first paragraph has no extra top margin so the body sits cleanly under the hero divider.
-
-## Out of scope
-
-- No data, routing, or image changes.
-- No changes to navbar, footer, homepage, or body typography rules.
+- No changes to the article/project layout we just shipped (split hero stays).
+- No changes to data, routing, theme, fonts, colors, or the galaxy/prime visuals.
 - No new dependencies.
+- No copy changes inside section bodies — only headlines and the hero deck.
+
+## Files touched
+
+- `src/modules/core/components/Navbar.tsx`
+- `src/data/nav-items.ts`
+- `src/modules/landing/components/HeroSection.tsx`
+- `src/modules/landing/pages/IndexPage.tsx`
+- `src/modules/landing/components/WhatIsUorSection.tsx`
+- `src/modules/landing/components/EcosystemSection.tsx`
+- `src/modules/landing/components/HighlightsSection.tsx`
+- `src/modules/landing/components/CommunitySection.tsx`
+- `src/modules/landing/components/ClosingCTASection.tsx`
+- `src/index.css` (shared section spacing utility, optional)
 
 ## Result
 
-Every blog post and project page opens with a confident split hero — portrait image on the left, headline and deck on the right — then flows into the same wide, crisp 820px reading column. Uniform across the site, distinctly editorial, and clearly TechCrunch-inspired without being a copy.
+Less to read, fewer places to click, one clear path forward on every screen. The home page reads as a confident sequence of short verdicts backed by numbers and proof — the same calm, high-signal cadence that makes plasma.to feel like frontier work, expressed in the UOR Foundation's own voice.
 
