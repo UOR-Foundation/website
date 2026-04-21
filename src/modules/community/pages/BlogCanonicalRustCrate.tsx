@@ -58,7 +58,7 @@ const BlogCanonicalRustCrate = () => {
           Existing fixes hash bytes. The instant a JSON library re-orders keys, normalizes a number, or re-encodes a string (routine across LangGraph, AutoGen, CrewAI), the hash changes and trust breaks. Signing the bytes (<a href="https://www.rfc-editor.org/rfc/rfc8785" target="_blank" rel="noopener noreferrer">JCS</a>, JWS) doesn't help: the guarantee dies at the first deserialize.
         </p>
         <p>
-          The MCP community already tried the obvious fix and abandoned it. <a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/2395" target="_blank" rel="noopener noreferrer">SEP-2395 (MCPS)</a> proposed canonical-JSON signing for MCP and was closed on <strong>March 15, 2026</strong>. The fatal finding: canonical JSON does not produce identical bytes across Node.js and Python, so the signing scheme falls apart at the language boundary. UOR addresses the same integrity problem one level up the stack, where re-serialization is no longer fatal.
+          The obvious fix has already been tried. <a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/2395" target="_blank" rel="noopener noreferrer">SEP-2395 (MCPS)</a>, which proposed canonical-JSON signing for MCP, was closed on <strong>March 15, 2026</strong> after canonical JSON was shown to produce different bytes in Node.js and Python. UOR solves this one level up, where re-serialization no longer breaks the hash.
         </p>
       </section>
 
