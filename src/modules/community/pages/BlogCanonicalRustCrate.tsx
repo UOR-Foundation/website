@@ -102,7 +102,11 @@ const BlogCanonicalRustCrate = () => {
             <circle cx="700" cy="170" r="92" className="fill-background stroke-foreground" strokeWidth="2.25" />
             <text x="700" y="180" textAnchor="middle" className="fill-foreground" style={{ fontSize: 30, fontWeight: 700 }}>Receiver</text>
 
-            {/* ============ TRANSPORT RAIL ============ */}
+            {/* ============ TRANSPORT RAIL (MCP · A2A) ============ */}
+            <text x="411" y="78" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 13, letterSpacing: "0.24em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>transport</text>
+            <rect x="338" y="92" width="146" height="36" rx="18" className="fill-background stroke-primary" strokeWidth="2" />
+            <text x="411" y="116" textAnchor="middle" className="fill-foreground" style={{ fontSize: 17, letterSpacing: "0.26em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>MCP · A2A</text>
+            <line x1="411" y1="128" x2="411" y2="152" stroke="currentColor" className="text-primary" strokeWidth="1.5" strokeDasharray="3 4" />
             <line x1="214" y1="170" x2="608" y2="170" stroke="currentColor" className="text-primary" strokeWidth="3" markerEnd="url(#arrPrimary)" />
 
             {/* ============ SEALED PAYLOAD (the essence) ============ */}
@@ -124,8 +128,8 @@ const BlogCanonicalRustCrate = () => {
               The address IS the content.
             </text>
           </svg>
-          <figcaption className="mt-4 text-[13px] text-muted-foreground font-body text-center">
-            UOR Identity rides inside every MCP / A2A message. Both agents derive the same seal from the same bytes — trust is local and instant.
+          <figcaption className="mx-auto mt-6 max-w-[680px] text-center text-[17px] md:text-[18px] leading-relaxed text-foreground font-body">
+            The seal travels inside every <span className="font-semibold">MCP</span> or <span className="font-semibold">A2A</span> message. Both agents derive it from the same bytes — trust is local and instant.
           </figcaption>
         </figure>
       </section>
