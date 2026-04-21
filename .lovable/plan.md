@@ -1,75 +1,76 @@
 
-# Fix the Missing Preview Button / Stuck Files Mode
 
-## Root Cause
+# Apply a TechCrunch-Style Editorial Format to Projects and Articles
 
-The project still has a full PWA/service-worker setup enabled:
+Goal: make every project page and every blog post look and read like a polished TechCrunch article — crisp typography, a strong editorial hero, a single comfortable reading column, clear section rhythm, and confident visual hierarchy.
 
-- `vite.config.ts` uses `vite-plugin-pwa` with `injectManifest`
-- `src/custom-sw.ts` registers Workbox caching + navigation interception
-- `src/main.tsx` still runs service-worker / cross-origin-isolation bootstrap logic
+## What "TechCrunch style" means here
 
-That combination is exactly the kind of setup that can break Lovable preview, especially because preview runs in an iframe. The platform guidance for this environment explicitly warns that service workers in preview can cause stale routing, navigation interference, and the editor getting stuck in Files mode with the preview button disappearing.
+- A tight top meta line: category/tag · date · short read time.
+- A large, serious headline (display serif-feeling weight, tight tracking).
+- A single deck/standfirst paragraph under the headline (slightly larger, muted).
+- A full-width hero image directly under the headline with a small caption line below it.
+- One narrow reading column (~680–720px) for the entire body — never two columns of prose.
+- Generous body type (~19px / 1.75 line-height), strong section subheads, clear pull-style emphasis on key sentences, and subtle horizontal rules between major sections.
+- A clean footer block: author/source line, share row, and a "Related" strip.
 
-## Plan
+## Changes
 
-### 1. Remove preview-breaking PWA behavior
-Update the app so Lovable preview never depends on a service worker:
+### 1. Project pages — `ProjectDetailLayout.tsx`
 
-- Remove `VitePWA(...)` from `vite.config.ts`
-- Remove the `vite-plugin-pwa` import
-- Remove Workbox-related dependencies from `package.json` if they are no longer needed
-- Keep the app as a normal SPA so the preview iframe can load reliably again
+Replace the current side-by-side hero + multi-section layout with an editorial article layout:
 
-### 2. Remove the custom service worker
-Delete the service-worker implementation path entirely:
+- **Top meta row**: `Category · Updated <date> · <X> min read`.
+- **Headline**: project name as an `<h1>`, large display weight, tight tracking, single column.
+- **Deck**: the existing tagline rendered as a larger muted standfirst paragraph directly under the headline.
+- **Hero image**: full-width (within the article max-width), 16:9, rounded, with a small italic caption underneath ("<Project name> — <category>").
+- **Body column**: a single `max-w-[720px]` column, centered, used for ALL sections.
+- **Section headings**: `h2` in display weight, with a thin top divider for clear rhythm.
+- **Body copy**: `text-[19px] leading-[1.75]`, comfortable paragraph spacing, larger lists, links underlined on hover.
+- **"For AI agents" block**: styled as an editorial sidebar card at the end of the article (subtle border, muted background, same column width).
+- **Footer**: source/repo line ("Source: <repoUrl>"), a simple share row, then a "Related projects" strip pulling 2–3 entries from `featured-projects.ts` (excluding current slug).
 
-- Remove `src/custom-sw.ts`
-- Remove any references to Workbox manifest injection or runtime caching
-- Eliminate the navigation interception that is currently modifying responses for COOP/COEP
+All existing project pages keep their current data — no per-page edits required.
 
-### 3. Simplify `src/main.tsx`
-Strip out the service-worker / COI bootstrap logic that is currently tied to preview behavior:
+### 2. Blog posts — shared article layout
 
-- Remove `isInIframe` / `isEditorPreview` PWA cleanup block
-- Remove `ensureCrossOriginIsolation()`
-- Remove reload-on-`controllerchange` logic
-- Leave `src/main.tsx` as a standard React entrypoint
+Apply the same editorial template to blog post pages so projects and articles feel like one publication:
 
-### 4. Preserve installability only if needed
-If you still want “install app” behavior without breaking preview, keep only the safe pieces:
+- Same meta row (Tag · Date · read time).
+- Same headline + deck treatment.
+- Same hero image + caption.
+- Same single 720px reading column, same type scale, same section dividers.
+- Same footer (share row + "Related reading" pulled from `blog-posts.ts`).
 
-- keep a lightweight web manifest if desired
-- do **not** reintroduce service worker registration
-- no offline caching in the Lovable environment
+Approach: introduce a single `ArticleLayout` component used by both project pages (via `ProjectDetailLayout`) and blog post pages, so the two surfaces stay visually identical going forward.
 
-This gives installability without the preview instability.
+### 3. Type and rhythm tokens
 
-### 5. Audit for leftover service-worker assumptions
-Clean up UI/status surfaces that currently imply service-worker support is expected:
+- Body: 19px / 1.75, paragraph spacing 1.25em.
+- H1: clamp(2.5rem, 5vw, 3.75rem), tracking-tight, weight 700.
+- H2: 1.875rem, tracking-tight, weight 700, with a 1px top border in `border-border/60` and 2.5rem top padding.
+- Deck: 1.375rem, muted-foreground, leading 1.55.
+- Caption: 0.875rem, muted-foreground, italic.
+- Max article width: 720px. Hero image width: 880px (slightly wider than text, classic editorial feel).
 
-- `src/modules/desktop/BootSequence.tsx`
-- `src/modules/boot/SystemMonitorDetailViews.tsx`
+### 4. Read time
 
-Update wording so preview/dev mode does not report SW/COI as a required capability.
+Compute a simple read time from the rendered section text length (≈ 200 wpm), shown in the meta row. Falls back to "3 min read" if content is minimal.
 
-### 6. Verify expected outcome
-After the cleanup:
+## Files to change
 
-- Lovable preview should return
-- the top preview button should reappear
-- the project should stop getting trapped in Files mode
-- the app should behave as a standard SPA in preview
+- `src/modules/projects/components/ProjectDetailLayout.tsx` — rebuild as editorial article layout.
+- New: `src/modules/core/components/ArticleLayout.tsx` — shared editorial shell (meta, headline, deck, hero, body slot, footer).
+- Blog post page(s) under `src/modules/core/pages/` (e.g. `BlogPost*.tsx`) — adopt `ArticleLayout`.
+- `src/index.css` — add `.prose-article` utility for the 19px/1.75 body rhythm and section divider styling.
 
-## Files to Change
+## Out of scope
 
-- `vite.config.ts`
-- `src/main.tsx`
-- `src/custom-sw.ts` (remove)
-- `package.json`
-- `src/modules/desktop/BootSequence.tsx`
-- `src/modules/boot/SystemMonitorDetailViews.tsx`
+- No changes to project data, blog data, routing, or images.
+- No changes to navbar, footer, or homepage.
+- No new dependencies.
 
 ## Result
 
-The site will stop using the preview-breaking PWA/service-worker path and return to a stable Lovable development setup, so the preview panel and preview button work normally again.
+Every project page and every blog post will read like a TechCrunch article: a confident headline, a clear deck, a strong hero image, and a single, generous reading column with crisp section rhythm — consistent across the entire site.
+
