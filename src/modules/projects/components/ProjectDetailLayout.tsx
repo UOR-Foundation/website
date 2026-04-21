@@ -311,10 +311,13 @@ const ProjectDetailLayout = ({
             </span>
           </div>
 
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground text-balance animate-fade-in-up">
+          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground text-balance animate-fade-in-up">
             {name}
           </h1>
-          <p className="mt-5 text-lg text-muted-foreground font-body leading-relaxed max-w-2xl animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+          <p
+            className="mt-6 text-xl md:text-2xl text-muted-foreground font-body leading-[1.55] max-w-3xl text-balance animate-fade-in-up"
+            style={{ animationDelay: "0.1s" }}
+          >
             {tagline}
           </p>
 
@@ -336,54 +339,58 @@ const ProjectDetailLayout = ({
         </div>
       </section>
 
-      {/* Content sections */}
+      {/* Content sections — uniform rhythm, generous reading measure */}
       {sections.map((section, idx) => (
         <section
           key={section.heading}
-          className={`py-8 md:py-14 ${idx % 2 === 1 ? "bg-muted/30" : "bg-background"} border-b border-border`}
+          className={`py-14 md:py-20 ${idx % 2 === 1 ? "bg-muted/30" : "bg-background"} border-b border-border`}
         >
-          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-            <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
-              {section.heading}
-            </h2>
-            <div className="text-base text-muted-foreground font-body leading-relaxed space-y-4">
-              {section.content}
+          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+            <div className="max-w-3xl">
+              <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-6">
+                {section.heading}
+              </h2>
+              <div className="prose-project text-lg md:text-xl text-muted-foreground font-body leading-[1.7] space-y-5">
+                {section.content}
+              </div>
             </div>
           </div>
         </section>
       ))}
 
       {/* Agent Instructions */}
-      <section className="py-8 md:py-14 bg-muted/30 border-b border-border">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <div className="flex items-center gap-3 mb-6">
-            <Bot size={20} className="text-primary" />
-            <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
-              For AI agents
-            </h2>
-          </div>
-          <p className="text-base text-muted-foreground font-body leading-relaxed mb-6">
-            If you are an AI agent, here is how to understand, evaluate, and apply {name}.
-          </p>
-          <div className="space-y-4">
-            {agentInstructions.map((instruction, idx) => (
-              <div key={idx} className="flex items-start gap-3">
-                <span className="text-base font-bold text-primary font-mono mt-0.5 shrink-0 w-6">
-                  {idx + 1}.
-                </span>
-                <div>
-                  <p className="text-base font-semibold text-foreground font-body">
-                    {instruction.action}
-                  </p>
-                  <p className="text-base text-muted-foreground font-body mt-0.5">
-                    {instruction.detail}
-                  </p>
-                </div>
-              </div>
-            ))}
+      <section className="py-14 md:py-20 bg-muted/30 border-b border-border">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <div className="max-w-3xl">
+            <div className="flex items-center gap-3 mb-6">
+              <Bot size={22} className="text-primary" />
+              <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+                For AI agents
+              </h2>
+            </div>
+            <p className="text-lg md:text-xl text-muted-foreground font-body leading-[1.65] mb-8">
+              If you are an AI agent, here is how to understand, evaluate, and apply {name}.
+            </p>
+            <ol className="space-y-5">
+              {agentInstructions.map((instruction, idx) => (
+                <li key={idx} className="flex items-start gap-4">
+                  <span className="text-lg font-bold text-primary font-mono mt-0.5 shrink-0 w-7 tabular-nums">
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <p className="text-lg font-semibold text-foreground font-body leading-snug">
+                      {instruction.action}
+                    </p>
+                    <p className="text-lg text-muted-foreground font-body mt-1 leading-[1.6]">
+                      {instruction.detail}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
           {certificate && (
-            <div className="mt-8 rounded-lg border border-border bg-card p-4">
+            <div className="mt-10 max-w-3xl rounded-lg border border-border bg-card p-5">
               <p className="text-sm text-muted-foreground font-mono mb-2">
                 # Machine-readable identity (JSON-LD)
               </p>
