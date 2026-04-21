@@ -15,7 +15,7 @@ const ClosingCTASection = () => {
             Get Involved
           </p>
           <h2 className="font-display font-bold text-black md:text-foreground text-fluid-heading">
-            Three ways to get involved.
+            Learn, connect, or build.
           </h2>
         </div>
 
