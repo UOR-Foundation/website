@@ -77,9 +77,9 @@ const BlogCanonicalRustCrate = () => {
         </p>
         <figure className="not-prose my-8 rounded-xl border border-border bg-card p-6 md:p-8">
           <svg
-            viewBox="0 0 820 420"
+            viewBox="0 0 820 360"
             role="img"
-            aria-label="Agent A sends a multimodal payload (text, image, audio, JSON tool call) to Agent B over MCP or A2A. A UOR fingerprint travels with the payload. Agent B re-derives the fingerprint locally and compares — no third-party authority is involved."
+            aria-label="Agent A sends a payload sealed with a UOR fingerprint to Agent B over MCP or A2A. Agent B re-derives the fingerprint locally and compares. The address is the content. No third-party authority is involved."
             className="w-full h-auto text-foreground"
           >
             <defs>
@@ -91,73 +91,50 @@ const BlogCanonicalRustCrate = () => {
               </marker>
             </defs>
 
-            {/* ============ AGENT A (sender) ============ */}
-            <rect x="20" y="40" width="240" height="220" rx="14" className="fill-background stroke-border" strokeWidth="1.5" />
-            <text x="40" y="68" className="fill-muted-foreground" style={{ fontSize: 12, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Agent A</text>
-            <text x="40" y="92" className="fill-foreground" style={{ fontSize: 18, fontWeight: 600 }}>Sender</text>
+            {/* ============ AGENT A ============ */}
+            <circle cx="120" cy="150" r="78" className="fill-background stroke-foreground" strokeWidth="2" />
+            <text x="120" y="142" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, letterSpacing: "0.24em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Agent A</text>
+            <text x="120" y="170" textAnchor="middle" className="fill-foreground" style={{ fontSize: 22, fontWeight: 700 }}>Sender</text>
 
-            {/* Multimodal payload chips */}
-            <g>
-              <rect x="40" y="110" width="92" height="34" rx="17" className="fill-muted/40 stroke-border" strokeWidth="1" />
-              <text x="86" y="132" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 500 }}>text</text>
+            {/* ============ AGENT B ============ */}
+            <circle cx="700" cy="150" r="78" className="fill-background stroke-foreground" strokeWidth="2" />
+            <text x="700" y="142" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, letterSpacing: "0.24em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Agent B</text>
+            <text x="700" y="170" textAnchor="middle" className="fill-foreground" style={{ fontSize: 22, fontWeight: 700 }}>Receiver</text>
 
-              <rect x="140" y="110" width="100" height="34" rx="17" className="fill-muted/40 stroke-border" strokeWidth="1" />
-              <text x="190" y="132" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 500 }}>image</text>
+            {/* ============ TRANSPORT RAIL ============ */}
+            <line x1="200" y1="150" x2="622" y2="150" stroke="currentColor" className="text-primary" strokeWidth="2.5" markerEnd="url(#arrPrimary)" strokeDasharray="0" />
+            <text x="411" y="100" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 13, letterSpacing: "0.28em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>MCP  ·  A2A</text>
 
-              <rect x="40" y="152" width="92" height="34" rx="17" className="fill-muted/40 stroke-border" strokeWidth="1" />
-              <text x="86" y="174" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 500 }}>audio</text>
-
-              <rect x="140" y="152" width="100" height="34" rx="17" className="fill-muted/40 stroke-border" strokeWidth="1" />
-              <text x="190" y="174" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 500 }}>tool call</text>
+            {/* ============ SEALED PAYLOAD (the essence) ============ */}
+            <g transform="translate(411 150)">
+              {/* Outer seal ring */}
+              <rect x="-110" y="-44" width="220" height="88" rx="12" className="fill-card stroke-primary" strokeWidth="2" />
+              {/* Payload row */}
+              <text x="0" y="-20" textAnchor="middle" className="fill-foreground" style={{ fontSize: 15, fontWeight: 600 }}>
+                payload  ·  text · image · audio
+              </text>
+              {/* Divider */}
+              <line x1="-90" y1="-8" x2="90" y2="-8" stroke="currentColor" className="text-border" strokeWidth="1" />
+              {/* The seal */}
+              <text x="0" y="14" textAnchor="middle" className="fill-primary" style={{ fontSize: 13, letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>UOR seal</text>
+              <text x="0" y="32" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace" }}>sha256 · 256-bit · self-verifiable</text>
             </g>
 
-            {/* UOR seal on agent A */}
-            <rect x="40" y="206" width="200" height="40" rx="8" className="fill-primary/10 stroke-primary" strokeWidth="1.25" />
-            <text x="140" y="231" textAnchor="middle" className="fill-foreground" style={{ fontSize: 14, fontWeight: 600 }}>UOR fingerprint · 256-bit</text>
+            {/* ============ SENDER ACTION ============ */}
+            <text x="120" y="252" textAnchor="middle" className="fill-foreground" style={{ fontSize: 14, fontWeight: 600 }}>derive seal</text>
+            <text x="120" y="272" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace" }}>canonical form → hash</text>
 
-            {/* ============ TRANSPORT (A2A / MCP) ============ */}
-            {/* Payload bundle traveling */}
-            <line x1="260" y1="150" x2="560" y2="150" stroke="currentColor" className="text-primary" strokeWidth="2.25" markerEnd="url(#arrPrimary)" />
-            <rect x="335" y="108" width="150" height="40" rx="8" className="fill-card stroke-primary" strokeWidth="1.25" />
-            <text x="410" y="133" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 600 }}>payload + passport</text>
-            <text x="410" y="174" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>A2A · MCP</text>
+            {/* ============ RECEIVER ACTION ============ */}
+            <text x="700" y="252" textAnchor="middle" className="fill-foreground" style={{ fontSize: 14, fontWeight: 600 }}>re-derive · compare</text>
+            <text x="700" y="272" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace" }}>match → trust locally</text>
 
-            {/* No third party — explicit, struck through */}
-            <g>
-              <rect x="320" y="220" width="180" height="56" rx="10" className="fill-muted/20 stroke-border" strokeWidth="1" strokeDasharray="4 4" />
-              <text x="410" y="244" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, fontWeight: 500 }}>third-party authority</text>
-              <text x="410" y="262" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11, fontFamily: "ui-monospace, monospace" }}>PKI · CA · registry</text>
-              {/* big diagonal strike */}
-              <line x1="328" y1="270" x2="492" y2="226" stroke="currentColor" className="text-destructive" strokeWidth="2.25" />
-            </g>
-            <text x="410" y="296" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, fontStyle: "italic" }}>not in the loop</text>
-
-            {/* ============ AGENT B (receiver) ============ */}
-            <rect x="560" y="40" width="240" height="220" rx="14" className="fill-background stroke-border" strokeWidth="1.5" />
-            <text x="580" y="68" className="fill-muted-foreground" style={{ fontSize: 12, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Agent B</text>
-            <text x="580" y="92" className="fill-foreground" style={{ fontSize: 18, fontWeight: 600 }}>Receiver</text>
-
-            {/* Receiver re-derives */}
-            <rect x="580" y="110" width="200" height="48" rx="8" className="fill-background stroke-border" strokeWidth="1.25" />
-            <text x="680" y="132" textAnchor="middle" className="fill-foreground" style={{ fontSize: 14, fontWeight: 600 }}>Re-run pipeline</text>
-            <text x="680" y="150" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11, fontFamily: "ui-monospace, monospace" }}>same canonical form + hash</text>
-
-            {/* Compare */}
-            <line x1="680" y1="158" x2="680" y2="190" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" markerEnd="url(#arr)" />
-            <rect x="580" y="190" width="200" height="56" rx="8" className="fill-primary/10 stroke-primary" strokeWidth="1.25" />
-            <text x="680" y="214" textAnchor="middle" className="fill-foreground" style={{ fontSize: 15, fontWeight: 600 }}>Compare fingerprints</text>
-            <text x="680" y="234" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12 }}>match → trust   ·   mismatch → refuse</text>
-
-            {/* Footer band */}
-            <text x="410" y="345" textAnchor="middle" className="fill-foreground" style={{ fontSize: 14, fontWeight: 500 }}>
-              Both agents compute the same passport from the same payload — independently.
-            </text>
-            <text x="410" y="370" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace" }}>
-              no shared key · no registry · no PKI
+            {/* ============ FOOTER ============ */}
+            <text x="411" y="324" textAnchor="middle" className="fill-foreground" style={{ fontSize: 15, fontWeight: 600 }}>
+              The address is the content. No PKI · no registry · no third party.
             </text>
           </svg>
           <figcaption className="mt-4 text-[12px] text-muted-foreground font-body text-center">
-            Two agents, one pipeline. UOR Identity travels with the payload — verification happens locally on each side.
+            Every object carries its own permanent, content-derived address — verification happens locally on each side.
           </figcaption>
         </figure>
       </section>
