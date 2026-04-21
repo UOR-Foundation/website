@@ -42,10 +42,10 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>What it is</h2>
         <p>
-          Every digital object gets its own permanent, content-addressed, self-verifying identity. A universal data passport that travels with the object itself.
+          <strong>UOR</strong> (Universal Object Reference) is an open-source standard, with a reference Rust implementation as <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, for giving typed structured objects a content-derived 256-bit address that survives the transformations those objects actually undergo between agents.
         </p>
         <p>
-          Open standard, Rust reference implementation (<a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>), drop-in under MCP, A2A, or any transport carrying typed payloads between agents.
+          It is designed to sit underneath MCP, A2A, and any other transport that carries structured data between autonomous systems.
         </p>
       </section>
 
