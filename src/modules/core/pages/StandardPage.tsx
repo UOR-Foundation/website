@@ -1,32 +1,18 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, BookOpen, Layers, Rocket, Globe, ShieldCheck, Bot, Microscope, Package } from "lucide-react";
+import { ExternalLink, Layers, Globe, ShieldCheck, Bot, Microscope, Rocket, Package } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { applications } from "@/data/applications";
 import { frameworkLayers } from "@/data/framework-layers";
 import { GITHUB_FRAMEWORK_URL, GITHUB_FRAMEWORK_DOCS_URL, CRATE_URL, CRATE_DOCS_URL } from "@/data/external-links";
+import {
+  canonicalSpecs,
+  CRATE_VERSION,
+  installSnippet,
+  hostTypesSnippet,
+  principalPathSnippet,
+} from "@/data/canonical-sources";
 
 const appIconMap: Record<string, LucideIcon> = { Globe, ShieldCheck, Bot, Microscope, Layers, Rocket };
-
-const gettingStarted = [
-  {
-    icon: BookOpen,
-    title: "Overview",
-    description: "What UOR is, what problem it solves, and how content-derived addressing works.",
-    url: `${GITHUB_FRAMEWORK_DOCS_URL}docs/overview.html`,
-  },
-  {
-    icon: Layers,
-    title: "Architecture",
-    description: "Six layers, from mathematical foundation to lossless data transformation.",
-    url: `${GITHUB_FRAMEWORK_DOCS_URL}docs/architecture.html`,
-  },
-  {
-    icon: Rocket,
-    title: "Quick Start",
-    description: "Clone the repo, run the core identity proof, and explore the API.",
-    url: GITHUB_FRAMEWORK_URL,
-  },
-];
 
 const Standard = () => {
   return (
