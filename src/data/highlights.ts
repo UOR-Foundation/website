@@ -7,9 +7,9 @@ export type TagType = "Research" | "Announcement" | "Release";
 export const highlights = [
   {
     tag: "Release" as TagType,
-    title: "uor-foundation v0.1.5 — Canonical Rust Crate",
-    date: "April 2, 2026",
-    imageKey: "frameworkLaunch",
+    title: "UOR Identity: A universal data passport for your AI agent",
+    date: "April 21, 2026",
+    imageKey: "uorIdentity",
     href: "/blog/canonical-rust-crate",
   },
   {
