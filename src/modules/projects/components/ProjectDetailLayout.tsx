@@ -302,39 +302,42 @@ const ProjectDetailLayout = ({
             All Projects
           </Link>
 
-          <div className="flex items-center gap-3 mb-5">
-            <span className="text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap">
-              {category}
-            </span>
-            <span className="text-sm font-medium px-3 py-1 rounded-full border border-border text-muted-foreground font-body">
-              Sandbox
-            </span>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+            {/* Text column */}
+            <div className="lg:col-span-7">
+              <div className="flex items-center gap-3 mb-5">
+                <span className="text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap">
+                  {category}
+                </span>
+                <span className="text-sm font-medium px-3 py-1 rounded-full border border-border text-muted-foreground font-body">
+                  Sandbox
+                </span>
+              </div>
 
-          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground text-balance animate-fade-in-up">
-            {name}
-          </h1>
-          <p
-            className="mt-6 text-xl md:text-2xl text-muted-foreground font-body leading-[1.55] max-w-3xl text-balance animate-fade-in-up"
-            style={{ animationDelay: "0.1s" }}
-          >
-            {tagline}
-          </p>
+              <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground text-balance animate-fade-in-up">
+                {name}
+              </h1>
+              <p
+                className="mt-6 text-xl md:text-2xl text-muted-foreground font-body leading-[1.55] max-w-2xl text-balance animate-fade-in-up"
+                style={{ animationDelay: "0.1s" }}
+              >
+                {tagline}
+              </p>
 
-          {certificate && sourceEnvelope && <CertificateReceipt certificate={certificate} name={name} sourceObject={sourceEnvelope} />}
-        </div>
-      </section>
+              {certificate && sourceEnvelope && <CertificateReceipt certificate={certificate} name={name} sourceObject={sourceEnvelope} />}
+            </div>
 
-      {/* Cover image */}
-      <section className="border-b border-border">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] py-8">
-          <div className="rounded-2xl overflow-hidden border border-border project-card-glow">
-            <img
-              src={heroImage}
-              alt={name}
-              className="w-full object-cover"
-              loading="eager"
-            />
+            {/* Cover image */}
+            <div className="lg:col-span-5 animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+              <div className="rounded-2xl overflow-hidden border border-border project-card-glow aspect-[4/3] lg:aspect-square bg-muted/40">
+                <img
+                  src={heroImage}
+                  alt={name}
+                  className="w-full h-full object-cover"
+                  loading="eager"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
