@@ -215,15 +215,15 @@ const ArticleLayout = ({
           )}
         </header>
 
-        {/* Body — single reading column, TechCrunch-style */}
-        <div className="px-4 sm:px-6 md:px-8 mt-10 md:mt-14">
-          <div className="mx-auto max-w-[760px] prose-article">
+        {/* Body — generous reading column that scales with viewport */}
+        <div className="px-4 sm:px-6 md:px-10 lg:px-12 mt-10 md:mt-14">
+          <div className="mx-auto prose-article" style={{ maxWidth: "min(1040px, 80ch)" }}>
             {deck && <p>{deck}</p>}
             {children}
           </div>
 
           {afterBody && (
-            <div className="mx-auto max-w-[760px] mt-12">
+            <div className="mx-auto mt-12" style={{ maxWidth: "min(1040px, 80ch)" }}>
               {afterBody}
             </div>
           )}
