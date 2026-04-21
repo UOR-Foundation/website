@@ -24,7 +24,7 @@ const Footer = () => {
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
             <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 md:gap-6">
-              {navItems.filter((item) => !item.isCta).map((item) => (
+              {navItems.map((item) => (
                 <Link
                   key={item.label}
                   to={item.href}
