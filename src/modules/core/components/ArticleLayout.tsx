@@ -144,21 +144,21 @@ const ArticleLayout = ({
       <FloatingShareRail />
       <article className="pt-24 md:pt-28 pb-16 md:pb-24 bg-background">
         {/* Aman-inspired stacked masthead — one element per row, generous air */}
-        <header className="mx-auto w-full max-w-[1280px] px-6 md:px-10 lg:px-14">
-          <div className="flex flex-col items-center text-center py-10 md:py-14 lg:py-16 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
+        <header className="mx-auto w-full px-6 md:px-10 lg:px-14" style={{ maxWidth: "clamp(1080px, 88vw, 1480px)" }}>
+          <div className="flex flex-col items-center text-center py-8 md:py-10 lg:py-12 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
             {/* Centered kicker — Aman-style micro label */}
-            <span className="text-[11px] md:text-[12px] uppercase tracking-[0.32em] font-medium text-primary/70 font-body mb-8 md:mb-10">
+            <span className="text-[11px] md:text-[12px] uppercase tracking-[0.32em] font-medium text-primary/70 font-body mb-6 md:mb-8">
               {kicker}
             </span>
 
-            {/* Cinematic 21:9 image, breathes alone */}
+            {/* Hero image — φ:1 golden ratio, dominates the fold */}
             {!hideHero && (heroOverride || heroImage) && (
-              <figure className="w-full mb-6 md:mb-8">
+              <figure className="w-full mb-3 md:mb-5">
                 {heroOverride ? (
                   heroOverride
                 ) : (
                   <>
-                    <div className="bg-muted/40 w-full overflow-hidden aspect-[21/9] max-h-[52vh]">
+                    <div className="bg-muted/40 w-full overflow-hidden aspect-[1.618/1] max-h-[clamp(420px,62vh,760px)]">
                       <img
                         src={heroImage}
                         alt={title}
@@ -167,7 +167,7 @@ const ArticleLayout = ({
                       />
                     </div>
                     {heroCaption && (
-                      <figcaption className="mt-4 text-[12px] italic font-display text-muted-foreground/60 text-center">
+                      <figcaption className="mt-4 text-[13px] italic font-display text-muted-foreground/60 text-center">
                         Image credits: {heroCaption}
                       </figcaption>
                     )}
@@ -176,15 +176,15 @@ const ArticleLayout = ({
               </figure>
             )}
 
-            {/* Title — quiet authority */}
+            {/* Title — confident scale, hugs the image */}
             <h1
-              className="font-display text-foreground text-balance mt-6 md:mt-10"
+              className="font-display text-foreground text-balance mt-3 md:mt-5"
               style={{
-                fontSize: "clamp(2rem, 3.6vw, 4rem)",
+                fontSize: "clamp(2.25rem, 5.2vw, 5.5rem)",
                 lineHeight: 1.1,
                 letterSpacing: "0.01em",
                 fontWeight: 400,
-                maxWidth: "clamp(680px, 60vw, 980px)",
+                maxWidth: "clamp(720px, 68vw, 1180px)",
               }}
             >
               {title}
@@ -204,7 +204,7 @@ const ArticleLayout = ({
         </header>
 
         {/* Body — golden-ratio reading column, wider on large screens */}
-        <div className="px-4 sm:px-6 md:px-10 lg:px-14 xl:px-20 mt-12 md:mt-16 lg:mt-20">
+        <div className="px-4 sm:px-6 md:px-10 lg:px-14 xl:px-20 mt-10 md:mt-14 lg:mt-16">
           <div className="mx-auto prose-article" style={{ maxWidth: "clamp(680px, 72vw, 1180px)" }}>
             {deck && <p>{deck}</p>}
             {children}
