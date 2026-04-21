@@ -42,38 +42,35 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>What it is</h2>
         <p>
-          UOR is an open standard, with a Rust reference implementation <code>uor-foundation</code>, that gives any structured object a 256-bit content-derived address.
-        </p>
-        <p>
-          It's designed to sit underneath MCP, A2A, and any transport carrying typed objects between agents.
+          A 256-bit fingerprint for any structured object — one that depends on the object's <em>meaning</em>, not its byte encoding. Open standard, Rust reference implementation (<a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>), drop-in under MCP, A2A, or any transport that carries typed payloads between agents.
         </p>
       </section>
 
       <section>
         <h2>Why it exists</h2>
         <p>
-          MCP and A2A specify how agents talk. Neither lets the receiver prove the object it got is the one the sender produced.
+          MCP and A2A specify <em>how</em> agents talk. Neither lets the receiver prove the object it got is the one the sender produced.
         </p>
         <p>
-          Byte-level schemes like JCS (RFC 8785) break the moment a JSON library re-orders keys or re-encodes a number — the issue tracked across LangGraph, AutoGen, and CrewAI today.
+          Existing fixes hash bytes. The instant a JSON library re-orders keys, normalizes a number, or re-encodes a string — routine across LangGraph, AutoGen, CrewAI — the hash changes and trust breaks. Signing the bytes (<a href="https://www.rfc-editor.org/rfc/rfc8785" target="_blank" rel="noopener noreferrer">JCS</a>, JWS) doesn't help: the guarantee dies at the first deserialize.
         </p>
       </section>
 
       <section>
         <h2>How it works</h2>
         <p>
-          Reduce the object to a canonical structural form, then hash it. The reduction is a deterministic operation over ℤ/256ℤ, formally verified in Lean 4 (its central lemma is the two's-complement identity <code>neg(bnot(x)) = succ(x)</code>).
+          Two steps: <strong>(1) normalize</strong> the object to a canonical form that ignores key order, encoding choice, and numeric representation; <strong>(2) SHA-256</strong> it. Same object → same fingerprint, on any runtime, in any language.
         </p>
         <p>
-          Reorder keys, swap encodings, round-trip through three serializers — the canonical form, and the fingerprint, don't change. Collision resistance comes from SHA-256, exactly as in Git or IPFS.
+          The normalization step is formally verified in Lean 4 — so determinism isn't a property we test for, it's a property we proved. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
         </p>
-        <pre>{`object → canonical form (ℤ/256ℤ reduction) → SHA-256 → 256-bit fingerprint`}</pre>
+        <pre>{`object → normalize → SHA-256 → 256-bit fingerprint`}</pre>
       </section>
 
       <section>
         <h2>Architecture</h2>
         <p>
-          One pipeline, two ends. The sender derives a fingerprint; the receiver re-derives it from whatever arrives and compares.
+          One pipeline, two ends. Sender derives the fingerprint and ships it alongside the payload. Receiver re-derives it from whatever arrived and compares. Match → trust. Mismatch → refuse. No third party in the loop.
         </p>
         <figure className="not-prose my-8 rounded-xl border border-border bg-card p-6 md:p-8">
           <svg
@@ -148,7 +145,7 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>Where it differs from prior art</h2>
         <p>
-          Content-addressed identity is not new. <em>Git did this in 2005. IPFS generalized it in 2015.</em> The pattern is well-worn — and for their own domains, those tools are correct. UOR targets a specific gap: <strong>structural identity that survives the re-serialization cycle routine between agents</strong>, with no signature layer to coordinate.
+          Content-addressed identity isn't new. Git did it in 2005, IPFS generalized it in 2015, Sigstore wrapped it in PKI. For their domains those tools are right. The gap UOR fills: <strong>identity that survives re-serialization</strong> — exactly what happens every time an agent parses, mutates, or forwards an object — <strong>without a signature layer to operate</strong>.
         </p>
         <figure className="not-prose my-6 overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full text-sm">
@@ -201,7 +198,7 @@ const BlogCanonicalRustCrate = () => {
           </table>
         </figure>
         <p>
-          The closest philosophical cousin is <strong>W3C SRI</strong>: re-derive on arrival, refuse on mismatch. UOR is that pattern applied to <em>structured objects</em> instead of byte streams — which is why a single agent pair can adopt it without coordinating anything.
+          Closest cousin: <strong>W3C SRI</strong> — re-derive on arrival, refuse on mismatch. UOR is the same pattern lifted from byte streams to structured objects. Two agents can adopt it without coordinating with anyone else.
         </p>
       </section>
 
