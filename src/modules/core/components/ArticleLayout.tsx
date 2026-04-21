@@ -242,10 +242,11 @@ const ArticleLayout = ({
 
           {/* Footer: source + related strip */}
           {(sourceUrl || (related && related.length > 0)) && (
-            <footer className="mx-auto mt-16 pt-8 border-t border-border" style={{ maxWidth: "clamp(680px, 82vw, 1680px)" }}>
+            <footer className="mx-auto mt-16" style={{ maxWidth: "clamp(680px, 82vw, 1680px)" }}>
+              <div className="rule-prime mb-10" />
               {sourceUrl && (
                 <p className="text-sm xl:text-base text-muted-foreground font-body mb-8" style={{ maxWidth: "clamp(680px, 78vw, 1600px)" }}>
-                  Source:{" "}
+                  <span className="uppercase tracking-[0.2em] font-semibold text-primary/70 text-[12.5px] xl:text-[13.5px] mr-2">Source:</span>
                   <a
                     href={sourceUrl}
                     target="_blank"
@@ -259,7 +260,7 @@ const ArticleLayout = ({
 
               {related && related.length > 0 && (
                 <div>
-                  <p className="text-[12px] uppercase tracking-[0.18em] font-semibold text-muted-foreground font-body mb-6">
+                  <p className="text-[12.5px] xl:text-[13.5px] uppercase tracking-[0.2em] font-semibold text-primary/70 font-body mb-6">
                     {relatedLabel}
                   </p>
                   <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -296,6 +297,7 @@ const ArticleLayout = ({
                       </li>
                     ))}
                   </ul>
+                  <div className="rule-prime mt-12" />
                 </div>
               )}
             </footer>
