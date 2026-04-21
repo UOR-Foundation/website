@@ -79,7 +79,7 @@ const CommunitySection = () => {
             Contributors
           </p>
           <h2 className="font-display font-bold text-black md:text-foreground text-fluid-heading">
-            The people behind UOR.
+            People behind UOR.
           </h2>
         </div>
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.19s" }}>
