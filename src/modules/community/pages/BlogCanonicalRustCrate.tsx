@@ -3,6 +3,15 @@ import { Link } from "react-router-dom";
 import { CRATE_URL, GITHUB_ORG_URL } from "@/data/external-links";
 import { blogPosts } from "@/data/blog-posts";
 import heroImage from "@/assets/project-uor-identity.jpg";
+import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
+import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
+import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
+
+const coverMap: Record<string, string> = {
+  knowledgeGraph: blogKnowledgeGraph,
+  goldenSeed: blogGoldenSeed,
+  frameworkLaunch: blogFrameworkLaunch,
+};
 
 const SLUG = "/blog/canonical-rust-crate";
 
@@ -10,7 +19,12 @@ const BlogCanonicalRustCrate = () => {
   const related = blogPosts
     .filter((p) => p.href !== SLUG)
     .slice(0, 3)
-    .map((p) => ({ title: p.title, href: p.href, meta: `${p.tag} · ${p.date}` }));
+    .map((p) => ({
+      title: p.title,
+      href: p.href,
+      meta: `${p.tag} · ${p.date}`,
+      image: coverMap[p.coverKey],
+    }));
 
   return (
     <ArticleLayout
