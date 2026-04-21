@@ -230,9 +230,9 @@ const ArticleLayout = ({
 
           {/* Footer: source + related strip */}
           {(sourceUrl || (related && related.length > 0)) && (
-            <footer className="mx-auto max-w-[1180px] mt-16 pt-8 border-t border-border">
+            <footer className="mx-auto mt-16 pt-8 border-t border-border" style={{ maxWidth: "min(1320px, 90vw)" }}>
               {sourceUrl && (
-                <p className="text-sm text-muted-foreground font-body mb-8 max-w-[760px]">
+                <p className="text-sm text-muted-foreground font-body mb-8" style={{ maxWidth: "min(1040px, 80ch)" }}>
                   Source:{" "}
                   <a
                     href={sourceUrl}
