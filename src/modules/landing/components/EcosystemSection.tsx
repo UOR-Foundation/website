@@ -23,10 +23,10 @@ const EcosystemSection = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-golden-lg gap-golden-sm">
           <div>
             <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-sm">
-              Ecosystem
+              Projects
             </p>
             <h2 className="font-display font-bold text-foreground text-fluid-heading">
-              Built in the open.
+              Open-source projects using UOR.
             </h2>
           </div>
           <Link

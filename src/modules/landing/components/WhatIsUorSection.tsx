@@ -109,10 +109,10 @@ const WhatIsUorSection = () => {
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="mb-golden-md">
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-sm">
-            What is UOR
+            How it works
           </p>
           <h2 className="font-display font-bold text-foreground text-fluid-heading">
-            One address. Everywhere.
+            Content-derived addresses.
           </h2>
         </div>
         <div className="rule-prime" />
