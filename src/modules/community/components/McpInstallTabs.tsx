@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Check, ExternalLink } from "lucide-react";
+import { Copy, Check, ArrowUpRight } from "lucide-react";
 
 const MCP_URL = "https://mcp.uor.foundation/mcp";
 
@@ -58,13 +58,46 @@ const CodeBlock = ({ code, language }: { code: string; language?: string }) => {
   );
 };
 
-const InstallButton = ({ href, children }: { href: string; children: React.ReactNode }) => (
+const InstallButton = ({
+  href,
+  icon,
+  label,
+  client,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  client: string;
+}) => (
   <a
     href={href}
-    className="not-prose inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors no-underline"
+    className="not-prose group inline-flex items-stretch overflow-hidden rounded-xl border border-border bg-foreground text-background shadow-sm hover:shadow-md hover:-translate-y-px transition-all no-underline"
   >
-    {children}
+    <span className="flex items-center justify-center px-4 bg-background/10">
+      <span className="h-5 w-5 flex items-center justify-center">{icon}</span>
+    </span>
+    <span className="flex flex-col justify-center px-5 py-2.5 border-l border-background/10">
+      <span className="text-[10.5px] font-medium uppercase tracking-[0.18em] opacity-60 leading-none mb-1">
+        {label}
+      </span>
+      <span className="text-sm font-semibold leading-tight flex items-center gap-1.5">
+        {client}
+        <ArrowUpRight size={13} className="opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+      </span>
+    </span>
   </a>
+);
+
+// ── Brand glyphs (inline SVG, themed via currentColor) ──────────────────────
+const CursorIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden>
+    <path d="M3 2l9 20 2.6-8.4L23 11 3 2z" />
+  </svg>
+);
+const VSCodeIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden>
+    <path d="M17.5 2.5L9 11 4.5 7.5 2 9l4 3-4 3 2.5 1.5L9 13l8.5 8.5L22 19V5l-4.5-2.5zM17 8v8l-5-4 5-4z" />
+  </svg>
 );
 
 const McpInstallTabs = () => {
