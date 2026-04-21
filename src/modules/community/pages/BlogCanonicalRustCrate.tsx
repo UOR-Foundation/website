@@ -39,6 +39,21 @@ const BlogCanonicalRustCrate = () => {
       sourceLabel="crates.io/crates/uor-foundation"
       related={related}
     >
+      <aside
+        aria-label="TL;DR"
+        className="not-prose mb-12 md:mb-14 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm px-6 md:px-8 py-6 md:py-7"
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-[11px] md:text-[12px] uppercase tracking-[0.24em] font-semibold text-primary/80 font-mono">
+            TL;DR
+          </span>
+          <span className="h-px flex-1 bg-border/60" />
+        </div>
+        <p className="font-body text-[16px] md:text-[18px] leading-[1.65] text-foreground/85 m-0">
+          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>meaning</em>, not its bytes, so the same data hashes to the same address in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman.
+        </p>
+      </aside>
+
       <section>
         <h2>What it is</h2>
         <p>
