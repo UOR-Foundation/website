@@ -61,30 +61,23 @@ const CodeBlock = ({ code, language }: { code: string; language?: string }) => {
 const InstallButton = ({
   href,
   icon,
-  label,
   client,
 }: {
   href: string;
   icon: React.ReactNode;
-  label: string;
   client: string;
 }) => (
   <a
     href={href}
-    className="not-prose group inline-flex items-stretch overflow-hidden rounded-xl border border-border bg-foreground text-background shadow-sm hover:shadow-md hover:-translate-y-px transition-all no-underline"
+    className="not-prose group relative inline-flex items-center gap-3 overflow-hidden rounded-full pl-2 pr-5 py-2 bg-white text-neutral-950 ring-1 ring-white/15 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)] hover:ring-primary/60 hover:shadow-[0_10px_30px_-8px_hsl(var(--primary)/0.55)] hover:-translate-y-0.5 transition-all duration-200 no-underline"
   >
-    <span className="flex items-center justify-center px-4 bg-background/10">
-      <span className="h-5 w-5 flex items-center justify-center">{icon}</span>
+    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-950 text-white">
+      <span className="h-[18px] w-[18px] flex items-center justify-center">{icon}</span>
     </span>
-    <span className="flex flex-col justify-center px-5 py-2.5 border-l border-background/10">
-      <span className="text-[10.5px] font-medium uppercase tracking-[0.18em] opacity-60 leading-none mb-1">
-        {label}
-      </span>
-      <span className="text-sm font-semibold leading-tight flex items-center gap-1.5">
-        {client}
-        <ArrowUpRight size={13} className="opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-      </span>
+    <span className="text-[14.5px] font-semibold tracking-tight leading-none">
+      Install in <span className="font-bold">{client}</span>
     </span>
+    <ArrowUpRight size={15} strokeWidth={2.4} className="text-neutral-500 group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
   </a>
 );
 
@@ -149,7 +142,6 @@ const McpInstallTabs = () => {
             <InstallButton
               href={CURSOR_DEEP_LINK}
               icon={<CursorIcon />}
-              label="Add to"
               client="Cursor"
             />
             <p>
@@ -165,7 +157,6 @@ const McpInstallTabs = () => {
             <InstallButton
               href={VSCODE_DEEP_LINK}
               icon={<VSCodeIcon />}
-              label="Add to"
               client="VS Code"
             />
             <p>
