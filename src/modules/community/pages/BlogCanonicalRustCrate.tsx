@@ -42,10 +42,10 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>What it is</h2>
         <p>
-          <strong>UOR</strong> (Universal Object Reference) gives every digital object a permanent, content-addressed, self-verifying identity, the universal data passport an AI agent presents whenever it sends a tool call, a memory, or a result to another agent.
+          Two AI agents exchange a tool call. Today, neither one can prove the object that arrived is the object that was sent. Re-serialize the JSON, the hash changes. Sign the bytes, the signature breaks at the first parse. Add a PKI, now you operate a PKI.
         </p>
         <p>
-          The standard is open, with a reference Rust implementation as <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>. It sits underneath MCP, A2A, and any other transport carrying structured data between autonomous systems, so the passport travels with the object across runtimes, languages, and re-serializations.
+          <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, content-derived, self-verifying 256-bit identity, a universal data passport that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP, A2A, and any transport carrying typed data between agents.
         </p>
       </section>
 
