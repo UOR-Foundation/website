@@ -269,15 +269,15 @@ const ArticleLayout = ({
                           )}
                           <div className="flex flex-1 flex-col p-6">
                             {item.meta && (
-                              <p className="text-[11px] uppercase tracking-[0.16em] font-semibold text-muted-foreground/80 mb-3">
+                              <p className="text-[12px] uppercase tracking-[0.18em] font-semibold text-muted-foreground/80 mb-4">
                                 {item.meta}
                               </p>
                             )}
-                            <p className="font-display text-[17px] font-semibold text-foreground leading-snug group-hover:text-primary transition-colors text-pretty">
+                            <p className="font-display text-[20px] md:text-[22px] font-semibold text-foreground leading-snug group-hover:text-primary transition-colors text-pretty">
                               {item.title}
                             </p>
-                            <span className="mt-auto pt-5 inline-flex items-center gap-1.5 text-[15px] text-muted-foreground group-hover:text-primary transition-colors">
-                              Read <ArrowRight size={14} />
+                            <span className="mt-auto pt-6 inline-flex items-center gap-1.5 text-[16px] text-muted-foreground group-hover:text-primary transition-colors">
+                              Read <ArrowRight size={16} />
                             </span>
                           </div>
                         </Link>
