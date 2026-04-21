@@ -1,66 +1,59 @@
 
 
-# TechCrunch-style Article Header
+## Reframe `/blog/canonical-rust-crate` — "A universal data passport for your AI agent"
 
-Reshape the shared `ArticleLayout` so every blog post and project page reads with the same crisp, editorial cadence as TechCrunch — without changing colors or content. One file change cascades to all four blog posts and all project detail pages.
+Rewrite the post as one focused, trustworthy story for engineers building agentic systems. MCP-docs voice: clean, concise, declarative, no jargon, no hype.
 
-## What changes (visually)
+### Header
 
-**Before:** Centered split hero, both columns inside an 1180px container, rounded image with shadow, deck below headline, back link below.
+- **Kicker:** `Standards`
+- **Title:** `A universal data passport for your AI agent`
+- **Deck:** "An open standard with a Rust reference implementation that gives every structured object a stable, content-derived identity — one that survives the round-trips real agents put it through."
+- **Date:** `April 2, 2026`
+- **Hero image:** `src/assets/project-uor-identity.jpg`
+- **Hero caption:** `An open standard for structured-object identity between agents.`
+- **Source link:** `crates.io/crates/uor-foundation`
 
-**After:** A true two-panel masthead that runs edge-to-edge.
+### Body — six short sections, ~600 words total
 
-```text
-┌────────────────────────────┬───────────────────────────┐
-│                            │                           │
-│                            │  KICKER         [share]   │
-│      FULL-BLEED IMAGE      │                           │
-│      (left half, no        │  Big bold headline,       │
-│       rounding, no         │  three lines, tight       │
-│       shadow, flush         │  leading                  │
-│       to viewport edge)    │                           │
-│                            │  Author · time · date     │
-│                            │                           │
-│  IMAGE CREDITS: …          │                           │
-└────────────────────────────┴───────────────────────────┘
-                ── thin rule ──
-            820-px reading column below
-```
+No internal terminology. No "imagine", "breakthrough", "revolutionary". Sentence-case headings. One idea per paragraph, ≤3 sentences. Code in fenced blocks. External standards by canonical names only.
 
-Specifics:
-- **Image:** square corners, no shadow, no border, `object-cover`. Aspect roughly 4:5 on desktop, 16:10 on mobile. Bleeds to the left edge of the viewport (no container padding on the left at `lg+`).
-- **Right panel:** solid `bg-card` block (TC uses brand green; we keep our existing card color so it stays on-brand). Square corners, flush to image, runs to the right viewport edge. Generous padding (`p-10 lg:p-14`).
-- **Kicker:** small caps, with a short underline rule above it (TC's signature small bracket line).
-- **Headline:** display font, bold, `clamp(2.5rem, 5vw, 4rem)`, tight `1.05` leading, balanced wrap.
-- **Share row:** top-right of the right panel — Facebook, X, LinkedIn, Reddit, Email, Copy-link icons (lucide). Copy-link writes `window.location.href` to clipboard with a toast.
-- **Byline row:** lower in the right panel — `Author — time · date` in muted text. Add an optional `author` prop (defaults to "UOR Foundation").
-- **Image credit:** small uppercase mono caption sitting under the image, left-aligned (`IMAGE CREDITS: …`).
-- **Mobile (`<lg`):** image stacks on top full-width, then the colored panel below it — same content, same order.
-- **Back link:** moves out of the masthead. Renders as a small `← Back to Research` link directly above the body column, so the masthead stays clean like TC's.
-- **Deck:** TC doesn't use a deck. We promote the deck to the **first paragraph of the body** (rendered automatically by `ArticleLayout`, slightly larger lead style). This keeps it readable without crowding the headline panel.
-- **Hairline divider:** removed — the masthead block itself is the divider.
+1. **The problem** — The same JSON tool-call leaves an agent, passes through a queue, gets re-serialized by another runtime, and arrives with a different hash. MCP and A2A standardize how agents talk; neither lets the receiver prove the object is the one the sender produced. Byte-level integrity (RFC 8785 / JCS) breaks at the first legitimate re-serialization. This is the class of issue showing up across LangGraph, AutoGen, and CrewAI deserialization and state-mismatch threads.
 
-## Body styling refinements (`prose-article` in `index.css`)
+2. **A data passport** — A short, content-derived identifier that travels with the object. Identical meaning produces an identical identifier across languages, runtimes, and serializers. Different meaning always produces a different one.
 
-Small TC-aligned tweaks only:
-- Lead paragraph (`.prose-article > p:first-child`): 22px, foreground color, `1.6` leading.
-- Body paragraphs: stay 20px, but tighten leading from `1.75` → `1.7` and switch color to `foreground` at 90% (TC reads as near-black, not muted gray).
-- Section `h2`: remove the top border rule; keep generous top margin only. TC sections breathe with whitespace, not lines.
-- Links: solid underline at 2px offset, `currentColor` underline, primary color on hover (already close).
+3. **How it works** — Reduce the object to a canonical structural form, then hash it with a standard cryptographic hash (SHA-256 by default, pluggable). The canonicalization step is small, deterministic, and formally verified in Lean 4. Collision resistance comes from the hash you already trust.
+   ```
+   object → canonical form → SHA-256 → 256-bit identity
+   ```
 
-## Footer (related + source)
+4. **What you write** —
+   ```rust
+   use uor_foundation::prelude::*;
 
-Keep current behavior. Tighten the related-cards heading to `Read next` (TC-style) and reduce to max 3 cards in a 3-up grid on desktop.
+   let cert = identify(&tool_call)?;          // sender
+   assert_eq!(cert.fingerprint(), expected);  // receiver
+   ```
+   No keys. No registry. No network. No PKI. The receiver re-runs the same function and compares.
 
-## Files touched
+5. **Where it sits next to what you know** —
+   - **Git, IPFS, Sigstore** — perfect when the object *is* its bytes; breaks when the bytes legitimately change.
+   - **JCS / RFC 8785** — fixes byte order at one moment in time; ends at the first deserialize.
+   - **W3C Subresource Integrity** — closest cousin. SRI re-derives a script's identity on arrival; this is SRI for structured objects.
+   - **JSON-LD + URDNA2015** — solves canonicalization for RDF; this generalizes the idea and removes the PKI dependency.
 
-- `src/modules/core/components/ArticleLayout.tsx` — rewrite the `<header>` block; add `author` prop; add share row component inline; move back-link below masthead.
-- `src/index.css` — adjust `.prose-article` lead/paragraph/h2 rules as above.
+6. **What it isn't, and how to try it** — Not a PKI, ledger, namespace, or filesystem. Compose with those when you need them. The Rust crate is the reference implementation; the same pipeline runs in your browser on the playground.
+   - Playground: `/oracle`
+   - Install: `cargo add uor-foundation`
+   - Source: `github.com/uor-foundation`
+   - Spec: `/framework`
 
-No changes needed to:
-- `BlogPost1/2/3.tsx`, `BlogCanonicalRustCrate.tsx`, `ResearchPaperAtlasEmbeddings.tsx`, or `ProjectDetailLayout.tsx` — they all consume `ArticleLayout` and inherit the new look automatically.
+### Files changed
 
-## Result
+- `src/modules/community/pages/BlogCanonicalRustCrate.tsx` — new title, deck, kicker, hero import (`@/assets/project-uor-identity.jpg`), new caption, body rewritten to the six sections above. Related-posts logic unchanged.
 
-Every blog post and project page opens with the same confident TechCrunch-style masthead: a single hero image bleeding off the left edge, a bold solid panel on the right carrying the category, headline, share controls, and byline, then a clean 820-px reading column below. Familiar, crisp, precise — in the UOR Foundation's own palette.
+### Out of scope
+
+- No changes to `ArticleLayout`, CSS, share rail, other blog posts, or `blog-posts.ts`.
+- No new image generation.
 
