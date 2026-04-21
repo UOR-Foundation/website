@@ -41,49 +41,40 @@ const BlogCanonicalRustCrate = () => {
       related={related}
     >
       <section>
-        <h2>What UOR Identity is</h2>
+        <h2>What it is</h2>
         <p>
-          UOR (Universal Object Reference) is an open standard, with a Rust reference implementation as <code>uor-foundation</code>, that gives a typed structured object a content-derived 256-bit address — one that survives the transformations those objects actually undergo between agents.
+          UOR is an open standard, with a Rust reference implementation <code>uor-foundation</code>, that gives any structured object a 256-bit content-derived address.
         </p>
         <p>
-          It is designed to sit underneath MCP, A2A, and any other transport that carries structured data between autonomous systems.
+          It's designed to sit underneath MCP, A2A, and any transport carrying typed objects between agents.
         </p>
       </section>
 
       <section>
-        <h2>The gap it fills</h2>
+        <h2>Why it exists</h2>
         <p>
-          MCP and A2A specify how agents talk. Neither specifies how a receiver can prove the object it received is the one the sender produced.
+          MCP and A2A specify how agents talk. Neither lets the receiver prove the object it got is the one the sender produced.
         </p>
         <p>
-          In practice, objects cross JSON libraries in two or three languages, middleware that reorders keys, queues that re-encode numbers, and checkpoint files that round-trip through different serializers. Byte-level integrity schemes — JCS (RFC 8785) and the closed MCP proposal SEP-2395 — break here: a single legitimate re-serialization invalidates the fingerprint even when the object is semantically unchanged.
-        </p>
-        <p>
-          The pattern is visible across every major agent framework: LangGraph #7066, #7272, #7417; AutoGen #7220, #7403; CrewAI #5544.
-        </p>
-        <p>
-          The byte-addressable world (Git, IPFS, Sigstore, JSON-LD with URDNA2015) solved this for files, immutable blocks, and signed documents. None of those tools were built for live typed objects moving between runtimes.
+          Byte-level schemes like JCS (RFC 8785) break the moment a JSON library re-orders keys or re-encodes a number — the issue tracked across LangGraph, AutoGen, and CrewAI today.
         </p>
       </section>
 
       <section>
         <h2>How it works</h2>
         <p>
-          UOR canonicalizes an object at the algebraic-structure level, then hashes the canonical form. The canonicalization is a total, deterministic reduction over ℤ/256ℤ, formally verified in Lean 4. Its central correctness lemma — the two's-complement identity <code>neg(bnot(x)) = succ(x)</code> — eliminates a signedness branch and keeps the reduction arithmetic uniform.
+          Reduce the object to a canonical structural form, then hash it. The reduction is a deterministic operation over ℤ/256ℤ, formally verified in Lean 4 (its central lemma is the two's-complement identity <code>neg(bnot(x)) = succ(x)</code>).
         </p>
         <p>
-          The canonical form is unique up to semantic equivalence. Reorder the keys, swap integer encodings, round-trip through three JSON libraries — the canonical form, and therefore the fingerprint, is unchanged. This is the property byte-level canonicalization cannot provide.
+          Reorder keys, swap encodings, round-trip through three serializers — the canonical form, and the fingerprint, don't change. Collision resistance comes from SHA-256, exactly as in Git or IPFS.
         </p>
         <pre>{`object → canonical form (ℤ/256ℤ reduction) → SHA-256 → 256-bit fingerprint`}</pre>
-        <p>
-          The fingerprint is produced by a pluggable cryptographic hash (default SHA-256). Collision resistance comes from the hash, exactly as in Git, IPFS, and Sigstore. What UOR contributes is the input: a structural canonical form rather than a byte serialization.
-        </p>
       </section>
 
       <section>
         <h2>Architecture</h2>
         <p>
-          One pipeline runs on both ends. The sender derives a fingerprint from the object; the receiver re-derives it from whatever bytes arrived and compares. No third party sits between them.
+          One pipeline, two ends. The sender derives a fingerprint; the receiver re-derives it from whatever arrives and compares.
         </p>
         <figure className="not-prose my-8 rounded-xl border border-border bg-card p-6 md:p-8">
           <svg
@@ -152,52 +143,15 @@ const BlogCanonicalRustCrate = () => {
       </section>
 
       <section>
-        <h2>The Rust pipeline</h2>
-        <p>
-          In the reference implementation, the pipeline is enforced as a typestate. <code>Grounded</code> and <code>Certified</code> are sealed types with <code>pub(crate)</code> constructors. Downstream code cannot fabricate them — they can only be produced by running the sanctioned pipeline. If an agent hands you a <code>Certified</code>, the Rust compiler has already checked that the object passed the canonical reduction.
-        </p>
+        <h2>Use it</h2>
         <pre>{`use uor_foundation::prelude::*;
 
 let cert = identify(&tool_call)?;          // sender
 assert_eq!(cert.fingerprint(), expected);  // receiver`}</pre>
-        <p>
-          Verification at the receiver is five lines: run the same pipeline, compare fingerprints, check the certificate. No keys, no registry, no network, no PKI.
-        </p>
-      </section>
-
-      <section>
-        <h2>What the certificate carries</h2>
         <ul>
-          <li><strong><code>ContentFingerprint</code></strong> — the 256-bit address.</li>
-          <li><strong><code>witt_bits: u16</code></strong> — the structural depth the reduction reached.</li>
-          <li><strong><code>UorTime</code></strong> — a content-deterministic two-clock value combining <code>rewrite_steps</code> and <code>landauer_nats</code> (mapped to <code>derivation:stepCount</code> and <code>observable:LandauerCost</code>).</li>
-        </ul>
-        <p>
-          The Landauer component ties computational effort to the thermodynamic lower bound on irreversible computation, so the same reduction yields the same <code>UorTime</code> on any machine. Cost becomes a reproducibility invariant, not a performance metric.
-        </p>
-      </section>
-
-      <section>
-        <h2>Where it differs from prior art</h2>
-        <p>
-          Content-addressed identity is not new. Git did this in 2005, IPFS generalized it in 2015, and Sigstore, JSON-LD/URDNA2015, and Rekor refined the pattern. For their own domains those tools are correct and UOR would be overkill. UOR targets a specific gap they were not built for.
-        </p>
-        <ul>
-          <li><strong>Git, IPFS/CIDs, Sigstore</strong> — hash specific byte encodings. Exactly right when the bytes <em>are</em> the object (source tree, immutable block, signed artifact). They do not survive the re-serialization cycle that is routine between agents.</li>
-          <li><strong>JSON-LD with URDNA2015</strong> — achieves structure-level invariance, but is scoped to RDF graphs and still requires a PKI for signatures. UOR applies to the broader family of typed objects (plans, tool calls, memory records, checkpoints) and has no key-management layer.</li>
-          <li><strong>JCS (RFC 8785)</strong> — canonicalizes JSON bytes, sufficient to sign at the moment of serialization. The guarantee ends at the first deserialize.</li>
-          <li><strong>SEP-2395</strong> — proposed a signing layer for MCP; closed in March 2026, the discussion citing the operational cost of managing signatures across every hop. UOR addresses the same integrity problem with no signature layer, so a single agent pair can adopt it without coordinating anything.</li>
-          <li><strong>W3C Subresource Integrity</strong> — the closest philosophical cousin: re-derive on arrival, refuse on mismatch. UOR is SRI's pattern applied to structured objects instead of byte streams.</li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>Try it</h2>
-        <ul>
-          <li><strong>Playground:</strong> <Link to="/oracle">/oracle</Link> — the same pipeline running in your browser.</li>
+          <li><strong>Playground:</strong> <Link to="/oracle">/oracle</Link></li>
           <li><strong>Install:</strong> <code>cargo add uor-foundation</code></li>
           <li><strong>Source:</strong> <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">github.com/uor-foundation</a></li>
-          <li><strong>Spec:</strong> <Link to="/framework">/framework</Link></li>
         </ul>
       </section>
     </ArticleLayout>
