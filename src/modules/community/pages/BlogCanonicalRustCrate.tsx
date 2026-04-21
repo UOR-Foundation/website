@@ -251,6 +251,16 @@ const BlogCanonicalRustCrate = () => {
       </section>
 
       <section>
+        <h2>What this unlocks</h2>
+        <ul>
+          <li><strong>Provable agent-to-agent calls.</strong> The receiver knows the tool call, memory, or result it ran is bit-for-bit the one the sender produced, across any language or transport.</li>
+          <li><strong>Free deduplication and caching.</strong> Identical objects collapse to one address. Caches, audit logs, and replay systems stop storing the same payload twice.</li>
+          <li><strong>Portable provenance.</strong> Fork an object, move it between MCP servers, hand it to a different agent, the address still resolves to the same content.</li>
+          <li><strong>Zero trust infrastructure.</strong> No certificates to issue, rotate, or revoke. Verification is a local hash, not a network call.</li>
+        </ul>
+      </section>
+
+      <section>
         <h2>Try it</h2>
         <p>
           Five lines. No keys, no config, no network. Same fingerprint on macOS, Linux, Node, Python (via the WASM build), and on the next library version that re-orders your JSON keys.
