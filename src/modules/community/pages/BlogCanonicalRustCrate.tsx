@@ -42,7 +42,7 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>What it is</h2>
         <p>
-          Every digital object gets its own permanent, content-addressed, self-verifying identity — a universal data passport that travels with the object itself.
+          Every digital object gets its own permanent, content-addressed, self-verifying identity. A universal data passport that travels with the object itself.
         </p>
         <p>
           Open standard, Rust reference implementation (<a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>), drop-in under MCP, A2A, or any transport carrying typed payloads between agents.
@@ -55,7 +55,7 @@ const BlogCanonicalRustCrate = () => {
           MCP and A2A specify <em>how</em> agents talk. Neither lets the receiver prove the object it got is the one the sender produced.
         </p>
         <p>
-          Existing fixes hash bytes. The instant a JSON library re-orders keys, normalizes a number, or re-encodes a string — routine across LangGraph, AutoGen, CrewAI — the hash changes and trust breaks. Signing the bytes (<a href="https://www.rfc-editor.org/rfc/rfc8785" target="_blank" rel="noopener noreferrer">JCS</a>, JWS) doesn't help: the guarantee dies at the first deserialize.
+          Existing fixes hash bytes. The instant a JSON library re-orders keys, normalizes a number, or re-encodes a string (routine across LangGraph, AutoGen, CrewAI), the hash changes and trust breaks. Signing the bytes (<a href="https://www.rfc-editor.org/rfc/rfc8785" target="_blank" rel="noopener noreferrer">JCS</a>, JWS) doesn't help: the guarantee dies at the first deserialize.
         </p>
       </section>
 
@@ -65,7 +65,7 @@ const BlogCanonicalRustCrate = () => {
           Two steps: <strong>(1) normalize</strong> the object to a canonical form that ignores key order, encoding choice, and numeric representation; <strong>(2) SHA-256</strong> it. Same object → same fingerprint, on any runtime, in any language.
         </p>
         <p>
-          The normalization step is formally verified in Lean 4 — so determinism isn't a property we test for, it's a property we proved. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
+          The normalization step is formally verified in Lean 4, so determinism isn't a property we test for. It's a property we proved. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
         </p>
         <pre>{`object → normalize → SHA-256 → 256-bit fingerprint`}</pre>
       </section>
@@ -140,7 +140,7 @@ const BlogCanonicalRustCrate = () => {
             </text>
           </svg>
           <figcaption className="mt-4 text-[13px] text-muted-foreground font-body text-center">
-            UOR Identity rides inside every MCP / A2A message. Both agents derive the same seal from the same bytes — trust is local, instant, and needs no authority.
+            UOR Identity rides inside every MCP / A2A message. Both agents derive the same seal from the same bytes. Trust is local, instant, and needs no authority.
           </figcaption>
         </figure>
       </section>
@@ -148,7 +148,7 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>Where it differs from prior art</h2>
         <p>
-          Content-addressed identity isn't new. Git did it in 2005, IPFS generalized it in 2015, Sigstore wrapped it in PKI. For their domains those tools are right. The gap UOR fills: <strong>identity that survives re-serialization</strong> — exactly what happens every time an agent parses, mutates, or forwards an object — <strong>without a signature layer to operate</strong>.
+          Content-addressed identity isn't new. Git did it in 2005, IPFS generalized it in 2015, Sigstore wrapped it in PKI. For their domains those tools are right. The gap UOR fills: <strong>identity that survives re-serialization</strong> (exactly what happens every time an agent parses, mutates, or forwards an object) <strong>without a signature layer to operate</strong>.
         </p>
         <figure className="not-prose my-6 overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full text-sm">
@@ -170,26 +170,26 @@ const BlogCanonicalRustCrate = () => {
               <tr>
                 <td className="px-4 py-3"><a href="https://git-scm.com/book/en/v2/Git-Internals-Git-Objects" target="_blank" rel="noopener noreferrer">Git</a> · <a href="https://docs.ipfs.tech/concepts/content-addressing/" target="_blank" rel="noopener noreferrer">IPFS / CIDs</a> · <a href="https://www.sigstore.dev/" target="_blank" rel="noopener noreferrer">Sigstore</a></td>
                 <td className="px-4 py-3">specific byte encoding</td>
-                <td className="px-4 py-3 text-muted-foreground">no — bytes change, hash changes</td>
+                <td className="px-4 py-3 text-muted-foreground">no, bytes change, hash changes</td>
                 <td className="px-4 py-3 text-muted-foreground">Sigstore: yes</td>
               </tr>
               <tr>
                 <td className="px-4 py-3"><a href="https://www.w3.org/TR/rdf-canon/" target="_blank" rel="noopener noreferrer">JSON-LD + URDNA2015</a></td>
                 <td className="px-4 py-3">canonical RDF graph</td>
                 <td className="px-4 py-3 text-foreground">yes (RDF only)</td>
-                <td className="px-4 py-3 text-muted-foreground">yes — for signatures</td>
+                <td className="px-4 py-3 text-muted-foreground">yes, for signatures</td>
               </tr>
               <tr>
                 <td className="px-4 py-3"><a href="https://www.rfc-editor.org/rfc/rfc8785" target="_blank" rel="noopener noreferrer">JCS (RFC 8785)</a></td>
                 <td className="px-4 py-3">canonical JSON bytes</td>
                 <td className="px-4 py-3 text-muted-foreground">guarantee ends at first deserialize</td>
-                <td className="px-4 py-3 text-muted-foreground">yes — for signatures</td>
+                <td className="px-4 py-3 text-muted-foreground">yes, for signatures</td>
               </tr>
               <tr>
                 <td className="px-4 py-3"><a href="https://github.com/modelcontextprotocol/specification/discussions/195" target="_blank" rel="noopener noreferrer">SEP-2395 (MCP signing)</a></td>
                 <td className="px-4 py-3">message + signature</td>
-                <td className="px-4 py-3 text-muted-foreground">closed Mar 2026 — operational cost</td>
-                <td className="px-4 py-3 text-muted-foreground">yes — across every hop</td>
+                <td className="px-4 py-3 text-muted-foreground">closed Mar 2026, operational cost</td>
+                <td className="px-4 py-3 text-muted-foreground">yes, across every hop</td>
               </tr>
               <tr>
                 <td className="px-4 py-3"><a href="https://www.w3.org/TR/SRI/" target="_blank" rel="noopener noreferrer">W3C SRI</a></td>
@@ -201,7 +201,7 @@ const BlogCanonicalRustCrate = () => {
           </table>
         </figure>
         <p>
-          Closest cousin: <strong>W3C SRI</strong> — re-derive on arrival, refuse on mismatch. UOR is the same pattern lifted from byte streams to structured objects. Two agents can adopt it without coordinating with anyone else.
+          Closest cousin: <strong>W3C SRI</strong>. Re-derive on arrival, refuse on mismatch. UOR is the same pattern lifted from byte streams to structured objects. Two agents can adopt it without coordinating with anyone else.
         </p>
       </section>
 
