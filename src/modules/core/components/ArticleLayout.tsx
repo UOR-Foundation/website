@@ -151,7 +151,7 @@ const ArticleLayout = ({
                   heroOverride
                 ) : (
                   <figure className="h-full flex flex-col">
-                    <div className="bg-muted/40 aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[420px] xl:min-h-[480px] 2xl:min-h-[520px] w-full overflow-hidden">
+                    <div className="bg-muted/40 aspect-[16/7] lg:aspect-auto lg:h-full lg:min-h-[210px] xl:min-h-[240px] 2xl:min-h-[260px] w-full overflow-hidden">
                       <img
                         src={heroImage}
                         alt={title}
@@ -170,13 +170,13 @@ const ArticleLayout = ({
 
               {/* Right panel */}
               <div
-                className="order-2 bg-card flex flex-col lg:min-h-[420px] xl:min-h-[480px] 2xl:min-h-[520px] animate-fade-in-up"
+                className="order-2 bg-card flex flex-col lg:min-h-[210px] xl:min-h-[240px] 2xl:min-h-[260px] animate-fade-in-up"
                 style={{ animationDelay: "0.04s", padding: "clamp(1.75rem, 3vw, 3.5rem) clamp(1.75rem, 3vw, 3.5rem)" }}
               >
-                {/* Vertically centered, TechCrunch-style stacked content */}
-                <div className="flex-1 flex flex-col justify-center max-w-[42ch]">
-                  <div className="flex items-start justify-between gap-6 mb-7">
-                    <span className="text-[12.5px] xl:text-[13.5px] uppercase tracking-[0.2em] font-semibold text-primary/70 font-body">
+                {/* Vertically centered, homepage-style stacked content */}
+                <div className="flex-1 flex flex-col justify-center max-w-[46ch]">
+                  <div className="flex items-start justify-between gap-6 mb-5">
+                    <span className="text-[13px] xl:text-[14px] uppercase tracking-[0.22em] font-semibold text-primary/80 font-body">
                       {kicker}
                     </span>
                     <ShareRow />
@@ -184,14 +184,14 @@ const ArticleLayout = ({
 
                   <h1
                     className="font-display font-bold uppercase text-foreground text-balance"
-                    style={{ fontSize: "clamp(1.9rem, 2.7vw, 3.6rem)", lineHeight: 1.08, letterSpacing: "0.05em" }}
+                    style={{ fontSize: "clamp(2.2rem, 3.4vw, 4.4rem)", lineHeight: 1.05, letterSpacing: "0.045em" }}
                   >
                     {title}
                   </h1>
 
-                  <div className="mt-7">
+                  <div className="mt-6">
                     <div className="rule-prime" />
-                    <div className="mt-5 text-sm xl:text-[15px] text-muted-foreground font-body">
+                    <div className="mt-4 text-[15px] xl:text-base text-muted-foreground font-body">
                       <span className="text-foreground font-semibold">{author}</span>
                       {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
                     </div>
