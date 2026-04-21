@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Check, ExternalLink } from "lucide-react";
+import { Copy, Check, ArrowUpRight } from "lucide-react";
 
 const MCP_URL = "https://mcp.uor.foundation/mcp";
 
@@ -58,13 +58,46 @@ const CodeBlock = ({ code, language }: { code: string; language?: string }) => {
   );
 };
 
-const InstallButton = ({ href, children }: { href: string; children: React.ReactNode }) => (
+const InstallButton = ({
+  href,
+  icon,
+  label,
+  client,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  client: string;
+}) => (
   <a
     href={href}
-    className="not-prose inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors no-underline"
+    className="not-prose group inline-flex items-stretch overflow-hidden rounded-xl border border-border bg-foreground text-background shadow-sm hover:shadow-md hover:-translate-y-px transition-all no-underline"
   >
-    {children}
+    <span className="flex items-center justify-center px-4 bg-background/10">
+      <span className="h-5 w-5 flex items-center justify-center">{icon}</span>
+    </span>
+    <span className="flex flex-col justify-center px-5 py-2.5 border-l border-background/10">
+      <span className="text-[10.5px] font-medium uppercase tracking-[0.18em] opacity-60 leading-none mb-1">
+        {label}
+      </span>
+      <span className="text-sm font-semibold leading-tight flex items-center gap-1.5">
+        {client}
+        <ArrowUpRight size={13} className="opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+      </span>
+    </span>
   </a>
+);
+
+// ── Brand glyphs (inline SVG, themed via currentColor) ──────────────────────
+const CursorIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden>
+    <path d="M3 2l9 20 2.6-8.4L23 11 3 2z" />
+  </svg>
+);
+const VSCodeIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden>
+    <path d="M17.5 2.5L9 11 4.5 7.5 2 9l4 3-4 3 2.5 1.5L9 13l8.5 8.5L22 19V5l-4.5-2.5zM17 8v8l-5-4 5-4z" />
+  </svg>
 );
 
 const McpInstallTabs = () => {
@@ -113,26 +146,15 @@ const McpInstallTabs = () => {
       <div className="text-[15.5px] leading-relaxed text-foreground/85 font-body">
         {active === "cursor" && (
           <div role="tabpanel" id="mcp-panel-cursor" aria-labelledby="mcp-tab-cursor" className="space-y-4">
-            <InstallButton href={CURSOR_DEEP_LINK}>
-              <img
-                src="https://cursor.com/deeplink/mcp-install-dark.svg"
-                alt="Install in Cursor"
-                className="h-5 w-auto"
-              />
-              Install in Cursor
-            </InstallButton>
+            <InstallButton
+              href={CURSOR_DEEP_LINK}
+              icon={<CursorIcon />}
+              label="Add to"
+              client="Cursor"
+            />
             <p>
-              To open Cursor and automatically add the UOR Passport MCP, click install. Alternatively, add the
-              following to your <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">~/.cursor/mcp.json</code> file. To learn more, see the{" "}
-              <a
-                href="https://docs.cursor.com/context/model-context-protocol"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                Cursor documentation
-              </a>
-              .
+              One click installs the UOR Passport MCP. Or add it to{" "}
+              <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">~/.cursor/mcp.json</code> manually:
             </p>
             <CodeBlock code={JSON_CONFIG} language="mcp.json" />
           </div>
@@ -140,18 +162,16 @@ const McpInstallTabs = () => {
 
         {active === "vscode" && (
           <div role="tabpanel" id="mcp-panel-vscode" aria-labelledby="mcp-tab-vscode" className="space-y-4">
-            <InstallButton href={VSCODE_DEEP_LINK}>
-              <img
-                src="https://img.shields.io/badge/VS_Code-Install_MCP_Server-0098FF?style=for-the-badge&logo=visualstudiocode&logoColor=white"
-                alt="Install in VS Code"
-                className="h-7 w-auto"
-              />
-            </InstallButton>
+            <InstallButton
+              href={VSCODE_DEEP_LINK}
+              icon={<VSCodeIcon />}
+              label="Add to"
+              client="VS Code"
+            />
             <p>
-              Click install to open VS Code and add the server automatically. Or run{" "}
-              <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">MCP: Add Server</code> from the
-              command palette (<code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">Ctrl/⌘+Shift+P</code>),
-              choose HTTP, and paste the URL below.
+              Or run <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">MCP: Add Server</code> from the
+              command palette (<code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">⌘⇧P</code>),
+              choose HTTP, and paste:
             </p>
             <CodeBlock code={MCP_URL} language="server url" />
           </div>
@@ -251,26 +271,10 @@ const McpInstallTabs = () => {
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-2 font-body">
           Verify it works
         </p>
-        <p className="text-[15.5px] text-foreground font-body leading-relaxed mb-3">
-          Ask your agent:
-        </p>
-        <CodeBlock code={VERIFY_PROMPT} language="prompt" />
+        <CodeBlock code={VERIFY_PROMPT} language="ask your agent" />
         <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">
-          The response will contain <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.passport</code> — a permanent 256-bit SHA-256 fingerprint of the
-          canonicalized response — and{" "}
-          <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.mcps.receipt</code>, an Ed25519 signature of that fingerprint that verifies locally with only
-          its embedded public key. <strong>No PKI, no registry, no third party.</strong>
-        </p>
-        <p className="text-[14px] text-muted-foreground font-body mt-3">
-          Source and reproducer scripts:{" "}
-          <a
-            href="https://github.com/humuhumu33/uor-passport"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline inline-flex items-center gap-1"
-          >
-            github.com/humuhumu33/uor-passport <ExternalLink size={12} />
-          </a>
+          The response carries <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.passport</code> — a 256-bit SHA-256 fingerprint of the canonicalized response — and{" "}
+          <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.mcps.receipt</code>, an Ed25519 signature that verifies locally with its embedded public key. <strong>No PKI, no registry, no third party.</strong>
         </p>
       </div>
     </div>
