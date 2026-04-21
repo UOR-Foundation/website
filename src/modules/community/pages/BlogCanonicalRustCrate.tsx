@@ -42,7 +42,10 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>What it is</h2>
         <p>
-          A 256-bit fingerprint for any structured object — one that depends on the object's <em>meaning</em>, not its byte encoding. Open standard, Rust reference implementation (<a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>), drop-in under MCP, A2A, or any transport that carries typed payloads between agents.
+          Every digital object gets its own permanent, content-addressed, self-verifying identity — a universal data passport that travels with the object itself.
+        </p>
+        <p>
+          Open standard, Rust reference implementation (<a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>), drop-in under MCP, A2A, or any transport carrying typed payloads between agents.
         </p>
       </section>
 
