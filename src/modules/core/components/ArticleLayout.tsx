@@ -1,4 +1,4 @@
-import { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/modules/core/components/Layout";
 import { ArrowLeft, ArrowRight, Facebook, Linkedin, Link2, Mail, Twitter } from "lucide-react";
@@ -99,11 +99,24 @@ const ArticleLayout = ({
     </div>
   );
 
+  const [railVisible, setRailVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setRailVisible(window.scrollY > 480);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   // TechCrunch-style vertical floating share rail (left edge, sticky)
   const FloatingShareRail = () => (
     <aside
       aria-label="Share this article"
-      className="hidden lg:flex fixed left-4 xl:left-6 top-1/2 -translate-y-1/2 z-40 flex-col items-center gap-1 p-2 rounded-full bg-card/85 backdrop-blur border border-border/60 shadow-sm"
+      aria-hidden={!railVisible}
+      className={`hidden lg:flex fixed left-4 xl:left-6 top-1/2 z-40 flex-col items-center gap-1 p-2 rounded-full bg-card/85 backdrop-blur border border-border/60 shadow-sm transition-all duration-500 ease-out ${
+        railVisible
+          ? "opacity-100 -translate-y-1/2 pointer-events-auto"
+          : "opacity-0 -translate-y-[40%] pointer-events-none"
+      }`}
     >
       <a aria-label="Share on Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
         <Facebook size={15} />
