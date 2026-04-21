@@ -41,49 +41,40 @@ const BlogCanonicalRustCrate = () => {
       related={related}
     >
       <section>
-        <h2>What UOR Identity is</h2>
+        <h2>What it is</h2>
         <p>
-          UOR (Universal Object Reference) is an open standard, with a Rust reference implementation as <code>uor-foundation</code>, that gives a typed structured object a content-derived 256-bit address — one that survives the transformations those objects actually undergo between agents.
+          UOR is an open standard, with a Rust reference implementation <code>uor-foundation</code>, that gives any structured object a 256-bit content-derived address.
         </p>
         <p>
-          It is designed to sit underneath MCP, A2A, and any other transport that carries structured data between autonomous systems.
+          It's designed to sit underneath MCP, A2A, and any transport carrying typed objects between agents.
         </p>
       </section>
 
       <section>
-        <h2>The gap it fills</h2>
+        <h2>Why it exists</h2>
         <p>
-          MCP and A2A specify how agents talk. Neither specifies how a receiver can prove the object it received is the one the sender produced.
+          MCP and A2A specify how agents talk. Neither lets the receiver prove the object it got is the one the sender produced.
         </p>
         <p>
-          In practice, objects cross JSON libraries in two or three languages, middleware that reorders keys, queues that re-encode numbers, and checkpoint files that round-trip through different serializers. Byte-level integrity schemes — JCS (RFC 8785) and the closed MCP proposal SEP-2395 — break here: a single legitimate re-serialization invalidates the fingerprint even when the object is semantically unchanged.
-        </p>
-        <p>
-          The pattern is visible across every major agent framework: LangGraph #7066, #7272, #7417; AutoGen #7220, #7403; CrewAI #5544.
-        </p>
-        <p>
-          The byte-addressable world (Git, IPFS, Sigstore, JSON-LD with URDNA2015) solved this for files, immutable blocks, and signed documents. None of those tools were built for live typed objects moving between runtimes.
+          Byte-level schemes like JCS (RFC 8785) break the moment a JSON library re-orders keys or re-encodes a number — the issue tracked across LangGraph, AutoGen, and CrewAI today.
         </p>
       </section>
 
       <section>
         <h2>How it works</h2>
         <p>
-          UOR canonicalizes an object at the algebraic-structure level, then hashes the canonical form. The canonicalization is a total, deterministic reduction over ℤ/256ℤ, formally verified in Lean 4. Its central correctness lemma — the two's-complement identity <code>neg(bnot(x)) = succ(x)</code> — eliminates a signedness branch and keeps the reduction arithmetic uniform.
+          Reduce the object to a canonical structural form, then hash it. The reduction is a deterministic operation over ℤ/256ℤ, formally verified in Lean 4 (its central lemma is the two's-complement identity <code>neg(bnot(x)) = succ(x)</code>).
         </p>
         <p>
-          The canonical form is unique up to semantic equivalence. Reorder the keys, swap integer encodings, round-trip through three JSON libraries — the canonical form, and therefore the fingerprint, is unchanged. This is the property byte-level canonicalization cannot provide.
+          Reorder keys, swap encodings, round-trip through three serializers — the canonical form, and the fingerprint, don't change. Collision resistance comes from SHA-256, exactly as in Git or IPFS.
         </p>
         <pre>{`object → canonical form (ℤ/256ℤ reduction) → SHA-256 → 256-bit fingerprint`}</pre>
-        <p>
-          The fingerprint is produced by a pluggable cryptographic hash (default SHA-256). Collision resistance comes from the hash, exactly as in Git, IPFS, and Sigstore. What UOR contributes is the input: a structural canonical form rather than a byte serialization.
-        </p>
       </section>
 
       <section>
         <h2>Architecture</h2>
         <p>
-          One pipeline runs on both ends. The sender derives a fingerprint from the object; the receiver re-derives it from whatever bytes arrived and compares. No third party sits between them.
+          One pipeline, two ends. The sender derives a fingerprint; the receiver re-derives it from whatever arrives and compares.
         </p>
         <figure className="not-prose my-8 rounded-xl border border-border bg-card p-6 md:p-8">
           <svg
