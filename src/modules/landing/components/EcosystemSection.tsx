@@ -17,24 +17,24 @@ const pipelineSteps: { level: MaturityLevel; description: string; count: number 
 
 const EcosystemSection = () => {
   return (
-    <section className="py-14 md:py-20 bg-section-dark section-depth">
+    <section className="py-20 md:py-28 bg-section-dark section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         {/* Featured Projects */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-golden-lg gap-golden-sm">
           <div>
-            <h2 className="font-display font-bold text-foreground text-[clamp(2.25rem,4.6vw,4.5rem)] leading-[0.98] tracking-[-0.02em]">
+            <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-sm">
+              Ecosystem
+            </p>
+            <h2 className="font-display font-bold text-foreground text-fluid-heading">
               Built in the open.
             </h2>
-            <p className="mt-golden-sm max-w-[60ch] font-body text-fluid-lead leading-[1.75] text-foreground/65">
-              Open standards, reference implementations, and tools — built in public.
-            </p>
           </div>
           <Link
             to="/projects"
             className="group flex items-center gap-2 text-foreground/60 hover:text-foreground font-semibold uppercase tracking-[0.15em] transition-all duration-300 font-body text-fluid-label"
           >
             View all projects
-            <ArrowRight size={14} strokeWidth={2} className="transition-transform duration-300 group-hover:translate-x-1" />
+            <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </div>
 

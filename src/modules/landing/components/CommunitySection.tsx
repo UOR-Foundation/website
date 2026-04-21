@@ -72,15 +72,15 @@ const CommunitySection = () => {
   };
 
   return (
-    <section className="py-14 md:py-20 bg-white md:bg-section-dark md:section-depth">
+    <section className="py-20 md:py-28 bg-white md:bg-section-dark md:section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="mb-golden-lg">
-          <h2 className="font-display font-bold text-black md:text-foreground text-[clamp(2.25rem,4.6vw,4.5rem)] leading-[0.98] tracking-[-0.02em]">
+          <p className="font-body font-semibold tracking-[0.2em] uppercase text-amber-700 md:text-primary/70 text-fluid-lead mb-golden-sm">
+            Community
+          </p>
+          <h2 className="font-display font-bold text-black md:text-foreground text-fluid-heading">
             Built by many.
           </h2>
-          <p className="mt-golden-sm max-w-[60ch] font-body text-fluid-lead leading-[1.75] text-black/70 md:text-foreground/65">
-            Researchers, engineers, and builders advancing universal data identity.
-          </p>
         </div>
         <div className="animate-fade-in-up opacity-0" style={{ animationDelay: "0.19s" }}>
 

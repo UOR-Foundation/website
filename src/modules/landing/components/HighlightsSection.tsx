@@ -12,15 +12,15 @@ const imageMap: Record<string, string> = {
 
 const HighlightsSection = () => {
   return (
-    <section className="py-14 md:py-20 bg-background">
+    <section className="py-20 md:py-28 bg-background">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="mb-golden-lg">
-          <h2 className="font-display font-bold text-foreground text-[clamp(2.25rem,4.6vw,4.5rem)] leading-[0.98] tracking-[-0.02em]">
+          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-sm">
+            Highlights
+          </p>
+          <h2 className="font-display font-bold text-foreground text-fluid-heading">
             Proof, not promises.
           </h2>
-          <p className="mt-golden-sm max-w-[60ch] font-body text-fluid-lead leading-[1.75] text-foreground/65">
-            What we've shipped, written, and proven.
-          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0">
@@ -51,7 +51,7 @@ const HighlightsSection = () => {
                   {item.date}
                 </p>
                 <span className="inline-flex items-center gap-1.5 mt-golden-sm font-semibold uppercase tracking-[0.15em] text-foreground/60 font-body group-hover:text-foreground group-hover:gap-2.5 transition-all duration-300 text-fluid-label">
-                  Read <ArrowRight size={14} strokeWidth={2} />
+                  Read <ArrowRight size={14} />
                 </span>
               </div>
             </a>
