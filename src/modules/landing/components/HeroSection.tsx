@@ -1,5 +1,6 @@
 import GalaxyAnimation from "@/modules/landing/components/GalaxyAnimation";
 import PrimeGrid from "@/modules/landing/components/PrimeGrid";
+import PhysicalTitle from "@/modules/landing/components/PhysicalTitle";
 import { ArrowRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -26,15 +27,12 @@ const HeroSection = () => {
         {/* Spacer orb → text — same flex as top for balance */}
         <div className="flex-[0.9] min-h-[1rem]" />
 
-        <h1
-          className="font-display font-bold leading-[1.08] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2 inline-block shrink-0"
-          style={{ animationDelay: "0.29s" }}
-        >
-           <span className="text-[clamp(1.8rem,7.5vw,2.75rem)] block">Make Data Identity</span>
-           <span className="text-[clamp(2.2rem,9vw,3.5rem)] flex justify-between w-full mt-0.5" aria-label="Universal">
-             {'UNIVERSAL'.split('').map((char, i) => <span key={i} aria-hidden="true">{char}</span>)}
-           </span>
-        </h1>
+        <PhysicalTitle
+          wrapperClass="font-display font-bold leading-[1.08] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2 inline-block shrink-0"
+          lineOneClass="text-[clamp(1.8rem,7.5vw,2.75rem)] block"
+          lineTwoClass="text-[clamp(2.2rem,9vw,3.5rem)] flex justify-between w-full mt-0.5"
+          delay="0.29s"
+        />
 
         <div
           className="mt-[clamp(2.5rem,6vw,3.5rem)] flex flex-col items-center gap-3 animate-fade-in-up opacity-0 shrink-0"
