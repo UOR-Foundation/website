@@ -1,10 +1,11 @@
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { ExternalLink, ChevronRight, Send, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { ExternalLink, Send, CheckCircle2, Search } from "lucide-react";
+import { useMemo, useState } from "react";
 import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
 import { supabase } from "@/integrations/supabase/client";
+import ProjectCard from "@/modules/projects/components/ProjectCard";
 
 const maturityColors: Record<MaturityLevel, string> = {
   Graduated: "bg-primary/15 text-primary border-primary/20",
@@ -35,6 +36,27 @@ const Projects = () => {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string>("All");
+
+  const categories = useMemo(
+    () => ["All", ...Array.from(new Set(projectsData.map((p) => p.category)))],
+    [],
+  );
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return projectsData.filter((p) => {
+      const matchesCategory = activeCategory === "All" || p.category === activeCategory;
+      if (!matchesCategory) return false;
+      if (!q) return true;
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q)
+      );
+    });
+  }, [query, activeCategory]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,36 +142,56 @@ const Projects = () => {
             All Projects
           </p>
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">Browse the Catalog</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projectsData.map((project, index) => (
-              <Link
-                key={project.slug}
-                to={`/projects/${project.slug}`}
-                className="group rounded-2xl border border-border bg-card p-5 hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up opacity-0 flex flex-col"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-fluid-label font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary font-body truncate">{project.category}</span>
-                  <span className={`text-fluid-label font-medium px-2 py-0.5 rounded-full border font-body shrink-0 ${maturityColors[project.maturity]}`}>{project.maturity}</span>
-                </div>
-                <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{project.name}</h3>
-                <p className="text-foreground/65 font-body text-fluid-body leading-relaxed flex-1">{project.description}</p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="flex items-center gap-1 text-primary text-fluid-label font-medium font-body group-hover:gap-2 transition-all">
-                    Learn more <ChevronRight size={14} />
-                  </span>
-                  {project.url && (
-                    <span
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(project.url, "_blank"); }}
-                      className="text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      <ExternalLink size={14} />
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
+          {/* Toolbar: search + category chips + result count */}
+          <div className="mb-6 flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search projects…"
+                  className="w-full h-11 pl-10 pr-4 rounded-full border border-border bg-card text-foreground placeholder:text-muted-foreground/60 font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all"
+                />
+              </div>
+              <p className="text-sm text-muted-foreground font-body md:ml-auto">
+                {filtered.length} {filtered.length === 1 ? "project" : "projects"}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold uppercase tracking-[0.12em] font-body border transition-colors ${
+                    activeCategory === cat
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-foreground/70 border-border hover:border-primary/30 hover:text-foreground"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {filtered.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-card/50 px-6 py-16 text-center">
+              <p className="text-foreground/70 font-body">No projects match your search.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+              {filtered.map((project, index) => (
+                <ProjectCard
+                  key={project.slug}
+                  project={project}
+                  className="animate-fade-in-up opacity-0"
+                  style={{ animationDelay: `${index * 0.04}s`, animationFillMode: "forwards" }}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

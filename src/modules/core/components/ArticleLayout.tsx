@@ -28,6 +28,9 @@ export interface ArticleLayoutProps {
   hideHero?: boolean;
   /** Optional content rendered above hero, e.g. a YouTube embed */
   heroOverride?: ReactNode;
+  /** Optional override for the entire header block (meta + headline + deck + hero).
+   *  When provided, the default header is hidden and this node is rendered instead. */
+  headerOverride?: ReactNode;
   /** Back-link config */
   backHref?: string;
   backLabel?: string;
@@ -83,6 +86,7 @@ const ArticleLayout = ({
   heroCaption,
   hideHero,
   heroOverride,
+  headerOverride,
   backHref = "/",
   backLabel = "Back",
   sourceUrl,
@@ -100,7 +104,35 @@ const ArticleLayout = ({
   return (
     <Layout>
       <article className="pt-32 md:pt-40 pb-20 md:pb-28 bg-background">
-        {/* Header: meta + headline + deck. Centered single-column */}
+        {headerOverride ? (
+          <header className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+            <div className="mx-auto max-w-[880px]">
+              <Link
+                to={backHref}
+                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-body mb-8"
+              >
+                <ArrowLeft size={14} />
+                {backLabel}
+              </Link>
+              {headerOverride}
+              <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-muted-foreground font-body">
+                {date && (
+                  <>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Calendar size={12} />
+                      {date}
+                    </span>
+                    <span aria-hidden className="text-muted-foreground/50">·</span>
+                  </>
+                )}
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock size={12} />
+                  {computedReadTime}
+                </span>
+              </div>
+            </div>
+          </header>
+        ) : (
         <header className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <div className="mx-auto max-w-[720px]">
             <Link
@@ -149,9 +181,10 @@ const ArticleLayout = ({
             )}
           </div>
         </header>
+        )}
 
         {/* Hero image — slightly wider than text column */}
-        {!hideHero && (heroOverride || heroImage) && (
+        {!headerOverride && !hideHero && (heroOverride || heroImage) && (
           <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mt-10 md:mt-14">
             <div
               className="mx-auto animate-fade-in-up"
