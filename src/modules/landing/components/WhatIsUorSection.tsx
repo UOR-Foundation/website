@@ -10,11 +10,14 @@ const UorDiagramCompact = () => (
 
     <div className="mt-[clamp(1.75rem,2.4vw,2.75rem)] flex flex-col items-center gap-8 md:grid md:grid-cols-[minmax(0,1fr)_minmax(9.75rem,0.618fr)_minmax(0,1fr)] md:items-center md:gap-[clamp(1.25rem,2vw,2.5rem)]">
       <div className="flex w-full max-w-[19rem] flex-col items-center md:justify-self-start">
-        <div className="grid w-full grid-cols-3 gap-[clamp(0.55rem,0.8vw,0.9rem)]">
+        {/* Container-query scope: font-size scales with the actual grid width,
+            so labels stay inside their boxes at any viewport or zoom level. */}
+        <div className="silo-grid grid w-full grid-cols-3 gap-[clamp(0.55rem,0.8vw,0.9rem)] [container-type:inline-size]">
           {silos.map((s) => (
             <div
               key={s}
-              className="flex min-h-[clamp(4rem,4.3vw,4.75rem)] items-center justify-center rounded-xl border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] px-2 text-center text-[clamp(0.95rem,0.35vw+0.82rem,1.08rem)] leading-[1.15] font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)]"
+              className="silo-cell flex aspect-[1/0.92] items-center justify-center rounded-xl border border-[hsl(var(--section-dark-foreground)/0.18)] bg-[hsl(var(--section-dark-foreground)/0.07)] px-[6cqi] py-[4cqi] text-center leading-[1.1] font-body font-medium text-[hsl(var(--section-dark-foreground)/0.9)] [text-wrap:balance] [hyphens:none] break-words"
+              style={{ fontSize: "clamp(0.72rem, 5.4cqi, 1.05rem)" }}
             >
               {s}
             </div>
