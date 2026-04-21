@@ -26,7 +26,7 @@ const EcosystemSection = () => {
               Projects
             </p>
             <h2 className="font-display font-bold text-foreground text-fluid-heading">
-              Open-source projects using UOR.
+              Projects built on UOR.
             </h2>
           </div>
           <Link
