@@ -53,7 +53,7 @@ function detectDeviceClass(): DeviceClass {
   if (isMobile) return "mobile";
 
   // Service worker / edge function context
-  if (typeof ServiceWorkerGlobalScope !== "undefined") return "edge";
+  if (typeof (globalThis as any).ServiceWorkerGlobalScope !== "undefined") return "edge";
 
   // Default to desktop-class browser
   return "desktop";
