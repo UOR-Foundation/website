@@ -1,10 +1,7 @@
 /**
  * Full project catalog and maturity model. serializable data for UOR certification.
  * Images are mapped at the component level by `imageKey`.
- * `spec` ties a project to one of the three canonical UOR specifications.
  */
-import type { SpecId } from "./canonical-sources";
-
 export type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 
 export interface ProjectData {
@@ -15,7 +12,6 @@ export interface ProjectData {
   maturity: MaturityLevel;
   url?: string;
   imageKey?: string;
-  spec?: SpecId;
 }
 
 export const projects: ProjectData[] = [
@@ -27,7 +23,6 @@ export const projects: ProjectData[] = [
     maturity: "Sandbox",
     url: "https://gethologram.ai/",
     imageKey: "hologram",
-    spec: "object",
   },
   {
     name: "Hologram SDK",
@@ -36,7 +31,6 @@ export const projects: ProjectData[] = [
     description: "The developer toolkit for building, shipping, and running applications on the Hologram platform. One identity, one build, every device.",
     maturity: "Sandbox",
     imageKey: "hologramSdk",
-    spec: "object",
   },
   {
     name: "Atlas Embeddings",
@@ -46,7 +40,6 @@ export const projects: ProjectData[] = [
     maturity: "Sandbox",
     url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
     imageKey: "atlas",
-    spec: "resolution",
   },
   {
     name: "Atomic Language Model",
@@ -56,7 +49,6 @@ export const projects: ProjectData[] = [
     maturity: "Sandbox",
     url: "https://github.com/dkypuros/atomic-lang-model",
     imageKey: "atomicLang",
-    spec: "object",
   },
   {
     name: "Prism",
@@ -66,7 +58,6 @@ export const projects: ProjectData[] = [
     maturity: "Sandbox",
     url: "https://github.com/UOR-Foundation/prism",
     imageKey: "prism",
-    spec: "identity",
   },
   {
     name: "UOR MCP",
@@ -76,7 +67,6 @@ export const projects: ProjectData[] = [
     maturity: "Sandbox",
     url: "https://github.com/UOR-Foundation/uor-mcp",
     imageKey: "uorMcp",
-    spec: "resolution",
   },
   {
     name: "UOR Name Service (UNS)",
@@ -85,7 +75,6 @@ export const projects: ProjectData[] = [
     description: "A complete network infrastructure platform where every resource is findable, verifiable, and protected. Trust is built into the address itself.",
     maturity: "Sandbox",
     imageKey: "uns",
-    spec: "resolution",
   },
   {
     name: "QR Cartridge",
@@ -94,7 +83,6 @@ export const projects: ProjectData[] = [
     description: "Turn any content into a scannable QR code that carries its own verified identity. One scan to load. No trust required.",
     maturity: "Sandbox",
     imageKey: "qrCartridge",
-    spec: "object",
   },
   {
     name: "UOR Identity",
@@ -103,7 +91,6 @@ export const projects: ProjectData[] = [
     description: "One permanent, private identity derived from who you are, not which service you signed up for. Works everywhere. Controlled entirely by you.",
     maturity: "Sandbox",
     imageKey: "uorIdentity",
-    spec: "identity",
   },
   {
     name: "UOR Privacy",
@@ -113,7 +100,6 @@ export const projects: ProjectData[] = [
     maturity: "Sandbox",
     url: "https://myterms.info/",
     imageKey: "uorPrivacy",
-    spec: "object",
   },
   {
     name: "UOR Certificate",
@@ -122,7 +108,6 @@ export const projects: ProjectData[] = [
     description: "A self-verifying receipt for any digital object. Proves authenticity through mathematics, not authorities. Anyone can verify, anywhere, with no special access required.",
     maturity: "Sandbox",
     imageKey: "uorCertificate",
-    spec: "resolution",
   },
 ];
 

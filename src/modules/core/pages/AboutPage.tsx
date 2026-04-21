@@ -4,8 +4,7 @@ import { useState } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { governanceBoard } from "@/data/governance";
 import { whatWeDoCards } from "@/data/about-cards";
-import { GITHUB_DOTGITHUB_URL, CRATE_URL, CRATE_DOCS_URL, GITHUB_FRAMEWORK_URL } from "@/data/external-links";
-import { CRATE_VERSION } from "@/data/canonical-sources";
+import { GITHUB_DOTGITHUB_URL } from "@/data/external-links";
 import DonatePopup from "@/modules/community/components/DonatePopup";
 
 const cardIconMap: Record<string, LucideIcon> = { BookOpen, Users, Rocket };
@@ -26,23 +25,8 @@ const About = () => {
             className="mt-10 text-foreground/70 font-body text-fluid-body leading-[1.7] max-w-4xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
-            UOR Foundation is an open governance project for creating open standards around data identity, packaging, and resolution. A 501(c)(3) nonprofit, we maintain three specifications and the canonical reference implementation that anchors them.
+            A 501(c)(3) nonprofit maintaining the UOR specification and the projects built on it.
           </p>
-          <div
-            className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-fluid-label font-body text-foreground/60 animate-fade-in-up opacity-0"
-            style={{ animationDelay: "0.2s" }}
-          >
-            <span className="font-mono text-foreground/70">uor-foundation v{CRATE_VERSION}</span>
-            <a href={CRATE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
-              crates.io <ExternalLink size={12} className="opacity-70" />
-            </a>
-            <a href={CRATE_DOCS_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
-              docs.rs <ExternalLink size={12} className="opacity-70" />
-            </a>
-            <a href={GITHUB_FRAMEWORK_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
-              UOR-Framework <ExternalLink size={12} className="opacity-70" />
-            </a>
-          </div>
           <div
             className="mt-8 flex flex-wrap gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.25s" }}

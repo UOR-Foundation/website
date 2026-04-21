@@ -6,8 +6,6 @@ import { generateCertificate, type UorCertificate } from "@/lib/uor-certificate"
 import { verifyCertificateFull, type FullVerificationResult } from "@/modules/certificate/verify";
 import { canonicalToTriword, formatTriword, triwordBreakdown } from "@/lib/uor-triword";
 import { featuredProjects } from "@/data/featured-projects";
-import { projectImageMap } from "@/modules/projects/components/ProjectCard";
-import { projects as projectsData } from "@/data/projects";
 import {
   Dialog,
   DialogContent,
@@ -281,6 +279,8 @@ const ProjectDetailLayout = ({
       kicker={category}
       title={name}
       deck={tagline}
+      heroImage={heroImage}
+      heroCaption={`${name} — ${category}`}
       backHref="/projects"
       backLabel="All Projects"
       sourceUrl={repoUrl}
@@ -288,55 +288,6 @@ const ProjectDetailLayout = ({
       related={related}
       relatedLabel="Related projects"
       afterBody={afterBody}
-      headerOverride={
-        <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8 animate-fade-in-up">
-          {/* Logo tile */}
-          <div className="shrink-0 w-36 h-36 md:w-[200px] md:h-[200px] rounded-2xl overflow-hidden border border-border bg-muted/30">
-            {(() => {
-              const imgKey = projectsData.find((p) => p.slug === slug)?.imageKey;
-              const img = imgKey ? projectImageMap[imgKey] : heroImage;
-              return img ? (
-                <img src={img} alt={name} className="w-full h-full object-cover" loading="eager" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5">
-                  <span className="font-display text-6xl font-bold text-primary/80">{name.charAt(0)}</span>
-                </div>
-              );
-            })()}
-          </div>
-          {/* Right: kicker, title, deck, CTAs */}
-          <div className="flex-1 min-w-0">
-            <p className="text-[12px] uppercase tracking-[0.18em] font-semibold text-primary font-body">
-              {category}
-            </p>
-            <h1
-              className="mt-3 font-display font-bold tracking-tight text-foreground text-balance"
-              style={{ fontSize: "clamp(2rem, 4.5vw, 3.25rem)", lineHeight: 1.08 }}
-            >
-              {name}
-            </h1>
-            <p className="mt-4 text-[1.25rem] text-muted-foreground font-body text-balance" style={{ lineHeight: 1.55 }}>
-              {tagline}
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a
-                href={repoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity font-body"
-              >
-                View Repository <ExternalLink size={13} />
-              </a>
-              <Link
-                to="/projects"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border text-foreground text-sm font-semibold hover:border-primary/40 transition-colors font-body"
-              >
-                All Projects
-              </Link>
-            </div>
-          </div>
-        </div>
-      }
     >
       {body}
     </ArticleLayout>

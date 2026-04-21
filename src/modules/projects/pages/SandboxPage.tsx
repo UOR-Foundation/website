@@ -7,15 +7,53 @@
 
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, Layers, Cpu, Code2, Globe } from "lucide-react";
-import { projects as allProjects, maturityInfo } from "@/data/projects";
-import ProjectCard from "@/modules/projects/components/ProjectCard";
+import { ArrowRight, ExternalLink, ChevronRight, Sparkles, Layers, Cpu, Code2, Globe } from "lucide-react";
+import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";
+
+import projectHologramImg from "@/assets/project-hologram.jpg";
+import projectAtlasImg from "@/assets/project-atlas.png";
+import projectAtomicLangImg from "@/assets/project-atomic-lang.jpg";
+import projectPrismImg from "@/assets/project-prism.png";
+import projectUorMcpImg from "@/assets/project-uor-mcp.jpg";
+import projectUnsImg from "@/assets/project-uns.jpg";
+import projectQrCartridgeImg from "@/assets/project-qr-cartridge.jpg";
+import projectHologramSdkImg from "@/assets/project-hologram-sdk.jpg";
+import projectUorIdentityImg from "@/assets/project-uor-identity.jpg";
+import projectUorPrivacyImg from "@/assets/project-uor-privacy.jpg";
+import projectUorCertificateImg from "@/assets/project-uor-certificate.jpg";
+
+const imageMap: Record<string, string> = {
+  hologram: projectHologramImg,
+  atlas: projectAtlasImg,
+  atomicLang: projectAtomicLangImg,
+  prism: projectPrismImg,
+  uorMcp: projectUorMcpImg,
+  uns: projectUnsImg,
+  qrCartridge: projectQrCartridgeImg,
+  hologramSdk: projectHologramSdkImg,
+  uorIdentity: projectUorIdentityImg,
+  uorPrivacy: projectUorPrivacyImg,
+  uorCertificate: projectUorCertificateImg,
+};
+
+type Project = ProjectData & { image?: string };
+
+const allProjects: Project[] = projectsData.map(p => ({
+  ...p,
+  image: p.imageKey ? imageMap[p.imageKey] : undefined,
+}));
 
 const categoryIcons: Record<string, typeof Sparkles> = {
   "Frontier Technology": Cpu,
   "Open Science": Sparkles,
   "Core Infrastructure": Layers,
   "Developer Tools": Code2,
+};
+
+const maturityBadge: Record<MaturityLevel, string> = {
+  Graduated: "bg-primary/15 text-primary border-primary/20",
+  Incubating: "bg-accent/15 text-accent border-accent/20",
+  Sandbox: "bg-muted text-muted-foreground border-border",
 };
 
 const SandboxPage = () => {
@@ -103,14 +141,59 @@ const SandboxPage = () => {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {categoryProjects.map((project, index) => (
-                    <ProjectCard
+                    <Link
                       key={project.slug}
-                      project={project}
-                      className="animate-fade-in-up opacity-0"
-                      style={{ animationDelay: `${(catIdx * 0.08) + (index * 0.06)}s`, animationFillMode: "forwards" }}
-                    />
+                      to={`/projects/${project.slug}`}
+                      className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/20 hover:-translate-y-1 transition-all duration-300 animate-fade-in-up opacity-0 flex flex-col"
+                      style={{ animationDelay: `${(catIdx * 0.08) + (index * 0.06)}s` }}
+                    >
+                      {project.image && (
+                        <div className="w-full h-56 md:h-64 overflow-hidden relative">
+                          <img
+                            src={project.image}
+                            alt={project.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-card/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </div>
+                      )}
+                      <div className="p-7 md:p-9 flex flex-col flex-1">
+                        <div className="flex items-center justify-between gap-2 mb-4">
+                          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary font-body">
+                            {project.category}
+                          </span>
+                          <span className={`text-xs font-medium px-2.5 py-1 rounded-full border font-body ${maturityBadge[project.maturity]}`}>
+                            {project.maturity}
+                          </span>
+                        </div>
+                        <h3 className="font-display text-xl md:text-2xl font-semibold text-foreground mb-3 group-hover:text-primary transition-colors duration-200">
+                          {project.name}
+                        </h3>
+                        <p className="text-foreground/70 font-body text-base leading-relaxed flex-1">
+                          {project.description}
+                        </p>
+                        <div className="mt-6 flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-primary text-sm font-medium font-body group-hover:gap-2.5 transition-all duration-200">
+                            Explore <ChevronRight size={14} />
+                          </span>
+                          {project.url && (
+                            <span
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                window.open(project.url, "_blank");
+                              }}
+                              className="text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              <ExternalLink size={14} />
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
                   ))}
                 </div>
               </div>
