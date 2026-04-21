@@ -31,7 +31,6 @@ const BlogCanonicalRustCrate = () => {
       kicker="Standards"
       date="April 2, 2026"
       title="A universal data passport for your AI agent"
-      deck="An open standard with a Rust reference implementation that gives every structured object a stable, content-derived identity — one that survives the round-trips real agents put it through."
       heroImage={heroImage}
       heroCaption="An open standard for structured-object identity between agents."
       backHref="/research#blog"
