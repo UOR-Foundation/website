@@ -1,67 +1,71 @@
 
 
-## Align Blog Posts with Homepage Style + Normalize `/blog/*` URLs
+## Apply Aman-Inspired Editorial Refinement to Blog Posts
 
-Two coordinated changes: (1) restyle the article shell so titles, kickers, and section headers feel like they came from the homepage, and (2) move every blog page under `uor.foundation/blog/`.
+The current article layout is dense and busy — image and text fight for attention in a side-by-side hero, headlines are uppercase-bold-display, vertical rhythm is compressed. Aman's editorial pages succeed because of three disciplines: **one thing per row**, **whitespace as a material**, and **understated typography that whispers rather than shouts**.
 
-### Part 1 — Make blog posts feel like the homepage
+### What we'll change in `ArticleLayout.tsx`
 
-The homepage's signature treatment is unmistakable:
-- **Section eyebrows** in `font-body`, `font-semibold`, **uppercase**, `tracking-[0.2em]`, primary-tinted (`text-primary/70`).
-- **Display headlines** in `font-display`, **uppercase**, with wide letter-spacing (`tracking-[0.05em]–[0.06em]`) and the heroic "MAKE DATA IDENTITY / UNIVERSAL" feel.
-- **Prime-rule dividers** (`.rule-prime`) flanking each section.
-- **Lead paragraphs** at `text-fluid-lead` with relaxed `leading-[1.75]–[1.85]`.
-- Color story: deep midnight bg, gold-amber accents, soft `foreground/70` body text.
+**1. Hero — single column, image breathes alone**
+- Replace the 58/42 split with a **stacked composition** that mirrors Aman: kicker centered above, image full-width below it, title + meta below the image.
+- Keep the existing 50% height reduction — image becomes a **cinematic letterbox** at `aspect-[21/9]` capped to `max-h-[52vh]`.
+- Generous vertical air: `py-16 md:py-20` around the masthead block, never edge-to-edge against the next section.
+- Kicker becomes a tiny centered uppercase label (11–12px, tracking `0.32em`), the way Aman labels "WELLNESS" above its hero.
 
-Right now the article shell uses sentence-case h1 with tight tracking and a generic kicker — it reads like a different publication. I'll align it.
+**2. Title — quiet authority, not shouting**
+- Drop `uppercase` and `font-bold` on the H1. Use `font-display` (serif) at `clamp(2rem, 3.6vw, 4rem)`, weight `400`, line-height `1.1`, letter-spacing `0.01em`.
+- Center-aligned, max-width `clamp(680px, 60vw, 980px)` so it sits like a poem under the image.
+- Author/date becomes a single hairline-separated line below: `Author · Date` in 13px muted, centered.
 
-**Changes to `src/modules/core/components/ArticleLayout.tsx`:**
-- **Kicker (eyebrow):** swap to homepage-style — `font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-[12.5px] xl:text-[13.5px]`. Drop the dimmer `foreground/80` look.
-- **Headline:** match homepage display treatment — `font-display font-bold uppercase tracking-[0.05em] leading-[1.08]`, fluid `clamp(1.9rem, 2.7vw, 3.6rem)`. Keep the compact hero height we just set.
-- **Byline divider:** add a thin `.rule-prime` segment above the author line so the hero closes the same way homepage sections do.
-- **Deck (standfirst):** lift to `text-fluid-lead`, `text-foreground/70`, `leading-[1.75]`, with a subtle bottom margin separator.
-- **Related strip header:** restyle "Read next" to match homepage eyebrows (`text-primary/70 tracking-[0.2em]`), and bracket the related section with `.rule-prime` top/bottom for homepage rhythm.
-- **Source line:** keep, but use the same eyebrow style for the "Source:" label.
+**3. Body rhythm — Aman-grade breathing room**
+In `index.css` `.prose-article`:
+- Increase `section + section` gap to `clamp(3.5rem, 6vw, 5.5rem)` (currently ~2.25em). Each section becomes a chapter, not a paragraph.
+- Increase paragraph `line-height` to `1.75` (from 1.6) at desktop sizes.
+- Tighten the reading column: `max-width: clamp(620px, 58vw, 760px)` — Aman's measure is narrow on purpose. Replace the current `clamp(680px, 78vw, 1600px)` which sprawls too wide on large screens.
+- H2 stays large but loses the `uppercase` feel: regular weight serif, `clamp(1.6rem, 2vw, 2.2rem)`, with a small uppercase eyebrow `kicker` style above each H2 (a CSS pseudo-element won't work for arbitrary text — we'll just lighten the H2 itself).
+- Add a thin `1px` divider with 4rem of whitespace before each `<section>` instead of relying on margin alone. Subtle separator = chapter break.
 
-**Changes to `src/index.css` (`.prose-article` block):**
-- **`h2`**: switch to homepage section-heading vibe — `font-display`, `font-bold`, `uppercase`, `tracking-[0.04em]`, fluid sizes already in place. Add a short gold underline (1px × 40px, `hsl(var(--primary)/0.6)`) below each `h2` instead of the current top-border, mirroring how homepage section titles sit above content.
-- **`h3`**: `font-display`, weight 700, sentence case, slightly tighter tracking.
-- **First-of-type paragraph (lead)**: keep current sizes; bump weight to 500 and color to `foreground/85` so it reads like an IntroSection lead.
-- **Blockquote**: add a subtle gold left rule (`border-l-2 border-primary/50`) to echo the homepage's amber accents.
-- **Section spacing**: nudge `section + section` to feel closer to the homepage's `py-golden-md` rhythm.
+**4. Hero caption — Aman's italic credit line**
+- Move the "Image credits:" caption to a single italic line **centered below the image**, font-size 12px, color `muted-foreground/60`. Italic serif, no uppercase.
 
-Result: hero kicker, headline, body lead, section headings, and dividers all visually echo the IntroSection/HeroSection pattern — one publication, one voice.
+**5. Floating share rail — quieter**
+- Reduce ring opacity, soften background to `bg-background/60`, icons to 16px (currently 18px). Aman's chrome is whisper-quiet.
 
-### Part 2 — Consolidate blog URLs under `/blog/*`
+### Layout sketch
 
-Today three posts live at `/blog/*` but **one post is at `/universal-data-passport`** (the Canonical Rust Crate / Universal Data Passport post). I'll move it under `/blog/`.
+```text
+       ─── OPEN RESEARCH ───              ← centered kicker, 11px
 
-**Changes to `src/App.tsx`:**
-- Add new canonical route: `/blog/universal-data-passport` → `BlogCanonicalRustCrate`.
-- Convert existing `/universal-data-passport` to a `<Navigate>` redirect to `/blog/universal-data-passport` (preserves any inbound links / shares).
-- Existing `/blog/canonical-rust-crate` redirect now points to `/blog/universal-data-passport` (already does).
+   ┌────────────────────────────────┐
+   │                                │
+   │      [ cinematic 21:9 image ]  │     ← single full-width image
+   │                                │
+   └────────────────────────────────┘
+        Image credits: …            ← italic, centered
 
-**Changes to `src/data/route-table.ts`:**
-- Replace any `/universal-data-passport` entry with `/blog/universal-data-passport`.
+      What If Every Piece of Data
+      Had One Permanent Address?           ← serif, regular weight, centered
 
-**Changes to internal references:**
-- Search & update any `Link to="/universal-data-passport"` (e.g. ResearchPage, blog cards, related lists) to point at `/blog/universal-data-passport`.
+         UOR Foundation · Feb 19, 2026     ← single muted line
 
-**Final `/blog/*` URL set (all under `uor.foundation/blog/`):**
+   ─────────────── (5rem of air) ──────────
+
+              [ deck paragraph ]
+              [ TL;DR if present ]
+              [ section 1 ]
+                  …
+              ─────────────── (chapter break)
+              [ section 2 ]
 ```
-/blog/building-the-internets-knowledge-graph
-/blog/universal-mathematical-language
-/blog/uor-framework-launch
-/blog/universal-data-passport
-```
 
-### Files to change
-1. `src/modules/core/components/ArticleLayout.tsx` — restyle kicker, headline, deck, divider, related-strip header.
-2. `src/index.css` — update `.prose-article` h2/h3, blockquote, lead paragraph, section spacing.
-3. `src/App.tsx` — add `/blog/universal-data-passport`, redirect old slug.
-4. `src/data/route-table.ts` — update entry.
-5. Any component still linking to `/universal-data-passport` — repoint to `/blog/universal-data-passport`.
+### Files to modify
 
-### Verification
-Snapshot one blog post at 1920×1080 and 390×844 after changes, confirm the hero kicker, headline, and section H2s visually match homepage IntroSection/HeroSection treatments, and confirm `/universal-data-passport` redirects correctly.
+- `src/modules/core/components/ArticleLayout.tsx` — rebuild hero as stacked single-column; soften title typography; tighten share rail.
+- `src/index.css` — widen `section + section` gap; tighten reading column max-width; raise body line-height; soften H2.
+
+### Out of scope
+
+- No content changes inside individual blog posts (all 4 posts inherit automatically through `ArticleLayout`).
+- No color/palette changes — this is purely composition + rhythm.
+- Footer/related strip stays as-is; it already has decent breathing room.
 
