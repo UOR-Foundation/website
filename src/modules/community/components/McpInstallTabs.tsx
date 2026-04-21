@@ -142,7 +142,6 @@ const McpInstallTabs = () => {
             <InstallButton
               href={CURSOR_DEEP_LINK}
               icon={<CursorIcon />}
-              label="Add to"
               client="Cursor"
             />
             <p>
@@ -158,7 +157,6 @@ const McpInstallTabs = () => {
             <InstallButton
               href={VSCODE_DEEP_LINK}
               icon={<VSCodeIcon />}
-              label="Add to"
               client="VS Code"
             />
             <p>
