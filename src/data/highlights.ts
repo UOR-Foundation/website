@@ -10,7 +10,7 @@ export const highlights = [
     title: "uor-foundation v0.1.5 — Canonical Rust Crate",
     date: "April 2, 2026",
     imageKey: "frameworkLaunch",
-    href: "https://crates.io/crates/uor-foundation",
+    href: "/blog/canonical-rust-crate",
   },
   {
     tag: "Research" as TagType,
