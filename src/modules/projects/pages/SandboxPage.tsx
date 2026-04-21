@@ -7,53 +7,15 @@
 
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { ArrowRight, ExternalLink, ChevronRight, Sparkles, Layers, Cpu, Code2, Globe } from "lucide-react";
-import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";
-
-import projectHologramImg from "@/assets/project-hologram.jpg";
-import projectAtlasImg from "@/assets/project-atlas.png";
-import projectAtomicLangImg from "@/assets/project-atomic-lang.jpg";
-import projectPrismImg from "@/assets/project-prism.png";
-import projectUorMcpImg from "@/assets/project-uor-mcp.jpg";
-import projectUnsImg from "@/assets/project-uns.jpg";
-import projectQrCartridgeImg from "@/assets/project-qr-cartridge.jpg";
-import projectHologramSdkImg from "@/assets/project-hologram-sdk.jpg";
-import projectUorIdentityImg from "@/assets/project-uor-identity.jpg";
-import projectUorPrivacyImg from "@/assets/project-uor-privacy.jpg";
-import projectUorCertificateImg from "@/assets/project-uor-certificate.jpg";
-
-const imageMap: Record<string, string> = {
-  hologram: projectHologramImg,
-  atlas: projectAtlasImg,
-  atomicLang: projectAtomicLangImg,
-  prism: projectPrismImg,
-  uorMcp: projectUorMcpImg,
-  uns: projectUnsImg,
-  qrCartridge: projectQrCartridgeImg,
-  hologramSdk: projectHologramSdkImg,
-  uorIdentity: projectUorIdentityImg,
-  uorPrivacy: projectUorPrivacyImg,
-  uorCertificate: projectUorCertificateImg,
-};
-
-type Project = ProjectData & { image?: string };
-
-const allProjects: Project[] = projectsData.map(p => ({
-  ...p,
-  image: p.imageKey ? imageMap[p.imageKey] : undefined,
-}));
+import { ArrowRight, Sparkles, Layers, Cpu, Code2, Globe } from "lucide-react";
+import { projects as allProjects, maturityInfo } from "@/data/projects";
+import ProjectCard from "@/modules/projects/components/ProjectCard";
 
 const categoryIcons: Record<string, typeof Sparkles> = {
   "Frontier Technology": Cpu,
   "Open Science": Sparkles,
   "Core Infrastructure": Layers,
   "Developer Tools": Code2,
-};
-
-const maturityBadge: Record<MaturityLevel, string> = {
-  Graduated: "bg-primary/15 text-primary border-primary/20",
-  Incubating: "bg-accent/15 text-accent border-accent/20",
-  Sandbox: "bg-muted text-muted-foreground border-border",
 };
 
 const SandboxPage = () => {
