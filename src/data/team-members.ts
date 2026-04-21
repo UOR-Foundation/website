@@ -42,13 +42,6 @@ export const teamMembers = [
     link: "https://www.linkedin.com/in/billwright1/",
   },
   {
-    name: "Mateusz Tobola",
-    role: "PM @ Stealth AI Startup",
-    description: "AI strategy and product management.",
-    image: "/images/profiles/mateusz-tobola.jpg",
-    link: "https://www.linkedin.com/in/mateusztobola/",
-  },
-  {
     name: "Adam de Delva",
     role: "Founder @ DTR",
     description: "Distributed systems and protocol design.",
