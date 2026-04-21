@@ -203,25 +203,25 @@ const ArticleLayout = ({
           </div>
         </header>
 
-        {/* Body — narrow, Aman-grade reading column */}
+        {/* Body — golden-ratio reading column, wider on large screens */}
         <div className="px-4 sm:px-6 md:px-10 lg:px-14 xl:px-20 mt-12 md:mt-16 lg:mt-20">
-          <div className="mx-auto prose-article" style={{ maxWidth: "clamp(620px, 58vw, 760px)" }}>
+          <div className="mx-auto prose-article" style={{ maxWidth: "clamp(680px, 72vw, 1180px)" }}>
             {deck && <p>{deck}</p>}
             {children}
           </div>
 
           {afterBody && (
-            <div className="mx-auto mt-12" style={{ maxWidth: "clamp(620px, 58vw, 760px)" }}>
+            <div className="mx-auto mt-12" style={{ maxWidth: "clamp(680px, 72vw, 1180px)" }}>
               {afterBody}
             </div>
           )}
 
           {/* Footer: source + related strip */}
           {(sourceUrl || (related && related.length > 0)) && (
-            <footer className="mx-auto mt-20 md:mt-24" style={{ maxWidth: "clamp(680px, 82vw, 1280px)" }}>
+            <footer className="mx-auto mt-20 md:mt-24" style={{ maxWidth: "clamp(680px, 78vw, 1280px)" }}>
               <div className="rule-prime mb-10" />
               {sourceUrl && (
-                <p className="text-sm xl:text-base text-muted-foreground font-body mb-8" style={{ maxWidth: "clamp(620px, 58vw, 760px)" }}>
+                <p className="text-sm xl:text-base text-muted-foreground font-body mb-8" style={{ maxWidth: "clamp(680px, 72vw, 1180px)" }}>
                   <span className="uppercase tracking-[0.2em] font-semibold text-primary/70 text-[12.5px] xl:text-[13.5px] mr-2">Source:</span>
                   <a
                     href={sourceUrl}
