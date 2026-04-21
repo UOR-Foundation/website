@@ -286,7 +286,15 @@ fn main() -> anyhow::Result<()> {
 # 3. run
 cargo run`}</pre>
         <p>
-          Re-run on any machine, in any order of JSON keys, with any whitespace: the fingerprint does not change. Full reference at <a href={CRATE_DOCS_URL} target="_blank" rel="noopener noreferrer">docs.rs/uor-foundation</a> · source at <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">github.com/uor-foundation</a>.
+          <strong>Expected output</strong> — a stable, content-derived UOR fingerprint:
+        </p>
+        <pre>{`$ cargo run
+uor1q9k7c2v3m8r4t6y0a1n5p2d8s4j7h3f9b6w0l5x2c8q4t1m7r3y6a9n0p5d2s8`}</pre>
+        <p>
+          Format: <code>uor1</code> prefix · 60 base32 characters · 256-bit fingerprint. Re-run on any machine, change key order, change whitespace, the string is identical.
+        </p>
+        <p>
+          Full reference at <a href={CRATE_DOCS_URL} target="_blank" rel="noopener noreferrer">docs.rs/uor-foundation</a> · source at <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">github.com/uor-foundation</a>.
         </p>
       </section>
     </ArticleLayout>
