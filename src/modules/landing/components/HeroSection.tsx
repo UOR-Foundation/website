@@ -59,6 +59,7 @@ const HeroSection = () => {
           style={{ animationDelay: "0.65s" }}
         >
           {[
+            { value: "1", label: "Standard" },
             { value: "11", label: "Projects" },
             { value: "150+", label: "Contributors" },
             { value: "Open", label: "Governance" },
