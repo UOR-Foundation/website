@@ -8,13 +8,10 @@ const iconMap: Record<string, LucideIcon> = { Globe, Users, Rocket };
 
 const ClosingCTASection = () => {
   return (
-    <section className="py-12 md:py-16 bg-white md:bg-section-dark md:section-depth">
+    <section className="py-14 md:py-20 bg-white md:bg-section-dark md:section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="mb-golden-lg animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
-          <p className="font-body font-semibold tracking-[0.2em] uppercase text-amber-700 md:text-primary/70 text-fluid-lead mb-golden-sm">
-            Get Started
-          </p>
-          <h2 className="font-display font-bold text-black md:text-foreground text-fluid-heading">
+          <h2 className="font-display font-bold text-black md:text-foreground text-[clamp(2.25rem,4.6vw,4.5rem)] leading-[0.98] tracking-[-0.02em]">
             Make it universal.
           </h2>
         </div>
@@ -38,7 +35,7 @@ const ClosingCTASection = () => {
                 <div className="flex justify-start mt-golden-lg">
                   <span className="inline-flex items-center gap-2 font-semibold uppercase tracking-[0.15em] text-black/60 md:text-foreground/60 font-body group-hover:text-black md:group-hover:text-foreground transition-all duration-300 text-fluid-label">
                     {pillar.cta}
-                    <ArrowRight size={12} className="transition-transform duration-300 group-hover:translate-x-1" />
+                    <ArrowRight size={14} strokeWidth={2} className="transition-transform duration-300 group-hover:translate-x-1" />
                   </span>
                 </div>
               </Link>

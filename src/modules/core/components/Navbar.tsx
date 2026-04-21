@@ -79,6 +79,12 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
 
           {/* Right group: social icons + Contribute CTA (desktop) */}
           <div className="hidden md:flex items-center">
+            <Link
+              to="/research"
+              className="mr-3 inline-flex items-center font-mono text-[10px] tracking-[0.2em] uppercase text-foreground/55 hover:text-foreground border border-foreground/15 px-2.5 py-1 transition-colors duration-150"
+            >
+              [ Latest · v0.1.0 ]
+            </Link>
             <div className="flex items-center gap-1.5">
               <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="Discord">
                 <DiscordIcon className="w-[clamp(21px,1.5vw,28px)] h-[clamp(21px,1.5vw,28px)]" />
