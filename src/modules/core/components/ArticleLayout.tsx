@@ -153,6 +153,7 @@ const ArticleLayout = ({
 
   return (
     <Layout>
+      <FloatingShareRail />
       <article className="pt-24 md:pt-28 pb-16 md:pb-24 bg-background">
         {/* TechCrunch-style edge-to-edge masthead */}
         <header>
@@ -173,7 +174,7 @@ const ArticleLayout = ({
                       />
                     </div>
                     {heroCaption && (
-                      <figcaption className="px-6 md:px-8 lg:px-10 mt-3 mb-2 text-[11px] uppercase tracking-[0.18em] font-mono text-muted-foreground">
+                      <figcaption className="px-6 md:px-8 lg:px-10 mt-3 mb-2 text-[10.5px] uppercase tracking-[0.22em] font-mono text-muted-foreground/80">
                         Image credits: {heroCaption}
                       </figcaption>
                     )}
@@ -182,56 +183,46 @@ const ArticleLayout = ({
               </div>
 
               {/* Right panel */}
-              <div className="order-2 bg-card flex flex-col justify-between p-8 md:p-10 lg:p-14 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
-                <div className="flex items-start justify-between gap-6 mb-8">
-                  <div>
-                    <div className="w-8 h-px bg-primary mb-3" aria-hidden />
-                    <span className="text-[12px] uppercase tracking-[0.2em] font-semibold text-primary font-body">
-                      {kicker}
-                    </span>
-                  </div>
+              <div className="order-2 bg-card flex flex-col justify-between p-8 md:p-12 lg:p-16 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
+                <div className="flex items-start justify-between gap-6">
+                  <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-foreground/80 font-body">
+                    {kicker}
+                  </span>
                   <ShareRow />
                 </div>
 
                 <h1
-                  className="font-display font-bold tracking-tight text-foreground text-balance normal-case"
-                  style={{ fontSize: "clamp(2.25rem, 4.5vw, 3.75rem)", lineHeight: 1.05, letterSpacing: "-0.015em", textTransform: "none" }}
+                  className="font-display font-bold tracking-tight text-foreground text-balance normal-case my-10"
+                  style={{ fontSize: "clamp(2rem, 3.6vw, 3rem)", lineHeight: 1.08, letterSpacing: "-0.018em", textTransform: "none" }}
                 >
                   {title}
                 </h1>
 
-                <div className="mt-8 pt-6 border-t border-border/60 text-sm text-muted-foreground font-body">
-                  <span className="text-foreground font-medium">{author}</span>
-                  {date && <> <span className="mx-2 text-muted-foreground/50">·</span> {date}</>}
-                  <span className="mx-2 text-muted-foreground/50">·</span>
-                  <span className="inline-flex items-center gap-1.5"><Clock size={12} /> {computedReadTime}</span>
+                <div className="text-sm text-muted-foreground font-body">
+                  <span className="text-foreground font-semibold">{author}</span>
+                  {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
                 </div>
               </div>
             </div>
           ) : (
             // No hero: solid panel only
-            <div className="bg-card px-6 md:px-10 lg:px-14 py-12 md:py-16">
+            <div className="bg-card px-6 md:px-10 lg:px-16 py-12 md:py-16">
               <div className="mx-auto max-w-[1180px]">
-                <div className="flex items-start justify-between gap-6 mb-8">
-                  <div>
-                    <div className="w-8 h-px bg-primary mb-3" aria-hidden />
-                    <span className="text-[12px] uppercase tracking-[0.2em] font-semibold text-primary font-body">
-                      {kicker}
-                    </span>
-                  </div>
+                <div className="flex items-start justify-between gap-6 mb-10">
+                  <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-foreground/80 font-body">
+                    {kicker}
+                  </span>
                   <ShareRow />
                 </div>
                 <h1
                   className="font-display font-bold tracking-tight text-foreground text-balance max-w-[900px] normal-case"
-                  style={{ fontSize: "clamp(2.25rem, 5vw, 3.75rem)", lineHeight: 1.05, letterSpacing: "-0.015em", textTransform: "none" }}
+                  style={{ fontSize: "clamp(2rem, 4vw, 3rem)", lineHeight: 1.08, letterSpacing: "-0.018em", textTransform: "none" }}
                 >
                   {title}
                 </h1>
-                <div className="mt-8 pt-6 border-t border-border/60 text-sm text-muted-foreground font-body">
-                  <span className="text-foreground font-medium">{author}</span>
-                  {date && <> <span className="mx-2 text-muted-foreground/50">·</span> {date}</>}
-                  <span className="mx-2 text-muted-foreground/50">·</span>
-                  <span className="inline-flex items-center gap-1.5"><Clock size={12} /> {computedReadTime}</span>
+                <div className="mt-10 text-sm text-muted-foreground font-body">
+                  <span className="text-foreground font-semibold">{author}</span>
+                  {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
                 </div>
               </div>
             </div>
