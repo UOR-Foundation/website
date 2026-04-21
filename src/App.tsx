@@ -114,8 +114,9 @@ const App = () => {
               <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
               <Route path="/blog/universal-mathematical-language" element={<BlogPost2 />} />
               <Route path="/blog/uor-framework-launch" element={<BlogPost3 />} />
-              <Route path="/universal-data-passport" element={<BlogCanonicalRustCrate />} />
-              <Route path="/blog/canonical-rust-crate" element={<Navigate to="/universal-data-passport" replace />} />
+              <Route path="/blog/universal-data-passport" element={<BlogCanonicalRustCrate />} />
+              <Route path="/universal-data-passport" element={<Navigate to="/blog/universal-data-passport" replace />} />
+              <Route path="/blog/canonical-rust-crate" element={<Navigate to="/blog/universal-data-passport" replace />} />
               <Route path="/research/atlas-embeddings" element={<ResearchPaperAtlasEmbeddings />} />
 
               {/* Project detail pages */}

@@ -1602,6 +1602,8 @@
 .prose-article > p:first-of-type {
   font-size: 18px;
   line-height: 1.55;
+  font-weight: 500;
+  color: hsl(var(--foreground) / 0.88);
   color: hsl(var(--foreground));
   font-weight: 500;
   margin-bottom: 1.2em;
@@ -1668,15 +1670,26 @@
 .prose-article h2 {
   font-family: var(--font-display, inherit);
   font-weight: 800;
-  letter-spacing: -0.01em;
-  text-transform: none;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   font-size: 1.625rem;
   line-height: 1.15;
   color: hsl(var(--foreground));
   margin-top: 3.25rem;
-  margin-bottom: 0.55em;
+  margin-bottom: 0.85em;
   padding-top: 0;
   border-top: 0;
+  position: relative;
+  padding-bottom: 0.65em;
+}
+.prose-article h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 40px;
+  height: 1px;
+  background: hsl(var(--primary) / 0.6);
 }
 .prose-article h2:first-child {
   margin-top: 0;
