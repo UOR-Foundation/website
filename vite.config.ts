@@ -16,10 +16,6 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
-    headers: {
-      "Cross-Origin-Opener-Policy": "same-origin",
-      "Cross-Origin-Embedder-Policy": "credentialless",
-    },
     proxy: {
       // First-party canonical mirror for the UOR REST API (dev only).
       // In production, callers go directly to the Supabase edge function;
