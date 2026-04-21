@@ -92,10 +92,11 @@ const HeroSection = () => {
         <div
           className="absolute right-0 top-1/2 -translate-y-1/2"
           style={{
-            // md: smaller orb so title has room; lg+: scales with viewport, capped on ultrawide
-            width: "clamp(380px, 52vw, 1100px)",
-            height: "clamp(380px, 52vw, 1100px)",
-            marginRight: "clamp(-4%, 1vw, 3%)",
+            // Fluid scaling: small on md (so title breathes), grows aggressively on lg/xl/2xl,
+            // capped on ultrawide. Uses min(vw, vh) to stay proportional to the shorter axis.
+            width: "clamp(380px, min(60vw, 78vh), 1400px)",
+            height: "clamp(380px, min(60vw, 78vh), 1400px)",
+            marginRight: "clamp(-6%, -1vw, 2%)",
           }}
         >
           <GalaxyAnimation />
@@ -105,7 +106,7 @@ const HeroSection = () => {
       <div className="hidden md:flex relative z-10 h-full flex-col px-[5%] lg:px-[6%] xl:px-[7%] pointer-events-none">
         <div className="basis-[34%] shrink-0" />
         {/* Title column: wider on md (orb is smaller), narrower on xl+ to leave breathing room */}
-        <div className="max-w-[64%] lg:max-w-[60%] xl:max-w-[56%] 2xl:max-w-[52%]">
+        <div className="max-w-[64%] lg:max-w-[58%] xl:max-w-[54%] 2xl:max-w-[50%]">
           <h1
             className="font-display font-bold leading-[1.04] tracking-[0.06em] uppercase text-foreground animate-fade-in-up opacity-0 inline-block"
             style={{ animationDelay: "0.29s" }}
