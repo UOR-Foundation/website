@@ -1,20 +1,10 @@
 import GalaxyAnimation from "@/modules/landing/components/GalaxyAnimation";
 import PrimeGrid from "@/modules/landing/components/PrimeGrid";
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useMemo } from "react";
 
-function useOSDownload() {
-  return useMemo(() => {
-    const ua = navigator.userAgent;
-    if (/Mac/i.test(ua)) return { os: "macOS", file: "UOR-Desktop-darwin-x64.zip" };
-    if (/Win/i.test(ua)) return { os: "Windows", file: "UOR-Desktop-win32-x64.zip" };
-    return { os: "Linux", file: "UOR-Desktop-linux-x64.tar.gz" };
-  }, []);
-}
 const HeroSection = () => {
   const isMobile = useIsMobile();
-  const { os, file } = useOSDownload();
   return (
     <section className="relative overflow-hidden h-[100svh] min-h-[600px]">
       {/* Living prime number field. desktop only */}
@@ -126,7 +116,7 @@ const HeroSection = () => {
             className="mt-[clamp(1rem,2vw,2.5rem)] text-fluid-lead text-foreground/60 max-w-[min(920px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
-            We build open standards that give every piece of data a permanent, verifiable address. Discoverable, provable, and trusted everywhere.
+            A permanent, verifiable address for every piece of data.
           </p>
           <div
             className="mt-[clamp(1.25rem,2.5vw,3rem)] flex flex-wrap gap-3 animate-fade-in-up opacity-0"
@@ -152,7 +142,6 @@ const HeroSection = () => {
           {[
             { value: "11", label: "Projects" },
             { value: "150+", label: "Contributors" },
-            { value: "12", label: "Research Areas" },
             { value: "Open", label: "Governance" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">

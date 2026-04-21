@@ -105,12 +105,15 @@ const UorDiagramCompact = () => (
 
 const WhatIsUorSection = () => {
   return (
-    <section id="intro" className="py-[clamp(3.5rem,10vw,5rem)] md:py-section-md bg-background scroll-mt-16">
+    <section id="intro" className="py-20 md:py-28 bg-background scroll-mt-16">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-        <div className="flex items-center gap-3 mb-golden-md">
-          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead">
+        <div className="mb-golden-md">
+          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-sm">
             What is UOR
           </p>
+          <h2 className="font-display font-bold text-foreground text-fluid-heading">
+            One address. Everywhere.
+          </h2>
         </div>
         <div className="rule-prime" />
 

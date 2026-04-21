@@ -17,16 +17,16 @@ const pipelineSteps: { level: MaturityLevel; description: string; count: number 
 
 const EcosystemSection = () => {
   return (
-    <section className="py-[clamp(3.5rem,10vw,5rem)] md:py-section-md bg-section-dark section-depth">
+    <section className="py-20 md:py-28 bg-section-dark section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         {/* Featured Projects */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-golden-lg gap-golden-sm">
           <div>
             <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-sm">
-              Our Projects
+              Ecosystem
             </p>
             <h2 className="font-display font-bold text-foreground text-fluid-heading">
-              Featured Projects
+              Built in the open.
             </h2>
           </div>
           <Link

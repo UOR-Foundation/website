@@ -6,5 +6,4 @@ export const navItems = [
   { label: "Community", href: "/community" },
   { label: "Projects", href: "/projects" },
   { label: "About", href: "/about" },
-  { label: "Contribute", href: "/projects#submit", isCta: true },
 ];

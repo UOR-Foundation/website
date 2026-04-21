@@ -12,12 +12,15 @@ const imageMap: Record<string, string> = {
 
 const HighlightsSection = () => {
   return (
-    <section className="py-[clamp(3.5rem,10vw,5rem)] md:py-section-md bg-background">
+    <section className="py-20 md:py-28 bg-background">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-        <div className="flex items-center gap-3 mb-golden-lg">
-          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead">
-            Community Highlights
+        <div className="mb-golden-lg">
+          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-sm">
+            Highlights
           </p>
+          <h2 className="font-display font-bold text-foreground text-fluid-heading">
+            Proof, not promises.
+          </h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0">
@@ -48,7 +51,7 @@ const HighlightsSection = () => {
                   {item.date}
                 </p>
                 <span className="inline-flex items-center gap-1.5 mt-golden-sm font-semibold uppercase tracking-[0.15em] text-foreground/60 font-body group-hover:text-foreground group-hover:gap-2.5 transition-all duration-300 text-fluid-label">
-                  Learn more <ArrowRight size={12} />
+                  Read <ArrowRight size={14} />
                 </span>
               </div>
             </a>

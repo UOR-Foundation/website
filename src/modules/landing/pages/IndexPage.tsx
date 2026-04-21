@@ -10,7 +10,6 @@ const Index = () => {
   const closingCTA = useCallback(() => import("@/modules/landing/components/ClosingCTASection"), []);
   const ecosystem = useCallback(() => import("@/modules/landing/components/EcosystemSection"), []);
   const highlights = useCallback(() => import("@/modules/landing/components/HighlightsSection"), []);
-  const readyToBuild = useCallback(() => import("@/modules/landing/components/ReadyToBuildCTA"), []);
 
   return (
     <Layout>
@@ -21,7 +20,6 @@ const Index = () => {
       <LazySection factory={closingCTA} />
       <LazySection factory={ecosystem} />
       <LazySection factory={highlights} />
-      <LazySection factory={readyToBuild} />
     </Layout>
   );
 };
