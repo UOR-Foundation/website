@@ -221,13 +221,13 @@ const Standard = () => {
       <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
-            Key Concepts
+            Deep Dive
           </p>
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-2">
             Framework Layers
           </h2>
           <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-golden-lg">
-            Six layers, each building on the one below. Together they handle naming, discovery, verification, and transformation.
+            Under the three specifications sit six composable layers. Together they handle naming, discovery, verification, and transformation — implemented in the canonical Rust crate.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {frameworkLayers.map((layer) => (
