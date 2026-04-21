@@ -56,9 +56,11 @@ function estimateReadTime(node: ReactNode): string {
       return;
     }
     if (Array.isArray(n)) { n.forEach(visit); return; }
-    if (typeof n === "object" && n && "props" in (n as Record<string, unknown>)) {
-      // @ts-expect-error - React element shape
-      visit(n.props?.children);
+    if (typeof n === "object" && n !== null) {
+      const maybeEl = n as unknown as { props?: { children?: ReactNode } };
+      if (maybeEl.props && "children" in maybeEl.props) {
+        visit(maybeEl.props.children);
+      }
     }
   };
   try { visit(node); } catch { /* ignore */ }

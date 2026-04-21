@@ -1578,3 +1578,94 @@
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: hsl(220 15% 30%);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Editorial article body — TechCrunch-style rhythm
+   Used by ArticleLayout for both project pages and blog posts.
+   ═══════════════════════════════════════════════════════════════════════ */
+.prose-article {
+  color: hsl(var(--foreground));
+  font-family: var(--font-body, inherit);
+}
+.prose-article > * + * { margin-top: 1.25em; }
+.prose-article p,
+.prose-article li {
+  font-size: 19px;
+  line-height: 1.75;
+  color: hsl(var(--muted-foreground));
+}
+.prose-article p strong,
+.prose-article li strong { color: hsl(var(--foreground)); font-weight: 600; }
+.prose-article a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+  border-bottom: 1px solid hsl(var(--primary) / 0.35);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.prose-article a:hover {
+  color: hsl(var(--primary));
+  border-bottom-color: hsl(var(--primary));
+}
+.prose-article h2 {
+  font-family: var(--font-display, inherit);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-size: 1.875rem;
+  line-height: 1.2;
+  color: hsl(var(--foreground));
+  margin-top: 2.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid hsl(var(--border) / 0.6);
+}
+.prose-article h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.prose-article h3 {
+  font-family: var(--font-display, inherit);
+  font-weight: 600;
+  font-size: 1.375rem;
+  line-height: 1.3;
+  color: hsl(var(--foreground));
+  margin-top: 2rem;
+}
+.prose-article ul,
+.prose-article ol { padding-left: 0; list-style: none; }
+.prose-article ul > li,
+.prose-article ol > li { margin-top: 0.75em; }
+.prose-article blockquote {
+  margin: 1.75em 0;
+  padding: 0.25em 0 0.25em 1.25em;
+  border-left: 3px solid hsl(var(--primary) / 0.5);
+  font-style: italic;
+  color: hsl(var(--foreground) / 0.85);
+  font-size: 1.25rem;
+  line-height: 1.55;
+}
+.prose-article pre {
+  background: hsl(var(--muted) / 0.4);
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+.prose-article code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.95em;
+}
+.prose-article hr {
+  border: 0;
+  border-top: 1px solid hsl(var(--border) / 0.6);
+  margin: 2.5rem 0;
+}
+.prose-article figure { margin: 1.75em 0; }
+.prose-article figcaption {
+  text-align: center;
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+  margin-top: 0.75rem;
+}
