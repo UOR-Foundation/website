@@ -1,77 +1,94 @@
 
 
-# Plasma-Inspired Polish Pass: Focus, Clarity, Delight
+# SpaceX-Inspired Sharpening Pass
 
-A focused cleanup of the home page and global chrome to remove redundancy, sharpen language, and bring the site closer to the calm, high-signal feel of plasma.to — without losing the UOR identity.
+Strip the home page down to the essentials SpaceX uses so well: massive headline, one short sentence, one quiet `→` action — set in vast negative space. Same content, far less noise.
 
-## Principles applied
+## What SpaceX does that we don't (yet)
 
-- **One job per section.** No section repeats what another already said.
-- **Verdict headlines.** 2–4 word section titles that state the point.
-- **Numbers over adjectives.** Stat strips replace soft "feature" copy.
-- **One CTA per surface.** Every screen has a single primary action.
-- **Quiet chrome.** Remove decorative chips, badges, and duplicate links.
+1. **No eyebrow labels.** No "Community", "Ecosystem", "Highlights" tags above headlines. The headline carries itself.
+2. **One sentence per section.** A single confident line, then a single `→` link. No paragraphs, no two-column intros.
+3. **Massive uppercase headlines.** Set tighter, bigger, more confident.
+4. **No decorative diagrams competing with copy.** The hero image *is* the diagram.
+5. **Status chip in nav.** A tiny mono-spaced live signal (SpaceX uses `T-17:30:34` — we'll use a `LATEST` chip).
+6. **Generous quiet between sections.** Let each statement land.
 
 ## Changes
 
-### 1. Navbar — single primary action
-**File:** `src/modules/core/components/Navbar.tsx`
-- Drop the trailing "Contribute" CTA from the desktop right cluster. Keep the three social icons (Discord, GitHub, LinkedIn) as the only right-side elements.
-- Remove the "Contribute" item from `src/data/nav-items.ts` so it no longer appears in the mobile drawer's primary nav or the secondary "Contribute →" link.
-- The single primary site-wide action becomes the hero's "Explore Projects" button. Contribute lives on the Projects page (`/projects#submit`) where it belongs.
-- Mobile drawer: remove the secondary `Contribute →` row (now redundant).
+### 1. Remove eyebrow labels site-wide (home)
+**Files:** `WhatIsUorSection.tsx`, `EcosystemSection.tsx`, `HighlightsSection.tsx`, `CommunitySection.tsx`, `ClosingCTASection.tsx`
 
-### 2. Hero — tighter, fewer words
-**File:** `src/modules/landing/components/HeroSection.tsx`
-- Headline stays: `MAKE DATA IDENTITY UNIVERSAL`.
-- Replace the deck with a single, sharper sentence: *"A permanent, verifiable address for every piece of data."* (down from two sentences).
-- Keep one CTA: `Explore Projects →`. No secondary link.
-- Stats strip stays but drops the "Research Areas" cell — keep the three with the strongest signal: **11 Projects · 150+ Contributors · Open Governance**. The grid becomes a clean 3-up on desktop, matching mobile.
-- Remove the unused `Download` import.
+Delete the small uppercase tag above each H2 ("What is UOR", "Ecosystem", "Highlights", "Community", "Get Started"). These five eyebrows add no information once the headline is a verdict — they're pure decoration.
 
-### 3. Section headlines — verdicts
-Rewrite the H2 of the next sections to short verdicts. No body copy changes, only the headline.
+### 2. Sharpen headlines to a single editorial scale
+Bring the home H2s closer to the SpaceX weight: bigger, tighter tracking, more confident. Replace `text-fluid-heading` on these five H2s with a sharper local clamp:
 
-- `WhatIsUorSection` → **"One address. Everywhere."**
-- `EcosystemSection` → **"Built in the open."**
-- `HighlightsSection` → **"Proof, not promises."**
-- `CommunitySection` → **"Built by many."**
-- `ClosingCTASection` → **"Make it universal."**
-- `ReadyToBuildCTA` → remove this section entirely (duplicates the closing CTA — see below).
+```
+text-[clamp(2.25rem,4.6vw,4.5rem)] leading-[0.98] tracking-[-0.02em]
+```
 
-### 4. Remove the duplicate closing CTA
-**File:** `src/modules/landing/pages/IndexPage.tsx`
-- Remove the `ReadyToBuildCTA` lazy section. The page already ends with `ClosingCTASection`; two back-to-back CTAs is the single biggest source of noise on the home page.
-- Final home order: Hero → Community → WhatIsUor → Ecosystem → Highlights → ClosingCTA.
+Same display font, just set with the confidence SpaceX uses for "MAKING LIFE MULTIPLANETARY".
 
-### 5. Standardize action arrows
-- Every primary text link/button across the home sections uses a trailing `→` (lucide `ArrowRight`, `size={14}`). No mixed `>`, no `›`, no plain text. Sweep `HeroSection`, `WhatIsUorSection`, `EcosystemSection`, `HighlightsSection`, `CommunitySection`, `ClosingCTASection` for any inconsistencies.
+### 3. Collapse `WhatIsUorSection` to one sentence + one link
+**File:** `WhatIsUorSection.tsx`
 
-### 6. Tighten section dividers
-**File:** `src/index.css` (small addition) and the six landing sections
-- Establish one shared vertical rhythm: each section uses `py-20 md:py-28` (replaces today's mix of paddings). This eliminates the visible "tall, short, tall" cadence between sections.
+Current section is the noisiest on the page: two long paragraphs, a 9-cell silos grid, an UOR badge, an animated node graph, and a CTA. SpaceX would never do this.
+
+New layout:
+- Headline: **"One address. Everywhere."** (sharper scale per #2).
+- One sentence below: *"Every system invents its own identifiers. UOR derives a permanent, verifiable address from the data itself — the same data has the same address, anywhere."*
+- One link: `Explore the Framework →`.
+- **Remove the entire `UorDiagramCompact` component** (silos grid, UOR badge, node graph, all of it). The hero galaxy and the rest of the page already carry the visual weight.
+
+Net effect: the section shrinks from ~470px tall to ~280px and reads like a verdict, not an explainer.
+
+### 4. Trim the rest to "headline + one sentence + one →"
+
+- **`EcosystemSection`** — keep the 3 project cards. Remove the eyebrow. Add a single sentence under the headline: *"Open standards, reference implementations, and tools — built in public."* Keep the existing `View all projects →` link in the header row.
+- **`HighlightsSection`** — keep the 3 highlight cards. Remove the eyebrow. Add a single sentence: *"What we've shipped, written, and proven."* No other CTA — the cards are the action.
+- **`CommunitySection`** — remove the eyebrow. Keep the honeycomb. Add a single sentence: *"Researchers, engineers, and builders advancing universal data identity."*
+- **`ClosingCTASection`** — remove the eyebrow. Keep the three pillars (they are the final action). Headline stays "Make it universal."
+
+### 5. Tiny status chip in the navbar (SpaceX cue)
+**File:** `Navbar.tsx`
+
+Add a small monospaced chip on the desktop right cluster, before the social icons:
+
+```text
+[ LATEST · v0.1.0 ]
+```
+
+- `font-mono text-[10px] tracking-[0.2em] uppercase`, hairline border `border-foreground/15`, padding `px-2.5 py-1`, links to `/research` (or `/highlights`).
+- Hidden on mobile (the hamburger already handles that surface).
+- This mirrors SpaceX's "UPCOMING LAUNCHES T-17:30:34" chip — a quiet signal that the site is alive, without being a CTA.
+
+### 6. Slightly more breathing room
+**Files:** the five home sections.
+
+Bring section padding from `py-12 md:py-16` to `py-14 md:py-20`. Still tight, but each statement gets the quiet around it that makes SpaceX feel inevitable rather than busy. (Earlier we squeezed too far.)
+
+### 7. Standardize the action arrow
+Sweep all `ArrowRight` icons in the home sections to `size={14}` and `strokeWidth={2}`. SpaceX uses one arrow weight, period.
 
 ## What we are NOT changing
 
-- No changes to the article/project layout we just shipped (split hero stays).
-- No changes to data, routing, theme, fonts, colors, or the galaxy/prime visuals.
+- Hero (already sharp — we just shipped it).
+- Navbar nav items, logo, mobile drawer.
+- Article/project page split-hero layout.
+- Theme, fonts, colors, galaxy/prime visuals.
+- Any data, routing, or images.
 - No new dependencies.
-- No copy changes inside section bodies — only headlines and the hero deck.
 
 ## Files touched
 
-- `src/modules/core/components/Navbar.tsx`
-- `src/data/nav-items.ts`
-- `src/modules/landing/components/HeroSection.tsx`
-- `src/modules/landing/pages/IndexPage.tsx`
-- `src/modules/landing/components/WhatIsUorSection.tsx`
+- `src/modules/landing/components/WhatIsUorSection.tsx` (largest change — diagram removed)
 - `src/modules/landing/components/EcosystemSection.tsx`
 - `src/modules/landing/components/HighlightsSection.tsx`
 - `src/modules/landing/components/CommunitySection.tsx`
 - `src/modules/landing/components/ClosingCTASection.tsx`
-- `src/index.css` (shared section spacing utility, optional)
+- `src/modules/core/components/Navbar.tsx` (status chip only)
 
 ## Result
 
-Less to read, fewer places to click, one clear path forward on every screen. The home page reads as a confident sequence of short verdicts backed by numbers and proof — the same calm, high-signal cadence that makes plasma.to feel like frontier work, expressed in the UOR Foundation's own voice.
+Five home sections, each one a verdict in one sentence with one quiet action. No eyebrows, no diagrams competing with copy, a tiny live signal in the nav. The page reads like SpaceX: confident, quiet, inevitable — without copying their look.
 
