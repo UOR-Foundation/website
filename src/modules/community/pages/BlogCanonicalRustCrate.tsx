@@ -209,6 +209,48 @@ const BlogCanonicalRustCrate = () => {
       </section>
 
       <section>
+        <h2>How UOR resolves the SEP-2395 failure modes</h2>
+        <p>
+          <a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/2395" target="_blank" rel="noopener noreferrer">SEP-2395</a> died on five concrete issues. Each was a consequence of the same architectural choice: hash and sign the <em>bytes</em>, then layer trust on top. UOR makes a different choice (hash the <em>structure</em>, no signing layer), and each failure either disappears or becomes a non-issue.
+        </p>
+        <figure className="not-prose my-6 overflow-x-auto rounded-xl border border-border bg-card">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/30 text-left">
+                <th className="px-4 py-3 font-semibold w-[40%]">SEP-2395 failure</th>
+                <th className="px-4 py-3 font-semibold">How UOR resolves it</th>
+              </tr>
+            </thead>
+            <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
+              <tr>
+                <td className="px-4 py-3"><strong>Canonical JSON differs across languages.</strong> Node.js and Python produce different bytes for the same JSON, breaking signatures at the language boundary.</td>
+                <td className="px-4 py-3">UOR normalizes <em>structure</em>, not bytes. Key order, encoding, and numeric representation are factored out before hashing. Same object, same fingerprint, in any runtime, formally verified in Lean 4.</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3"><strong>Downgrade attack.</strong> Delete one key, server falls back to unsigned mode.</td>
+                <td className="px-4 py-3">There is no signed mode to fall back from. The fingerprint is the address. If it doesn't match, the object is not the object. There is no negotiation.</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3"><strong>Self-signed trust anchors.</strong> An anchor could stamp itself as L4 (highest trust).</td>
+                <td className="px-4 py-3">No trust anchors exist. UOR has no PKI, no levels, no issuers. Trust is the local result of a hash comparison, not a claim made by anyone.</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3"><strong>Unsigned, fail-open revocation.</strong> Revocation lists themselves were not authenticated and failed open on error.</td>
+                <td className="px-4 py-3">Nothing to revoke. The fingerprint is content-derived, so a "compromised key" has no meaning. Replacing the object is the only way to change its identity.</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3"><strong>Misattributed CVEs and fabricated endorsements.</strong> The proposal cited security claims that did not hold up to review.</td>
+                <td className="px-4 py-3">No social trust surface. The reference implementation is a 200-line Rust crate plus a Lean 4 proof. Every claim in this article is verifiable by running the code.</td>
+              </tr>
+            </tbody>
+          </table>
+        </figure>
+        <p>
+          The pattern: SEP-2395 tried to add an <em>integrity layer on top of MCP</em> using PKI and per-message signatures. UOR pushes the integrity property <em>into the object itself</em>, so MCP and A2A can carry it without changing.
+        </p>
+      </section>
+
+      <section>
         <h2>Try it</h2>
         <pre>{`use uor_foundation::prelude::*;
 
