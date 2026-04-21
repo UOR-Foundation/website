@@ -126,18 +126,26 @@ const HeroSection = () => {
             className="mt-[clamp(1rem,2vw,2.5rem)] text-fluid-lead text-foreground/60 max-w-[min(920px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
-            We build open standards that give every piece of data a permanent, verifiable address. Discoverable, provable, and trusted everywhere.
+            We gave every digital object its own permanent, content-addressed, self-verifying identity. Open governance. Three specifications. One canonical Rust crate.
           </p>
           <div
             className="mt-[clamp(1.25rem,2.5vw,3rem)] flex flex-wrap gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.59s" }}
           >
             <a
-              href="/projects"
+              href="/framework"
               className="pointer-events-auto inline-flex items-center gap-3 px-[clamp(1.5rem,1.7vw,2.25rem)] py-[clamp(0.7rem,0.9vw,1.1rem)] text-[clamp(13px,0.95vw,17px)] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out"
             >
-              Explore Projects
+              Read the Specs
               <ArrowRight size={15} />
+            </a>
+            <a
+              href="https://github.com/UOR-Foundation/UOR-Framework"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pointer-events-auto inline-flex items-center gap-3 px-[clamp(1.5rem,1.7vw,2.25rem)] py-[clamp(0.7rem,0.9vw,1.1rem)] text-[clamp(13px,0.95vw,17px)] font-semibold uppercase tracking-[0.2em] border border-foreground/25 text-foreground/85 hover:border-foreground/60 hover:text-foreground active:scale-[0.97] transition-all duration-200 ease-out"
+            >
+              View on GitHub
             </a>
           </div>
         </div>

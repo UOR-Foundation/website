@@ -94,7 +94,7 @@ const Projects = () => {
             Projects
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl" style={{ animationDelay: "0.15s" }}>
-            Open-source tools and infrastructure built on the UOR Framework. Browse the catalog, or submit your own.
+            Reference implementations of the UOR specifications — identity, object, and resolution. Open-source, built on the canonical <code className="font-mono text-foreground/85">uor-foundation</code> Rust crate. Browse the catalog, or submit your own.
           </p>
           <div
             className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
