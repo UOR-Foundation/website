@@ -263,7 +263,7 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>Try it</h2>
         <p>
-          Five lines. No keys, no config, no network. Same fingerprint on macOS, Linux, Node, Python (via the WASM build), and on the next library version that re-orders your JSON keys.
+          Five lines. No keys, no config, no network. Same fingerprint on macOS, Linux, and on the next library version that re-orders your JSON keys.
         </p>
         <pre>{`use uor_foundation::prelude::*;
 
