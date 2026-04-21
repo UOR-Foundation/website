@@ -7,6 +7,13 @@ export const teamMembers = [
     link: "https://www.linkedin.com/in/alexander-flom/",
   },
   {
+    name: "Ari Lerner",
+    role: "Engineer",
+    description: "AI, robotics, and embedded systems.",
+    image: "/images/profiles/ari-lerner.jpg",
+    link: "https://www.linkedin.com/in/arilerner/",
+  },
+  {
     name: "Tirath Virdee",
     role: "Chief Scientist @ Xenesis",
     description: "Data science and applied AI.",
@@ -75,12 +82,5 @@ export const teamMembers = [
     description: "Healthcare technology and applied research.",
     image: "/images/profiles/jimmy-danella.jpg",
     link: "https://www.linkedin.com/in/wellnessworxio/",
-  },
-  {
-    name: "Ari Lerner",
-    role: "Engineer",
-    description: "AI, robotics, and embedded systems.",
-    image: "/images/profiles/ari-lerner.jpg",
-    link: "https://www.linkedin.com/in/arilerner/",
   },
 ];
