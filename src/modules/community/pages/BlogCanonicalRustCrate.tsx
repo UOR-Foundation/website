@@ -142,7 +142,7 @@ const BlogCanonicalRustCrate = () => {
       </section>
 
       <section>
-        <h2>Use it</h2>
+        <h2>Try it</h2>
         <pre>{`use uor_foundation::prelude::*;
 
 let cert = identify(&tool_call)?;          // sender
