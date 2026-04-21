@@ -1,7 +1,7 @@
 import { ReactNode, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/modules/core/components/Layout";
-import { ArrowLeft, ArrowRight, Clock, Facebook, Linkedin, Link2, Mail, Twitter } from "lucide-react";
+import { ArrowLeft, ArrowRight, Facebook, Linkedin, Link2, Mail, Twitter } from "lucide-react";
 import { toast } from "sonner";
 
 export interface ArticleRelated {
@@ -96,11 +96,6 @@ const ArticleLayout = ({
   afterBody,
   children,
 }: ArticleLayoutProps) => {
-  const computedReadTime = useMemo(
-    () => readTime ?? estimateReadTime(children),
-    [readTime, children],
-  );
-
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const shareTitle = title;
   const copyLink = useCallback(() => {
@@ -109,24 +104,51 @@ const ArticleLayout = ({
     toast.success("Link copied");
   }, []);
 
-  const ShareRow = () => (
-    <div className="flex items-center gap-1 text-muted-foreground">
-      <a aria-label="Share on Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
-        <Facebook size={15} />
+  const shareItemClass =
+    "p-2 rounded-full text-muted-foreground hover:bg-background/60 hover:text-foreground transition-colors";
+
+  const ShareRow = ({ size = 15 }: { size?: number }) => (
+    <div className="flex items-center gap-1">
+      <a aria-label="Share on Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
+        <Facebook size={size} />
       </a>
-      <a aria-label="Share on X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
-        <Twitter size={15} />
+      <a aria-label="Share on X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
+        <Twitter size={size} />
       </a>
-      <a aria-label="Share on LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
-        <Linkedin size={15} />
+      <a aria-label="Share on LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
+        <Linkedin size={size} />
       </a>
-      <a aria-label="Share via Email" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`} className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
-        <Mail size={15} />
+      <a aria-label="Share via Email" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`} className={shareItemClass}>
+        <Mail size={size} />
       </a>
-      <button aria-label="Copy link" onClick={copyLink} className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
-        <Link2 size={15} />
+      <button aria-label="Copy link" onClick={copyLink} className={shareItemClass}>
+        <Link2 size={size} />
       </button>
     </div>
+  );
+
+  // TechCrunch-style vertical floating share rail (left edge, sticky)
+  const FloatingShareRail = () => (
+    <aside
+      aria-label="Share this article"
+      className="hidden lg:flex fixed left-4 xl:left-6 top-1/2 -translate-y-1/2 z-40 flex-col items-center gap-1 p-2 rounded-full bg-card/85 backdrop-blur border border-border/60 shadow-sm"
+    >
+      <a aria-label="Share on Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
+        <Facebook size={15} />
+      </a>
+      <a aria-label="Share on X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
+        <Twitter size={15} />
+      </a>
+      <a aria-label="Share on LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
+        <Linkedin size={15} />
+      </a>
+      <a aria-label="Share via Email" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`} className={shareItemClass}>
+        <Mail size={15} />
+      </a>
+      <button aria-label="Copy link" onClick={copyLink} className={shareItemClass}>
+        <Link2 size={15} />
+      </button>
+    </aside>
   );
 
   return (
