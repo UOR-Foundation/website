@@ -181,9 +181,10 @@ const ArticleLayout = ({
             )}
           </div>
         </header>
+        )}
 
         {/* Hero image — slightly wider than text column */}
-        {!hideHero && (heroOverride || heroImage) && (
+        {!headerOverride && !hideHero && (heroOverride || heroImage) && (
           <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mt-10 md:mt-14">
             <div
               className="mx-auto animate-fade-in-up"
