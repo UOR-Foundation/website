@@ -16,10 +16,10 @@ const HighlightsSection = () => {
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="mb-golden-lg">
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-sm">
-            Highlights
+            Updates
           </p>
           <h2 className="font-display font-bold text-foreground text-fluid-heading">
-            Proof, not promises.
+            Recent research and releases.
           </h2>
         </div>
 

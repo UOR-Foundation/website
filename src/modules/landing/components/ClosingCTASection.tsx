@@ -12,10 +12,10 @@ const ClosingCTASection = () => {
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="mb-golden-lg animate-fade-in-up opacity-0" style={{ animationDelay: "0.1s" }}>
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-amber-700 md:text-primary/70 text-fluid-lead mb-golden-sm">
-            Get Started
+            Get Involved
           </p>
           <h2 className="font-display font-bold text-black md:text-foreground text-fluid-heading">
-            Make it universal.
+            Learn, connect, or build.
           </h2>
         </div>
 
