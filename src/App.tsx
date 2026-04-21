@@ -21,6 +21,7 @@ const ResearchPage = lazy(() => import("@/modules/community/pages/ResearchPage")
 const BlogPost1 = lazy(() => import("@/modules/community/pages/BlogPost1"));
 const BlogPost2 = lazy(() => import("@/modules/community/pages/BlogPost2"));
 const BlogPost3 = lazy(() => import("@/modules/community/pages/BlogPost3"));
+const BlogCanonicalRustCrate = lazy(() => import("@/modules/community/pages/BlogCanonicalRustCrate"));
 const ResearchPaperAtlasEmbeddings = lazy(() => import("@/modules/community/pages/ResearchPaperAtlasEmbeddings"));
 const ProjectsPage = lazy(() => import("@/modules/projects/pages/ProjectsPage"));
 const ProjectHologram = lazy(() => import("@/modules/projects/pages/ProjectHologram"));
@@ -113,6 +114,7 @@ const App = () => {
               <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
               <Route path="/blog/universal-mathematical-language" element={<BlogPost2 />} />
               <Route path="/blog/uor-framework-launch" element={<BlogPost3 />} />
+              <Route path="/blog/canonical-rust-crate" element={<BlogCanonicalRustCrate />} />
               <Route path="/research/atlas-embeddings" element={<ResearchPaperAtlasEmbeddings />} />
 
               {/* Project detail pages */}
