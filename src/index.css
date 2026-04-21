@@ -1602,6 +1602,8 @@
 .prose-article > p:first-of-type {
   font-size: 18px;
   line-height: 1.55;
+  font-weight: 500;
+  color: hsl(var(--foreground) / 0.88);
   color: hsl(var(--foreground));
   font-weight: 500;
   margin-bottom: 1.2em;
