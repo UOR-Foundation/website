@@ -189,7 +189,7 @@ const BlogCanonicalRustCrate = () => {
                 <td className="px-4 py-3 text-muted-foreground">yes, for signatures</td>
               </tr>
               <tr>
-                <td className="px-4 py-3"><a href="https://github.com/modelcontextprotocol/specification/discussions/195" target="_blank" rel="noopener noreferrer">SEP-2395 (MCP signing)</a></td>
+                <td className="px-4 py-3"><a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/2395" target="_blank" rel="noopener noreferrer">SEP-2395 (MCP signing)</a></td>
                 <td className="px-4 py-3">message + signature</td>
                 <td className="px-4 py-3 text-muted-foreground">closed Mar 2026, operational cost</td>
                 <td className="px-4 py-3 text-muted-foreground">yes, across every hop</td>
