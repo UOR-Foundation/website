@@ -8,6 +8,7 @@ export interface ArticleRelated {
   title: string;
   href: string;
   meta?: string;
+  image?: string;
 }
 
 export interface ArticleLayoutProps {
