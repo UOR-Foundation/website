@@ -32,7 +32,6 @@ const BlogCanonicalRustCrate = () => {
       date="April 21, 2026"
       title="UOR Identity: A universal data passport for your AI agent"
       heroImage={heroImage}
-      heroCaption="An open standard for structured-object identity between agents."
       backHref="/research#blog"
       backLabel="Back to Research"
       sourceUrl={CRATE_URL}
