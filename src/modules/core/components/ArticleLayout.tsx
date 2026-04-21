@@ -82,6 +82,7 @@ const ArticleLayout = ({
   readTime,
   title,
   deck,
+  author = "UOR Foundation",
   heroImage,
   heroCaption,
   hideHero,
@@ -91,7 +92,7 @@ const ArticleLayout = ({
   sourceUrl,
   sourceLabel,
   related,
-  relatedLabel = "Related reading",
+  relatedLabel = "Read next",
   afterBody,
   children,
 }: ArticleLayoutProps) => {
@@ -100,20 +101,48 @@ const ArticleLayout = ({
     [readTime, children],
   );
 
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const shareTitle = title;
+  const copyLink = useCallback(() => {
+    if (typeof window === "undefined") return;
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Link copied");
+  }, []);
+
+  const ShareRow = () => (
+    <div className="flex items-center gap-1 text-muted-foreground">
+      <a aria-label="Share on Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
+        <Facebook size={15} />
+      </a>
+      <a aria-label="Share on X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
+        <Twitter size={15} />
+      </a>
+      <a aria-label="Share on LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
+        <Linkedin size={15} />
+      </a>
+      <a aria-label="Share via Email" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`} className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
+        <Mail size={15} />
+      </a>
+      <button aria-label="Copy link" onClick={copyLink} className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
+        <Link2 size={15} />
+      </button>
+    </div>
+  );
+
   return (
     <Layout>
-      <article className="pt-32 md:pt-36 pb-16 md:pb-24 bg-background">
-        {/* Split hero: image left, headline block right (stacks on mobile) */}
-        <header className="container px-6 md:px-8 lg:px-10">
+      <article className="pt-24 md:pt-28 pb-16 md:pb-24 bg-background">
+        {/* TechCrunch-style edge-to-edge masthead */}
+        <header>
           {!hideHero && (heroOverride || heroImage) ? (
-            <div className="mx-auto max-w-[1180px] grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-              {/* Image column */}
-              <div className="lg:col-span-6 order-1 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 items-stretch">
+              {/* Image — full bleed left */}
+              <div className="order-1 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
                 {heroOverride ? (
                   heroOverride
                 ) : (
-                  <figure>
-                    <div className="rounded-2xl overflow-hidden border border-border bg-muted/40 aspect-[16/10] lg:aspect-[4/5] shadow-[0_20px_60px_-30px_hsl(var(--foreground)/0.35)]">
+                  <figure className="h-full">
+                    <div className="bg-muted/40 aspect-[16/10] lg:aspect-auto lg:h-full w-full overflow-hidden">
                       <img
                         src={heroImage}
                         alt={title}
@@ -122,116 +151,84 @@ const ArticleLayout = ({
                       />
                     </div>
                     {heroCaption && (
-                      <figcaption className="mt-3 text-sm italic text-muted-foreground font-body">
-                        {heroCaption}
+                      <figcaption className="px-6 md:px-8 lg:px-10 mt-3 mb-2 text-[11px] uppercase tracking-[0.18em] font-mono text-muted-foreground">
+                        Image credits: {heroCaption}
                       </figcaption>
                     )}
                   </figure>
                 )}
               </div>
 
-              {/* Text column */}
-              <div className="lg:col-span-6 order-2 flex flex-col">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] uppercase tracking-[0.14em] font-semibold text-muted-foreground font-body mb-5 animate-fade-in-up">
-                  <span className="inline-flex items-center gap-1.5 text-primary">
-                    <TagIcon size={12} strokeWidth={2.5} />
-                    {kicker}
-                  </span>
-                  {date && (
-                    <>
-                      <span aria-hidden className="text-muted-foreground/50">·</span>
-                      <span className="inline-flex items-center gap-1.5 normal-case tracking-normal font-medium text-muted-foreground/80">
-                        <Calendar size={12} />
-                        {date}
-                      </span>
-                    </>
-                  )}
-                  <span aria-hidden className="text-muted-foreground/50">·</span>
-                  <span className="inline-flex items-center gap-1.5 normal-case tracking-normal font-medium text-muted-foreground/80">
-                    <Clock size={12} />
-                    {computedReadTime}
-                  </span>
+              {/* Right panel */}
+              <div className="order-2 bg-card flex flex-col justify-between p-8 md:p-10 lg:p-14 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
+                <div className="flex items-start justify-between gap-6 mb-8">
+                  <div>
+                    <div className="w-8 h-px bg-primary mb-3" aria-hidden />
+                    <span className="text-[12px] uppercase tracking-[0.2em] font-semibold text-primary font-body">
+                      {kicker}
+                    </span>
+                  </div>
+                  <ShareRow />
                 </div>
 
                 <h1
-                  className="font-display font-bold tracking-tight text-foreground text-balance animate-fade-in-up"
-                  style={{ fontSize: "clamp(2.25rem, 4.4vw, 3.5rem)", lineHeight: 1.08, animationDelay: "0.04s" }}
+                  className="font-display font-bold tracking-tight text-foreground text-balance"
+                  style={{ fontSize: "clamp(2.25rem, 4.5vw, 3.75rem)", lineHeight: 1.05 }}
                 >
                   {title}
                 </h1>
 
-                {deck && (
-                  <p
-                    className="mt-6 text-[1.25rem] text-muted-foreground font-body text-balance animate-fade-in-up"
-                    style={{ lineHeight: 1.55, animationDelay: "0.08s" }}
-                  >
-                    {deck}
-                  </p>
-                )}
-
-                <Link
-                  to={backHref}
-                  className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-body self-start"
-                >
-                  <ArrowLeft size={14} />
-                  {backLabel}
-                </Link>
+                <div className="mt-8 pt-6 border-t border-border/60 text-sm text-muted-foreground font-body">
+                  <span className="text-foreground font-medium">{author}</span>
+                  {date && <> <span className="mx-2 text-muted-foreground/50">·</span> {date}</>}
+                  <span className="mx-2 text-muted-foreground/50">·</span>
+                  <span className="inline-flex items-center gap-1.5"><Clock size={12} /> {computedReadTime}</span>
+                </div>
               </div>
             </div>
           ) : (
-            // No hero: centered single-column header
-            <div className="mx-auto max-w-[820px]">
-              <Link
-                to={backHref}
-                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-body mb-8"
-              >
-                <ArrowLeft size={14} />
-                {backLabel}
-              </Link>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] uppercase tracking-[0.14em] font-semibold text-muted-foreground font-body mb-5">
-                <span className="inline-flex items-center gap-1.5 text-primary">
-                  <TagIcon size={12} strokeWidth={2.5} />
-                  {kicker}
-                </span>
-                {date && (
-                  <>
-                    <span aria-hidden className="text-muted-foreground/50">·</span>
-                    <span className="inline-flex items-center gap-1.5 normal-case tracking-normal font-medium text-muted-foreground/80">
-                      <Calendar size={12} />
-                      {date}
+            // No hero: solid panel only
+            <div className="bg-card px-6 md:px-10 lg:px-14 py-12 md:py-16">
+              <div className="mx-auto max-w-[1180px]">
+                <div className="flex items-start justify-between gap-6 mb-8">
+                  <div>
+                    <div className="w-8 h-px bg-primary mb-3" aria-hidden />
+                    <span className="text-[12px] uppercase tracking-[0.2em] font-semibold text-primary font-body">
+                      {kicker}
                     </span>
-                  </>
-                )}
-                <span aria-hidden className="text-muted-foreground/50">·</span>
-                <span className="inline-flex items-center gap-1.5 normal-case tracking-normal font-medium text-muted-foreground/80">
-                  <Clock size={12} />
-                  {computedReadTime}
-                </span>
-              </div>
-              <h1
-                className="font-display font-bold tracking-tight text-foreground text-balance"
-                style={{ fontSize: "clamp(2.25rem, 5vw, 3.75rem)", lineHeight: 1.08 }}
-              >
-                {title}
-              </h1>
-              {deck && (
-                <p
-                  className="mt-6 text-[1.375rem] text-muted-foreground font-body text-balance"
-                  style={{ lineHeight: 1.55 }}
+                  </div>
+                  <ShareRow />
+                </div>
+                <h1
+                  className="font-display font-bold tracking-tight text-foreground text-balance max-w-[900px]"
+                  style={{ fontSize: "clamp(2.25rem, 5vw, 3.75rem)", lineHeight: 1.05 }}
                 >
-                  {deck}
-                </p>
-              )}
+                  {title}
+                </h1>
+                <div className="mt-8 pt-6 border-t border-border/60 text-sm text-muted-foreground font-body">
+                  <span className="text-foreground font-medium">{author}</span>
+                  {date && <> <span className="mx-2 text-muted-foreground/50">·</span> {date}</>}
+                  <span className="mx-2 text-muted-foreground/50">·</span>
+                  <span className="inline-flex items-center gap-1.5"><Clock size={12} /> {computedReadTime}</span>
+                </div>
+              </div>
             </div>
           )}
-
-          {/* Hairline divider under the hero */}
-          <div className="mx-auto max-w-[1180px] mt-12 md:mt-16 border-t border-border" />
         </header>
 
         {/* Body — single 820px reading column */}
-        <div className="container px-6 md:px-8 lg:px-10 mt-12 md:mt-16">
+        <div className="container px-6 md:px-8 lg:px-10 mt-10 md:mt-14">
+          <div className="mx-auto max-w-[820px] mb-8">
+            <Link
+              to={backHref}
+              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-body"
+            >
+              <ArrowLeft size={14} />
+              {backLabel}
+            </Link>
+          </div>
           <div className="mx-auto max-w-[820px] prose-article">
+            {deck && <p>{deck}</p>}
             {children}
           </div>
 
@@ -263,8 +260,8 @@ const ArticleLayout = ({
                   <p className="text-[12px] uppercase tracking-[0.18em] font-semibold text-muted-foreground font-body mb-5">
                     {relatedLabel}
                   </p>
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {related.slice(0, 4).map((item) => (
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {related.slice(0, 3).map((item) => (
                       <li key={item.href}>
                         <Link
                           to={item.href}
