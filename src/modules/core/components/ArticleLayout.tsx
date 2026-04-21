@@ -219,23 +219,23 @@ const ArticleLayout = ({
         </header>
 
         {/* Body — generous reading column that scales with viewport */}
-        <div className="px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24 2xl:px-32 mt-10 md:mt-14 xl:mt-20">
-          <div className="mx-auto prose-article" style={{ maxWidth: "clamp(680px, 62vw, 1280px)" }}>
+        <div className="px-4 sm:px-6 md:px-10 lg:px-14 xl:px-20 2xl:px-28 mt-10 md:mt-12 xl:mt-14">
+          <div className="mx-auto prose-article" style={{ maxWidth: "clamp(680px, 78vw, 1600px)" }}>
             {deck && <p>{deck}</p>}
             {children}
           </div>
 
           {afterBody && (
-            <div className="mx-auto mt-12" style={{ maxWidth: "clamp(680px, 62vw, 1280px)" }}>
+            <div className="mx-auto mt-12" style={{ maxWidth: "clamp(680px, 78vw, 1600px)" }}>
               {afterBody}
             </div>
           )}
 
           {/* Footer: source + related strip */}
           {(sourceUrl || (related && related.length > 0)) && (
-            <footer className="mx-auto mt-16 pt-8 border-t border-border" style={{ maxWidth: "clamp(680px, 70vw, 1480px)" }}>
+            <footer className="mx-auto mt-16 pt-8 border-t border-border" style={{ maxWidth: "clamp(680px, 82vw, 1680px)" }}>
               {sourceUrl && (
-                <p className="text-sm xl:text-base text-muted-foreground font-body mb-8" style={{ maxWidth: "clamp(680px, 62vw, 1280px)" }}>
+                <p className="text-sm xl:text-base text-muted-foreground font-body mb-8" style={{ maxWidth: "clamp(680px, 78vw, 1600px)" }}>
                   Source:{" "}
                   <a
                     href={sourceUrl}
