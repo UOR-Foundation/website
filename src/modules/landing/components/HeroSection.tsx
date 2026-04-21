@@ -105,15 +105,12 @@ const HeroSection = () => {
         <div className="basis-[34%] shrink-0" />
         {/* Title column: wider on md (orb is smaller), narrower on xl+ to leave breathing room */}
         <div className="max-w-[64%] lg:max-w-[58%] xl:max-w-[54%] 2xl:max-w-[50%]">
-          <h1
-            className="font-display font-bold leading-[1.04] tracking-[0.06em] uppercase text-foreground animate-fade-in-up opacity-0 inline-block"
-            style={{ animationDelay: "0.29s" }}
-          >
-             <span className="text-[clamp(2.25rem,4vw,7rem)] block">Make Data Identity</span>
-             <span className="text-[clamp(2.75rem,5.4vw,9.5rem)] flex justify-between w-full mt-1" aria-label="Universal">
-               {'UNIVERSAL'.split('').map((char, i) => <span key={i} aria-hidden="true">{char}</span>)}
-             </span>
-          </h1>
+          <PhysicalTitle
+            wrapperClass="font-display font-bold leading-[1.04] tracking-[0.06em] uppercase text-foreground animate-fade-in-up opacity-0 inline-block"
+            lineOneClass="text-[clamp(2.25rem,4vw,7rem)] block"
+            lineTwoClass="text-[clamp(2.75rem,5.4vw,9.5rem)] flex justify-between w-full mt-1"
+            delay="0.29s"
+          />
           <p
             className="mt-[clamp(1.25rem,2.2vw,2.75rem)] text-foreground/60 max-w-[min(960px,92%)] leading-[1.65] font-body animate-fade-in-up opacity-0 text-[clamp(1.05rem,1.2vw,1.6rem)]"
             style={{ animationDelay: "0.47s" }}
