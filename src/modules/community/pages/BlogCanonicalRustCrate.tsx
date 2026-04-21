@@ -96,54 +96,36 @@ const BlogCanonicalRustCrate = () => {
 
             {/* ============ AGENT A ============ */}
             <circle cx="120" cy="170" r="92" className="fill-background stroke-foreground" strokeWidth="2.25" />
-            <text x="120" y="160" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 14, letterSpacing: "0.26em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Agent A</text>
-            <text x="120" y="194" textAnchor="middle" className="fill-foreground" style={{ fontSize: 26, fontWeight: 700 }}>Sender</text>
+            <text x="120" y="180" textAnchor="middle" className="fill-foreground" style={{ fontSize: 30, fontWeight: 700 }}>Sender</text>
 
             {/* ============ AGENT B ============ */}
             <circle cx="700" cy="170" r="92" className="fill-background stroke-foreground" strokeWidth="2.25" />
-            <text x="700" y="160" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 14, letterSpacing: "0.26em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Agent B</text>
-            <text x="700" y="194" textAnchor="middle" className="fill-foreground" style={{ fontSize: 26, fontWeight: 700 }}>Receiver</text>
+            <text x="700" y="180" textAnchor="middle" className="fill-foreground" style={{ fontSize: 30, fontWeight: 700 }}>Receiver</text>
 
-            {/* ============ TRANSPORT RAIL (MCP · A2A) ============ */}
+            {/* ============ TRANSPORT RAIL ============ */}
             <line x1="214" y1="170" x2="608" y2="170" stroke="currentColor" className="text-primary" strokeWidth="3" markerEnd="url(#arrPrimary)" />
-            {/* MCP / A2A label sits on the rail, framed as "the wire" */}
-            <rect x="346" y="78" width="130" height="30" rx="15" className="fill-background stroke-border" strokeWidth="1.25" />
-            <text x="411" y="98" textAnchor="middle" className="fill-foreground" style={{ fontSize: 14, letterSpacing: "0.28em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>MCP · A2A</text>
-            <text x="411" y="126" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, fontStyle: "italic" }}>the wire agents talk over</text>
 
             {/* ============ SEALED PAYLOAD (the essence) ============ */}
             <g transform="translate(411 170)">
-              {/* Sealed envelope */}
-              <rect x="-128" y="-54" width="256" height="108" rx="14" className="fill-card stroke-primary" strokeWidth="2.25" />
-              {/* Payload row */}
-              <text x="0" y="-26" textAnchor="middle" className="fill-foreground" style={{ fontSize: 17, fontWeight: 600 }}>
-                payload · text · image · audio
+              <rect x="-138" y="-52" width="276" height="104" rx="14" className="fill-card stroke-primary" strokeWidth="2.25" />
+              <text x="0" y="-14" textAnchor="middle" className="fill-foreground" style={{ fontSize: 22, fontWeight: 600 }}>
+                payload
               </text>
-              {/* Divider */}
-              <line x1="-104" y1="-12" x2="104" y2="-12" stroke="currentColor" className="text-border" strokeWidth="1" />
-              {/* The seal */}
-              <text x="0" y="14" textAnchor="middle" className="fill-primary" style={{ fontSize: 16, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>UOR seal</text>
-              <text x="0" y="38" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 13, fontFamily: "ui-monospace, monospace" }}>sha256 · 256-bit · self-verifiable</text>
+              <line x1="-110" y1="0" x2="110" y2="0" stroke="currentColor" className="text-border" strokeWidth="1" />
+              <text x="0" y="32" textAnchor="middle" className="fill-primary" style={{ fontSize: 20, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>UOR seal</text>
             </g>
 
-            {/* ============ SENDER ACTION ============ */}
-            <text x="120" y="294" textAnchor="middle" className="fill-foreground" style={{ fontSize: 17, fontWeight: 600 }}>1 · derive seal</text>
-            <text x="120" y="316" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 13, fontFamily: "ui-monospace, monospace" }}>canonical form → hash</text>
-
-            {/* ============ RECEIVER ACTION ============ */}
-            <text x="700" y="294" textAnchor="middle" className="fill-foreground" style={{ fontSize: 17, fontWeight: 600 }}>2 · re-derive · compare</text>
-            <text x="700" y="316" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 13, fontFamily: "ui-monospace, monospace" }}>match → trust locally</text>
+            {/* ============ ACTIONS ============ */}
+            <text x="120" y="306" textAnchor="middle" className="fill-foreground" style={{ fontSize: 22, fontWeight: 600 }}>1 · derive</text>
+            <text x="700" y="306" textAnchor="middle" className="fill-foreground" style={{ fontSize: 22, fontWeight: 600 }}>2 · verify</text>
 
             {/* ============ FOOTER ============ */}
-            <text x="411" y="372" textAnchor="middle" className="fill-foreground" style={{ fontSize: 18, fontWeight: 700 }}>
+            <text x="411" y="386" textAnchor="middle" className="fill-foreground" style={{ fontSize: 24, fontWeight: 700 }}>
               The address IS the content.
-            </text>
-            <text x="411" y="398" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 14, fontFamily: "ui-monospace, monospace" }}>
-              no PKI · no registry · no third party
             </text>
           </svg>
           <figcaption className="mt-4 text-[13px] text-muted-foreground font-body text-center">
-            UOR Identity rides inside every MCP / A2A message. Both agents derive the same seal from the same bytes. Trust is local, instant, and needs no authority.
+            UOR Identity rides inside every MCP / A2A message. Both agents derive the same seal from the same bytes — trust is local and instant.
           </figcaption>
         </figure>
       </section>
