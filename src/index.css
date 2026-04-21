@@ -1586,26 +1586,47 @@
 .prose-article {
   color: hsl(var(--foreground));
   font-family: var(--font-body, inherit);
-  font-size: 18px;
+  font-size: 16px;
 }
-.prose-article > * + * { margin-top: 1.25em; }
+/* ── Responsive rhythm ───────────────────────────────────────────────
+   Mobile-first: tight, readable. Scales up at md / lg breakpoints. */
+.prose-article > * + * { margin-top: 1em; }
 .prose-article > *:first-child { margin-top: 0; }
-/* Spacing inside sections (between sibling paragraphs, lists, pre blocks, figures) */
-.prose-article section > * + * { margin-top: 1.1em; }
-.prose-article section + section { margin-top: 2.25em; }
+.prose-article section > * + * { margin-top: 0.9em; }
+.prose-article section + section { margin-top: 1.75em; }
 .prose-article p,
 .prose-article li {
-  font-size: 18px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.65;
   color: hsl(var(--foreground) / 0.95);
   letter-spacing: -0.003em;
 }
 .prose-article > p:first-of-type {
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1.55;
   color: hsl(var(--foreground));
   font-weight: 500;
-  margin-bottom: 1.4em;
+  margin-bottom: 1.2em;
+}
+
+/* Tablet (≥ 768px) */
+@media (min-width: 768px) {
+  .prose-article { font-size: 17px; }
+  .prose-article p,
+  .prose-article li { font-size: 17px; line-height: 1.62; }
+  .prose-article > p:first-of-type { font-size: 19px; margin-bottom: 1.3em; }
+  .prose-article section > * + * { margin-top: 1em; }
+  .prose-article section + section { margin-top: 2em; }
+}
+
+/* Desktop (≥ 1024px) */
+@media (min-width: 1024px) {
+  .prose-article { font-size: 18px; }
+  .prose-article p,
+  .prose-article li { font-size: 18px; line-height: 1.6; }
+  .prose-article > p:first-of-type { font-size: 20px; margin-bottom: 1.4em; }
+  .prose-article section > * + * { margin-top: 1.1em; }
+  .prose-article section + section { margin-top: 2.25em; }
 }
 .prose-article p strong,
 .prose-article li strong { color: hsl(var(--foreground)); font-weight: 600; }
