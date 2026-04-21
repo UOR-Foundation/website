@@ -1586,22 +1586,23 @@
 .prose-article {
   color: hsl(var(--foreground));
   font-family: var(--font-body, inherit);
-  font-size: 19px;
+  font-size: 18px;
 }
-.prose-article > * + * { margin-top: 1.5em; }
+.prose-article > * + * { margin-top: 1.4em; }
 .prose-article > *:first-child { margin-top: 0; }
 .prose-article p,
 .prose-article li {
-  font-size: 19px;
-  line-height: 1.75;
-  color: hsl(var(--foreground) / 0.92);
+  font-size: 18px;
+  line-height: 1.65;
+  color: hsl(var(--foreground) / 0.95);
+  letter-spacing: -0.003em;
 }
 .prose-article > p:first-of-type {
-  font-size: 23px;
-  line-height: 1.55;
+  font-size: 20px;
+  line-height: 1.6;
   color: hsl(var(--foreground));
   font-weight: 500;
-  margin-bottom: 2em;
+  margin-bottom: 1.6em;
 }
 .prose-article p strong,
 .prose-article li strong { color: hsl(var(--foreground)); font-weight: 600; }
@@ -1620,11 +1621,11 @@
   font-weight: 800;
   letter-spacing: -0.01em;
   text-transform: none;
-  font-size: 1.75rem;
+  font-size: 1.625rem;
   line-height: 1.2;
   color: hsl(var(--foreground));
-  margin-top: 3.25rem;
-  margin-bottom: 0.25em;
+  margin-top: 2.75rem;
+  margin-bottom: 0.4em;
   padding-top: 0;
   border-top: 0;
 }
@@ -1638,18 +1639,19 @@
   font-weight: 700;
   text-transform: none;
   letter-spacing: -0.005em;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   line-height: 1.3;
   color: hsl(var(--foreground));
-  margin-top: 2.25rem;
+  margin-top: 2rem;
+  margin-bottom: 0.3em;
 }
 .prose-article ul,
 .prose-article ol { padding-left: 0; list-style: none; }
 .prose-article ul > li,
 .prose-article ol > li {
-  margin-top: 0.6em;
-  font-size: 19px;
-  line-height: 1.75;
+  margin-top: 0.5em;
+  font-size: 18px;
+  line-height: 1.65;
   padding-left: 1.25em;
   position: relative;
 }
@@ -1657,20 +1659,20 @@
   content: "";
   position: absolute;
   left: 0.25em;
-  top: 0.75em;
+  top: 0.7em;
   width: 6px;
   height: 6px;
   border-radius: 9999px;
   background: hsl(var(--primary));
 }
 .prose-article blockquote {
-  margin: 2em 0;
-  padding: 0.25em 0 0.25em 1.5em;
+  margin: 2.25em 0;
+  padding: 0.1em 0 0.1em 1.5em;
   border-left: 3px solid hsl(var(--primary));
   font-style: italic;
   color: hsl(var(--foreground));
-  font-size: 1.4rem;
-  line-height: 1.5;
+  font-size: 1.35rem;
+  line-height: 1.45;
   font-family: var(--font-display, inherit);
   font-weight: 500;
 }
