@@ -191,14 +191,14 @@ const ArticleLayout = ({
             </h1>
 
             {/* Single hairline meta line */}
-            <div className="mt-6 md:mt-8 text-[13px] text-muted-foreground font-body">
+            <div className="mt-6 md:mt-8 text-[15px] md:text-[16px] text-muted-foreground font-body">
               <span className="text-foreground/80">{author}</span>
               {date && <> <span className="mx-2 text-muted-foreground/40">·</span> <span>{date}</span></>}
             </div>
 
             {/* Inline share row — small, muted, sits below meta */}
-            <div className="mt-6 opacity-70">
-              <ShareRow />
+            <div className="mt-6 opacity-80">
+              <ShareRow size={19} />
             </div>
           </div>
         </header>
