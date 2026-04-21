@@ -77,71 +77,87 @@ const BlogCanonicalRustCrate = () => {
         </p>
         <figure className="not-prose my-8 rounded-xl border border-border bg-card p-6 md:p-8">
           <svg
-            viewBox="0 0 760 330"
+            viewBox="0 0 820 420"
             role="img"
-            aria-label="Sender derives a 256-bit fingerprint from a structured object via canonical form and SHA-256. The object and fingerprint travel together over MCP or A2A. The receiver re-runs the same pipeline on arrival and compares."
+            aria-label="Agent A sends a multimodal payload (text, image, audio, JSON tool call) to Agent B over MCP or A2A. A UOR fingerprint travels with the payload. Agent B re-derives the fingerprint locally and compares — no third-party authority is involved."
             className="w-full h-auto text-foreground"
           >
             <defs>
               <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
                 <path d="M0,0 L10,5 L0,10 z" fill="currentColor" className="text-muted-foreground" />
               </marker>
+              <marker id="arrPrimary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="currentColor" className="text-primary" />
+              </marker>
             </defs>
 
-            {/* Sender lane */}
-            <text x="20" y="28" className="fill-muted-foreground" style={{ fontSize: 13, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Sender</text>
+            {/* ============ AGENT A (sender) ============ */}
+            <rect x="20" y="40" width="240" height="220" rx="14" className="fill-background stroke-border" strokeWidth="1.5" />
+            <text x="40" y="68" className="fill-muted-foreground" style={{ fontSize: 12, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Agent A</text>
+            <text x="40" y="92" className="fill-foreground" style={{ fontSize: 18, fontWeight: 600 }}>Sender</text>
+
+            {/* Multimodal payload chips */}
             <g>
-              <rect x="20" y="44" width="150" height="64" rx="8" className="fill-background stroke-border" strokeWidth="1.25" />
-              <text x="95" y="82" textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 600 }}>Object</text>
+              <rect x="40" y="110" width="92" height="34" rx="17" className="fill-muted/40 stroke-border" strokeWidth="1" />
+              <text x="86" y="132" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 500 }}>text</text>
 
-              <line x1="170" y1="76" x2="210" y2="76" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" markerEnd="url(#arr)" />
+              <rect x="140" y="110" width="100" height="34" rx="17" className="fill-muted/40 stroke-border" strokeWidth="1" />
+              <text x="190" y="132" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 500 }}>image</text>
 
-              <rect x="210" y="44" width="170" height="64" rx="8" className="fill-background stroke-border" strokeWidth="1.25" />
-              <text x="295" y="82" textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 600 }}>Canonical form</text>
+              <rect x="40" y="152" width="92" height="34" rx="17" className="fill-muted/40 stroke-border" strokeWidth="1" />
+              <text x="86" y="174" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 500 }}>audio</text>
 
-              <line x1="380" y1="76" x2="420" y2="76" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" markerEnd="url(#arr)" />
-
-              <rect x="420" y="44" width="150" height="64" rx="8" className="fill-background stroke-border" strokeWidth="1.25" />
-              <text x="495" y="82" textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 600 }}>SHA-256</text>
-
-              <line x1="570" y1="76" x2="610" y2="76" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" markerEnd="url(#arr)" />
-
-              <rect x="610" y="44" width="130" height="64" rx="8" className="fill-primary/10 stroke-primary" strokeWidth="1.25" />
-              <text x="675" y="82" textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 600 }}>Fingerprint</text>
+              <rect x="140" y="152" width="100" height="34" rx="17" className="fill-muted/40 stroke-border" strokeWidth="1" />
+              <text x="190" y="174" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 500 }}>tool call</text>
             </g>
 
-            {/* Connectors from sender down into transport */}
-            <line x1="95" y1="108" x2="95" y2="142" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" strokeDasharray="4 4" />
-            <line x1="675" y1="108" x2="675" y2="142" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" strokeDasharray="4 4" />
+            {/* UOR seal on agent A */}
+            <rect x="40" y="206" width="200" height="40" rx="8" className="fill-primary/10 stroke-primary" strokeWidth="1.25" />
+            <text x="140" y="231" textAnchor="middle" className="fill-foreground" style={{ fontSize: 14, fontWeight: 600 }}>UOR fingerprint · 256-bit</text>
 
-            {/* Transport band — MCP / A2A */}
-            <rect x="20" y="142" width="720" height="60" rx="10" className="fill-muted/30 stroke-border" strokeWidth="1.25" strokeDasharray="5 4" />
-            <text x="40" y="167" className="fill-muted-foreground" style={{ fontSize: 12, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Transport</text>
-            <text x="380" y="180" textAnchor="middle" className="fill-foreground" style={{ fontSize: 17, fontWeight: 600 }}>MCP   ·   A2A</text>
-            <text x="380" y="196" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace" }}>object + fingerprint travel together</text>
+            {/* ============ TRANSPORT (A2A / MCP) ============ */}
+            {/* Payload bundle traveling */}
+            <line x1="260" y1="150" x2="560" y2="150" stroke="currentColor" className="text-primary" strokeWidth="2.25" markerEnd="url(#arrPrimary)" />
+            <rect x="335" y="108" width="150" height="40" rx="8" className="fill-card stroke-primary" strokeWidth="1.25" />
+            <text x="410" y="133" textAnchor="middle" className="fill-foreground" style={{ fontSize: 13, fontWeight: 600 }}>payload + passport</text>
+            <text x="410" y="174" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>A2A · MCP</text>
 
-            {/* Connectors from transport down into receiver */}
-            <line x1="95" y1="202" x2="95" y2="236" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" strokeDasharray="4 4" />
-            <line x1="675" y1="202" x2="675" y2="236" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" strokeDasharray="4 4" />
+            {/* No third party — explicit, struck through */}
+            <g>
+              <rect x="320" y="220" width="180" height="56" rx="10" className="fill-muted/20 stroke-border" strokeWidth="1" strokeDasharray="4 4" />
+              <text x="410" y="244" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, fontWeight: 500 }}>third-party authority</text>
+              <text x="410" y="262" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11, fontFamily: "ui-monospace, monospace" }}>PKI · CA · registry</text>
+              {/* big diagonal strike */}
+              <line x1="328" y1="270" x2="492" y2="226" stroke="currentColor" className="text-destructive" strokeWidth="2.25" />
+            </g>
+            <text x="410" y="296" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, fontStyle: "italic" }}>not in the loop</text>
 
-            {/* Receiver lane */}
-            <text x="20" y="226" className="fill-muted-foreground" style={{ fontSize: 13, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Receiver</text>
+            {/* ============ AGENT B (receiver) ============ */}
+            <rect x="560" y="40" width="240" height="220" rx="14" className="fill-background stroke-border" strokeWidth="1.5" />
+            <text x="580" y="68" className="fill-muted-foreground" style={{ fontSize: 12, letterSpacing: "0.22em", textTransform: "uppercase", fontFamily: "ui-monospace, monospace" }}>Agent B</text>
+            <text x="580" y="92" className="fill-foreground" style={{ fontSize: 18, fontWeight: 600 }}>Receiver</text>
 
-            <rect x="20" y="246" width="150" height="64" rx="8" className="fill-background stroke-border" strokeWidth="1.25" />
-            <text x="95" y="284" textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 600 }}>Object</text>
+            {/* Receiver re-derives */}
+            <rect x="580" y="110" width="200" height="48" rx="8" className="fill-background stroke-border" strokeWidth="1.25" />
+            <text x="680" y="132" textAnchor="middle" className="fill-foreground" style={{ fontSize: 14, fontWeight: 600 }}>Re-run pipeline</text>
+            <text x="680" y="150" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 11, fontFamily: "ui-monospace, monospace" }}>same canonical form + hash</text>
 
-            <line x1="170" y1="278" x2="380" y2="278" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" markerEnd="url(#arr)" />
+            {/* Compare */}
+            <line x1="680" y1="158" x2="680" y2="190" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" markerEnd="url(#arr)" />
+            <rect x="580" y="190" width="200" height="56" rx="8" className="fill-primary/10 stroke-primary" strokeWidth="1.25" />
+            <text x="680" y="214" textAnchor="middle" className="fill-foreground" style={{ fontSize: 15, fontWeight: 600 }}>Compare fingerprints</text>
+            <text x="680" y="234" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12 }}>match → trust   ·   mismatch → refuse</text>
 
-            <rect x="380" y="246" width="220" height="64" rx="8" className="fill-background stroke-border" strokeWidth="1.25" />
-            <text x="490" y="284" textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 600 }}>Re-run pipeline</text>
-
-            <line x1="600" y1="278" x2="640" y2="278" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5" markerEnd="url(#arr)" />
-
-            <rect x="640" y="246" width="100" height="64" rx="8" className="fill-primary/10 stroke-primary" strokeWidth="1.25" />
-            <text x="690" y="284" textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 600 }}>Compare</text>
+            {/* Footer band */}
+            <text x="410" y="345" textAnchor="middle" className="fill-foreground" style={{ fontSize: 14, fontWeight: 500 }}>
+              Both agents compute the same passport from the same payload — independently.
+            </text>
+            <text x="410" y="370" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12, fontFamily: "ui-monospace, monospace" }}>
+              no shared key · no registry · no PKI
+            </text>
           </svg>
           <figcaption className="mt-4 text-[12px] text-muted-foreground font-body text-center">
-            One pipeline, two ends. The fingerprint is re-derived on arrival — no keys, no registry.
+            Two agents, one pipeline. UOR Identity travels with the payload — verification happens locally on each side.
           </figcaption>
         </figure>
       </section>
