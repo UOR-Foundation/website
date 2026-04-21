@@ -1,72 +1,55 @@
 
 
-## Hero Section — Confident Scale on Large Screens (SpaceX-inspired)
+## Restore Hero Presence — Bigger Image, Bigger Title, Tighter Stack
 
-At 1901px the current hero feels timid: title caps at ~7rem but the orb dominates the right half, the stats row sits cramped at the bottom, and the navigation feels small relative to the canvas. SpaceX's approach: **oversized confident type, generous negative space, edge-to-edge composition, large nav, and breathing room between every element.**
+On a 1837px-wide screen the current hero feels diminished: image caps at `52vh` height, the title sits small (`max ~64px` at 4rem), and there is `mt-10` of air between image and title — so they read as two separate, undersized elements with too much sky around them. The home page works because the hero composition **fills the screen** and the title is **large and confident**.
 
-We'll lift the entire composition without changing structure.
+We'll restore that presence using golden-ratio proportions.
 
-### Changes
+### Changes — `ArticleLayout.tsx` masthead only
 
-**1. Navigation — `Navigation.tsx`** (presence on large screens)
-- Logo wordmark: scale to `text-[clamp(13px, 0.9vw, 17px)]` (currently fixed small).
-- Nav links: scale to `text-[clamp(11px, 0.78vw, 14px)]`, increase gap to `gap-10 lg:gap-14 xl:gap-16`.
-- Header padding: `py-6 lg:py-7 xl:py-8` for more vertical presence.
-- Social icons: `size={18} lg:size={20}`.
+**1. Image — let it dominate the fold (golden ratio, not letterbox)**
+- Drop the `21:9` letterbox (too cinematic-thin for vertical screens). Use a **φ:1 aspect ratio** (`aspect-[1.618/1]`) — the same ratio we use across the OS.
+- Raise the height cap: `max-h-[clamp(420px, 62vh, 760px)]` so it actually fills the viewport on large screens.
+- Widen the image container to use full editorial width: `max-w-[clamp(1080px, 88vw, 1480px)]`.
 
-**2. Hero typography — `HeroSection.tsx`** (the headline must dominate)
-- **"Make Data Identity"**: `clamp(2.25rem, 4.6vw, 8rem)` (was 4vw / 7rem max). At 1901px this lands ~87px — confident but not shouty.
-- **"UNIVERSAL"**: `clamp(2.75rem, 6.2vw, 11rem)` (was 5.4vw / 9.5rem). At 1901px ~118px — true SpaceX-grade scale.
-- Description: `clamp(1.05rem, 1.35vw, 1.75rem)`, `max-w-[min(720px, 90%)]` — slightly tighter measure for readability at large sizes.
-- Title column: `xl:max-w-[58%] 2xl:max-w-[55%]` — let title breathe wider on ultrawide (was 56%/52%).
+**2. Title — confident scale, closer to image**
+- Increase H1 size to `clamp(2.25rem, 5.2vw, 5.5rem)` (currently caps at 4rem). At 1837px viewport this lands ~85px — comparable to the home page's "Make Data Identity" scale.
+- Widen title `max-width` to `clamp(720px, 68vw, 1180px)` so two-line headlines don't break awkwardly.
+- Tighten gap between image and title: `mt-3 md:mt-5` (was `mt-6 md:mt-10`). Aman keeps title hugged to image — the breathing happens **above** the kicker and **below** the meta, not between linked elements.
 
-**3. Vertical rhythm — golden-ratio breathing**
-- Top spacer: `basis-[32%]` (was 34%) — hero anchors slightly higher, opens room below.
-- Title→description gap: `mt-[clamp(1.5rem, 2.6vw, 3.25rem)]` (was 2.2vw / 2.75rem max).
-- Description→CTA gap: `mt-[clamp(1.5rem, 2.8vw, 3.5rem)]`.
-- CTA button: padding `px-[clamp(1.75rem, 2vw, 2.75rem)] py-[clamp(0.85rem, 1.05vw, 1.35rem)]`, text `clamp(13px, 1.05vw, 18px)`.
+**3. Vertical rhythm — golden-ratio top/bottom air**
+- Header padding: `py-8 md:py-10 lg:py-12` (was `py-10/14/16`). Reduces top air so the hero anchors higher.
+- Kicker→image gap: `mb-6 md:mb-8` (was `mb-8/10`). Tighter coupling.
+- Body offset: `mt-10 md:mt-14 lg:mt-16` (was `mt-12/16/20`).
 
-**4. Galaxy orb — keep proportional, slight lift**
-- Width/height: `clamp(420px, 54vw, 1180px)` (was 380/52vw/1100px) — scales more on ultrawide to match enlarged title.
-- Right margin unchanged.
+**4. Caption + meta — proportional bumps**
+- Hero caption: 13px (was 12px), still italic centered.
+- Meta line: 16px desktop already good, keep.
 
-**5. Stats bar — confident finish**
-- Divider width: `w-2/3` (was 3/5), more presence.
-- Bottom padding: `pb-[clamp(2.5rem, 4vh, 5rem)]` (was 3vh/3.5rem) — generous floor.
-- Stat numbers: `clamp(2rem, 2.9vw, 3.75rem)` (was 2.5vw / 3rem max).
-- Stat labels: `text-[clamp(11px, 0.78vw, 14px)]`, `tracking-[0.18em]`, `mt-2.5`.
-- Gap between stats: `gap-12 lg:gap-20 xl:gap-28` (was 10/14) — SpaceX-style wide spacing.
-
-### Result at 1901px viewport
+### Resulting proportion (at 1837px viewport)
 
 ```text
-   ┌────────────────────────────────────────────────────────┐
-   │  THE UOR FOUNDATION    FRAMEWORK  COMMUNITY  ...   ◯◯◯ │  ← larger nav, more gap
-   │                                                         │
-   │                                                         │
-   │   MAKE DATA IDENTITY                  ╭──────────╮     │
-   │                                       │          │     │
-   │   U N I V E R S A L                   │   ORB    │     │  ← title ~118px
-   │                                       │          │     │
-   │   UOR is an open-source standard…     ╰──────────╯     │
-   │                                                         │
-   │   [ EXPLORE PROJECTS → ]                                │
-   │                                                         │
-   │                                                         │
-   │              ─────────────────────                     │  ← wider divider
-   │                                                         │
-   │       1          11        150+      Open              │  ← larger stats, wider gaps
-   │   STANDARD   PROJECTS  CONTRIBUTORS  GOVERNANCE        │
-   └────────────────────────────────────────────────────────┘
+   ─── kicker ───                          ← 12px, 24px below nav
+
+   [ image  φ:1, ~1480px wide × 915px ]    ← dominates fold
+
+      Italic image credit                  ← 13px
+
+   Title ~85px serif, 2 lines              ← hugs image (20px gap)
+
+         Author · Date                     ← 16px
+
+         [ share row ]
 ```
 
 ### Files to modify
 
-- `src/modules/landing/components/HeroSection.tsx` — typography scales, spacing, stats, orb size.
-- `src/components/Navigation.tsx` (or equivalent) — link scale, gap, padding, social icon size.
+- `src/modules/core/components/ArticleLayout.tsx` — masthead container widths, image aspect/cap, title scale, vertical spacing only.
 
 ### Out of scope
 
-- No changes to galaxy internals, mobile layout, or sections below the hero.
-- No content / copy changes.
+- Body column width stays at `clamp(680px, 72vw, 1180px)` (already approved last round).
+- No changes to footer, share rail, or `index.css`.
+- No content changes.
 

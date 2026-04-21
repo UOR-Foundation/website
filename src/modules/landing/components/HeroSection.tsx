@@ -93,8 +93,8 @@ const HeroSection = () => {
           className="absolute right-0 top-1/2 -translate-y-1/2"
           style={{
             // md: smaller orb so title has room; lg+: scales with viewport, capped on ultrawide
-            width: "clamp(420px, 54vw, 1180px)",
-            height: "clamp(420px, 54vw, 1180px)",
+            width: "clamp(380px, 52vw, 1100px)",
+            height: "clamp(380px, 52vw, 1100px)",
             marginRight: "clamp(-4%, 1vw, 3%)",
           }}
         >
@@ -103,31 +103,31 @@ const HeroSection = () => {
       </div>
 
       <div className="hidden md:flex relative z-10 h-full flex-col px-[5%] lg:px-[6%] xl:px-[7%] pointer-events-none">
-        <div className="basis-[32%] shrink-0" />
+        <div className="basis-[34%] shrink-0" />
         {/* Title column: wider on md (orb is smaller), narrower on xl+ to leave breathing room */}
-        <div className="max-w-[64%] lg:max-w-[60%] xl:max-w-[58%] 2xl:max-w-[55%]">
+        <div className="max-w-[64%] lg:max-w-[60%] xl:max-w-[56%] 2xl:max-w-[52%]">
           <h1
             className="font-display font-bold leading-[1.04] tracking-[0.06em] uppercase text-foreground animate-fade-in-up opacity-0 inline-block"
             style={{ animationDelay: "0.29s" }}
           >
-             <span className="text-[clamp(2.25rem,4.6vw,8rem)] block">Make Data Identity</span>
-             <span className="text-[clamp(2.75rem,6.2vw,11rem)] flex justify-between w-full mt-1" aria-label="Universal">
+             <span className="text-[clamp(2.25rem,4vw,7rem)] block">Make Data Identity</span>
+             <span className="text-[clamp(2.75rem,5.4vw,9.5rem)] flex justify-between w-full mt-1" aria-label="Universal">
                {'UNIVERSAL'.split('').map((char, i) => <span key={i} aria-hidden="true">{char}</span>)}
              </span>
           </h1>
           <p
-            className="mt-[clamp(1.5rem,2.6vw,3.25rem)] text-foreground/60 max-w-[min(720px,90%)] leading-[1.65] font-body animate-fade-in-up opacity-0 text-[clamp(1.05rem,1.35vw,1.75rem)]"
+            className="mt-[clamp(1.25rem,2.2vw,2.75rem)] text-foreground/60 max-w-[min(960px,92%)] leading-[1.65] font-body animate-fade-in-up opacity-0 text-[clamp(1.05rem,1.2vw,1.6rem)]"
             style={{ animationDelay: "0.47s" }}
           >
             UOR (Universal Object Reference) is an open-source standard for content-addressed, decentralized identity for digital objects.
           </p>
           <div
-            className="mt-[clamp(1.5rem,2.8vw,3.5rem)] flex flex-wrap gap-3 animate-fade-in-up opacity-0"
+            className="mt-[clamp(1.25rem,2.5vw,3rem)] flex flex-wrap gap-3 animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.59s" }}
           >
             <a
               href="/projects"
-              className="pointer-events-auto inline-flex items-center gap-3 px-[clamp(1.75rem,2vw,2.75rem)] py-[clamp(0.85rem,1.05vw,1.35rem)] text-[clamp(13px,1.05vw,18px)] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out"
+              className="pointer-events-auto inline-flex items-center gap-3 px-[clamp(1.5rem,1.7vw,2.25rem)] py-[clamp(0.7rem,0.9vw,1.1rem)] text-[clamp(13px,0.95vw,17px)] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out"
             >
               Explore Projects
               <ArrowRight size={15} />
@@ -137,9 +137,9 @@ const HeroSection = () => {
         <div className="flex-1" />
 
         {/* Stats bar. desktop */}
-        <div className="w-2/3 mx-auto h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent mb-6 animate-fade-in-up opacity-0" style={{ animationDelay: "0.7s" }} />
+        <div className="w-3/5 mx-auto h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent mb-6 animate-fade-in-up opacity-0" style={{ animationDelay: "0.7s" }} />
         <div
-          className="w-full flex justify-center gap-12 lg:gap-20 xl:gap-28 pb-[clamp(2.5rem,4vh,5rem)] animate-fade-in-up opacity-0"
+          className="w-full flex justify-center gap-10 lg:gap-14 pb-[clamp(2rem,3vh,3.5rem)] animate-fade-in-up opacity-0"
           style={{ animationDelay: "0.75s" }}
         >
           {[
@@ -149,8 +149,8 @@ const HeroSection = () => {
             { value: "Open", label: "Governance" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="font-display font-bold text-foreground text-[clamp(2rem,2.9vw,3.75rem)] leading-none">{stat.value}</p>
-              <p className="font-body text-foreground/40 text-[clamp(11px,0.78vw,14px)] uppercase tracking-[0.18em] mt-2.5">{stat.label}</p>
+              <p className="font-display font-bold text-foreground text-[clamp(1.75rem,2.5vw,3rem)] leading-none">{stat.value}</p>
+              <p className="font-body text-foreground/40 text-fluid-label uppercase tracking-[0.15em] mt-1.5">{stat.label}</p>
             </div>
           ))}
         </div>
