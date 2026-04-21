@@ -79,6 +79,8 @@ const ArticleLayout = ({
 
   const shareItemClass =
     "p-2 rounded-full text-muted-foreground hover:bg-background/60 hover:text-foreground transition-colors";
+  const railItemClass =
+    "p-2.5 rounded-full text-muted-foreground hover:bg-background/60 hover:text-foreground transition-colors";
 
   const ShareRow = ({ size = 15 }: { size?: number }) => (
     <div className="flex items-center gap-1">
@@ -113,26 +115,26 @@ const ArticleLayout = ({
     <aside
       aria-label="Share this article"
       aria-hidden={!railVisible}
-      className={`hidden lg:flex fixed left-4 xl:left-6 top-1/2 z-40 flex-col items-center gap-1 p-2 rounded-full bg-card/85 backdrop-blur border border-border/60 shadow-sm transition-all duration-500 ease-out ${
+      className={`hidden lg:flex fixed left-4 xl:left-6 top-1/2 z-40 flex-col items-center gap-1.5 p-2.5 rounded-full bg-card/85 backdrop-blur border border-border/60 shadow-sm transition-all duration-500 ease-out ${
         railVisible
           ? "opacity-100 -translate-y-1/2 pointer-events-auto"
           : "opacity-0 -translate-y-[40%] pointer-events-none"
       }`}
     >
-      <a aria-label="Share on Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
-        <Facebook size={15} />
+      <a aria-label="Share on Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={railItemClass}>
+        <Facebook size={18} />
       </a>
-      <a aria-label="Share on X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
-        <Twitter size={15} />
+      <a aria-label="Share on X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer" className={railItemClass}>
+        <Twitter size={18} />
       </a>
-      <a aria-label="Share on LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
-        <Linkedin size={15} />
+      <a aria-label="Share on LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={railItemClass}>
+        <Linkedin size={18} />
       </a>
-      <a aria-label="Share via Email" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`} className={shareItemClass}>
-        <Mail size={15} />
+      <a aria-label="Share via Email" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`} className={railItemClass}>
+        <Mail size={18} />
       </a>
-      <button aria-label="Copy link" onClick={copyLink} className={shareItemClass}>
-        <Link2 size={15} />
+      <button aria-label="Copy link" onClick={copyLink} className={railItemClass}>
+        <Link2 size={18} />
       </button>
     </aside>
   );
