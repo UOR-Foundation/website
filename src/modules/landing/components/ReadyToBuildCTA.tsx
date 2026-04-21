@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const ReadyToBuildCTA = () => {
   return (
-    <section className="py-section-md bg-section-dark section-depth">
+    <section className="py-14 md:py-20 bg-section-dark section-depth">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="relative text-center pt-golden-lg border-t border-foreground/8">
           <h2 className="font-display font-bold text-foreground text-fluid-heading">
