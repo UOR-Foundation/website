@@ -28,6 +28,9 @@ export interface ArticleLayoutProps {
   hideHero?: boolean;
   /** Optional content rendered above hero, e.g. a YouTube embed */
   heroOverride?: ReactNode;
+  /** Optional override for the entire header block (meta + headline + deck + hero).
+   *  When provided, the default header is hidden and this node is rendered instead. */
+  headerOverride?: ReactNode;
   /** Back-link config */
   backHref?: string;
   backLabel?: string;
