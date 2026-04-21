@@ -1,76 +1,74 @@
 
 
-# Apply a TechCrunch-Style Editorial Format to Projects and Articles
+# Alchemy-Style Project Cards + Project Detail Header
 
-Goal: make every project page and every blog post look and read like a polished TechCrunch article — crisp typography, a strong editorial hero, a single comfortable reading column, clear section rhythm, and confident visual hierarchy.
+Make every place a project appears use the same crisp, developer-friendly format inspired by Alchemy's Dapp Store: a square logo tile on the left, name/description/tags on the right.
 
-## What "TechCrunch style" means here
+## What changes
 
-- A tight top meta line: category/tag · date · short read time.
-- A large, serious headline (display serif-feeling weight, tight tracking).
-- A single deck/standfirst paragraph under the headline (slightly larger, muted).
-- A full-width hero image directly under the headline with a small caption line below it.
-- One narrow reading column (~680–720px) for the entire body — never two columns of prose.
-- Generous body type (~19px / 1.75 line-height), strong section subheads, clear pull-style emphasis on key sentences, and subtle horizontal rules between major sections.
-- A clean footer block: author/source line, share row, and a "Related" strip.
+### 1. Shared `ProjectCard` component (new)
 
-## Changes
+Create `src/modules/projects/components/ProjectCard.tsx` — one canonical card used everywhere a project is listed:
 
-### 1. Project pages — `ProjectDetailLayout.tsx`
+- Layout: **horizontal**, square logo tile (96px on mobile, 112–128px on desktop) on the left, content on the right.
+- Logo tile: `aspect-square`, rounded-2xl, soft border, neutral background, `object-cover` of the project image. Falls back to a tasteful gradient + monogram when no image.
+- Right side, top to bottom: project name (display, semibold), one-line tagline (muted, clamped to 2 lines), then a chip row showing `category` and `maturity` (small pill badges, same colors as today).
+- Hover: border lifts to `primary/30`, subtle shadow, name shifts to primary. Whole card is a `<Link to={/projects/:slug}>`.
+- Optional external-link icon top-right when `url` is set, stops propagation.
+- Variants: `compact` (used on homepage / 3-up grid) and `default` (used on /projects and /sandbox 2-up grid).
 
-Replace the current side-by-side hero + multi-section layout with an editorial article layout:
+### 2. Homepage — `EcosystemSection`
 
-- **Top meta row**: `Category · Updated <date> · <X> min read`.
-- **Headline**: project name as an `<h1>`, large display weight, tight tracking, single column.
-- **Deck**: the existing tagline rendered as a larger muted standfirst paragraph directly under the headline.
-- **Hero image**: full-width (within the article max-width), 16:9, rounded, with a small italic caption underneath ("<Project name> — <category>").
-- **Body column**: a single `max-w-[720px]` column, centered, used for ALL sections.
-- **Section headings**: `h2` in display weight, with a thin top divider for clear rhythm.
-- **Body copy**: `text-[19px] leading-[1.75]`, comfortable paragraph spacing, larger lists, links underlined on hover.
-- **"For AI agents" block**: styled as an editorial sidebar card at the end of the article (subtle border, muted background, same column width).
-- **Footer**: source/repo line ("Source: <repoUrl>"), a simple share row, then a "Related projects" strip pulling 2–3 entries from `featured-projects.ts` (excluding current slug).
+Replace the current 3-column text-only featured strip with three `ProjectCard` (compact variant) in a `grid-cols-1 md:grid-cols-3` layout, separated by hairlines, on the same dark section. `featuredProjects` data gains an `imageKey` so the same `imageMap` used elsewhere is reused.
 
-All existing project pages keep their current data — no per-page edits required.
+### 3. Catalog — `ProjectsPage` ("Browse the Catalog")
 
-### 2. Blog posts — shared article layout
+Replace the current text-only 3-up grid with `ProjectCard` (default variant) in a `grid-cols-1 md:grid-cols-2 lg:grid-cols-3` layout. Add a small toolbar on top of the grid:
 
-Apply the same editorial template to blog post pages so projects and articles feel like one publication:
+- Search input (filters by `name`, `description`, `category`).
+- Category filter chips (derived from the catalog).
+- Result count text on the right.
 
-- Same meta row (Tag · Date · read time).
-- Same headline + deck treatment.
-- Same hero image + caption.
-- Same single 720px reading column, same type scale, same section dividers.
-- Same footer (share row + "Related reading" pulled from `blog-posts.ts`).
+Filtering is purely client-side over `projectsData`. No data changes required beyond this page's local state.
 
-Approach: introduce a single `ArticleLayout` component used by both project pages (via `ProjectDetailLayout`) and blog post pages, so the two surfaces stay visually identical going forward.
+### 4. Sandbox / explore — `SandboxPage`
 
-### 3. Type and rhythm tokens
+Same `ProjectCard` (default variant), grouped by category as today. Cards become uniform horizontal logo + text instead of the current "image on top, text below" stack — matches the Alchemy directory feel exactly.
 
-- Body: 19px / 1.75, paragraph spacing 1.25em.
-- H1: clamp(2.5rem, 5vw, 3.75rem), tracking-tight, weight 700.
-- H2: 1.875rem, tracking-tight, weight 700, with a 1px top border in `border-border/60` and 2.5rem top padding.
-- Deck: 1.375rem, muted-foreground, leading 1.55.
-- Caption: 0.875rem, muted-foreground, italic.
-- Max article width: 720px. Hero image width: 880px (slightly wider than text, classic editorial feel).
+### 5. Project detail header — `ProjectDetailLayout`
 
-### 4. Read time
+Currently the detail page (via `ArticleLayout`) shows a wide 16:9 hero image below the headline. Change the project-detail header to match Alchemy's Spearbit-style layout:
 
-Compute a simple read time from the rendered section text length (≈ 200 wpm), shown in the meta row. Falls back to "3 min read" if content is minimal.
+- Two-column header band: **left** = square logo tile (same component as the card's tile, larger — 200px on desktop, 144px on mobile, rounded-2xl); **right** = kicker (category), `h1` name, deck (tagline), and a CTA row (`Visit website` if `url`, `View Repository`, optional X/social).
+- Below the header band, keep the existing meta line (date · read time) and the single-column editorial body unchanged.
+- The wide 16:9 hero image is removed for project pages (it competes with the logo tile and creates two large visuals). Blog posts keep the wide hero image — only the project surface changes.
+- This is achieved by adding a `headerOverride` slot to `ArticleLayout` and rendering the logo + title block from `ProjectDetailLayout`. Blog posts pass nothing and keep current behavior.
 
-## Files to change
+### 6. Visual tokens (consistent across all surfaces)
 
-- `src/modules/projects/components/ProjectDetailLayout.tsx` — rebuild as editorial article layout.
-- New: `src/modules/core/components/ArticleLayout.tsx` — shared editorial shell (meta, headline, deck, hero, body slot, footer).
-- Blog post page(s) under `src/modules/core/pages/` (e.g. `BlogPost*.tsx`) — adopt `ArticleLayout`.
-- `src/index.css` — add `.prose-article` utility for the 19px/1.75 body rhythm and section divider styling.
+- Logo tile: `rounded-2xl border border-border bg-muted/30`, `aspect-square`, `object-cover`.
+- Card: `rounded-2xl border border-border bg-card`, `p-5 md:p-6`, hover `border-primary/30 shadow-md`.
+- Pill chips (category, maturity): `text-[11px] font-semibold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full`. Maturity colors stay as today.
+- Name: `font-display text-lg md:text-xl font-semibold`.
+- Tagline: `text-foreground/65 text-sm md:text-base leading-snug line-clamp-2`.
+
+## Files
+
+- New: `src/modules/projects/components/ProjectCard.tsx`
+- Edit: `src/data/featured-projects.ts` (add `imageKey` per entry).
+- Edit: `src/modules/landing/components/EcosystemSection.tsx` (use `ProjectCard`).
+- Edit: `src/modules/projects/pages/ProjectsPage.tsx` (search + filter chips + `ProjectCard`).
+- Edit: `src/modules/projects/pages/SandboxPage.tsx` (use `ProjectCard`).
+- Edit: `src/modules/projects/components/ProjectDetailLayout.tsx` (logo + text header band, drop wide hero).
+- Edit: `src/modules/core/components/ArticleLayout.tsx` (optional `headerOverride` slot; default behavior unchanged).
 
 ## Out of scope
 
-- No changes to project data, blog data, routing, or images.
-- No changes to navbar, footer, or homepage.
-- No new dependencies.
+- No changes to blog post rendering or the article body for projects.
+- No new images, no routing changes, no backend changes.
+- No changes to the "Submit a Project" form.
 
 ## Result
 
-Every project page and every blog post will read like a TechCrunch article: a confident headline, a clear deck, a strong hero image, and a single, generous reading column with crisp section rhythm — consistent across the entire site.
+Every project — on the homepage, the catalog, the sandbox grid, and individual detail pages — uses the same square-logo-plus-text pattern. The catalog gains search and category filters. Detail pages open with a clean Alchemy-style header (logo · title · description · actions) followed by the existing editorial body.
 
