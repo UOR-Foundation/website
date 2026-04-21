@@ -247,27 +247,39 @@ const ArticleLayout = ({
 
               {related && related.length > 0 && (
                 <div>
-                  <p className="text-[12px] uppercase tracking-[0.18em] font-semibold text-muted-foreground font-body mb-5">
+                  <p className="text-[12px] uppercase tracking-[0.18em] font-semibold text-muted-foreground font-body mb-6">
                     {relatedLabel}
                   </p>
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {related.slice(0, 3).map((item) => (
                       <li key={item.href}>
                         <Link
                           to={item.href}
-                          className="group block rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40"
+                          className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/40"
                         >
-                          {item.meta && (
-                            <p className="text-[11px] uppercase tracking-[0.16em] font-semibold text-muted-foreground/80 mb-2">
-                              {item.meta}
-                            </p>
+                          {item.image && (
+                            <div className="aspect-[16/9] w-full overflow-hidden bg-muted">
+                              <img
+                                src={item.image}
+                                alt={item.title}
+                                loading="lazy"
+                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                              />
+                            </div>
                           )}
-                          <p className="font-display text-base font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">
-                            {item.title}
-                          </p>
-                          <span className="mt-3 inline-flex items-center gap-1 text-sm text-muted-foreground group-hover:text-primary transition-colors">
-                            Read <ArrowRight size={13} />
-                          </span>
+                          <div className="flex flex-1 flex-col p-6">
+                            {item.meta && (
+                              <p className="text-[11px] uppercase tracking-[0.16em] font-semibold text-muted-foreground/80 mb-3">
+                                {item.meta}
+                              </p>
+                            )}
+                            <p className="font-display text-[17px] font-semibold text-foreground leading-snug group-hover:text-primary transition-colors text-pretty">
+                              {item.title}
+                            </p>
+                            <span className="mt-auto pt-5 inline-flex items-center gap-1.5 text-[15px] text-muted-foreground group-hover:text-primary transition-colors">
+                              Read <ArrowRight size={14} />
+                            </span>
+                          </div>
                         </Link>
                       </li>
                     ))}
