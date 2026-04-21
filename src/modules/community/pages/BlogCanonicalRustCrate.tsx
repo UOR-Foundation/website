@@ -65,10 +65,10 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>How it works</h2>
         <p>
-          Two steps: <strong>(1) normalize</strong> the object to a canonical form that ignores key order, encoding choice, and numeric representation; <strong>(2) SHA-256</strong> it. Same object → same fingerprint, on any runtime, in any language.
+          Two steps: <strong>(1) normalize</strong> the object to a canonical form that factors out key order, string encoding, integer width, float representation (including <code>-0</code>, NaN, ±Inf), datetime spelling, and unspecified array ordering for set-typed fields; <strong>(2) SHA-256</strong> it. Same object, same fingerprint, on any runtime, in any language.
         </p>
         <p>
-          The normalization step is formally verified in Lean 4, so determinism isn't a property we test for. It's a property we proved. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
+          The normalization step is formally verified in Lean 4: a machine-checked proof that <em>any</em> two inputs equal under the type's equivalence relation produce identical canonical bytes. Determinism isn't a property we test for, it's a property we proved. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
         </p>
         <pre>{`object → normalize → SHA-256 → 256-bit fingerprint`}</pre>
       </section>
