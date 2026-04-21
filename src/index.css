@@ -1628,6 +1628,22 @@
   .prose-article section > * + * { margin-top: 1.1em; }
   .prose-article section + section { margin-top: 2.25em; }
 }
+
+/* Large desktop (≥ 1440px) */
+@media (min-width: 1440px) {
+  .prose-article { font-size: 19px; }
+  .prose-article p,
+  .prose-article li { font-size: 19px; line-height: 1.62; }
+  .prose-article > p:first-of-type { font-size: 22px; margin-bottom: 1.5em; }
+}
+
+/* Ultra-wide (≥ 1920px) */
+@media (min-width: 1920px) {
+  .prose-article { font-size: 20px; }
+  .prose-article p,
+  .prose-article li { font-size: 20px; line-height: 1.62; }
+  .prose-article > p:first-of-type { font-size: 24px; }
+}
 .prose-article p strong,
 .prose-article li strong { color: hsl(var(--foreground)); font-weight: 600; }
 .prose-article a {
