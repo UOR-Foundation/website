@@ -1,74 +1,113 @@
 
 
-# Alchemy-Style Project Cards + Project Detail Header
+# Align UOR Spec Surface with the Canonical `uor-foundation` Crate
 
-Make every place a project appears use the same crisp, developer-friendly format inspired by Alchemy's Dapp Store: a square logo tile on the left, name/description/tags on the right.
+Same OCI-style refactor as approved, with one anchor change: the three specifications and every code example are sourced **directly** from the canonical materials — the `uor-foundation` Rust crate on crates.io and the `UOR-Foundation/UOR-Framework` GitHub repository. No invented APIs, no paraphrased pseudocode.
 
-## What changes
+## Anchor message (locked)
 
-### 1. Shared `ProjectCard` component (new)
+> **Make data identity universal.**
+> We gave every digital object its own permanent, content-addressed, self-verifying identity.
 
-Create `src/modules/projects/components/ProjectCard.tsx` — one canonical card used everywhere a project is listed:
+## Canonical sourcing rule
 
-- Layout: **horizontal**, square logo tile (96px on mobile, 112–128px on desktop) on the left, content on the right.
-- Logo tile: `aspect-square`, rounded-2xl, soft border, neutral background, `object-cover` of the project image. Falls back to a tasteful gradient + monogram when no image.
-- Right side, top to bottom: project name (display, semibold), one-line tagline (muted, clamped to 2 lines), then a chip row showing `category` and `maturity` (small pill badges, same colors as today).
-- Hover: border lifts to `primary/30`, subtle shadow, name shifts to primary. Whole card is a `<Link to={/projects/:slug}>`.
-- Optional external-link icon top-right when `url` is set, stops propagation.
-- Variants: `compact` (used on homepage / 3-up grid) and `default` (used on /projects and /sandbox 2-up grid).
+Every public-facing claim, type name, function name, and code snippet on the marketing site must map back to:
 
-### 2. Homepage — `EcosystemSection`
+- **Crate**: `uor-foundation` on crates.io (latest published version, pinned in copy).
+- **Repo**: `github.com/UOR-Foundation/UOR-Framework` (specifically the `foundation/` Rust workspace and its published specs).
+- **In-repo TS mirrors**: `src/types/uor-foundation/**` (e.g. `kernel/address.ts`) which already mirror the Rust modules via `@see foundation/src/...` annotations.
 
-Replace the current 3-column text-only featured strip with three `ProjectCard` (compact variant) in a `grid-cols-1 md:grid-cols-3` layout, separated by hairlines, on the same dark section. `featuredProjects` data gains an `imageKey` so the same `imageMap` used elsewhere is reused.
+Wherever a spec name, type, or example appears in the UI, it is taken verbatim from these sources and links back to the exact file/line. No marketing-only terminology.
 
-### 3. Catalog — `ProjectsPage` ("Browse the Catalog")
+## The three specifications (canonical names from the crate)
 
-Replace the current text-only 3-up grid with `ProjectCard` (default variant) in a `grid-cols-1 md:grid-cols-2 lg:grid-cols-3` layout. Add a small toolbar on top of the grid:
+Mapped to existing modules in `foundation/src/`:
 
-- Search input (filters by `name`, `description`, `category`).
-- Category filter chips (derived from the catalog).
-- Result count text on the right.
+| Public spec | Canonical module | Source of truth |
+|---|---|---|
+| **identity-spec** | `kernel::address` | `foundation/src/kernel/address.rs` (mirrored at `src/types/uor-foundation/kernel/address.ts`) — Glyph, Address, byte↔Braille bijection. |
+| **object-spec** | `kernel::object` (+ `kernel::manifest`) | Canonical UOR Object: content + JSON-LD manifest + signature, as defined in the crate's object module. |
+| **resolution-spec** | `kernel::resolver` (+ UNS) | Address → object resolution across registries/peers, as defined in the crate's resolver module and UNS reference. |
 
-Filtering is purely client-side over `projectsData`. No data changes required beyond this page's local state.
+Each spec card links to: (a) the crate's `docs.rs` page for that module, (b) the source file in `UOR-Framework`, and (c) the in-repo TS mirror under `src/types/uor-foundation/**`.
 
-### 4. Sandbox / explore — `SandboxPage`
+## Changes (delta from previously approved plan)
 
-Same `ProjectCard` (default variant), grouped by category as today. Cards become uniform horizontal logo + text instead of the current "image on top, text below" stack — matches the Alchemy directory feel exactly.
+Everything in the previously approved plan still applies. The additions/refinements below make it canonical.
 
-### 5. Project detail header — `ProjectDetailLayout`
+### 1. New canonical sources file
 
-Currently the detail page (via `ArticleLayout`) shows a wide 16:9 hero image below the headline. Change the project-detail header to match Alchemy's Spearbit-style layout:
+Add `src/data/canonical-sources.ts` exporting one record per spec with:
 
-- Two-column header band: **left** = square logo tile (same component as the card's tile, larger — 200px on desktop, 144px on mobile, rounded-2xl); **right** = kicker (category), `h1` name, deck (tagline), and a CTA row (`Visit website` if `url`, `View Repository`, optional X/social).
-- Below the header band, keep the existing meta line (date · read time) and the single-column editorial body unchanged.
-- The wide 16:9 hero image is removed for project pages (it competes with the logo tile and creates two large visuals). Blog posts keep the wide hero image — only the project surface changes.
-- This is achieved by adding a `headerOverride` slot to `ArticleLayout` and rendering the logo + title block from `ProjectDetailLayout`. Blog posts pass nothing and keep current behavior.
+```ts
+{
+  id: "identity" | "object" | "resolution",
+  name: "Identity Specification" | ...,
+  module: "kernel::address" | "kernel::object" | "kernel::resolver",
+  crate: { name: "uor-foundation", version: "<pinned>", docsUrl, cratesUrl },
+  repo:  { url: "https://github.com/UOR-Foundation/UOR-Framework",
+           path: "foundation/src/kernel/address.rs", permalink: "<commit-pinned>" },
+  tsMirror: "src/types/uor-foundation/kernel/address.ts",
+  oneLine: string,
+  status: "Draft" | "Stable",
+}
+```
 
-### 6. Visual tokens (consistent across all surfaces)
+All spec UI reads from this file. Single source of truth, easy to bump the pinned version.
 
-- Logo tile: `rounded-2xl border border-border bg-muted/30`, `aspect-square`, `object-cover`.
-- Card: `rounded-2xl border border-border bg-card`, `p-5 md:p-6`, hover `border-primary/30 shadow-md`.
-- Pill chips (category, maturity): `text-[11px] font-semibold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full`. Maturity colors stay as today.
-- Name: `font-display text-lg md:text-xl font-semibold`.
-- Tagline: `text-foreground/65 text-sm md:text-base leading-snug line-clamp-2`.
+### 2. `WhatIsUorSection.tsx` — three spec cards
 
-## Files
+Each card pulls from `canonical-sources.ts` and shows: spec name · `module::path` · status · "Read source →" (repo permalink) · "docs.rs →" (crate docs).
 
-- New: `src/modules/projects/components/ProjectCard.tsx`
-- Edit: `src/data/featured-projects.ts` (add `imageKey` per entry).
-- Edit: `src/modules/landing/components/EcosystemSection.tsx` (use `ProjectCard`).
-- Edit: `src/modules/projects/pages/ProjectsPage.tsx` (search + filter chips + `ProjectCard`).
-- Edit: `src/modules/projects/pages/SandboxPage.tsx` (use `ProjectCard`).
-- Edit: `src/modules/projects/components/ProjectDetailLayout.tsx` (logo + text header band, drop wide hero).
-- Edit: `src/modules/core/components/ArticleLayout.tsx` (optional `headerOverride` slot; default behavior unchanged).
+### 3. `StandardPage.tsx` — spec hub uses canonical snippets only
+
+"Getting Started" reduced to three steps, each a verbatim snippet from the crate's README/examples:
+
+1. **Install** — exact `Cargo.toml` line for the pinned `uor-foundation` version, plus the npm install for the TS mirrors if applicable.
+2. **Resolve an address** — exact example from the crate's `kernel::resolver` doc-test (cited inline with a "source" link to the file/line).
+3. **Publish an object** — exact example from the crate's `kernel::object` doc-test (cited inline).
+
+No paraphrased code. Every snippet has a small "from `foundation/src/.../...rs#Lxx-Lyy`" link beneath it.
+
+### 4. `ProjectCard.tsx` spec badge maps to canonical modules
+
+The optional `spec?: "identity" | "object" | "resolution"` field on `featured-projects.ts` / `projects.ts` is interpreted as the canonical module the project implements. Hovering the badge shows the underlying `kernel::*` module name.
+
+### 5. About + global meta
+
+- About page lists the canonical sources (crate + repo) directly under the governance paragraph.
+- `index.html` `<meta>` keeps the anchor message; AI-agent beacon adds machine-readable links to the crate, the repo, and the three module paths.
+
+### 6. Verification step (read-only checks before writing copy)
+
+Before drafting snippets, fetch and read the canonical surfaces to capture exact APIs and the latest crate version:
+
+- `https://crates.io/crates/uor-foundation` (version + description).
+- `https://docs.rs/uor-foundation/latest/uor_foundation/` (module list, public types).
+- `https://github.com/UOR-Foundation/UOR-Framework` (repo root README).
+- `foundation/src/kernel/{address,object,resolver}.rs` in the repo (signatures + doc-tests).
+- Local `src/types/uor-foundation/kernel/address.ts` and siblings (already mirrored types).
+
+If any of the three modules (`object`, `resolver`) is not yet exposed in the published crate at that exact name, the card is labelled **Draft** and links to the open spec PR rather than a published doc page — never invented.
+
+## Files (delta)
+
+In addition to the previously approved file list:
+
+- New: `src/data/canonical-sources.ts` — pinned crate version, repo permalinks, TS mirror paths, status per spec.
+- `src/modules/landing/components/WhatIsUorSection.tsx` — spec cards read from `canonical-sources.ts`.
+- `src/modules/core/pages/StandardPage.tsx` — Install / Resolve / Publish snippets pulled verbatim from the crate, each with a source-link footer.
+- `src/modules/projects/components/ProjectCard.tsx` — spec badge tooltip shows `kernel::*` module name.
+- `src/modules/core/pages/AboutPage.tsx` — canonical-sources block under governance paragraph.
+- `index.html` — beacon links to crate + repo + module paths.
 
 ## Out of scope
 
-- No changes to blog post rendering or the article body for projects.
-- No new images, no routing changes, no backend changes.
-- No changes to the "Submit a Project" form.
+- No changes to the Rust crate or the UOR-Framework repo.
+- No new APIs, no marketing-only terminology, no paraphrased code.
+- No routing, backend, or dependency changes.
 
 ## Result
 
-Every project — on the homepage, the catalog, the sandbox grid, and individual detail pages — uses the same square-logo-plus-text pattern. The catalog gains search and category filters. Detail pages open with a clean Alchemy-style header (logo · title · description · actions) followed by the existing editorial body.
+The public site presents UOR with OCI-style clarity (one message, three specs, one path in) and every spec name, type, and code example is a direct, linked citation of the canonical `uor-foundation` crate and the `UOR-Framework` repository — as canonical as the source itself.
 
