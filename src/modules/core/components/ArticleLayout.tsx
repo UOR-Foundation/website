@@ -80,7 +80,7 @@ const ArticleLayout = ({
   const shareItemClass =
     "p-2 rounded-full text-muted-foreground hover:bg-background/60 hover:text-foreground transition-colors";
   const railItemClass =
-    "p-2.5 rounded-full text-muted-foreground hover:bg-background/60 hover:text-foreground transition-colors";
+    "p-2 rounded-full text-muted-foreground/80 hover:bg-background/60 hover:text-foreground transition-colors";
 
   const ShareRow = ({ size = 15 }: { size?: number }) => (
     <div className="flex items-center gap-1">
@@ -115,26 +115,26 @@ const ArticleLayout = ({
     <aside
       aria-label="Share this article"
       aria-hidden={!railVisible}
-      className={`hidden lg:flex fixed left-4 xl:left-6 top-1/2 z-40 flex-col items-center gap-1.5 p-2.5 rounded-full bg-card/85 backdrop-blur border border-border/60 shadow-sm transition-all duration-500 ease-out ${
+      className={`hidden lg:flex fixed left-4 xl:left-6 top-1/2 z-40 flex-col items-center gap-1 p-2 rounded-full bg-background/60 backdrop-blur border border-border/30 transition-all duration-500 ease-out ${
         railVisible
           ? "opacity-100 -translate-y-1/2 pointer-events-auto"
           : "opacity-0 -translate-y-[40%] pointer-events-none"
       }`}
     >
       <a aria-label="Share on Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={railItemClass}>
-        <Facebook size={18} />
+        <Facebook size={16} />
       </a>
       <a aria-label="Share on X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer" className={railItemClass}>
-        <Twitter size={18} />
+        <Twitter size={16} />
       </a>
       <a aria-label="Share on LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={railItemClass}>
-        <Linkedin size={18} />
+        <Linkedin size={16} />
       </a>
       <a aria-label="Share via Email" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`} className={railItemClass}>
-        <Mail size={18} />
+        <Mail size={16} />
       </a>
       <button aria-label="Copy link" onClick={copyLink} className={railItemClass}>
-        <Link2 size={18} />
+        <Link2 size={16} />
       </button>
     </aside>
   );
@@ -143,17 +143,22 @@ const ArticleLayout = ({
     <Layout>
       <FloatingShareRail />
       <article className="pt-24 md:pt-28 pb-16 md:pb-24 bg-background">
-        {/* TechCrunch-style edge-to-edge masthead */}
-        <header className="mx-auto w-full max-w-[1920px] 2xl:border-x 2xl:border-border/60">
-          {!hideHero && (heroOverride || heroImage) ? (
-            <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] items-stretch lg:max-h-[58vh] xl:max-h-[56vh]">
-              {/* Image — full bleed left */}
-              <div className="order-1 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
+        {/* Aman-inspired stacked masthead — one element per row, generous air */}
+        <header className="mx-auto w-full max-w-[1280px] px-6 md:px-10 lg:px-14">
+          <div className="flex flex-col items-center text-center py-10 md:py-14 lg:py-16 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
+            {/* Centered kicker — Aman-style micro label */}
+            <span className="text-[11px] md:text-[12px] uppercase tracking-[0.32em] font-medium text-primary/70 font-body mb-8 md:mb-10">
+              {kicker}
+            </span>
+
+            {/* Cinematic 21:9 image, breathes alone */}
+            {!hideHero && (heroOverride || heroImage) && (
+              <figure className="w-full mb-6 md:mb-8">
                 {heroOverride ? (
                   heroOverride
                 ) : (
-                  <figure className="h-full flex flex-col">
-                    <div className="bg-muted/40 aspect-[16/6] lg:aspect-auto lg:h-full lg:min-h-[320px] xl:min-h-[360px] 2xl:min-h-[400px] lg:max-h-[58vh] xl:max-h-[56vh] w-full overflow-hidden">
+                  <>
+                    <div className="bg-muted/40 w-full overflow-hidden aspect-[21/9] max-h-[52vh]">
                       <img
                         src={heroImage}
                         alt={title}
@@ -162,92 +167,61 @@ const ArticleLayout = ({
                       />
                     </div>
                     {heroCaption && (
-                      <figcaption className="px-6 md:px-8 lg:px-10 mt-3 mb-2 text-[10.5px] uppercase tracking-[0.22em] font-mono text-muted-foreground/70">
+                      <figcaption className="mt-4 text-[12px] italic font-display text-muted-foreground/60 text-center">
                         Image credits: {heroCaption}
                       </figcaption>
                     )}
-                  </figure>
+                  </>
                 )}
-              </div>
+              </figure>
+            )}
 
-              {/* Right panel */}
-              <div
-                className="order-2 bg-card flex flex-col lg:min-h-[320px] xl:min-h-[360px] 2xl:min-h-[400px] lg:max-h-[58vh] xl:max-h-[56vh] animate-fade-in-up overflow-hidden"
-                style={{ animationDelay: "0.04s", padding: "clamp(1.5rem, 2.4vw, 2.75rem) clamp(1.75rem, 3vw, 3.25rem)" }}
-              >
-                {/* Vertically centered, homepage-style stacked content */}
-                <div className="flex-1 flex flex-col justify-center max-w-[42ch]">
-                  <div className="flex items-start justify-between gap-6 mb-4">
-                    <span className="text-[13px] xl:text-[14px] uppercase tracking-[0.22em] font-semibold text-primary/80 font-body">
-                      {kicker}
-                    </span>
-                    <ShareRow />
-                  </div>
+            {/* Title — quiet authority */}
+            <h1
+              className="font-display text-foreground text-balance mt-6 md:mt-10"
+              style={{
+                fontSize: "clamp(2rem, 3.6vw, 4rem)",
+                lineHeight: 1.1,
+                letterSpacing: "0.01em",
+                fontWeight: 400,
+                maxWidth: "clamp(680px, 60vw, 980px)",
+              }}
+            >
+              {title}
+            </h1>
 
-                  <h1
-                    className="font-display font-bold uppercase text-foreground text-balance"
-                    style={{ fontSize: "clamp(1.7rem, 2.4vw, 3rem)", lineHeight: 1.06, letterSpacing: "0.035em" }}
-                  >
-                    {title}
-                  </h1>
-
-                  <div className="mt-5">
-                    <div className="rule-prime" />
-                    <div className="mt-3 text-[14px] xl:text-[15px] text-muted-foreground font-body">
-                      <span className="text-foreground font-semibold">{author}</span>
-                      {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* Single hairline meta line */}
+            <div className="mt-6 md:mt-8 text-[13px] text-muted-foreground font-body">
+              <span className="text-foreground/80">{author}</span>
+              {date && <> <span className="mx-2 text-muted-foreground/40">·</span> <span>{date}</span></>}
             </div>
-          ) : (
-            // No hero: solid panel only
-            <div className="bg-card px-6 md:px-10 lg:px-16 xl:px-20 py-12 md:py-16 xl:py-20">
-              <div className="mx-auto max-w-[1180px]">
-                <div className="flex items-start justify-between gap-6 mb-10">
-                  <span className="text-[12.5px] xl:text-[13.5px] uppercase tracking-[0.2em] font-semibold text-primary/70 font-body">
-                    {kicker}
-                  </span>
-                  <ShareRow />
-                </div>
-                <h1
-                  className="font-display font-bold uppercase text-foreground text-balance max-w-[1100px]"
-                  style={{ fontSize: "clamp(2.2rem, 4.2vw, 4.5rem)", lineHeight: 1.05, letterSpacing: "0.05em" }}
-                >
-                  {title}
-                </h1>
-                <div className="mt-10 max-w-[1100px]">
-                  <div className="rule-prime" />
-                  <div className="mt-5 text-sm text-muted-foreground font-body">
-                    <span className="text-foreground font-semibold">{author}</span>
-                    {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
-                  </div>
-                </div>
-              </div>
+
+            {/* Inline share row — small, muted, sits below meta */}
+            <div className="mt-6 opacity-70">
+              <ShareRow />
             </div>
-          )}
+          </div>
         </header>
 
-        {/* Body — generous reading column that scales with viewport */}
-        <div className="px-4 sm:px-6 md:px-10 lg:px-14 xl:px-20 2xl:px-28 mt-10 md:mt-12 xl:mt-14">
-          <div className="mx-auto prose-article" style={{ maxWidth: "clamp(680px, 78vw, 1600px)" }}>
+        {/* Body — narrow, Aman-grade reading column */}
+        <div className="px-4 sm:px-6 md:px-10 lg:px-14 xl:px-20 mt-12 md:mt-16 lg:mt-20">
+          <div className="mx-auto prose-article" style={{ maxWidth: "clamp(620px, 58vw, 760px)" }}>
             {deck && <p>{deck}</p>}
             {children}
           </div>
 
           {afterBody && (
-            <div className="mx-auto mt-12" style={{ maxWidth: "clamp(680px, 78vw, 1600px)" }}>
+            <div className="mx-auto mt-12" style={{ maxWidth: "clamp(620px, 58vw, 760px)" }}>
               {afterBody}
             </div>
           )}
 
           {/* Footer: source + related strip */}
           {(sourceUrl || (related && related.length > 0)) && (
-            <footer className="mx-auto mt-16" style={{ maxWidth: "clamp(680px, 82vw, 1680px)" }}>
+            <footer className="mx-auto mt-20 md:mt-24" style={{ maxWidth: "clamp(680px, 82vw, 1280px)" }}>
               <div className="rule-prime mb-10" />
               {sourceUrl && (
-                <p className="text-sm xl:text-base text-muted-foreground font-body mb-8" style={{ maxWidth: "clamp(680px, 78vw, 1600px)" }}>
+                <p className="text-sm xl:text-base text-muted-foreground font-body mb-8" style={{ maxWidth: "clamp(620px, 58vw, 760px)" }}>
                   <span className="uppercase tracking-[0.2em] font-semibold text-primary/70 text-[12.5px] xl:text-[13.5px] mr-2">Source:</span>
                   <a
                     href={sourceUrl}
