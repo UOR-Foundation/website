@@ -1592,8 +1592,13 @@
 .prose-article p,
 .prose-article li {
   font-size: 20px;
-  line-height: 1.75;
-  color: hsl(var(--muted-foreground));
+  line-height: 1.7;
+  color: hsl(var(--foreground) / 0.9);
+}
+.prose-article > p:first-of-type {
+  font-size: 22px;
+  line-height: 1.6;
+  color: hsl(var(--foreground));
 }
 .prose-article p strong,
 .prose-article li strong { color: hsl(var(--foreground)); font-weight: 600; }
@@ -1614,9 +1619,9 @@
   font-size: 1.875rem;
   line-height: 1.2;
   color: hsl(var(--foreground));
-  margin-top: 2.25rem;
-  padding-top: 2rem;
-  border-top: 1px solid hsl(var(--border) / 0.6);
+  margin-top: 3rem;
+  padding-top: 0;
+  border-top: 0;
 }
 .prose-article h2:first-child {
   margin-top: 0;
