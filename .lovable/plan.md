@@ -1,56 +1,75 @@
 
+# Fix the Missing Preview Button / Stuck Files Mode
 
-# Rewrite the "Canonical Rust Crate" Release Post
+## Root Cause
 
-## What This Does
+The project still has a full PWA/service-worker setup enabled:
 
-Replace the current "Release" highlight card (which links externally to crates.io) with a proper, on-site article post that matches the format of `BlogPost1.tsx` exactly. Same layout, same typography, same back-link, same closing CTA — just the new content you supplied.
+- `vite.config.ts` uses `vite-plugin-pwa` with `injectManifest`
+- `src/custom-sw.ts` registers Workbox caching + navigation interception
+- `src/main.tsx` still runs service-worker / cross-origin-isolation bootstrap logic
 
-## The Three Changes
+That combination is exactly the kind of setup that can break Lovable preview, especially because preview runs in an iframe. The platform guidance for this environment explicitly warns that service workers in preview can cause stale routing, navigation interference, and the editor getting stuck in Files mode with the preview button disappearing.
 
-### 1. New page: `src/modules/community/pages/BlogCanonicalRustCrate.tsx`
-A direct structural clone of `BlogPost1.tsx` with:
-- **Back link** → "Back to Community" (`/research#blog`)
-- **Meta row** → `April 2, 2026` · tag `Release` (using the same `accent` chip styling)
-- **Title** → "uor-foundation v0.1.5 — Canonical Rust Crate"
-- **Hero image** → `blog-uor-framework-launch.png` (the staircase image already used for this card — same one shown in the screenshot you uploaded)
-- **Article body** organized into the sections from your draft, using the existing `prose-uor` styling, `<blockquote>` treatment, bulleted lists with primary dots, and `<h2>` section headers identical to BlogPost1:
-  1. Lead paragraph ("We gave every digital object…")
-  2. **Imagine this** (with the `tool_call.json` round-trip block rendered as a styled `<pre>` code block)
-  3. **How UOR works**
-  4. **How UOR is different** (bulleted list)
-  5. **What can UOR enable?** (bulleted list — AI pipelines, data sharing, deepfakes, data lakes)
-  6. **Why does UOR matter?**
-  7. **Try it yourself in under 30 seconds** — describes the playground and links to `uor.foundation/try`; includes the `cargo add uor-foundation` snippet as a `<pre>` block
-  8. Closing pull-quote ("A digital object's identity should travel with the object…")
-  9. **Learn more** with three links (live playground, developer guide, open repository)
-- **CTA footer** → identical to BlogPost1 (Discord button + "Back to Community")
+## Plan
 
-The "Embedded Wasm Playground" you mention is referenced as a link out to `/try` rather than embedded inline — keeping this post tight and matching the read-then-act flow of the other posts. (If you want it actually embedded, say the word and I'll add an iframe slot; current site has no `/try` route yet so we'd be planning that surface too.)
+### 1. Remove preview-breaking PWA behavior
+Update the app so Lovable preview never depends on a service worker:
 
-### 2. Route registration: `src/App.tsx`
-Add one line:
-```tsx
-const BlogCanonicalRustCrate = lazy(() => import("@/modules/community/pages/BlogCanonicalRustCrate"));
-// …
-<Route path="/blog/canonical-rust-crate" element={<BlogCanonicalRustCrate />} />
-```
+- Remove `VitePWA(...)` from `vite.config.ts`
+- Remove the `vite-plugin-pwa` import
+- Remove Workbox-related dependencies from `package.json` if they are no longer needed
+- Keep the app as a normal SPA so the preview iframe can load reliably again
 
-### 3. Re-point the highlight card: `src/data/highlights.ts`
-Change the `href` of the Release card from the external crates.io URL to the new internal route, so clicking the card on the home page opens the article instead of leaving the site:
-```ts
-href: "/blog/canonical-rust-crate",
-```
-The card itself (image, title, date, tag) stays exactly as it is — matches the screenshot you uploaded.
+### 2. Remove the custom service worker
+Delete the service-worker implementation path entirely:
 
-## What I'm NOT Touching
+- Remove `src/custom-sw.ts`
+- Remove any references to Workbox manifest injection or runtime caching
+- Eliminate the navigation interception that is currently modifying responses for COOP/COEP
 
-- `BlogPost1.tsx` and the Semantic Web post — kept as the format reference
-- `highlights.ts` other fields — title, date, tag, image stay identical
-- The `HighlightsSection` grid component — already handles internal vs external `href` correctly
-- The `src/custom-sw.ts` build errors shown in the build log — those are a pre-existing missing-dependency issue (workbox packages not installed) unrelated to this rewrite. Flag if you want them fixed in the same pass and I'll add a separate step to install `workbox-precaching`, `workbox-routing`, `workbox-strategies`, `workbox-expiration` and add the `__WB_MANIFEST` type declaration.
+### 3. Simplify `src/main.tsx`
+Strip out the service-worker / COI bootstrap logic that is currently tied to preview behavior:
+
+- Remove `isInIframe` / `isEditorPreview` PWA cleanup block
+- Remove `ensureCrossOriginIsolation()`
+- Remove reload-on-`controllerchange` logic
+- Leave `src/main.tsx` as a standard React entrypoint
+
+### 4. Preserve installability only if needed
+If you still want “install app” behavior without breaking preview, keep only the safe pieces:
+
+- keep a lightweight web manifest if desired
+- do **not** reintroduce service worker registration
+- no offline caching in the Lovable environment
+
+This gives installability without the preview instability.
+
+### 5. Audit for leftover service-worker assumptions
+Clean up UI/status surfaces that currently imply service-worker support is expected:
+
+- `src/modules/desktop/BootSequence.tsx`
+- `src/modules/boot/SystemMonitorDetailViews.tsx`
+
+Update wording so preview/dev mode does not report SW/COI as a required capability.
+
+### 6. Verify expected outcome
+After the cleanup:
+
+- Lovable preview should return
+- the top preview button should reappear
+- the project should stop getting trapped in Files mode
+- the app should behave as a standard SPA in preview
+
+## Files to Change
+
+- `vite.config.ts`
+- `src/main.tsx`
+- `src/custom-sw.ts` (remove)
+- `package.json`
+- `src/modules/desktop/BootSequence.tsx`
+- `src/modules/boot/SystemMonitorDetailViews.tsx`
 
 ## Result
 
-The home-page Release card (the one in your screenshot) opens an in-site article matching the visual rhythm of the other two community-highlight posts: same back link, same meta chip, same prose styling, same closing CTA — with your new copy as the body. Crisp, clear, and consistent.
-
+The site will stop using the preview-breaking PWA/service-worker path and return to a stable Lovable development setup, so the preview panel and preview button work normally again.
