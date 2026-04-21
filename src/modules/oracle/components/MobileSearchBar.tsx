@@ -64,7 +64,7 @@ export default function MobileSearchBar({ onSubmit, onEncode, onAiMode, loading 
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        className="relative rounded-2xl border border-white/[0.1] bg-[hsl(0_0%_10%/0.95)] backdrop-blur-xl shadow-[0_-4px_40px_-8px_hsl(0_0%_0%/0.6)]"
+        className="relative rounded-2xl border border-white/[0.1] bg-[hsl(0_0%_8%/0.97)] supports-[backdrop-filter]:bg-[hsl(0_0%_10%/0.85)] supports-[backdrop-filter]:backdrop-blur-md shadow-[0_-4px_40px_-8px_hsl(0_0%_0%/0.6)]"
       >
         <div className="flex items-center gap-1 px-2 py-1.5">
           {/* Open File Explorer */}

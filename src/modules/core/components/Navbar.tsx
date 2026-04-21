@@ -12,9 +12,23 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    let ticking = false;
+    let last = scrolled;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const next = window.scrollY > 20;
+        if (next !== last) {
+          last = next;
+          setScrolled(next);
+        }
+        ticking = false;
+      });
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -50,6 +64,10 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
               <img
                 src={uorIcon}
                 alt="UOR Foundation"
+                width={40}
+                height={40}
+                fetchPriority="high"
+                decoding="async"
                 className="w-10 h-10 md:w-[clamp(2.25rem,2.6vw,3.25rem)] md:h-[clamp(2.25rem,2.6vw,3.25rem)] object-contain invert brightness-[300] contrast-[1.5] drop-shadow-[0_0_1px_rgba(255,255,255,0.4)] transition-all duration-300"
               />
               <span className="md:hidden font-display text-[14px] font-bold tracking-[0.18em] uppercase text-foreground">
