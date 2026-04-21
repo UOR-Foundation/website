@@ -176,22 +176,25 @@ const ArticleLayout = ({
                 {/* Vertically centered, TechCrunch-style stacked content */}
                 <div className="flex-1 flex flex-col justify-center max-w-[42ch]">
                   <div className="flex items-start justify-between gap-6 mb-7">
-                    <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-foreground/80 font-body">
+                    <span className="text-[12.5px] xl:text-[13.5px] uppercase tracking-[0.2em] font-semibold text-primary/70 font-body">
                       {kicker}
                     </span>
                     <ShareRow />
                   </div>
 
                   <h1
-                    className="font-display font-semibold tracking-tight text-foreground text-balance normal-case"
-                    style={{ fontSize: "clamp(1.75rem, 2.4vw, 3.25rem)", lineHeight: 1.1, letterSpacing: "-0.015em", textTransform: "none" }}
+                    className="font-display font-bold uppercase text-foreground text-balance"
+                    style={{ fontSize: "clamp(1.9rem, 2.7vw, 3.6rem)", lineHeight: 1.08, letterSpacing: "0.05em" }}
                   >
                     {title}
                   </h1>
 
-                  <div className="mt-7 text-sm xl:text-[15px] text-muted-foreground font-body">
-                    <span className="text-foreground font-semibold">{author}</span>
-                    {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
+                  <div className="mt-7">
+                    <div className="rule-prime" />
+                    <div className="mt-5 text-sm xl:text-[15px] text-muted-foreground font-body">
+                      <span className="text-foreground font-semibold">{author}</span>
+                      {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -201,20 +204,23 @@ const ArticleLayout = ({
             <div className="bg-card px-6 md:px-10 lg:px-16 xl:px-20 py-12 md:py-16 xl:py-20">
               <div className="mx-auto max-w-[1180px]">
                 <div className="flex items-start justify-between gap-6 mb-10">
-                  <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-foreground/80 font-body">
+                  <span className="text-[12.5px] xl:text-[13.5px] uppercase tracking-[0.2em] font-semibold text-primary/70 font-body">
                     {kicker}
                   </span>
                   <ShareRow />
                 </div>
                 <h1
-                  className="font-display font-bold tracking-tight text-foreground text-balance max-w-[900px] normal-case"
-                  style={{ fontSize: "clamp(2rem, 4vw, 4rem)", lineHeight: 1.05, letterSpacing: "-0.02em", textTransform: "none" }}
+                  className="font-display font-bold uppercase text-foreground text-balance max-w-[1100px]"
+                  style={{ fontSize: "clamp(2.2rem, 4.2vw, 4.5rem)", lineHeight: 1.05, letterSpacing: "0.05em" }}
                 >
                   {title}
                 </h1>
-                <div className="mt-10 text-sm text-muted-foreground font-body">
-                  <span className="text-foreground font-semibold">{author}</span>
-                  {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
+                <div className="mt-10 max-w-[1100px]">
+                  <div className="rule-prime" />
+                  <div className="mt-5 text-sm text-muted-foreground font-body">
+                    <span className="text-foreground font-semibold">{author}</span>
+                    {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
+                  </div>
                 </div>
               </div>
             </div>
