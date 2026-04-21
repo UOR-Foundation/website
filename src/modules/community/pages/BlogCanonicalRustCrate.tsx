@@ -274,8 +274,8 @@ let id = tool_call.identify()?;          // → uor1q…f3a2 (256-bit, determini
 // receiver, after the message crosses MCP / A2A / anything
 assert_eq!(received.identify()?, id);    // bit-for-bit, or refuse`}</pre>
         <ul>
-          <li><strong>Playground:</strong> <Link to="/oracle">/oracle</Link></li>
           <li><strong>Install:</strong> <code>cargo add uor-foundation</code></li>
+          <li><strong>Guides:</strong> <a href={CRATE_DOCS_URL} target="_blank" rel="noopener noreferrer">docs.rs/uor-foundation</a></li>
           <li><strong>Source:</strong> <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">github.com/uor-foundation</a></li>
         </ul>
       </section>
