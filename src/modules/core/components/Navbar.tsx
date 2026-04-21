@@ -78,7 +78,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
           </div>
 
           {/* Right group: social icons + Contribute CTA (desktop) */}
-          <div className="hidden md:flex items-center gap-5">
+          <div className="hidden md:flex items-center">
             <div className="flex items-center gap-1.5">
               <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="p-2 text-foreground/50 hover:text-foreground active:scale-90 transition-all duration-150 ease-out" aria-label="Discord">
                 <DiscordIcon className="w-[clamp(21px,1.5vw,28px)] h-[clamp(21px,1.5vw,28px)]" />
@@ -90,12 +90,6 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                 <Linkedin className="w-[clamp(21px,1.5vw,28px)] h-[clamp(21px,1.5vw,28px)]" />
               </a>
             </div>
-            <Link
-              to="/projects#submit"
-              className="px-[clamp(1.5rem,1.7vw,2.25rem)] py-[clamp(0.7rem,0.9vw,1.1rem)] text-[clamp(13px,0.95vw,17px)] font-semibold uppercase tracking-[0.2em] border border-primary/60 text-primary hover:bg-primary hover:text-primary-foreground active:scale-[0.97] transition-all duration-200 ease-out inline-flex items-center"
-            >
-              Contribute
-            </Link>
           </div>
 
           {/* Mobile: Hamburger / X icon toggle */}
@@ -152,17 +146,6 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
             }`}
             style={{ transitionDelay: mobileOpen ? "350ms" : "0ms" }}
           />
-
-          {/* Secondary: Contribute link */}
-          <Link
-            to="/projects#submit"
-            className={`font-mono text-[15px] font-semibold uppercase tracking-[0.2em] text-foreground/70 active:text-foreground transition-all duration-[350ms] py-2 ${
-              mobileOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-            }`}
-            style={{ transitionDelay: mobileOpen ? "380ms" : "0ms" }}
-          >
-            Contribute →
-          </Link>
 
           {/* Spacer */}
           <div className="flex-1" />
