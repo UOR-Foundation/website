@@ -251,6 +251,19 @@ const BlogCanonicalRustCrate = () => {
       </section>
 
       <section>
+        <h2>What this enables</h2>
+        <p>
+          Once every object carries its own address, a few things become possible that simply were not before.
+        </p>
+        <ul>
+          <li><strong>Verifiable agent-to-agent calls.</strong> The receiver can prove the tool call, memory, or result it processed is bit-for-bit the one the sender produced, across any language or transport.</li>
+          <li><strong>Deduplicated, cacheable computation.</strong> Identical objects collapse to one address, so caches, audit logs, and replay systems stop storing the same payload twice.</li>
+          <li><strong>Portable provenance.</strong> An object's history travels with it: fork it, move it between MCP servers, hand it to a different agent, the address still resolves.</li>
+          <li><strong>No trust layer to operate.</strong> No certificates to issue, rotate, or revoke. Verification is a local hash, not a network call.</li>
+        </ul>
+      </section>
+
+      <section>
         <h2>Try it</h2>
         <pre>{`use uor_foundation::prelude::*;
 
