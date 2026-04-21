@@ -1,41 +1,49 @@
 
 
-## Tighten `/blog/canonical-rust-crate` to MCP-intro length & clarity
+## TechCrunch-Style Editorial Layout — Adaptive at Every Width
 
-Cut the article to ~350 words, MCP-intro voice: short declarative sentences, plain English, no internal jargon, no repetition. Keep the architecture diagram. Drop or fold sections that restate the thesis.
+The article currently caps at ~1040px wide and uses small body text (18-20px), leaving huge empty margins on a 1837px screen. I'll rebuild the layout so it scales beautifully across all viewports — from phone to ultra-wide — with proportional typography, a sidebar-style reading column on wide screens, and a much more balanced hero.
 
-### What stays
-- Header (kicker, title, deck, hero, source) — unchanged
-- Architecture SVG diagram — unchanged
-- Related posts — unchanged
+### What the user will see
 
-### New body — five sections
+**Hero (large screens)**
+- Hero image grows: from 50/50 split today → 58/42 (image/text) on `xl`, with image min-height growing to ~720px on 1440px+, ~820px on 1920px+.
+- Headline scales up: max font size from 4rem → 5.5rem on 1920px+, with tighter measure (16ch) for dramatic ragging.
+- Right-panel padding grows proportionally (clamp 2rem → 5rem) so kicker, title, byline breathe.
 
-1. **What it is** (2 sentences)
-   UOR is an open standard, with a Rust reference implementation `uor-foundation`, that gives any structured object a 256-bit content-derived address. It's designed to sit underneath MCP, A2A, and any transport carrying typed objects between agents.
+**Body (large screens)**
+- Reading column widens: from `min(1040px, 80ch)` → `clamp(680px, 62vw, 1280px)` on lg+, capped at ~75ch for comfortable measure but ~30% wider than today.
+- Body text scales: 18px → 21px (1440px), 23px (1920px). Lead paragraph: 20px → 26px (1920px).
+- Side padding shrinks proportionally on ultra-wide so the column sits naturally without feeling stranded; floating share rail stays in left gutter.
+- Optional drop-cap on first paragraph for editorial feel.
 
-2. **Why it exists** (3 sentences)
-   MCP and A2A specify how agents talk. Neither lets the receiver prove the object it got is the one the sender produced. Byte-level schemes like JCS (RFC 8785) break the moment a JSON library re-orders keys or re-encodes a number — the issue tracked across LangGraph, AutoGen, and CrewAI today.
+**Mobile / tablet**
+- Unchanged behavior (already tuned). Verified breakpoints stay 16px → 17px → 18px.
 
-3. **How it works** (kept short, keep `neg(bnot(x)) = succ(x)` line, keep the arrow line)
-   Reduce the object to a canonical structural form, then hash it. The reduction is a deterministic operation over ℤ/256ℤ, formally verified in Lean 4. Reorder keys, swap encodings, round-trip through three serializers — the canonical form, and the fingerprint, don't change. Collision resistance comes from SHA-256, exactly as in Git or IPFS.
+### Files to change
 
-4. **Architecture** (keep the SVG + one-line intro, drop extra prose)
+1. **`src/modules/core/components/ArticleLayout.tsx`**
+   - Hero grid: `lg:grid-cols-[58%_42%]`, raise `min-h` tiers (520 → 640 → 720 → 820).
+   - Title clamp: `clamp(2rem, 3.6vw, 5.5rem)`, max-width `16ch xl:18ch`.
+   - Right panel padding: `clamp(2rem, 4vw, 5rem)`.
+   - Body wrapper: `maxWidth: "clamp(680px, 62vw, 1280px)"`.
+   - Outer padding tiers: `px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24 2xl:px-32`.
+   - Footer/related grid uses same fluid maxWidth.
 
-5. **Use it** (replace "What you write", "Rust pipeline", "What the certificate carries", "Where it differs from prior art", "Try it" — fold into one tight section)
-   - 5-line Rust snippet (sender + receiver), unchanged
-   - Three bullet links: Playground `/oracle`, `cargo add uor-foundation`, source on GitHub
+2. **`src/index.css` — `.prose-article` block**
+   - Add `@media (min-width: 1280px)` step (20px body, 22px first paragraph).
+   - Bump 1440px tier: 21px body / 24px lead.
+   - Bump 1920px tier: 23px body / 26px lead, line-height 1.6.
+   - Add subtle drop-cap rule on `.prose-article > p:first-of-type::first-letter` (optional, 1440px+).
+   - Increase H2 size scaling at large breakpoints (clamp).
 
-### What gets cut
-- "The gap it fills" (folded into Why it exists)
-- "The Rust pipeline" prose about typestate (advanced detail; readers who care will read the crate)
-- "What the certificate carries" (witt_bits, UorTime, Landauer) — too deep for an intro
-- "Where it differs from prior art" full bulleted comparison — replaced by one sentence in §2 + one parenthetical in §3
-- Spec link in footer (already linked from header / nav)
+### Coverage across the site
 
-### Files
-- `src/modules/community/pages/BlogCanonicalRustCrate.tsx` — replace body sections; header, diagram, related untouched.
+The website's main page archetypes already use one of two systems:
+- **Article pages** (blog posts, project deep-dives) → all route through `ArticleLayout`. Fixing it covers every blog/project page in one shot.
+- **Marketing/info pages** (UNS, Framework, About, Projects index) → already use the fluid `text-fluid-*` tokens defined in `:root` (`--text-page-title`, `--text-body`, etc.). I'll bump the upper bounds of those tokens so they also scale on 1440px+ and 1920px+ screens (e.g., `--text-body` max from 20px → 23px). One token edit lifts the entire site.
 
-### Out of scope
-- `ArticleLayout`, blog-posts data, hero image, related-posts logic.
+### Verification
+
+After implementation, I'll snapshot the article at 1366×768, 1920×1080, and 390×844 to confirm layout balance and read each capture for clipping, alignment, and breathing room.
 
