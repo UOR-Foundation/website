@@ -99,10 +99,10 @@ const ArticleLayout = ({
 
   return (
     <Layout>
-      <article className="pt-32 md:pt-40 pb-20 md:pb-28 bg-background">
+      <article className="pt-32 md:pt-36 pb-16 md:pb-24 bg-background">
         {/* Header: meta + headline + deck. Centered single-column */}
-        <header className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <div className="mx-auto max-w-[720px]">
+        <header className="container px-6 md:px-8 lg:px-10">
+          <div className="mx-auto max-w-[820px]">
             <Link
               to={backHref}
               className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-body mb-8"
@@ -152,10 +152,10 @@ const ArticleLayout = ({
 
         {/* Hero image — slightly wider than text column */}
         {!hideHero && (heroOverride || heroImage) && (
-          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mt-10 md:mt-14">
+          <div className="container px-6 md:px-8 lg:px-10 mt-8 md:mt-10">
             <div
               className="mx-auto animate-fade-in-up"
-              style={{ maxWidth: "880px", animationDelay: "0.12s" }}
+              style={{ maxWidth: "960px", animationDelay: "0.12s" }}
             >
               {heroOverride ? (
                 heroOverride
@@ -181,20 +181,20 @@ const ArticleLayout = ({
         )}
 
         {/* Body — single 720px reading column */}
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] mt-12 md:mt-16">
-          <div className="mx-auto max-w-[720px] prose-article">
+        <div className="container px-6 md:px-8 lg:px-10 mt-10 md:mt-12">
+          <div className="mx-auto max-w-[820px] prose-article">
             {children}
           </div>
 
           {afterBody && (
-            <div className="mx-auto max-w-[720px] mt-12">
+            <div className="mx-auto max-w-[820px] mt-12">
               {afterBody}
             </div>
           )}
 
           {/* Footer: source + related strip */}
           {(sourceUrl || (related && related.length > 0)) && (
-            <footer className="mx-auto max-w-[720px] mt-16 pt-8 border-t border-border">
+            <footer className="mx-auto max-w-[820px] mt-16 pt-8 border-t border-border">
               {sourceUrl && (
                 <p className="text-sm text-muted-foreground font-body mb-8">
                   Source:{" "}
