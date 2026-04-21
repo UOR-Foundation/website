@@ -153,52 +153,52 @@ const BlogCanonicalRustCrate = () => {
         <p>
           Content-addressed identity isn't new. Git did it in 2005, IPFS generalized it in 2015, Sigstore wrapped it in PKI. For their domains those tools are right. The gap UOR fills: <strong>identity that survives re-serialization</strong> (exactly what happens every time an agent parses, mutates, or forwards an object) <strong>without a signature layer to operate</strong>.
         </p>
-        <figure className="not-prose my-6 overflow-x-auto rounded-xl border border-border bg-card">
-          <table className="w-full text-sm">
+        <figure className="not-prose my-8 overflow-x-auto rounded-xl border border-border bg-card">
+          <table className="w-full text-[15px] md:text-base leading-relaxed">
             <thead>
-              <tr className="border-b border-border bg-muted/30 text-left">
-                <th className="px-4 py-3 font-semibold">System</th>
-                <th className="px-4 py-3 font-semibold">What it hashes</th>
-                <th className="px-4 py-3 font-semibold">Survives re-serialization</th>
-                <th className="px-4 py-3 font-semibold">Needs PKI / registry</th>
+              <tr className="border-b border-border bg-muted/40 text-left">
+                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">System</th>
+                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">What it hashes</th>
+                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Survives re-serialization</th>
+                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Needs PKI / registry</th>
               </tr>
             </thead>
             <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
               <tr>
-                <td className="px-4 py-3 font-semibold">UOR</td>
-                <td className="px-4 py-3">canonical structure of typed objects</td>
-                <td className="px-4 py-3 text-foreground">yes</td>
-                <td className="px-4 py-3 text-foreground">no</td>
+                <td className="px-5 py-5 align-top font-semibold text-foreground">UOR</td>
+                <td className="px-5 py-5 align-top text-foreground">canonical structure of typed objects</td>
+                <td className="px-5 py-5 align-top text-foreground">yes</td>
+                <td className="px-5 py-5 align-top text-foreground">no</td>
               </tr>
               <tr>
-                <td className="px-4 py-3"><a href="https://git-scm.com/book/en/v2/Git-Internals-Git-Objects" target="_blank" rel="noopener noreferrer">Git</a> · <a href="https://docs.ipfs.tech/concepts/content-addressing/" target="_blank" rel="noopener noreferrer">IPFS / CIDs</a> · <a href="https://www.sigstore.dev/" target="_blank" rel="noopener noreferrer">Sigstore</a></td>
-                <td className="px-4 py-3">specific byte encoding</td>
-                <td className="px-4 py-3 text-muted-foreground">no, bytes change, hash changes</td>
-                <td className="px-4 py-3 text-muted-foreground">Sigstore: yes</td>
+                <td className="px-5 py-5 align-top text-foreground"><a href="https://git-scm.com/book/en/v2/Git-Internals-Git-Objects" target="_blank" rel="noopener noreferrer">Git</a> · <a href="https://docs.ipfs.tech/concepts/content-addressing/" target="_blank" rel="noopener noreferrer">IPFS / CIDs</a> · <a href="https://www.sigstore.dev/" target="_blank" rel="noopener noreferrer">Sigstore</a></td>
+                <td className="px-5 py-5 align-top text-foreground">specific byte encoding</td>
+                <td className="px-5 py-5 align-top text-muted-foreground">no, bytes change, hash changes</td>
+                <td className="px-5 py-5 align-top text-muted-foreground">Sigstore: yes</td>
               </tr>
               <tr>
-                <td className="px-4 py-3"><a href="https://www.w3.org/TR/rdf-canon/" target="_blank" rel="noopener noreferrer">JSON-LD + URDNA2015</a></td>
-                <td className="px-4 py-3">canonical RDF graph</td>
-                <td className="px-4 py-3 text-foreground">yes (RDF only)</td>
-                <td className="px-4 py-3 text-muted-foreground">yes, for signatures</td>
+                <td className="px-5 py-5 align-top text-foreground"><a href="https://www.w3.org/TR/rdf-canon/" target="_blank" rel="noopener noreferrer">JSON-LD + URDNA2015</a></td>
+                <td className="px-5 py-5 align-top text-foreground">canonical RDF graph</td>
+                <td className="px-5 py-5 align-top text-foreground">yes (RDF only)</td>
+                <td className="px-5 py-5 align-top text-muted-foreground">yes, for signatures</td>
               </tr>
               <tr>
-                <td className="px-4 py-3"><a href="https://www.rfc-editor.org/rfc/rfc8785" target="_blank" rel="noopener noreferrer">JCS (RFC 8785)</a></td>
-                <td className="px-4 py-3">canonical JSON bytes</td>
-                <td className="px-4 py-3 text-muted-foreground">guarantee ends at first deserialize</td>
-                <td className="px-4 py-3 text-muted-foreground">yes, for signatures</td>
+                <td className="px-5 py-5 align-top text-foreground"><a href="https://www.rfc-editor.org/rfc/rfc8785" target="_blank" rel="noopener noreferrer">JCS (RFC 8785)</a></td>
+                <td className="px-5 py-5 align-top text-foreground">canonical JSON bytes</td>
+                <td className="px-5 py-5 align-top text-muted-foreground">guarantee ends at first deserialize</td>
+                <td className="px-5 py-5 align-top text-muted-foreground">yes, for signatures</td>
               </tr>
               <tr>
-                <td className="px-4 py-3"><a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/2395" target="_blank" rel="noopener noreferrer">SEP-2395 (MCP signing)</a></td>
-                <td className="px-4 py-3">message + signature</td>
-                <td className="px-4 py-3 text-muted-foreground">closed Mar 2026, operational cost</td>
-                <td className="px-4 py-3 text-muted-foreground">yes, across every hop</td>
+                <td className="px-5 py-5 align-top text-foreground"><a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/2395" target="_blank" rel="noopener noreferrer">SEP-2395 (MCP signing)</a></td>
+                <td className="px-5 py-5 align-top text-foreground">message + signature</td>
+                <td className="px-5 py-5 align-top text-muted-foreground">closed Mar 2026, operational cost</td>
+                <td className="px-5 py-5 align-top text-muted-foreground">yes, across every hop</td>
               </tr>
               <tr>
-                <td className="px-4 py-3"><a href="https://www.w3.org/TR/SRI/" target="_blank" rel="noopener noreferrer">W3C SRI</a></td>
-                <td className="px-4 py-3">byte stream of a resource</td>
-                <td className="px-4 py-3 text-foreground">re-derive on arrival</td>
-                <td className="px-4 py-3 text-foreground">no</td>
+                <td className="px-5 py-5 align-top text-foreground"><a href="https://www.w3.org/TR/SRI/" target="_blank" rel="noopener noreferrer">W3C SRI</a></td>
+                <td className="px-5 py-5 align-top text-foreground">byte stream of a resource</td>
+                <td className="px-5 py-5 align-top text-foreground">re-derive on arrival</td>
+                <td className="px-5 py-5 align-top text-foreground">no</td>
               </tr>
             </tbody>
           </table>
