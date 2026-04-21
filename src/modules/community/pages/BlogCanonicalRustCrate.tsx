@@ -29,7 +29,7 @@ const BlogCanonicalRustCrate = () => {
   return (
     <ArticleLayout
       kicker="Standards"
-      date="April 2, 2026"
+      date="April 21, 2026"
       title="UOR Identity: A universal data passport for your AI agent"
       heroImage={heroImage}
       heroCaption="An open standard for structured-object identity between agents."
