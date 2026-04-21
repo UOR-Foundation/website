@@ -1,4 +1,5 @@
 import ArticleLayout from "@/modules/core/components/ArticleLayout";
+import coverImage from "@/assets/blog-knowledge-graph.png";
 import { blogPosts } from "@/data/blog-posts";
 
 const SLUG = "/blog/building-the-internets-knowledge-graph";
@@ -18,8 +19,11 @@ const BlogPost1 = () => {
       backHref="/research#blog"
       backLabel="Back to Research"
       related={related}
-      heroOverride={
-        <div className="rounded-2xl overflow-hidden border border-border aspect-video">
+      heroImage={coverImage}
+      heroCaption="UOR Foundation — turning the web into a navigable knowledge graph"
+    >
+      <figure className="my-8 not-prose">
+        <div className="rounded-xl overflow-hidden border border-border aspect-video bg-muted/40">
           <iframe
             className="w-full h-full"
             src="https://www.youtube.com/embed/WWAySQvHcr0?rel=0&origin=https://univeral-coordinate-hub.lovable.app"
@@ -30,9 +34,11 @@ const BlogPost1 = () => {
             loading="lazy"
           />
         </div>
-      }
-      heroCaption="From SEAL Missions to Graph Theory — a conversation with Alex Flom"
-    >
+        <figcaption className="mt-3 text-[11px] uppercase tracking-[0.22em] font-mono text-muted-foreground/80">
+          Watch: From SEAL Missions to Graph Theory — a conversation with Alex Flom
+        </figcaption>
+      </figure>
+
       <section>
         <h2>Introduction</h2>
         <p>

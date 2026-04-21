@@ -1,7 +1,7 @@
-import { ReactNode, useMemo, useCallback } from "react";
+import { ReactNode, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/modules/core/components/Layout";
-import { ArrowLeft, ArrowRight, Clock, Facebook, Linkedin, Link2, Mail, Twitter } from "lucide-react";
+import { ArrowLeft, ArrowRight, Facebook, Linkedin, Link2, Mail, Twitter } from "lucide-react";
 import { toast } from "sonner";
 
 export interface ArticleRelated {
@@ -15,8 +15,6 @@ export interface ArticleLayoutProps {
   kicker: string;
   /** Date string already formatted, e.g. "April 21, 2026" */
   date?: string;
-  /** Optional override; otherwise estimated from children text */
-  readTime?: string;
   /** Headline */
   title: string;
   /** Standfirst / deck — single muted paragraph below headline */
@@ -47,31 +45,6 @@ export interface ArticleLayoutProps {
 }
 
 /**
- * Estimate reading time from a React subtree by walking children for strings.
- * ~200 wpm. Falls back to "3 min read".
- */
-function estimateReadTime(node: ReactNode): string {
-  let words = 0;
-  const visit = (n: ReactNode) => {
-    if (n == null || typeof n === "boolean") return;
-    if (typeof n === "string" || typeof n === "number") {
-      words += String(n).trim().split(/\s+/).filter(Boolean).length;
-      return;
-    }
-    if (Array.isArray(n)) { n.forEach(visit); return; }
-    if (typeof n === "object" && n !== null) {
-      const maybeEl = n as unknown as { props?: { children?: ReactNode } };
-      if (maybeEl.props && "children" in maybeEl.props) {
-        visit(maybeEl.props.children);
-      }
-    }
-  };
-  try { visit(node); } catch { /* ignore */ }
-  if (words < 50) return "3 min read";
-  return `${Math.max(1, Math.round(words / 200))} min read`;
-}
-
-/**
  * ArticleLayout — shared TechCrunch-style editorial shell.
  * Used by project detail pages and blog post pages so both surfaces
  * read like one publication.
@@ -79,7 +52,6 @@ function estimateReadTime(node: ReactNode): string {
 const ArticleLayout = ({
   kicker,
   date,
-  readTime,
   title,
   deck,
   author = "UOR Foundation",
@@ -96,11 +68,6 @@ const ArticleLayout = ({
   afterBody,
   children,
 }: ArticleLayoutProps) => {
-  const computedReadTime = useMemo(
-    () => readTime ?? estimateReadTime(children),
-    [readTime, children],
-  );
-
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const shareTitle = title;
   const copyLink = useCallback(() => {
@@ -109,28 +76,56 @@ const ArticleLayout = ({
     toast.success("Link copied");
   }, []);
 
-  const ShareRow = () => (
-    <div className="flex items-center gap-1 text-muted-foreground">
-      <a aria-label="Share on Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
-        <Facebook size={15} />
+  const shareItemClass =
+    "p-2 rounded-full text-muted-foreground hover:bg-background/60 hover:text-foreground transition-colors";
+
+  const ShareRow = ({ size = 15 }: { size?: number }) => (
+    <div className="flex items-center gap-1">
+      <a aria-label="Share on Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
+        <Facebook size={size} />
       </a>
-      <a aria-label="Share on X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
-        <Twitter size={15} />
+      <a aria-label="Share on X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
+        <Twitter size={size} />
       </a>
-      <a aria-label="Share on LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
-        <Linkedin size={15} />
+      <a aria-label="Share on LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
+        <Linkedin size={size} />
       </a>
-      <a aria-label="Share via Email" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`} className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
-        <Mail size={15} />
+      <a aria-label="Share via Email" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`} className={shareItemClass}>
+        <Mail size={size} />
       </a>
-      <button aria-label="Copy link" onClick={copyLink} className="p-2 rounded-full hover:bg-background hover:text-foreground transition-colors">
-        <Link2 size={15} />
+      <button aria-label="Copy link" onClick={copyLink} className={shareItemClass}>
+        <Link2 size={size} />
       </button>
     </div>
   );
 
+  // TechCrunch-style vertical floating share rail (left edge, sticky)
+  const FloatingShareRail = () => (
+    <aside
+      aria-label="Share this article"
+      className="hidden lg:flex fixed left-4 xl:left-6 top-1/2 -translate-y-1/2 z-40 flex-col items-center gap-1 p-2 rounded-full bg-card/85 backdrop-blur border border-border/60 shadow-sm"
+    >
+      <a aria-label="Share on Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
+        <Facebook size={15} />
+      </a>
+      <a aria-label="Share on X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
+        <Twitter size={15} />
+      </a>
+      <a aria-label="Share on LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className={shareItemClass}>
+        <Linkedin size={15} />
+      </a>
+      <a aria-label="Share via Email" href={`mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(shareUrl)}`} className={shareItemClass}>
+        <Mail size={15} />
+      </a>
+      <button aria-label="Copy link" onClick={copyLink} className={shareItemClass}>
+        <Link2 size={15} />
+      </button>
+    </aside>
+  );
+
   return (
     <Layout>
+      <FloatingShareRail />
       <article className="pt-24 md:pt-28 pb-16 md:pb-24 bg-background">
         {/* TechCrunch-style edge-to-edge masthead */}
         <header>
@@ -151,7 +146,7 @@ const ArticleLayout = ({
                       />
                     </div>
                     {heroCaption && (
-                      <figcaption className="px-6 md:px-8 lg:px-10 mt-3 mb-2 text-[11px] uppercase tracking-[0.18em] font-mono text-muted-foreground">
+                      <figcaption className="px-6 md:px-8 lg:px-10 mt-3 mb-2 text-[10.5px] uppercase tracking-[0.22em] font-mono text-muted-foreground/80">
                         Image credits: {heroCaption}
                       </figcaption>
                     )}
@@ -160,56 +155,46 @@ const ArticleLayout = ({
               </div>
 
               {/* Right panel */}
-              <div className="order-2 bg-card flex flex-col justify-between p-8 md:p-10 lg:p-14 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
-                <div className="flex items-start justify-between gap-6 mb-8">
-                  <div>
-                    <div className="w-8 h-px bg-primary mb-3" aria-hidden />
-                    <span className="text-[12px] uppercase tracking-[0.2em] font-semibold text-primary font-body">
-                      {kicker}
-                    </span>
-                  </div>
+              <div className="order-2 bg-card flex flex-col justify-between p-8 md:p-12 lg:p-16 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
+                <div className="flex items-start justify-between gap-6">
+                  <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-foreground/80 font-body">
+                    {kicker}
+                  </span>
                   <ShareRow />
                 </div>
 
                 <h1
-                  className="font-display font-bold tracking-tight text-foreground text-balance normal-case"
-                  style={{ fontSize: "clamp(2.25rem, 4.5vw, 3.75rem)", lineHeight: 1.05, letterSpacing: "-0.015em", textTransform: "none" }}
+                  className="font-display font-bold tracking-tight text-foreground text-balance normal-case my-10"
+                  style={{ fontSize: "clamp(2rem, 3.6vw, 3rem)", lineHeight: 1.08, letterSpacing: "-0.018em", textTransform: "none" }}
                 >
                   {title}
                 </h1>
 
-                <div className="mt-8 pt-6 border-t border-border/60 text-sm text-muted-foreground font-body">
-                  <span className="text-foreground font-medium">{author}</span>
-                  {date && <> <span className="mx-2 text-muted-foreground/50">·</span> {date}</>}
-                  <span className="mx-2 text-muted-foreground/50">·</span>
-                  <span className="inline-flex items-center gap-1.5"><Clock size={12} /> {computedReadTime}</span>
+                <div className="text-sm text-muted-foreground font-body">
+                  <span className="text-foreground font-semibold">{author}</span>
+                  {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
                 </div>
               </div>
             </div>
           ) : (
             // No hero: solid panel only
-            <div className="bg-card px-6 md:px-10 lg:px-14 py-12 md:py-16">
+            <div className="bg-card px-6 md:px-10 lg:px-16 py-12 md:py-16">
               <div className="mx-auto max-w-[1180px]">
-                <div className="flex items-start justify-between gap-6 mb-8">
-                  <div>
-                    <div className="w-8 h-px bg-primary mb-3" aria-hidden />
-                    <span className="text-[12px] uppercase tracking-[0.2em] font-semibold text-primary font-body">
-                      {kicker}
-                    </span>
-                  </div>
+                <div className="flex items-start justify-between gap-6 mb-10">
+                  <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-foreground/80 font-body">
+                    {kicker}
+                  </span>
                   <ShareRow />
                 </div>
                 <h1
                   className="font-display font-bold tracking-tight text-foreground text-balance max-w-[900px] normal-case"
-                  style={{ fontSize: "clamp(2.25rem, 5vw, 3.75rem)", lineHeight: 1.05, letterSpacing: "-0.015em", textTransform: "none" }}
+                  style={{ fontSize: "clamp(2rem, 4vw, 3rem)", lineHeight: 1.08, letterSpacing: "-0.018em", textTransform: "none" }}
                 >
                   {title}
                 </h1>
-                <div className="mt-8 pt-6 border-t border-border/60 text-sm text-muted-foreground font-body">
-                  <span className="text-foreground font-medium">{author}</span>
-                  {date && <> <span className="mx-2 text-muted-foreground/50">·</span> {date}</>}
-                  <span className="mx-2 text-muted-foreground/50">·</span>
-                  <span className="inline-flex items-center gap-1.5"><Clock size={12} /> {computedReadTime}</span>
+                <div className="mt-10 text-sm text-muted-foreground font-body">
+                  <span className="text-foreground font-semibold">{author}</span>
+                  {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
                 </div>
               </div>
             </div>
