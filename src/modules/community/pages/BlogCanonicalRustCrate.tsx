@@ -263,38 +263,23 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>Try it</h2>
         <p>
-          Three commands to install. One file to run. No keys, no config, no network.
+          One curl. <strong>No install, no auth, no config.</strong>
         </p>
-        <pre>{`# 1. install
-cargo new hello-uor && cd hello-uor
-cargo add uor-foundation
-
-# 2. src/main.rs
-use uor_foundation::{DefaultHostTypes, prelude::*};
-
-fn main() -> anyhow::Result<()> {
-    let payload = serde_json::json!({
-        "tool": "search",
-        "args": { "q": "uor", "limit": 10 }
-    });
-
-    let id = payload.identify::<DefaultHostTypes>()?;
-    println!("{id}");   // → uor1q…  (256-bit, deterministic)
-    Ok(())
-}
-
-# 3. run
-cargo run`}</pre>
+        <pre>{`curl -s https://api.uor.foundation/v1/kernel/address/encode -H "content-type: application/json" -d '{"input":"hello, uor"}'`}</pre>
         <p>
-          <strong>Expected output</strong> — a stable, content-derived UOR fingerprint:
+          Trimmed response — <code>u:glyph</code> is the content-derived address, encoded as Braille glyphs (U+2800–U+28FF):
         </p>
-        <pre>{`$ cargo run
-uor1q9k7c2v3m8r4t6y0a1n5p2d8s4j7h3f9b6w0l5x2c8q4t1m7r3y6a9n0p5d2s8`}</pre>
+        <pre>{`{
+  "u:glyph": "⠓⠑⠇⠇⠕⠂⠀⠥⠕⠗",
+  "u:length": 10
+}`}</pre>
         <p>
-          Format: <code>uor1</code> prefix · 60 base32 characters · 256-bit fingerprint. Re-run on any machine, change key order, change whitespace, the string is identical.
+          Same bytes in → same address out. Deterministic, content-derived for any UTF-8 input (≤1000 chars), in any runtime, any language.
         </p>
         <p>
-          Full reference at <a href={CRATE_DOCS_URL} target="_blank" rel="noopener noreferrer">docs.rs/uor-foundation</a> · source at <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">github.com/uor-foundation</a>.
+          <small>
+            Structural addressing for typed JSON objects (re-serialization-safe) ships next; this endpoint addresses UTF-8 bytes. Roadmap at <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">github.com/uor-foundation</a>.
+          </small>
         </p>
       </section>
     </ArticleLayout>
