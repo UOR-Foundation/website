@@ -215,24 +215,24 @@ const ArticleLayout = ({
           )}
         </header>
 
-        {/* Body — single reading column, TechCrunch-style */}
-        <div className="px-4 sm:px-6 md:px-8 mt-10 md:mt-14">
-          <div className="mx-auto max-w-[760px] prose-article">
+        {/* Body — generous reading column that scales with viewport */}
+        <div className="px-4 sm:px-6 md:px-10 lg:px-12 mt-10 md:mt-14">
+          <div className="mx-auto prose-article" style={{ maxWidth: "min(1040px, 80ch)" }}>
             {deck && <p>{deck}</p>}
             {children}
           </div>
 
           {afterBody && (
-            <div className="mx-auto max-w-[760px] mt-12">
+            <div className="mx-auto mt-12" style={{ maxWidth: "min(1040px, 80ch)" }}>
               {afterBody}
             </div>
           )}
 
           {/* Footer: source + related strip */}
           {(sourceUrl || (related && related.length > 0)) && (
-            <footer className="mx-auto max-w-[1180px] mt-16 pt-8 border-t border-border">
+            <footer className="mx-auto mt-16 pt-8 border-t border-border" style={{ maxWidth: "min(1320px, 90vw)" }}>
               {sourceUrl && (
-                <p className="text-sm text-muted-foreground font-body mb-8 max-w-[760px]">
+                <p className="text-sm text-muted-foreground font-body mb-8" style={{ maxWidth: "min(1040px, 80ch)" }}>
                   Source:{" "}
                   <a
                     href={sourceUrl}
