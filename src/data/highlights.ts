@@ -10,7 +10,7 @@ export const highlights = [
     title: "UOR Identity: A universal data passport for your AI agent",
     date: "April 21, 2026",
     imageKey: "uorIdentity",
-    href: "/blog/canonical-rust-crate",
+    href: "/universal-data-passport",
   },
   {
     tag: "Research" as TagType,
