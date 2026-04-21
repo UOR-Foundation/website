@@ -105,7 +105,7 @@ const UorDiagramCompact = () => (
 
 const WhatIsUorSection = () => {
   return (
-    <section id="intro" className="py-20 md:py-28 bg-background scroll-mt-16">
+    <section id="intro" className="py-12 md:py-16 bg-background scroll-mt-16">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <div className="mb-golden-md">
           <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-sm">
