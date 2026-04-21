@@ -146,26 +146,15 @@ const McpInstallTabs = () => {
       <div className="text-[15.5px] leading-relaxed text-foreground/85 font-body">
         {active === "cursor" && (
           <div role="tabpanel" id="mcp-panel-cursor" aria-labelledby="mcp-tab-cursor" className="space-y-4">
-            <InstallButton href={CURSOR_DEEP_LINK}>
-              <img
-                src="https://cursor.com/deeplink/mcp-install-dark.svg"
-                alt="Install in Cursor"
-                className="h-5 w-auto"
-              />
-              Install in Cursor
-            </InstallButton>
+            <InstallButton
+              href={CURSOR_DEEP_LINK}
+              icon={<CursorIcon />}
+              label="Add to"
+              client="Cursor"
+            />
             <p>
-              To open Cursor and automatically add the UOR Passport MCP, click install. Alternatively, add the
-              following to your <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">~/.cursor/mcp.json</code> file. To learn more, see the{" "}
-              <a
-                href="https://docs.cursor.com/context/model-context-protocol"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                Cursor documentation
-              </a>
-              .
+              One click installs the UOR Passport MCP. Or add it to{" "}
+              <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">~/.cursor/mcp.json</code> manually:
             </p>
             <CodeBlock code={JSON_CONFIG} language="mcp.json" />
           </div>
@@ -173,18 +162,16 @@ const McpInstallTabs = () => {
 
         {active === "vscode" && (
           <div role="tabpanel" id="mcp-panel-vscode" aria-labelledby="mcp-tab-vscode" className="space-y-4">
-            <InstallButton href={VSCODE_DEEP_LINK}>
-              <img
-                src="https://img.shields.io/badge/VS_Code-Install_MCP_Server-0098FF?style=for-the-badge&logo=visualstudiocode&logoColor=white"
-                alt="Install in VS Code"
-                className="h-7 w-auto"
-              />
-            </InstallButton>
+            <InstallButton
+              href={VSCODE_DEEP_LINK}
+              icon={<VSCodeIcon />}
+              label="Add to"
+              client="VS Code"
+            />
             <p>
-              Click install to open VS Code and add the server automatically. Or run{" "}
-              <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">MCP: Add Server</code> from the
-              command palette (<code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">Ctrl/⌘+Shift+P</code>),
-              choose HTTP, and paste the URL below.
+              Or run <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">MCP: Add Server</code> from the
+              command palette (<code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">⌘⇧P</code>),
+              choose HTTP, and paste:
             </p>
             <CodeBlock code={MCP_URL} language="server url" />
           </div>
