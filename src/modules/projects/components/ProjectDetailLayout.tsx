@@ -1,16 +1,14 @@
-import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, ArrowLeft, ShieldCheck, Bot, CheckCircle2, Loader2, Copy, Check, RefreshCw } from "lucide-react";
+import ArticleLayout from "@/modules/core/components/ArticleLayout";
+import { Bot, ExternalLink, ShieldCheck, CheckCircle2, Copy, Check, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { generateCertificate, type UorCertificate } from "@/lib/uor-certificate";
-import { canonicalJsonLd, computeCid } from "@/lib/uor-address";
 import { verifyCertificateFull, type FullVerificationResult } from "@/modules/certificate/verify";
 import { canonicalToTriword, formatTriword, triwordBreakdown } from "@/lib/uor-triword";
+import { featuredProjects } from "@/data/featured-projects";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/modules/core/ui/dialog";
 
 export interface ProjectSection {
@@ -33,29 +31,10 @@ export interface ProjectDetailProps {
   sections: ProjectSection[];
   agentInstructions: AgentInstruction[];
 }
-const CopyRow = ({ label, value, display }: { label: string; value: string; display?: React.ReactNode }) => {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-  return (
-    <p className="text-sm text-section-dark-foreground/90 font-mono break-all leading-relaxed mt-1.5 flex items-start gap-2 group">
-      <span className="flex-1">
-        <span className="text-section-dark-foreground/50">{label}:</span>{" "}
-        {display || value}
-      </span>
-      <button onClick={handleCopy} className="shrink-0 mt-0.5 text-section-dark-foreground/40 hover:text-section-dark-foreground/80 transition-colors cursor-pointer" title={`Copy ${label}`}>
-        {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
-      </button>
-    </p>
-  );
-};
 
 /**
- * CertificateReceipt. Triword-based Receipt of Authenticity
- * Used on every project page. Same format as the ConsoleUI CanonicalIdBadge verify dialog.
+ * CertificateReceipt — Triword-based Receipt of Authenticity dialog.
+ * Rendered as an inline editorial detail beneath the deck.
  */
 const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: UorCertificate; name: string; sourceObject: Record<string, unknown> }) => {
   const [open, setOpen] = useState(false);
@@ -65,7 +44,6 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
 
   const cid = certificate["cert:cid"];
   const triword = canonicalToTriword(cid);
-  const displayTriword = formatTriword(triword);
   const breakdown = triwordBreakdown(triword);
 
   const copyValue = useCallback((v: string) => {
@@ -77,8 +55,6 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
   const runVerification = useCallback(async () => {
     setStatus("verifying");
     try {
-      // FULL RE-DERIVATION: re-canonicalize source object via URDNA2015,
-      // re-hash with SHA-256, generate fresh CID, compare byte-level.
       const result = await verifyCertificateFull(sourceObject, certificate);
       setVerifyResult(result);
       setStatus(result.authentic ? "verified" : "failed");
@@ -89,14 +65,11 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
 
   const handleOpen = useCallback((o: boolean) => {
     setOpen(o);
-    if (o) {
-      setStatus("idle");
-      setVerifyResult(null);
-    }
+    if (o) { setStatus("idle"); setVerifyResult(null); }
   }, []);
 
   return (
-    <div className="mt-5 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+    <>
       <button
         onClick={() => handleOpen(true)}
         className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/70 transition-colors"
@@ -107,7 +80,6 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
 
       <Dialog open={open} onOpenChange={handleOpen}>
         <DialogContent className="max-w-md p-0 overflow-hidden">
-          {/* Header */}
           <div className="border-b border-dashed border-border px-6 pt-7 pb-5 text-center">
             <p className="text-[11px] uppercase tracking-[0.25em] text-foreground/40 font-medium">
               Receipt of Authenticity
@@ -116,7 +88,6 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
           </div>
 
           <div className="px-6 py-6 space-y-5">
-            {/* Coordinates */}
             {breakdown && (
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
@@ -130,50 +101,20 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                   </button>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                {([
-                  { key: "observer" as const, label: "Entity" },
-                  { key: "observable" as const, label: "Property" },
-                  { key: "context" as const, label: "Frame" },
-                ]).map(({ key, label }) => (
-                  <div key={key} className="rounded-lg border border-border bg-card px-3 py-3 text-center">
-                    <p className="text-xs text-foreground/40 mb-0.5">{label}</p>
-                    <p className="text-base font-bold capitalize text-foreground">{breakdown[key]}</p>
-                  </div>
-                ))}
-              </div>
+                  {([
+                    { key: "observer" as const, label: "Entity" },
+                    { key: "observable" as const, label: "Property" },
+                    { key: "context" as const, label: "Frame" },
+                  ]).map(({ key, label }) => (
+                    <div key={key} className="rounded-lg border border-border bg-card px-3 py-3 text-center">
+                      <p className="text-xs text-foreground/40 mb-0.5">{label}</p>
+                      <p className="text-base font-bold capitalize text-foreground">{breakdown[key]}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Details */}
-            <div className="space-y-2.5">
-              <p className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">Details</p>
-              <div className="rounded-lg border border-border bg-card px-4 py-3.5 space-y-2.5">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-sm text-foreground/50">Subject</span>
-                  <span className="text-sm font-medium text-foreground font-mono">{certificate["cert:subject"]}</span>
-                </div>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-sm text-foreground/50">Issued</span>
-                  <span className="text-sm font-medium text-foreground font-mono">
-                    {(() => { const d = new Date(certificate["cert:issuedAt"]); return d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) + "." + String(d.getMilliseconds()).padStart(3, "0"); })()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-sm text-foreground/50">Fingerprint</span>
-                  <span className="text-sm font-medium text-foreground font-mono">{certificate["cert:sourceHash"].slice(0, 16)}…</span>
-                </div>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-sm text-foreground/50">Structure</span>
-                  <span className="text-sm font-medium text-foreground font-mono">{certificate["cert:boundary"].fieldCount} fields · {certificate["cert:boundary"].keys.length} keys</span>
-                </div>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-sm text-foreground/50">Content size</span>
-                  <span className="text-sm font-medium text-foreground font-mono">{new TextEncoder().encode(certificate["cert:canonicalPayload"]).byteLength} bytes</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Unique ID */}
             <div className="space-y-2.5">
               <p className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">Unique ID</p>
               <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3.5 py-3">
@@ -184,7 +125,6 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
               </div>
             </div>
 
-            {/* Verification */}
             {status === "verifying" && (
               <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-4 py-3.5">
                 <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -195,8 +135,6 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
               const match = verifyResult.recomputedCid === verifyResult.storedCid;
               const color = match ? "text-primary" : "text-destructive";
               const borderColor = match ? "border-primary/30 bg-primary/5" : "border-destructive/30 bg-destructive/5";
-              const d = new Date(verifyResult.verifiedAt);
-              const ts = d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" }) + " " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) + "." + String(d.getMilliseconds()).padStart(3, "0");
               return (
                 <div className={`rounded-lg border px-4 py-4 space-y-3 ${borderColor}`}>
                   <div className="flex items-center gap-2">
@@ -205,32 +143,15 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
                       {match ? "Authentic" : "Mismatch"}
                     </span>
                   </div>
-
-                  <div className="rounded-md border border-border bg-muted/30 px-3.5 py-3 space-y-1.5">
-                    <code className={`block font-mono text-sm break-all leading-relaxed ${color}`}>
-                      {verifyResult.recomputedCid}
-                    </code>
-                    <p className={`text-sm font-medium ${color}`}>
-                      {match ? "✓ Match confirmed" : "✗ Does not match"}
-                    </p>
-                  </div>
-
-                  <p className="text-sm text-foreground/40 font-mono">
-                    {ts} · {verifyResult.elapsedMs}ms
-                  </p>
                 </div>
               );
             })()}
             {status === "failed" && (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-4">
                 <span className="text-base font-semibold text-destructive">Could not confirm</span>
-                <p className="text-sm text-foreground/50 mt-1.5">
-                  {verifyResult?.summary || "The content may have been modified since this receipt was issued."}
-                </p>
               </div>
             )}
 
-            {/* Verify button */}
             <button
               onClick={runVerification}
               disabled={status === "verifying"}
@@ -240,27 +161,12 @@ const CertificateReceipt = ({ certificate, name, sourceObject }: { certificate: 
               Verify certificate
             </button>
           </div>
-
-          {/* W3C Compliance badges */}
-          <div className="border-t border-dashed border-border px-6 py-3 flex flex-wrap gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-semibold text-primary tracking-wide">VC 2.0</span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-semibold text-primary tracking-wide">DID</span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-semibold text-primary tracking-wide">Data Integrity</span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-semibold text-primary tracking-wide">URDNA2015</span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-semibold text-primary tracking-wide">CIDv1</span>
-          </div>
-
-          <div className="bg-muted/30 border-t border-dashed border-border px-6 py-4 flex items-center justify-between">
-            <p className="text-sm text-foreground/50">W3C Compliant · Self-verifying</p>
-            <button onClick={() => copyValue(cid)} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-semibold">
-              {copied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy ID</>}
-            </button>
-          </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
+
 const ProjectDetailLayout = ({
   name,
   slug,
@@ -289,158 +195,102 @@ const ProjectDetailLayout = ({
     generateCertificate(`project:${slug}`, envelope).then(setCertificate);
   }, [slug, name, category, tagline, repoUrl]);
 
-  return (
-    <Layout>
-      {/* Hero */}
-      <section className="hero-gradient pt-32 md:pt-44 pb-12 md:pb-16">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <Link
-            to="/projects"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-body mb-8"
-          >
-            <ArrowLeft size={14} />
-            All Projects
-          </Link>
+  // Related: 2-3 other featured projects, excluding current slug
+  const related = featuredProjects
+    .filter((p) => p.slug !== slug)
+    .slice(0, 3)
+    .map((p) => ({
+      title: p.name,
+      href: `/projects/${p.slug}`,
+      meta: p.category,
+    }));
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-            {/* Text column */}
-            <div className="lg:col-span-7">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary font-body whitespace-nowrap">
-                  {category}
-                </span>
-                <span className="text-sm font-medium px-3 py-1 rounded-full border border-border text-muted-foreground font-body">
-                  Sandbox
-                </span>
-              </div>
-
-              <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground text-balance animate-fade-in-up">
-                {name}
-              </h1>
-              <p
-                className="mt-6 text-xl md:text-2xl text-muted-foreground font-body leading-[1.55] max-w-2xl text-balance animate-fade-in-up"
-                style={{ animationDelay: "0.1s" }}
-              >
-                {tagline}
-              </p>
-
-              {certificate && sourceEnvelope && <CertificateReceipt certificate={certificate} name={name} sourceObject={sourceEnvelope} />}
-            </div>
-
-            {/* Cover image */}
-            <div className="lg:col-span-5 animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-              <div className="rounded-2xl overflow-hidden border border-border project-card-glow aspect-[4/3] lg:aspect-square bg-muted/40">
-                <img
-                  src={heroImage}
-                  alt={name}
-                  className="w-full h-full object-cover"
-                  loading="eager"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Content sections — uniform rhythm, generous reading measure */}
-      {sections.map((section, idx) => (
-        <section
-          key={section.heading}
-          className={`py-14 md:py-20 ${idx % 2 === 1 ? "bg-muted/30" : "bg-background"} border-b border-border`}
-        >
-          <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-            <div className="max-w-3xl">
-              <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-6">
-                {section.heading}
-              </h2>
-              <div className="prose-project text-lg md:text-xl text-muted-foreground font-body leading-[1.7] space-y-5">
-                {section.content}
-              </div>
-            </div>
-          </div>
+  // Body: render every section in order. h2 + content blocks within prose-article.
+  const body = (
+    <>
+      {sections.map((section) => (
+        <section key={section.heading}>
+          <h2>{section.heading}</h2>
+          <div>{section.content}</div>
         </section>
       ))}
+    </>
+  );
 
-      {/* Agent Instructions */}
-      <section className="py-14 md:py-20 bg-muted/30 border-b border-border">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <div className="max-w-3xl">
-            <div className="flex items-center gap-3 mb-6">
-              <Bot size={22} className="text-primary" />
-              <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-                For AI agents
-              </h2>
-            </div>
-            <p className="text-lg md:text-xl text-muted-foreground font-body leading-[1.65] mb-8">
-              If you are an AI agent, here is how to understand, evaluate, and apply {name}.
-            </p>
-            <ol className="space-y-5">
-              {agentInstructions.map((instruction, idx) => (
-                <li key={idx} className="flex items-start gap-4">
-                  <span className="text-lg font-bold text-primary font-mono mt-0.5 shrink-0 w-7 tabular-nums">
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                  <div>
-                    <p className="text-lg font-semibold text-foreground font-body leading-snug">
-                      {instruction.action}
-                    </p>
-                    <p className="text-lg text-muted-foreground font-body mt-1 leading-[1.6]">
-                      {instruction.detail}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-          {certificate && (
-            <div className="mt-10 max-w-3xl rounded-lg border border-border bg-card p-5">
-              <p className="text-sm text-muted-foreground font-mono mb-2">
-                # Machine-readable identity (JSON-LD)
-              </p>
-              <pre className="text-sm text-foreground/80 font-mono overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
-{JSON.stringify({
-  "@context": certificate["@context"],
-  "@type": certificate["@type"],
-  "cert:subject": certificate["cert:subject"],
-  "cert:cid": certificate["cert:cid"],
-  "store:uorAddress": certificate["store:uorAddress"],
-  "cert:specification": certificate["cert:specification"],
-}, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="section-dark py-20 md:py-28">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] text-center">
-          <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight mb-5">
-            Get involved
-          </h2>
-          <p className="text-lg md:text-xl text-section-dark-foreground/70 font-body leading-[1.6] mb-10 max-w-xl mx-auto">
-            {name} is open source and open to contributors. Explore the code, open an issue, or start building.
+  // After-body: editorial sidebar card for AI agents + repo CTA
+  const afterBody = (
+    <>
+      <aside className="rounded-2xl border border-border bg-muted/30 p-6 md:p-8">
+        <div className="flex items-center gap-2.5 mb-4">
+          <Bot size={18} className="text-primary" />
+          <p className="text-[12px] uppercase tracking-[0.18em] font-semibold text-foreground font-body">
+            For AI agents
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a
-              href={repoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full bg-primary text-primary-foreground font-medium text-base hover:opacity-90 transition-opacity font-body"
-            >
-              View Repository
-              <ExternalLink size={14} />
-            </a>
-            <Link
-              to="/projects#submit"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full border border-section-dark-foreground/15 text-section-dark-foreground/70 font-medium text-base hover:border-section-dark-foreground/30 transition-colors font-body"
-            >
-              Submit Your Own Project
-            </Link>
-          </div>
         </div>
-      </section>
-    </Layout>
+        <p className="text-base text-muted-foreground font-body leading-[1.65] mb-6">
+          If you are an AI agent, here is how to understand, evaluate, and apply {name}.
+        </p>
+        <ol className="space-y-4">
+          {agentInstructions.map((instruction, idx) => (
+            <li key={idx} className="flex items-start gap-3.5">
+              <span className="text-sm font-bold text-primary font-mono mt-1 shrink-0 w-6 tabular-nums">
+                {String(idx + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <p className="text-base font-semibold text-foreground font-body leading-snug">
+                  {instruction.action}
+                </p>
+                <p className="text-base text-muted-foreground font-body mt-1 leading-[1.6]">
+                  {instruction.detail}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </aside>
+
+      <div className="mt-10 flex flex-col sm:flex-row gap-3">
+        <a
+          href={repoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium text-base hover:opacity-90 transition-opacity font-body"
+        >
+          View Repository
+          <ExternalLink size={14} />
+        </a>
+        <Link
+          to="/projects#submit"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-border text-foreground font-medium text-base hover:border-primary/40 transition-colors font-body"
+        >
+          Submit Your Own Project
+        </Link>
+        {certificate && sourceEnvelope && (
+          <div className="sm:ml-auto inline-flex items-center">
+            <CertificateReceipt certificate={certificate} name={name} sourceObject={sourceEnvelope} />
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <ArticleLayout
+      kicker={category}
+      title={name}
+      deck={tagline}
+      heroImage={heroImage}
+      heroCaption={`${name} — ${category}`}
+      backHref="/projects"
+      backLabel="All Projects"
+      sourceUrl={repoUrl}
+      sourceLabel={repoUrl.replace(/^https?:\/\//, "")}
+      related={related}
+      relatedLabel="Related projects"
+      afterBody={afterBody}
+    >
+      {body}
+    </ArticleLayout>
   );
 };
 
