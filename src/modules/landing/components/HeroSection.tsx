@@ -55,17 +55,18 @@ const HeroSection = () => {
         {/* Stats bar */}
         <div className="w-2/5 mx-auto h-px bg-gradient-to-r from-transparent via-foreground/12 to-transparent mb-4 animate-fade-in-up opacity-0 shrink-0" style={{ animationDelay: "0.6s" }} />
         <div
-          className="w-full grid grid-cols-3 gap-6 px-6 pb-[max(1.75rem,calc(env(safe-area-inset-bottom,1rem)+1rem))] animate-fade-in-up opacity-0 pointer-events-none shrink-0"
+          className="w-full grid grid-cols-4 gap-3 px-4 pb-[max(1.75rem,calc(env(safe-area-inset-bottom,1rem)+1rem))] animate-fade-in-up opacity-0 pointer-events-none shrink-0"
           style={{ animationDelay: "0.65s" }}
         >
           {[
+            { value: "1", label: "Standard" },
             { value: "11", label: "Projects" },
             { value: "150+", label: "Contributors" },
             { value: "Open", label: "Governance" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <p className="font-display font-bold text-foreground text-[clamp(1.5rem,6.5vw,2rem)] leading-none">{stat.value}</p>
-              <p className="font-mono text-foreground/55 text-[11px] uppercase tracking-[0.14em] mt-2 leading-tight">{stat.label}</p>
+              <p className="font-display font-bold text-foreground text-[clamp(1.25rem,5vw,1.75rem)] leading-none">{stat.value}</p>
+              <p className="font-mono text-foreground/55 text-[10px] uppercase tracking-[0.12em] mt-2 leading-tight">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -140,6 +141,7 @@ const HeroSection = () => {
           style={{ animationDelay: "0.75s" }}
         >
           {[
+            { value: "1", label: "Standard" },
             { value: "11", label: "Projects" },
             { value: "150+", label: "Contributors" },
             { value: "Open", label: "Governance" },
