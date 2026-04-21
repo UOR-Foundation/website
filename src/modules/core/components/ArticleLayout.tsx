@@ -1,7 +1,8 @@
-import { ReactNode, useMemo } from "react";
+import { ReactNode, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/modules/core/components/Layout";
-import { ArrowLeft, ArrowRight, Calendar, Clock, Tag as TagIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock, Facebook, Linkedin, Link2, Mail, Twitter } from "lucide-react";
+import { toast } from "sonner";
 
 export interface ArticleRelated {
   title: string;
@@ -20,6 +21,8 @@ export interface ArticleLayoutProps {
   title: string;
   /** Standfirst / deck — single muted paragraph below headline */
   deck?: string;
+  /** Byline author name */
+  author?: string;
   /** Hero image src */
   heroImage?: string;
   /** Italic caption under hero */
