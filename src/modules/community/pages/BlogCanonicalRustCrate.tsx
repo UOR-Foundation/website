@@ -146,6 +146,66 @@ const BlogCanonicalRustCrate = () => {
       </section>
 
       <section>
+        <h2>Where it differs from prior art</h2>
+        <p>
+          Content-addressed identity is not new. <em>Git did this in 2005. IPFS generalized it in 2015.</em> The pattern is well-worn — and for their own domains, those tools are correct. UOR targets a specific gap: <strong>structural identity that survives the re-serialization cycle routine between agents</strong>, with no signature layer to coordinate.
+        </p>
+        <figure className="not-prose my-6 overflow-x-auto rounded-xl border border-border bg-card">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/30 text-left">
+                <th className="px-4 py-3 font-semibold">System</th>
+                <th className="px-4 py-3 font-semibold">What it hashes</th>
+                <th className="px-4 py-3 font-semibold">Survives re-serialization</th>
+                <th className="px-4 py-3 font-semibold">Needs PKI / registry</th>
+              </tr>
+            </thead>
+            <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
+              <tr>
+                <td className="px-4 py-3 font-semibold">UOR</td>
+                <td className="px-4 py-3">canonical structure of typed objects</td>
+                <td className="px-4 py-3 text-foreground">yes</td>
+                <td className="px-4 py-3 text-foreground">no</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3"><a href="https://git-scm.com/book/en/v2/Git-Internals-Git-Objects" target="_blank" rel="noopener noreferrer">Git</a> · <a href="https://docs.ipfs.tech/concepts/content-addressing/" target="_blank" rel="noopener noreferrer">IPFS / CIDs</a> · <a href="https://www.sigstore.dev/" target="_blank" rel="noopener noreferrer">Sigstore</a></td>
+                <td className="px-4 py-3">specific byte encoding</td>
+                <td className="px-4 py-3 text-muted-foreground">no — bytes change, hash changes</td>
+                <td className="px-4 py-3 text-muted-foreground">Sigstore: yes</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3"><a href="https://www.w3.org/TR/rdf-canon/" target="_blank" rel="noopener noreferrer">JSON-LD + URDNA2015</a></td>
+                <td className="px-4 py-3">canonical RDF graph</td>
+                <td className="px-4 py-3 text-foreground">yes (RDF only)</td>
+                <td className="px-4 py-3 text-muted-foreground">yes — for signatures</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3"><a href="https://www.rfc-editor.org/rfc/rfc8785" target="_blank" rel="noopener noreferrer">JCS (RFC 8785)</a></td>
+                <td className="px-4 py-3">canonical JSON bytes</td>
+                <td className="px-4 py-3 text-muted-foreground">guarantee ends at first deserialize</td>
+                <td className="px-4 py-3 text-muted-foreground">yes — for signatures</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3"><a href="https://github.com/modelcontextprotocol/specification/discussions/195" target="_blank" rel="noopener noreferrer">SEP-2395 (MCP signing)</a></td>
+                <td className="px-4 py-3">message + signature</td>
+                <td className="px-4 py-3 text-muted-foreground">closed Mar 2026 — operational cost</td>
+                <td className="px-4 py-3 text-muted-foreground">yes — across every hop</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3"><a href="https://www.w3.org/TR/SRI/" target="_blank" rel="noopener noreferrer">W3C SRI</a></td>
+                <td className="px-4 py-3">byte stream of a resource</td>
+                <td className="px-4 py-3 text-foreground">re-derive on arrival</td>
+                <td className="px-4 py-3 text-foreground">no</td>
+              </tr>
+            </tbody>
+          </table>
+        </figure>
+        <p>
+          The closest philosophical cousin is <strong>W3C SRI</strong>: re-derive on arrival, refuse on mismatch. UOR is that pattern applied to <em>structured objects</em> instead of byte streams — which is why a single agent pair can adopt it without coordinating anything.
+        </p>
+      </section>
+
+      <section>
         <h2>Try it</h2>
         <pre>{`use uor_foundation::prelude::*;
 
