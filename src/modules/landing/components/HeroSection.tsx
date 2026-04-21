@@ -116,7 +116,7 @@ const HeroSection = () => {
             className="mt-[clamp(1rem,2vw,2.5rem)] text-fluid-lead text-foreground/60 max-w-[min(920px,90%)] leading-[1.75] font-body animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.47s" }}
           >
-            UOR (Universal Object Reference) is an open-source standard for content-addressed, decentralized identity for digital objects.
+            An open standard for content-addressed identity. One permanent address per digital object, derived from its content.
           </p>
           <div
             className="mt-[clamp(1.25rem,2.5vw,3rem)] flex flex-wrap gap-3 animate-fade-in-up opacity-0"
