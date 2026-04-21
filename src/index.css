@@ -1588,6 +1588,7 @@
   font-family: var(--font-body, inherit);
 }
 .prose-article > * + * { margin-top: 1.25em; }
+.prose-article > *:first-child { margin-top: 0; }
 .prose-article p,
 .prose-article li {
   font-size: 20px;

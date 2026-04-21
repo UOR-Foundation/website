@@ -100,88 +100,134 @@ const ArticleLayout = ({
   return (
     <Layout>
       <article className="pt-32 md:pt-36 pb-16 md:pb-24 bg-background">
-        {/* Header: meta + headline + deck. Centered single-column */}
+        {/* Split hero: image left, headline block right (stacks on mobile) */}
         <header className="container px-6 md:px-8 lg:px-10">
-          <div className="mx-auto max-w-[820px]">
-            <Link
-              to={backHref}
-              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-body mb-8"
-            >
-              <ArrowLeft size={14} />
-              {backLabel}
-            </Link>
+          {!hideHero && (heroOverride || heroImage) ? (
+            <div className="mx-auto max-w-[1180px] grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+              {/* Image column */}
+              <div className="lg:col-span-6 order-1 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
+                {heroOverride ? (
+                  heroOverride
+                ) : (
+                  <figure>
+                    <div className="rounded-2xl overflow-hidden border border-border bg-muted/40 aspect-[16/10] lg:aspect-[4/5] shadow-[0_20px_60px_-30px_hsl(var(--foreground)/0.35)]">
+                      <img
+                        src={heroImage}
+                        alt={title}
+                        className="w-full h-full object-cover"
+                        loading="eager"
+                      />
+                    </div>
+                    {heroCaption && (
+                      <figcaption className="mt-3 text-sm italic text-muted-foreground font-body">
+                        {heroCaption}
+                      </figcaption>
+                    )}
+                  </figure>
+                )}
+              </div>
 
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] uppercase tracking-[0.14em] font-semibold text-muted-foreground font-body mb-5 animate-fade-in-up">
-              <span className="inline-flex items-center gap-1.5 text-primary">
-                <TagIcon size={12} strokeWidth={2.5} />
-                {kicker}
-              </span>
-              {date && (
-                <>
+              {/* Text column */}
+              <div className="lg:col-span-6 order-2 flex flex-col">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] uppercase tracking-[0.14em] font-semibold text-muted-foreground font-body mb-5 animate-fade-in-up">
+                  <span className="inline-flex items-center gap-1.5 text-primary">
+                    <TagIcon size={12} strokeWidth={2.5} />
+                    {kicker}
+                  </span>
+                  {date && (
+                    <>
+                      <span aria-hidden className="text-muted-foreground/50">·</span>
+                      <span className="inline-flex items-center gap-1.5 normal-case tracking-normal font-medium text-muted-foreground/80">
+                        <Calendar size={12} />
+                        {date}
+                      </span>
+                    </>
+                  )}
                   <span aria-hidden className="text-muted-foreground/50">·</span>
                   <span className="inline-flex items-center gap-1.5 normal-case tracking-normal font-medium text-muted-foreground/80">
-                    <Calendar size={12} />
-                    {date}
+                    <Clock size={12} />
+                    {computedReadTime}
                   </span>
-                </>
-              )}
-              <span aria-hidden className="text-muted-foreground/50">·</span>
-              <span className="inline-flex items-center gap-1.5 normal-case tracking-normal font-medium text-muted-foreground/80">
-                <Clock size={12} />
-                {computedReadTime}
-              </span>
+                </div>
+
+                <h1
+                  className="font-display font-bold tracking-tight text-foreground text-balance animate-fade-in-up"
+                  style={{ fontSize: "clamp(2.25rem, 4.4vw, 3.5rem)", lineHeight: 1.08, animationDelay: "0.04s" }}
+                >
+                  {title}
+                </h1>
+
+                {deck && (
+                  <p
+                    className="mt-6 text-[1.25rem] text-muted-foreground font-body text-balance animate-fade-in-up"
+                    style={{ lineHeight: 1.55, animationDelay: "0.08s" }}
+                  >
+                    {deck}
+                  </p>
+                )}
+
+                <Link
+                  to={backHref}
+                  className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-body self-start"
+                >
+                  <ArrowLeft size={14} />
+                  {backLabel}
+                </Link>
+              </div>
             </div>
-
-            <h1
-              className="font-display font-bold tracking-tight text-foreground text-balance animate-fade-in-up"
-              style={{ fontSize: "clamp(2.25rem, 5vw, 3.75rem)", lineHeight: 1.08 }}
-            >
-              {title}
-            </h1>
-
-            {deck && (
-              <p
-                className="mt-6 text-[1.375rem] text-muted-foreground font-body text-balance animate-fade-in-up"
-                style={{ lineHeight: 1.55, animationDelay: "0.08s" }}
+          ) : (
+            // No hero: centered single-column header
+            <div className="mx-auto max-w-[820px]">
+              <Link
+                to={backHref}
+                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-body mb-8"
               >
-                {deck}
-              </p>
-            )}
-          </div>
+                <ArrowLeft size={14} />
+                {backLabel}
+              </Link>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] uppercase tracking-[0.14em] font-semibold text-muted-foreground font-body mb-5">
+                <span className="inline-flex items-center gap-1.5 text-primary">
+                  <TagIcon size={12} strokeWidth={2.5} />
+                  {kicker}
+                </span>
+                {date && (
+                  <>
+                    <span aria-hidden className="text-muted-foreground/50">·</span>
+                    <span className="inline-flex items-center gap-1.5 normal-case tracking-normal font-medium text-muted-foreground/80">
+                      <Calendar size={12} />
+                      {date}
+                    </span>
+                  </>
+                )}
+                <span aria-hidden className="text-muted-foreground/50">·</span>
+                <span className="inline-flex items-center gap-1.5 normal-case tracking-normal font-medium text-muted-foreground/80">
+                  <Clock size={12} />
+                  {computedReadTime}
+                </span>
+              </div>
+              <h1
+                className="font-display font-bold tracking-tight text-foreground text-balance"
+                style={{ fontSize: "clamp(2.25rem, 5vw, 3.75rem)", lineHeight: 1.08 }}
+              >
+                {title}
+              </h1>
+              {deck && (
+                <p
+                  className="mt-6 text-[1.375rem] text-muted-foreground font-body text-balance"
+                  style={{ lineHeight: 1.55 }}
+                >
+                  {deck}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Hairline divider under the hero */}
+          <div className="mx-auto max-w-[1180px] mt-12 md:mt-16 border-t border-border" />
         </header>
 
-        {/* Hero image — slightly wider than text column */}
-        {!hideHero && (heroOverride || heroImage) && (
-          <div className="container px-6 md:px-8 lg:px-10 mt-8 md:mt-10">
-            <div
-              className="mx-auto animate-fade-in-up"
-              style={{ maxWidth: "960px", animationDelay: "0.12s" }}
-            >
-              {heroOverride ? (
-                heroOverride
-              ) : (
-                <figure>
-                  <div className="rounded-2xl overflow-hidden border border-border bg-muted/40 aspect-[16/9]">
-                    <img
-                      src={heroImage}
-                      alt={title}
-                      className="w-full h-full object-cover"
-                      loading="eager"
-                    />
-                  </div>
-                  {heroCaption && (
-                    <figcaption className="mt-3 text-sm italic text-muted-foreground font-body text-center">
-                      {heroCaption}
-                    </figcaption>
-                  )}
-                </figure>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Body — single 720px reading column */}
-        <div className="container px-6 md:px-8 lg:px-10 mt-10 md:mt-12">
+        {/* Body — single 820px reading column */}
+        <div className="container px-6 md:px-8 lg:px-10 mt-12 md:mt-16">
           <div className="mx-auto max-w-[820px] prose-article">
             {children}
           </div>
