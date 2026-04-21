@@ -42,10 +42,10 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>What it is</h2>
         <p>
-          <strong>UOR</strong> (Universal Object Reference) gives every digital object a permanent, content-addressed, self-verifying identity, the universal data passport an AI agent presents whenever it sends a tool call, a memory, or a result to another agent.
+          Two AI agents exchange a tool call. Today, neither one can prove the object that arrived is the object that was sent. Re-serialize the JSON, the hash changes. Sign the bytes, the signature breaks at the first parse. Add a PKI, now you operate a PKI.
         </p>
         <p>
-          The standard is open, with a reference Rust implementation as <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>. It sits underneath MCP, A2A, and any other transport carrying structured data between autonomous systems, so the passport travels with the object across runtimes, languages, and re-serializations.
+          <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, content-derived, self-verifying 256-bit identity, a universal data passport that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP, A2A, and any transport carrying typed data between agents.
         </p>
       </section>
 
@@ -65,10 +65,10 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>How it works</h2>
         <p>
-          Two steps: <strong>(1) normalize</strong> the object to a canonical form that ignores key order, encoding choice, and numeric representation; <strong>(2) SHA-256</strong> it. Same object → same fingerprint, on any runtime, in any language.
+          Two steps: <strong>(1) normalize</strong> the object to a canonical form that factors out key order, string encoding, integer width, float representation (including <code>-0</code>, NaN, ±Inf), datetime spelling, and unspecified array ordering for set-typed fields; <strong>(2) SHA-256</strong> it. Same object, same fingerprint, on any runtime, in any language.
         </p>
         <p>
-          The normalization step is formally verified in Lean 4, so determinism isn't a property we test for. It's a property we proved. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
+          The normalization step is formally verified in Lean 4: a machine-checked proof that <em>any</em> two inputs equal under the type's equivalence relation produce identical canonical bytes. Determinism isn't a property we test for, it's a property we proved. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
         </p>
         <pre>{`object → normalize → SHA-256 → 256-bit fingerprint`}</pre>
       </section>
@@ -251,24 +251,27 @@ const BlogCanonicalRustCrate = () => {
       </section>
 
       <section>
-        <h2>What this enables</h2>
-        <p>
-          Once every object carries its own address, a few things become possible that simply were not before.
-        </p>
+        <h2>What this unlocks</h2>
         <ul>
-          <li><strong>Verifiable agent-to-agent calls.</strong> The receiver can prove the tool call, memory, or result it processed is bit-for-bit the one the sender produced, across any language or transport.</li>
-          <li><strong>Deduplicated, cacheable computation.</strong> Identical objects collapse to one address, so caches, audit logs, and replay systems stop storing the same payload twice.</li>
-          <li><strong>Portable provenance.</strong> An object's history travels with it: fork it, move it between MCP servers, hand it to a different agent, the address still resolves.</li>
-          <li><strong>No trust layer to operate.</strong> No certificates to issue, rotate, or revoke. Verification is a local hash, not a network call.</li>
+          <li><strong>Provable agent-to-agent calls.</strong> The receiver knows the tool call, memory, or result it ran is bit-for-bit the one the sender produced, across any language or transport.</li>
+          <li><strong>Free deduplication and caching.</strong> Identical objects collapse to one address. Caches, audit logs, and replay systems stop storing the same payload twice.</li>
+          <li><strong>Portable provenance.</strong> Fork an object, move it between MCP servers, hand it to a different agent, the address still resolves to the same content.</li>
+          <li><strong>Zero trust infrastructure.</strong> No certificates to issue, rotate, or revoke. Verification is a local hash, not a network call.</li>
         </ul>
       </section>
 
       <section>
         <h2>Try it</h2>
+        <p>
+          Five lines. No keys, no config, no network. Same fingerprint on macOS, Linux, Node, Python (via the WASM build), and on the next library version that re-orders your JSON keys.
+        </p>
         <pre>{`use uor_foundation::prelude::*;
 
-let cert = identify(&tool_call)?;          // sender
-assert_eq!(cert.fingerprint(), expected);  // receiver`}</pre>
+// sender
+let id = tool_call.identify()?;          // → uor1q…f3a2 (256-bit, deterministic)
+
+// receiver, after the message crosses MCP / A2A / anything
+assert_eq!(received.identify()?, id);    // bit-for-bit, or refuse`}</pre>
         <ul>
           <li><strong>Playground:</strong> <Link to="/oracle">/oracle</Link></li>
           <li><strong>Install:</strong> <code>cargo add uor-foundation</code></li>
