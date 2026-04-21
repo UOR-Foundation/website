@@ -3,8 +3,10 @@ import Layout from "@/modules/core/components/Layout";
 import HeroSection from "@/modules/landing/components/HeroSection";
 import PrimeConstellationBg from "@/modules/landing/components/PrimeConstellationBg";
 import LazySection from "@/modules/landing/components/LazySection";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
+  const isMobile = useIsMobile();
   const community = useCallback(() => import("@/modules/landing/components/CommunitySection"), []);
   const whatIsUor = useCallback(() => import("@/modules/landing/components/WhatIsUorSection"), []);
   const closingCTA = useCallback(() => import("@/modules/landing/components/ClosingCTASection"), []);
@@ -14,7 +16,7 @@ const Index = () => {
 
   return (
     <Layout>
-      <PrimeConstellationBg />
+      {!isMobile && <PrimeConstellationBg />}
       <HeroSection />
       <LazySection factory={community} />
       <LazySection factory={whatIsUor} />
