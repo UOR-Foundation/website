@@ -1633,26 +1633,26 @@
 
 /* Wide desktop (≥ 1280px) */
 @media (min-width: 1280px) {
-  .prose-article { font-size: 19px; }
+  .prose-article { font-size: 20px; }
   .prose-article p,
-  .prose-article li { font-size: 19px; line-height: 1.78; }
-  .prose-article > p:first-of-type { font-size: 22px; margin-bottom: 1.45em; }
+  .prose-article li { font-size: 20px; line-height: 1.78; }
+  .prose-article > p:first-of-type { font-size: 23px; margin-bottom: 1.45em; }
 }
 
 /* Large desktop (≥ 1440px) */
 @media (min-width: 1440px) {
-  .prose-article { font-size: 20px; }
+  .prose-article { font-size: 21px; }
   .prose-article p,
-  .prose-article li { font-size: 20px; line-height: 1.75; }
-  .prose-article > p:first-of-type { font-size: 24px; margin-bottom: 1.5em; }
+  .prose-article li { font-size: 21px; line-height: 1.75; }
+  .prose-article > p:first-of-type { font-size: 25px; margin-bottom: 1.5em; }
 }
 
 /* Ultra-wide (≥ 1920px) */
 @media (min-width: 1920px) {
-  .prose-article { font-size: 21px; }
+  .prose-article { font-size: 22px; }
   .prose-article p,
-  .prose-article li { font-size: 21px; line-height: 1.75; }
-  .prose-article > p:first-of-type { font-size: 26px; line-height: 1.5; }
+  .prose-article li { font-size: 22px; line-height: 1.75; }
+  .prose-article > p:first-of-type { font-size: 27px; line-height: 1.5; }
 }
 .prose-article p strong,
 .prose-article li strong { color: hsl(var(--foreground)); font-weight: 600; }
