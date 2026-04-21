@@ -1619,6 +1619,7 @@
   font-family: var(--font-display, inherit);
   font-weight: 800;
   letter-spacing: -0.01em;
+  text-transform: none;
   font-size: 1.75rem;
   line-height: 1.2;
   color: hsl(var(--foreground));
@@ -1635,6 +1636,8 @@
 .prose-article h3 {
   font-family: var(--font-display, inherit);
   font-weight: 700;
+  text-transform: none;
+  letter-spacing: -0.005em;
   font-size: 1.25rem;
   line-height: 1.3;
   color: hsl(var(--foreground));

@@ -172,8 +172,8 @@ const ArticleLayout = ({
                 </div>
 
                 <h1
-                  className="font-display font-bold tracking-tight text-foreground text-balance"
-                  style={{ fontSize: "clamp(2.25rem, 4.5vw, 3.75rem)", lineHeight: 1.05 }}
+                  className="font-display font-bold tracking-tight text-foreground text-balance normal-case"
+                  style={{ fontSize: "clamp(2.25rem, 4.5vw, 3.75rem)", lineHeight: 1.05, letterSpacing: "-0.015em", textTransform: "none" }}
                 >
                   {title}
                 </h1>
@@ -200,8 +200,8 @@ const ArticleLayout = ({
                   <ShareRow />
                 </div>
                 <h1
-                  className="font-display font-bold tracking-tight text-foreground text-balance max-w-[900px]"
-                  style={{ fontSize: "clamp(2.25rem, 5vw, 3.75rem)", lineHeight: 1.05 }}
+                  className="font-display font-bold tracking-tight text-foreground text-balance max-w-[900px] normal-case"
+                  style={{ fontSize: "clamp(2.25rem, 5vw, 3.75rem)", lineHeight: 1.05, letterSpacing: "-0.015em", textTransform: "none" }}
                 >
                   {title}
                 </h1>
@@ -218,10 +218,10 @@ const ArticleLayout = ({
 
         {/* Body — single 820px reading column */}
         <div className="container px-6 md:px-8 lg:px-10 mt-10 md:mt-14">
-          <div className="mx-auto max-w-[820px] mb-8">
+          <div className="mx-auto max-w-[820px] mb-10">
             <Link
               to={backHref}
-              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-body"
+              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-body normal-case"
             >
               <ArrowLeft size={14} />
               {backLabel}
