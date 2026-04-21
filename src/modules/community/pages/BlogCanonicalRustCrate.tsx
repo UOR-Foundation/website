@@ -1,7 +1,6 @@
 import ArticleLayout from "@/modules/core/components/ArticleLayout";
 import { Link } from "react-router-dom";
-import { CRATE_URL, GITHUB_ORG_URL } from "@/data/external-links";
-import { CRATE_DOCS_URL } from "@/data/external-links";
+import { CRATE_URL, CRATE_DOCS_URL, GITHUB_ORG_URL } from "@/data/external-links";
 import { blogPosts } from "@/data/blog-posts";
 import heroImage from "@/assets/project-uor-identity.jpg";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
