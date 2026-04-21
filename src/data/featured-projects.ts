@@ -5,6 +5,15 @@ export type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 
 export const featuredProjects = [
   {
+    name: "Prism",
+    slug: "prism",
+    category: "Compiler",
+    description: "A formally-specified compiler and runtime grounded in the UOR Foundation ontology. Treats computation as navigation in a categorical structure.",
+    maturity: "Sandbox" as MaturityLevel,
+    license: "Apache-2.0",
+    url: "https://github.com/UOR-Foundation/prism",
+  },
+  {
     name: "Hologram",
     slug: "hologram",
     category: "Systems",
