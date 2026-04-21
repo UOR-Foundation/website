@@ -151,7 +151,7 @@ const ArticleLayout = ({
                   heroOverride
                 ) : (
                   <figure className="h-full">
-                    <div className="bg-muted/40 aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[560px] xl:min-h-[680px] 2xl:min-h-[780px] w-full overflow-hidden">
+                    <div className="bg-muted/40 aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[380px] xl:min-h-[440px] 2xl:min-h-[500px] w-full overflow-hidden">
                       <img
                         src={heroImage}
                         alt={title}
@@ -170,8 +170,8 @@ const ArticleLayout = ({
 
               {/* Right panel */}
               <div
-                className="order-2 bg-card flex flex-col justify-between lg:min-h-[560px] xl:min-h-[680px] 2xl:min-h-[780px] animate-fade-in-up"
-                style={{ animationDelay: "0.04s", padding: "clamp(2rem, 3.6vw, 5rem)" }}
+                className="order-2 bg-card flex flex-col justify-between lg:min-h-[380px] xl:min-h-[440px] 2xl:min-h-[500px] animate-fade-in-up"
+                style={{ animationDelay: "0.04s", padding: "clamp(1.5rem, 2.6vw, 3.25rem)" }}
               >
                 <div className="flex items-start justify-between gap-6">
                   <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-foreground/80 font-body">
@@ -181,8 +181,8 @@ const ArticleLayout = ({
                 </div>
 
                 <h1
-                  className="font-display font-bold tracking-tight text-foreground text-balance normal-case my-10 max-w-[14ch] xl:max-w-[16ch] 2xl:max-w-[18ch]"
-                  style={{ fontSize: "clamp(2rem, 3.6vw, 5.5rem)", lineHeight: 1.05, letterSpacing: "-0.02em", textTransform: "none" }}
+                  className="font-display font-bold tracking-tight text-foreground text-balance normal-case my-6 lg:my-7 xl:my-8 max-w-[16ch] xl:max-w-[18ch] 2xl:max-w-[20ch]"
+                  style={{ fontSize: "clamp(1.75rem, 2.7vw, 3.75rem)", lineHeight: 1.07, letterSpacing: "-0.02em", textTransform: "none" }}
                 >
                   {title}
                 </h1>
@@ -219,23 +219,23 @@ const ArticleLayout = ({
         </header>
 
         {/* Body — generous reading column that scales with viewport */}
-        <div className="px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24 2xl:px-32 mt-10 md:mt-14 xl:mt-20">
-          <div className="mx-auto prose-article" style={{ maxWidth: "clamp(680px, 62vw, 1280px)" }}>
+        <div className="px-4 sm:px-6 md:px-10 lg:px-14 xl:px-20 2xl:px-28 mt-10 md:mt-12 xl:mt-14">
+          <div className="mx-auto prose-article" style={{ maxWidth: "clamp(680px, 78vw, 1600px)" }}>
             {deck && <p>{deck}</p>}
             {children}
           </div>
 
           {afterBody && (
-            <div className="mx-auto mt-12" style={{ maxWidth: "clamp(680px, 62vw, 1280px)" }}>
+            <div className="mx-auto mt-12" style={{ maxWidth: "clamp(680px, 78vw, 1600px)" }}>
               {afterBody}
             </div>
           )}
 
           {/* Footer: source + related strip */}
           {(sourceUrl || (related && related.length > 0)) && (
-            <footer className="mx-auto mt-16 pt-8 border-t border-border" style={{ maxWidth: "clamp(680px, 70vw, 1480px)" }}>
+            <footer className="mx-auto mt-16 pt-8 border-t border-border" style={{ maxWidth: "clamp(680px, 82vw, 1680px)" }}>
               {sourceUrl && (
-                <p className="text-sm xl:text-base text-muted-foreground font-body mb-8" style={{ maxWidth: "clamp(680px, 62vw, 1280px)" }}>
+                <p className="text-sm xl:text-base text-muted-foreground font-body mb-8" style={{ maxWidth: "clamp(680px, 78vw, 1600px)" }}>
                   Source:{" "}
                   <a
                     href={sourceUrl}
