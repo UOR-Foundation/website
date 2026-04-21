@@ -1,55 +1,47 @@
 
 
-## Restore Hero Presence — Bigger Image, Bigger Title, Tighter Stack
+## Make the Hero Title Feel Physically Present
 
-On a 1837px-wide screen the current hero feels diminished: image caps at `52vh` height, the title sits small (`max ~64px` at 4rem), and there is `mt-10` of air between image and title — so they read as two separate, undersized elements with too much sky around them. The home page works because the hero composition **fills the screen** and the title is **large and confident**.
+Goal: the words "MAKE DATA IDENTITY / UNIVERSAL" should feel like they're lifting off the screen — more real than the pixels around them — without resorting to obvious tricks (no drop shadows, no 3D flips, no parallax-on-scroll cliches).
 
-We'll restore that presence using golden-ratio proportions.
+### The Insight
 
-### Changes — `ArticleLayout.tsx` masthead only
+Three perceptual cues, layered subtly, create the illusion of physical presence:
 
-**1. Image — let it dominate the fold (golden ratio, not letterbox)**
-- Drop the `21:9` letterbox (too cinematic-thin for vertical screens). Use a **φ:1 aspect ratio** (`aspect-[1.618/1]`) — the same ratio we use across the OS.
-- Raise the height cap: `max-h-[clamp(420px, 62vh, 760px)]` so it actually fills the viewport on large screens.
-- Widen the image container to use full editorial width: `max-w-[clamp(1080px, 88vw, 1480px)]`.
+1. **Sub-pixel anti-gravity** — the title responds to the cursor's position with a *micro* 3D tilt (max 1.5°) and a *featherlight* translation (max 4px). The brain reads "this object has weight in space" without registering an animation.
+2. **Atmospheric separation** — a barely-there contact shadow beneath the letters (not a drop shadow — a *contact* shadow, soft and warm, ~6% opacity) plus a hairline highlight on the top edge of each glyph. Together they create the illusion the letters are floating ~2mm above the background.
+3. **Breathing depth** — when idle, the title imperceptibly "breathes" with a 6-second sine wave on `letter-spacing` (±0.3px) and `text-shadow` blur (±1px). Not animation — *life*.
 
-**2. Title — confident scale, closer to image**
-- Increase H1 size to `clamp(2.25rem, 5.2vw, 5.5rem)` (currently caps at 4rem). At 1837px viewport this lands ~85px — comparable to the home page's "Make Data Identity" scale.
-- Widen title `max-width` to `clamp(720px, 68vw, 1180px)` so two-line headlines don't break awkwardly.
-- Tighten gap between image and title: `mt-3 md:mt-5` (was `mt-6 md:mt-10`). Aman keeps title hugged to image — the breathing happens **above** the kicker and **below** the meta, not between linked elements.
+The crispness comes from doing all three at once with restraint. Any one of them alone is a gimmick. All three together cross the threshold into "feels real."
 
-**3. Vertical rhythm — golden-ratio top/bottom air**
-- Header padding: `py-8 md:py-10 lg:py-12` (was `py-10/14/16`). Reduces top air so the hero anchors higher.
-- Kicker→image gap: `mb-6 md:mb-8` (was `mb-8/10`). Tighter coupling.
-- Body offset: `mt-10 md:mt-14 lg:mt-16` (was `mt-12/16/20`).
+### Implementation
 
-**4. Caption + meta — proportional bumps**
-- Hero caption: 13px (was 12px), still italic centered.
-- Meta line: 16px desktop already good, keep.
+A new lightweight component `PhysicalTitle.tsx` wrapping the existing two `<span>` lines. It:
 
-### Resulting proportion (at 1837px viewport)
-
-```text
-   ─── kicker ───                          ← 12px, 24px below nav
-
-   [ image  φ:1, ~1480px wide × 915px ]    ← dominates fold
-
-      Italic image credit                  ← 13px
-
-   Title ~85px serif, 2 lines              ← hugs image (20px gap)
-
-         Author · Date                     ← 16px
-
-         [ share row ]
-```
+- Uses a single `requestAnimationFrame` loop driven by mouse position (relative to the title's bounding box).
+- Applies one CSS transform: `perspective(1200px) rotateX(...) rotateY(...) translateZ(...)` to the wrapper.
+- Each character keeps its existing flex distribution; the transform applies to the whole title block, so kerning stays pixel-perfect.
+- Adds two pseudo-elements via CSS:
+  - `::before` — top-edge highlight (`linear-gradient` clipped to text via `background-clip: text`, 1px tall band, 8% white).
+  - `::after` — contact shadow below the baseline (radial gradient, warm amber at 4% opacity, blur 24px, offset 8px down).
+- Idle breathing via a CSS keyframe on `letter-spacing` and `filter: drop-shadow()` blur radius, 6s ease-in-out infinite.
+- Honors `prefers-reduced-motion` — strips the cursor tilt and breathing, keeps only the static contact shadow + edge highlight (which still give the "lifting off" feel without motion).
 
 ### Files to modify
 
-- `src/modules/core/components/ArticleLayout.tsx` — masthead container widths, image aspect/cap, title scale, vertical spacing only.
+- **NEW** `src/modules/landing/components/PhysicalTitle.tsx` — the wrapper component (~80 lines).
+- **MODIFY** `src/modules/landing/components/HeroSection.tsx` — replace the inline `<h1>` blocks (both mobile and desktop) with `<PhysicalTitle>`. Pass through the existing clamp font sizes and tracking unchanged.
+- **MODIFY** `src/index.css` — add the `@keyframes hero-breathe` keyframe and one utility class for the contact shadow gradient.
 
-### Out of scope
+### What we will NOT do
 
-- Body column width stays at `clamp(680px, 72vw, 1180px)` (already approved last round).
-- No changes to footer, share rail, or `index.css`.
-- No content changes.
+- No `text-shadow: 0 4px 8px rgba(0,0,0,0.5)` style drop shadows — too obvious, looks like a 2010 web design.
+- No mouse-parallax on the galaxy orb — the title is the subject.
+- No scroll-driven effects — the magic must be present on first paint.
+- No font-weight changes on hover — breaks crispness.
+- No backdrop-filter — performance cost, not worth it for this surface.
+
+### Resulting feel
+
+On a still page, the title sits with a faint contact shadow and a hairline top highlight — it reads as a physical plate of metal type laid on the dark background. Move the cursor and the plate tilts almost imperceptibly toward you, with sub-pixel weight. Stop moving and it breathes. The effect is impossible to point at, but the page feels *alive* in a way the previous version did not.
 
