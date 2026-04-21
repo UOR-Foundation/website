@@ -11,11 +11,14 @@ const EcosystemSection = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-golden-lg gap-golden-sm">
           <div>
             <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-sm">
-              Our Projects
+              Reference Implementations
             </p>
             <h2 className="font-display font-bold text-foreground text-fluid-heading">
               Featured Projects
             </h2>
+            <p className="mt-golden-sm text-foreground/65 font-body text-fluid-body leading-relaxed max-w-2xl">
+              Reference implementations of the UOR specifications — identity, object, and resolution.
+            </p>
           </div>
           <Link
             to="/projects"

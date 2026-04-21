@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
 import { type MaturityLevel } from "@/data/projects";
+import { type SpecId, specById } from "@/data/canonical-sources";
 
 import projectHologramImg from "@/assets/project-hologram.jpg";
 import projectAtlasImg from "@/assets/project-atlas.png";
@@ -34,6 +35,12 @@ const maturityChip: Record<MaturityLevel, string> = {
   Sandbox: "bg-muted text-muted-foreground border-border",
 };
 
+const specChip: Record<SpecId, string> = {
+  identity: "bg-foreground/5 text-foreground/75 border-foreground/15",
+  object: "bg-foreground/5 text-foreground/75 border-foreground/15",
+  resolution: "bg-foreground/5 text-foreground/75 border-foreground/15",
+};
+
 export interface ProjectCardData {
   name: string;
   slug: string;
@@ -42,6 +49,7 @@ export interface ProjectCardData {
   maturity: MaturityLevel;
   url?: string;
   imageKey?: string;
+  spec?: SpecId;
 }
 
 interface ProjectCardProps {
@@ -112,6 +120,17 @@ const ProjectCard = ({ project, variant = "default", className = "", style }: Pr
           <span className={`text-[11px] font-semibold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full border font-body ${maturityChip[project.maturity]}`}>
             {project.maturity}
           </span>
+          {project.spec && (() => {
+            const s = specById(project.spec);
+            return (
+              <span
+                className={`text-[11px] font-semibold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full border font-body ${specChip[project.spec]}`}
+                title={`Implements ${s.name} — uor_foundation::${s.module}`}
+              >
+                {project.spec}-spec
+              </span>
+            );
+          })()}
         </div>
       </div>
     </Link>

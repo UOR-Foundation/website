@@ -1,6 +1,10 @@
 /**
  * Featured projects (homepage showcase). serializable data for UOR certification.
+ * `spec` ties a project to one of the three canonical UOR specifications,
+ * mirroring the OCI model of identity / object / resolution specs.
  */
+import type { SpecId } from "./canonical-sources";
+
 export type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 
 export const featuredProjects = [
@@ -13,6 +17,7 @@ export const featuredProjects = [
     license: "Apache-2.0",
     url: "https://github.com/UOR-Foundation/UOR-Framework",
     imageKey: "uorIdentity",
+    spec: "identity" as SpecId,
   },
   {
     name: "Hologram",
@@ -23,6 +28,7 @@ export const featuredProjects = [
     license: "MIT",
     url: "https://gethologram.ai/",
     imageKey: "hologram",
+    spec: "object" as SpecId,
   },
   {
     name: "Atlas Embeddings",
@@ -33,5 +39,6 @@ export const featuredProjects = [
     license: "MIT",
     url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
     imageKey: "atlas",
+    spec: "resolution" as SpecId,
   },
 ];

@@ -1,29 +1,30 @@
 /**
- * Three pillars. Learn · Connect · Build. the visitor's journey.
+ * Three pillars. Participate · Contribute · Adopt. modeled on OCI's
+ * "Participate / Become a Member / Get Certified" path.
  * Icons are mapped at the component level by `iconKey`.
  */
 export const pillars = [
   {
-    iconKey: "Globe",
-    title: "Learn",
-    description:
-      "Understand how UOR addressing works. Read the specification, explore the architecture, and see how it compares to existing standards.",
-    href: "/docs",
-    cta: "Read the Docs",
-  },
-  {
     iconKey: "Users",
-    title: "Connect",
+    title: "Participate",
     description:
-      "Join a global community of developers and researchers. Propose ideas, get peer review, and collaborate in the open.",
+      "Join the technical community on Discord and GitHub. Discuss the specifications, ask questions, and meet the maintainers building UOR in the open.",
     href: "/community",
     cta: "Join the Community",
   },
   {
-    iconKey: "Rocket",
-    title: "Build",
+    iconKey: "Globe",
+    title: "Contribute",
     description:
-      "Start building with UOR. Install the core library and start integrating the UOR tools into your own system.",
+      "Propose changes to a specification or a reference implementation. Read the canonical Rust crate, open an issue, or submit a pull request on GitHub.",
+    href: "https://github.com/UOR-Foundation/UOR-Framework",
+    cta: "Contribute on GitHub",
+  },
+  {
+    iconKey: "Rocket",
+    title: "Adopt",
+    description:
+      "Use the specifications in your product. Install the canonical crate, build a reference implementation, and submit it to the project catalog.",
     href: "/projects",
     cta: "Explore Projects",
   },

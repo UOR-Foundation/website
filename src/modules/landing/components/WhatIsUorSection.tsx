@@ -1,4 +1,5 @@
-import { ArrowRight, ArrowDown } from "lucide-react";
+import { ArrowRight, ArrowDown, ExternalLink } from "lucide-react";
+import { canonicalSpecs } from "@/data/canonical-sources";
 
 const silos = ["APIs", "Databases", "Files", "AI Models", "Graphs", "Streams", "Ledgers", "Devices", "Protocols"];
 
@@ -136,6 +137,66 @@ const WhatIsUorSection = () => {
 
           <div className="flex justify-center lg:justify-end">
             <UorDiagramCompact />
+          </div>
+        </div>
+
+        {/* Three canonical specifications — OCI-style */}
+        <div className="mt-golden-lg pt-golden-lg border-t border-border/40">
+          <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-label mb-golden-sm">
+            Three Specifications
+          </p>
+          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-golden-md">
+            UOR currently contains three specifications: the Identity Specification, the Object Specification, and the Resolution Specification — each anchored in a published module of the canonical{" "}
+            <a href="https://crates.io/crates/uor-foundation" target="_blank" rel="noopener noreferrer" className="font-mono text-foreground/90 hover:text-primary transition-colors">uor-foundation</a> Rust crate.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+            {canonicalSpecs.map((spec) => (
+              <div
+                key={spec.id}
+                className="rounded-2xl border border-border bg-card p-5 md:p-6 flex flex-col"
+              >
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="font-mono text-[11px] tracking-tight text-foreground/55">
+                    uor_foundation::{spec.module}
+                  </span>
+                  <span
+                    className={`text-[10px] font-semibold uppercase tracking-[0.14em] px-2 py-0.5 rounded-full border font-body ${
+                      spec.status === "Stable"
+                        ? "bg-primary/10 text-primary border-primary/20"
+                        : "bg-muted text-muted-foreground border-border"
+                    }`}
+                  >
+                    {spec.status}
+                  </span>
+                </div>
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-2">
+                  {spec.name}
+                </h3>
+                <p className="text-foreground/70 font-body text-fluid-body leading-relaxed flex-1">
+                  {spec.oneLine}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
+                  <a
+                    href={spec.crate.docsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-fluid-label font-body font-medium text-primary/80 hover:text-primary transition-colors"
+                  >
+                    docs.rs
+                    <ExternalLink size={12} className="opacity-70" />
+                  </a>
+                  <a
+                    href={`${spec.repo.url}/tree/main/${spec.repo.path}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-fluid-label font-body font-medium text-foreground/55 hover:text-primary transition-colors"
+                  >
+                    Read source
+                    <ExternalLink size={12} className="opacity-70" />
+                  </a>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
