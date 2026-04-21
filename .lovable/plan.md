@@ -1,77 +1,66 @@
 
 
-# Plasma-Inspired Polish Pass: Focus, Clarity, Delight
+# TechCrunch-style Article Header
 
-A focused cleanup of the home page and global chrome to remove redundancy, sharpen language, and bring the site closer to the calm, high-signal feel of plasma.to — without losing the UOR identity.
+Reshape the shared `ArticleLayout` so every blog post and project page reads with the same crisp, editorial cadence as TechCrunch — without changing colors or content. One file change cascades to all four blog posts and all project detail pages.
 
-## Principles applied
+## What changes (visually)
 
-- **One job per section.** No section repeats what another already said.
-- **Verdict headlines.** 2–4 word section titles that state the point.
-- **Numbers over adjectives.** Stat strips replace soft "feature" copy.
-- **One CTA per surface.** Every screen has a single primary action.
-- **Quiet chrome.** Remove decorative chips, badges, and duplicate links.
+**Before:** Centered split hero, both columns inside an 1180px container, rounded image with shadow, deck below headline, back link below.
 
-## Changes
+**After:** A true two-panel masthead that runs edge-to-edge.
 
-### 1. Navbar — single primary action
-**File:** `src/modules/core/components/Navbar.tsx`
-- Drop the trailing "Contribute" CTA from the desktop right cluster. Keep the three social icons (Discord, GitHub, LinkedIn) as the only right-side elements.
-- Remove the "Contribute" item from `src/data/nav-items.ts` so it no longer appears in the mobile drawer's primary nav or the secondary "Contribute →" link.
-- The single primary site-wide action becomes the hero's "Explore Projects" button. Contribute lives on the Projects page (`/projects#submit`) where it belongs.
-- Mobile drawer: remove the secondary `Contribute →` row (now redundant).
+```text
+┌────────────────────────────┬───────────────────────────┐
+│                            │                           │
+│                            │  KICKER         [share]   │
+│      FULL-BLEED IMAGE      │                           │
+│      (left half, no        │  Big bold headline,       │
+│       rounding, no         │  three lines, tight       │
+│       shadow, flush         │  leading                  │
+│       to viewport edge)    │                           │
+│                            │  Author · time · date     │
+│                            │                           │
+│  IMAGE CREDITS: …          │                           │
+└────────────────────────────┴───────────────────────────┘
+                ── thin rule ──
+            820-px reading column below
+```
 
-### 2. Hero — tighter, fewer words
-**File:** `src/modules/landing/components/HeroSection.tsx`
-- Headline stays: `MAKE DATA IDENTITY UNIVERSAL`.
-- Replace the deck with a single, sharper sentence: *"A permanent, verifiable address for every piece of data."* (down from two sentences).
-- Keep one CTA: `Explore Projects →`. No secondary link.
-- Stats strip stays but drops the "Research Areas" cell — keep the three with the strongest signal: **11 Projects · 150+ Contributors · Open Governance**. The grid becomes a clean 3-up on desktop, matching mobile.
-- Remove the unused `Download` import.
+Specifics:
+- **Image:** square corners, no shadow, no border, `object-cover`. Aspect roughly 4:5 on desktop, 16:10 on mobile. Bleeds to the left edge of the viewport (no container padding on the left at `lg+`).
+- **Right panel:** solid `bg-card` block (TC uses brand green; we keep our existing card color so it stays on-brand). Square corners, flush to image, runs to the right viewport edge. Generous padding (`p-10 lg:p-14`).
+- **Kicker:** small caps, with a short underline rule above it (TC's signature small bracket line).
+- **Headline:** display font, bold, `clamp(2.5rem, 5vw, 4rem)`, tight `1.05` leading, balanced wrap.
+- **Share row:** top-right of the right panel — Facebook, X, LinkedIn, Reddit, Email, Copy-link icons (lucide). Copy-link writes `window.location.href` to clipboard with a toast.
+- **Byline row:** lower in the right panel — `Author — time · date` in muted text. Add an optional `author` prop (defaults to "UOR Foundation").
+- **Image credit:** small uppercase mono caption sitting under the image, left-aligned (`IMAGE CREDITS: …`).
+- **Mobile (`<lg`):** image stacks on top full-width, then the colored panel below it — same content, same order.
+- **Back link:** moves out of the masthead. Renders as a small `← Back to Research` link directly above the body column, so the masthead stays clean like TC's.
+- **Deck:** TC doesn't use a deck. We promote the deck to the **first paragraph of the body** (rendered automatically by `ArticleLayout`, slightly larger lead style). This keeps it readable without crowding the headline panel.
+- **Hairline divider:** removed — the masthead block itself is the divider.
 
-### 3. Section headlines — verdicts
-Rewrite the H2 of the next sections to short verdicts. No body copy changes, only the headline.
+## Body styling refinements (`prose-article` in `index.css`)
 
-- `WhatIsUorSection` → **"One address. Everywhere."**
-- `EcosystemSection` → **"Built in the open."**
-- `HighlightsSection` → **"Proof, not promises."**
-- `CommunitySection` → **"Built by many."**
-- `ClosingCTASection` → **"Make it universal."**
-- `ReadyToBuildCTA` → remove this section entirely (duplicates the closing CTA — see below).
+Small TC-aligned tweaks only:
+- Lead paragraph (`.prose-article > p:first-child`): 22px, foreground color, `1.6` leading.
+- Body paragraphs: stay 20px, but tighten leading from `1.75` → `1.7` and switch color to `foreground` at 90% (TC reads as near-black, not muted gray).
+- Section `h2`: remove the top border rule; keep generous top margin only. TC sections breathe with whitespace, not lines.
+- Links: solid underline at 2px offset, `currentColor` underline, primary color on hover (already close).
 
-### 4. Remove the duplicate closing CTA
-**File:** `src/modules/landing/pages/IndexPage.tsx`
-- Remove the `ReadyToBuildCTA` lazy section. The page already ends with `ClosingCTASection`; two back-to-back CTAs is the single biggest source of noise on the home page.
-- Final home order: Hero → Community → WhatIsUor → Ecosystem → Highlights → ClosingCTA.
+## Footer (related + source)
 
-### 5. Standardize action arrows
-- Every primary text link/button across the home sections uses a trailing `→` (lucide `ArrowRight`, `size={14}`). No mixed `>`, no `›`, no plain text. Sweep `HeroSection`, `WhatIsUorSection`, `EcosystemSection`, `HighlightsSection`, `CommunitySection`, `ClosingCTASection` for any inconsistencies.
-
-### 6. Tighten section dividers
-**File:** `src/index.css` (small addition) and the six landing sections
-- Establish one shared vertical rhythm: each section uses `py-20 md:py-28` (replaces today's mix of paddings). This eliminates the visible "tall, short, tall" cadence between sections.
-
-## What we are NOT changing
-
-- No changes to the article/project layout we just shipped (split hero stays).
-- No changes to data, routing, theme, fonts, colors, or the galaxy/prime visuals.
-- No new dependencies.
-- No copy changes inside section bodies — only headlines and the hero deck.
+Keep current behavior. Tighten the related-cards heading to `Read next` (TC-style) and reduce to max 3 cards in a 3-up grid on desktop.
 
 ## Files touched
 
-- `src/modules/core/components/Navbar.tsx`
-- `src/data/nav-items.ts`
-- `src/modules/landing/components/HeroSection.tsx`
-- `src/modules/landing/pages/IndexPage.tsx`
-- `src/modules/landing/components/WhatIsUorSection.tsx`
-- `src/modules/landing/components/EcosystemSection.tsx`
-- `src/modules/landing/components/HighlightsSection.tsx`
-- `src/modules/landing/components/CommunitySection.tsx`
-- `src/modules/landing/components/ClosingCTASection.tsx`
-- `src/index.css` (shared section spacing utility, optional)
+- `src/modules/core/components/ArticleLayout.tsx` — rewrite the `<header>` block; add `author` prop; add share row component inline; move back-link below masthead.
+- `src/index.css` — adjust `.prose-article` lead/paragraph/h2 rules as above.
+
+No changes needed to:
+- `BlogPost1/2/3.tsx`, `BlogCanonicalRustCrate.tsx`, `ResearchPaperAtlasEmbeddings.tsx`, or `ProjectDetailLayout.tsx` — they all consume `ArticleLayout` and inherit the new look automatically.
 
 ## Result
 
-Less to read, fewer places to click, one clear path forward on every screen. The home page reads as a confident sequence of short verdicts backed by numbers and proof — the same calm, high-signal cadence that makes plasma.to feel like frontier work, expressed in the UOR Foundation's own voice.
+Every blog post and project page opens with the same confident TechCrunch-style masthead: a single hero image bleeding off the left edge, a bold solid panel on the right carrying the category, headline, share controls, and byline, then a clean 820-px reading column below. Familiar, crisp, precise — in the UOR Foundation's own palette.
 
