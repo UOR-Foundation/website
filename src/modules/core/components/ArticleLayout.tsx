@@ -144,14 +144,14 @@ const ArticleLayout = ({
         {/* TechCrunch-style edge-to-edge masthead */}
         <header className="mx-auto w-full max-w-[1920px] 2xl:border-x 2xl:border-border/60">
           {!hideHero && (heroOverride || heroImage) ? (
-            <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] items-stretch lg:max-h-[58vh] xl:max-h-[56vh]">
               {/* Image — full bleed left */}
               <div className="order-1 animate-fade-in-up" style={{ animationDelay: "0.04s" }}>
                 {heroOverride ? (
                   heroOverride
                 ) : (
                   <figure className="h-full flex flex-col">
-                    <div className="bg-muted/40 aspect-[16/7] lg:aspect-auto lg:h-full lg:min-h-[210px] xl:min-h-[240px] 2xl:min-h-[260px] w-full overflow-hidden">
+                    <div className="bg-muted/40 aspect-[16/6] lg:aspect-auto lg:h-full lg:min-h-[320px] xl:min-h-[360px] 2xl:min-h-[400px] lg:max-h-[58vh] xl:max-h-[56vh] w-full overflow-hidden">
                       <img
                         src={heroImage}
                         alt={title}
@@ -170,12 +170,12 @@ const ArticleLayout = ({
 
               {/* Right panel */}
               <div
-                className="order-2 bg-card flex flex-col lg:min-h-[210px] xl:min-h-[240px] 2xl:min-h-[260px] animate-fade-in-up"
-                style={{ animationDelay: "0.04s", padding: "clamp(1.75rem, 3vw, 3.5rem) clamp(1.75rem, 3vw, 3.5rem)" }}
+                className="order-2 bg-card flex flex-col lg:min-h-[320px] xl:min-h-[360px] 2xl:min-h-[400px] lg:max-h-[58vh] xl:max-h-[56vh] animate-fade-in-up overflow-hidden"
+                style={{ animationDelay: "0.04s", padding: "clamp(1.5rem, 2.4vw, 2.75rem) clamp(1.75rem, 3vw, 3.25rem)" }}
               >
                 {/* Vertically centered, homepage-style stacked content */}
-                <div className="flex-1 flex flex-col justify-center max-w-[46ch]">
-                  <div className="flex items-start justify-between gap-6 mb-5">
+                <div className="flex-1 flex flex-col justify-center max-w-[42ch]">
+                  <div className="flex items-start justify-between gap-6 mb-4">
                     <span className="text-[13px] xl:text-[14px] uppercase tracking-[0.22em] font-semibold text-primary/80 font-body">
                       {kicker}
                     </span>
@@ -184,14 +184,14 @@ const ArticleLayout = ({
 
                   <h1
                     className="font-display font-bold uppercase text-foreground text-balance"
-                    style={{ fontSize: "clamp(2.2rem, 3.4vw, 4.4rem)", lineHeight: 1.05, letterSpacing: "0.045em" }}
+                    style={{ fontSize: "clamp(1.7rem, 2.4vw, 3rem)", lineHeight: 1.06, letterSpacing: "0.035em" }}
                   >
                     {title}
                   </h1>
 
-                  <div className="mt-6">
+                  <div className="mt-5">
                     <div className="rule-prime" />
-                    <div className="mt-4 text-[15px] xl:text-base text-muted-foreground font-body">
+                    <div className="mt-3 text-[14px] xl:text-[15px] text-muted-foreground font-body">
                       <span className="text-foreground font-semibold">{author}</span>
                       {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
                     </div>
