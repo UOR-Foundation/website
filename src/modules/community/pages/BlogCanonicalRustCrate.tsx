@@ -213,34 +213,34 @@ const BlogCanonicalRustCrate = () => {
         <p>
           <a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/2395" target="_blank" rel="noopener noreferrer">SEP-2395</a> hashed the <em>bytes</em> and layered trust on top. UOR hashes the <em>structure</em> and has no trust layer. The five failures collapse:
         </p>
-        <figure className="not-prose my-6 overflow-x-auto rounded-xl border border-border bg-card">
-          <table className="w-full text-sm">
+        <figure className="not-prose my-8 overflow-x-auto rounded-xl border border-border bg-card">
+          <table className="w-full text-[15px] md:text-base leading-relaxed">
             <thead>
-              <tr className="border-b border-border bg-muted/30 text-left">
-                <th className="px-4 py-3 font-semibold w-[40%]">SEP-2395 failure</th>
-                <th className="px-4 py-3 font-semibold">How UOR resolves it</th>
+              <tr className="border-b border-border bg-muted/40 text-left">
+                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[42%]">SEP-2395 failure</th>
+                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">How UOR resolves it</th>
               </tr>
             </thead>
             <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
               <tr>
-                <td className="px-4 py-3"><strong>Canonical JSON differs across languages.</strong> Node and Python produce different bytes for the same JSON.</td>
-                <td className="px-4 py-3">Normalize structure, not bytes. Same object, same fingerprint, any runtime. Verified in Lean 4.</td>
+                <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Canonical JSON differs across languages.</strong> <span className="text-muted-foreground">Node and Python produce different bytes for the same JSON.</span></td>
+                <td className="px-5 py-5 align-top text-foreground">Normalize structure, not bytes. Same object, same fingerprint, any runtime. Verified in Lean 4.</td>
               </tr>
               <tr>
-                <td className="px-4 py-3"><strong>Downgrade attack.</strong> Drop a key, server falls back to unsigned.</td>
-                <td className="px-4 py-3">No signed mode to fall back from. The fingerprint <em>is</em> the address.</td>
+                <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Downgrade attack.</strong> <span className="text-muted-foreground">Drop a key, server falls back to unsigned.</span></td>
+                <td className="px-5 py-5 align-top text-foreground">No signed mode to fall back from. The fingerprint <em>is</em> the address.</td>
               </tr>
               <tr>
-                <td className="px-4 py-3"><strong>Self-signed trust anchors.</strong> An anchor could stamp itself L4.</td>
-                <td className="px-4 py-3">No PKI, no levels, no issuers. Trust is a local hash comparison.</td>
+                <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Self-signed trust anchors.</strong> <span className="text-muted-foreground">An anchor could stamp itself L4.</span></td>
+                <td className="px-5 py-5 align-top text-foreground">No PKI, no levels, no issuers. Trust is a local hash comparison.</td>
               </tr>
               <tr>
-                <td className="px-4 py-3"><strong>Fail-open revocation.</strong> Unauthenticated revocation lists failed open.</td>
-                <td className="px-4 py-3">Nothing to revoke. No keys, no lists. Change the object, change the address.</td>
+                <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Fail-open revocation.</strong> <span className="text-muted-foreground">Unauthenticated revocation lists failed open.</span></td>
+                <td className="px-5 py-5 align-top text-foreground">Nothing to revoke. No keys, no lists. Change the object, change the address.</td>
               </tr>
               <tr>
-                <td className="px-4 py-3"><strong>Misattributed CVEs, fabricated endorsements.</strong> Claims didn't hold up to review.</td>
-                <td className="px-4 py-3">No social trust surface. 200 lines of Rust, one Lean 4 proof. Run it yourself.</td>
+                <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Misattributed CVEs, fabricated endorsements.</strong> <span className="text-muted-foreground">Claims didn't hold up to review.</span></td>
+                <td className="px-5 py-5 align-top text-foreground">No social trust surface. 200 lines of Rust, one Lean 4 proof. Run it yourself.</td>
               </tr>
             </tbody>
           </table>
