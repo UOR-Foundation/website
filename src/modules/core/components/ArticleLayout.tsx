@@ -150,8 +150,8 @@ const ArticleLayout = ({
                 {heroOverride ? (
                   heroOverride
                 ) : (
-                  <figure className="h-full">
-                    <div className="bg-muted/40 aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[380px] xl:min-h-[440px] 2xl:min-h-[500px] w-full overflow-hidden">
+                  <figure className="h-full flex flex-col">
+                    <div className="bg-muted/40 aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[420px] xl:min-h-[480px] 2xl:min-h-[520px] w-full overflow-hidden">
                       <img
                         src={heroImage}
                         alt={title}
@@ -160,7 +160,7 @@ const ArticleLayout = ({
                       />
                     </div>
                     {heroCaption && (
-                      <figcaption className="px-6 md:px-8 lg:px-10 mt-3 mb-2 text-[10.5px] uppercase tracking-[0.22em] font-mono text-muted-foreground/80">
+                      <figcaption className="px-6 md:px-8 lg:px-10 mt-3 mb-2 text-[10.5px] uppercase tracking-[0.22em] font-mono text-muted-foreground/70">
                         Image credits: {heroCaption}
                       </figcaption>
                     )}
@@ -170,26 +170,29 @@ const ArticleLayout = ({
 
               {/* Right panel */}
               <div
-                className="order-2 bg-card flex flex-col justify-between lg:min-h-[380px] xl:min-h-[440px] 2xl:min-h-[500px] animate-fade-in-up"
-                style={{ animationDelay: "0.04s", padding: "clamp(1.5rem, 2.6vw, 3.25rem)" }}
+                className="order-2 bg-card flex flex-col lg:min-h-[420px] xl:min-h-[480px] 2xl:min-h-[520px] animate-fade-in-up"
+                style={{ animationDelay: "0.04s", padding: "clamp(1.75rem, 3vw, 3.5rem) clamp(1.75rem, 3vw, 3.5rem)" }}
               >
-                <div className="flex items-start justify-between gap-6">
-                  <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-foreground/80 font-body">
-                    {kicker}
-                  </span>
-                  <ShareRow />
-                </div>
+                {/* Vertically centered, TechCrunch-style stacked content */}
+                <div className="flex-1 flex flex-col justify-center max-w-[42ch]">
+                  <div className="flex items-start justify-between gap-6 mb-7">
+                    <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-foreground/80 font-body">
+                      {kicker}
+                    </span>
+                    <ShareRow />
+                  </div>
 
-                <h1
-                  className="font-display font-bold tracking-tight text-foreground text-balance normal-case my-6 lg:my-7 xl:my-8 max-w-[16ch] xl:max-w-[18ch] 2xl:max-w-[20ch]"
-                  style={{ fontSize: "clamp(1.75rem, 2.7vw, 3.75rem)", lineHeight: 1.07, letterSpacing: "-0.02em", textTransform: "none" }}
-                >
-                  {title}
-                </h1>
+                  <h1
+                    className="font-display font-semibold tracking-tight text-foreground text-balance normal-case"
+                    style={{ fontSize: "clamp(1.75rem, 2.4vw, 3.25rem)", lineHeight: 1.1, letterSpacing: "-0.015em", textTransform: "none" }}
+                  >
+                    {title}
+                  </h1>
 
-                <div className="text-sm xl:text-base 2xl:text-lg text-muted-foreground font-body">
-                  <span className="text-foreground font-semibold">{author}</span>
-                  {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
+                  <div className="mt-7 text-sm xl:text-[15px] text-muted-foreground font-body">
+                    <span className="text-foreground font-semibold">{author}</span>
+                    {date && <> <span className="mx-2 text-muted-foreground/50">—</span> <span>{date}</span></>}
+                  </div>
                 </div>
               </div>
             </div>
