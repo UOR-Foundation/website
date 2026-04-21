@@ -410,12 +410,12 @@ const ProjectDetailLayout = ({
       </section>
 
       {/* CTA */}
-      <section className="section-dark py-16 md:py-24">
+      <section className="section-dark py-20 md:py-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] text-center">
-          <h2 className="font-display text-2xl md:text-3xl font-bold mb-4">
+          <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight mb-5">
             Get involved
           </h2>
-          <p className="text-base text-section-dark-foreground/70 font-body mb-8 max-w-lg mx-auto">
+          <p className="text-lg md:text-xl text-section-dark-foreground/70 font-body leading-[1.6] mb-10 max-w-xl mx-auto">
             {name} is open source and open to contributors. Explore the code, open an issue, or start building.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
