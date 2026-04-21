@@ -7,7 +7,7 @@ export const pillars = [
     iconKey: "Globe",
     title: "Learn",
     description:
-      "Understand how UOR addressing works. Read the specification, explore the architecture, and see how it compares to existing standards.",
+      "Read the specification and explore how UOR addressing works.",
     href: "/docs",
     cta: "Read the Docs",
   },
@@ -15,7 +15,7 @@ export const pillars = [
     iconKey: "Users",
     title: "Connect",
     description:
-      "Join a global community of developers and researchers. Propose ideas, get peer review, and collaborate in the open.",
+      "Join developers and researchers building UOR in the open.",
     href: "/community",
     cta: "Join the Community",
   },
@@ -23,7 +23,7 @@ export const pillars = [
     iconKey: "Rocket",
     title: "Build",
     description:
-      "Start building with UOR. Install the core library and start integrating the UOR tools into your own system.",
+      "Install the core library and integrate UOR into your system.",
     href: "/projects",
     cta: "Explore Projects",
   },
