@@ -164,9 +164,9 @@ const BlogCanonicalRustCrate = () => {
       </section>
 
       <section>
-        <h2>Where it differs from prior art</h2>
+        <h2>How it compares</h2>
         <p>
-          Content-addressed identity isn't new. Git did it in 2005, IPFS generalized it in 2015, Sigstore wrapped it in PKI. For their domains those tools are right. The gap UOR fills: <strong>identity that survives re-serialization</strong> (exactly what happens every time an agent parses, mutates, or forwards an object) <strong>without a signature layer to operate</strong>.
+          Content addressing is well-trodden ground. Git shipped it in 2005, IPFS generalized it in 2015, Sigstore bolted PKI around it. Each is the right tool inside its lane. The unsolved part — and what UOR targets — is <strong>an identity that holds through re-serialization</strong> (which happens on every parse, mutation, and hop between agents) <strong>without standing up a signing stack to keep it alive</strong>.
         </p>
         <figure className="not-prose my-8 overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full text-[15px] md:text-base leading-relaxed">
