@@ -263,8 +263,8 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>Try it</h2>
         <p>
-          Connect any MCP-compatible agent to UOR's hosted server in under a minute. <strong>No install, no auth, no config.</strong> Pick your client below — the same canonical endpoint works everywhere:{" "}
-          <code>https://mcp.uor.foundation/mcp</code>.
+          Connect any MCP-compatible agent to UOR's hosted server in under a minute. <strong>No install, no signup, no config.</strong> Pick your client below — the same canonical endpoint works everywhere:{" "}
+          <code>https://mcp.uor.foundation/mcp</code> <span className="not-prose inline-flex items-center gap-1.5 align-middle ml-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-mono uppercase tracking-[0.14em]"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />live</span>.
         </p>
         <McpInstallTabs />
         <p>
