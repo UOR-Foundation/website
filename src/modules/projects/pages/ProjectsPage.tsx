@@ -1,10 +1,11 @@
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { ExternalLink, ChevronRight, Send, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { ExternalLink, Send, CheckCircle2, Search } from "lucide-react";
+import { useMemo, useState } from "react";
 import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
 import { supabase } from "@/integrations/supabase/client";
+import ProjectCard from "@/modules/projects/components/ProjectCard";
 
 const maturityColors: Record<MaturityLevel, string> = {
   Graduated: "bg-primary/15 text-primary border-primary/20",
@@ -35,6 +36,27 @@ const Projects = () => {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string>("All");
+
+  const categories = useMemo(
+    () => ["All", ...Array.from(new Set(projectsData.map((p) => p.category)))],
+    [],
+  );
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return projectsData.filter((p) => {
+      const matchesCategory = activeCategory === "All" || p.category === activeCategory;
+      if (!matchesCategory) return false;
+      if (!q) return true;
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q)
+      );
+    });
+  }, [query, activeCategory]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
