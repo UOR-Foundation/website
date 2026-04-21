@@ -263,20 +263,31 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>Try it</h2>
         <p>
-          Five lines. No keys, no config, no network. Same fingerprint on macOS, Linux, and on the next library version that re-orders your JSON keys.
+          Three commands to install. One file to run. No keys, no config, no network.
         </p>
-        <pre>{`use uor_foundation::prelude::*;
+        <pre>{`# 1. install
+cargo new hello-uor && cd hello-uor
+cargo add uor-foundation
 
-// sender
-let id = tool_call.identify()?;          // → uor1q…f3a2 (256-bit, deterministic)
+# 2. src/main.rs
+use uor_foundation::{DefaultHostTypes, prelude::*};
 
-// receiver, after the message crosses MCP / A2A / anything
-assert_eq!(received.identify()?, id);    // bit-for-bit, or refuse`}</pre>
-        <ul>
-          <li><strong>Install:</strong> <code>cargo add uor-foundation</code></li>
-          <li><strong>Guides:</strong> <a href={CRATE_DOCS_URL} target="_blank" rel="noopener noreferrer">docs.rs/uor-foundation</a></li>
-          <li><strong>Source:</strong> <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">github.com/uor-foundation</a></li>
-        </ul>
+fn main() -> anyhow::Result<()> {
+    let payload = serde_json::json!({
+        "tool": "search",
+        "args": { "q": "uor", "limit": 10 }
+    });
+
+    let id = payload.identify::<DefaultHostTypes>()?;
+    println!("{id}");   // → uor1q…  (256-bit, deterministic)
+    Ok(())
+}
+
+# 3. run
+cargo run`}</pre>
+        <p>
+          Re-run on any machine, in any order of JSON keys, with any whitespace: the fingerprint does not change. Full reference at <a href={CRATE_DOCS_URL} target="_blank" rel="noopener noreferrer">docs.rs/uor-foundation</a> · source at <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">github.com/uor-foundation</a>.
+        </p>
       </section>
     </ArticleLayout>
   );
