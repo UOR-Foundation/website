@@ -3,7 +3,7 @@ import { ArrowRight, ArrowDown } from "lucide-react";
 const silos = ["APIs", "Databases", "Files", "AI Models", "Graphs", "Streams", "Ledgers", "Devices", "Protocols"];
 
 const UorDiagramCompact = () => (
-  <div className="mx-auto w-full max-w-[54rem] rounded-[1.75rem] border border-[hsl(var(--section-dark-foreground)/0.1)] bg-[hsl(var(--section-dark))] px-[clamp(1.5rem,2vw,2.75rem)] py-[clamp(1.75rem,2.4vw,3rem)] lg:min-h-[clamp(23rem,28vw,29rem)]">
+  <div className="mx-auto w-full max-w-[54rem] rounded-[1.75rem] border border-[hsl(var(--section-dark-foreground)/0.1)] bg-[hsl(var(--section-dark))] px-[clamp(1.5rem,2vw,2.75rem)] py-[clamp(2.25rem,3vw,3.75rem)] lg:min-h-[clamp(26rem,31vw,33rem)]">
     <p className="text-center font-body text-[clamp(0.8rem,0.28vw+0.76rem,1rem)] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--section-dark-foreground)/0.68)]">
       Fragmentation → Unification
     </p>
