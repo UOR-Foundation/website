@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useCallback } from "react";
+import { ReactNode, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/modules/core/components/Layout";
 import { ArrowLeft, ArrowRight, Facebook, Linkedin, Link2, Mail, Twitter } from "lucide-react";
@@ -15,8 +15,6 @@ export interface ArticleLayoutProps {
   kicker: string;
   /** Date string already formatted, e.g. "April 21, 2026" */
   date?: string;
-  /** Optional override; otherwise estimated from children text */
-  readTime?: string;
   /** Headline */
   title: string;
   /** Standfirst / deck — single muted paragraph below headline */
@@ -47,31 +45,6 @@ export interface ArticleLayoutProps {
 }
 
 /**
- * Estimate reading time from a React subtree by walking children for strings.
- * ~200 wpm. Falls back to "3 min read".
- */
-function estimateReadTime(node: ReactNode): string {
-  let words = 0;
-  const visit = (n: ReactNode) => {
-    if (n == null || typeof n === "boolean") return;
-    if (typeof n === "string" || typeof n === "number") {
-      words += String(n).trim().split(/\s+/).filter(Boolean).length;
-      return;
-    }
-    if (Array.isArray(n)) { n.forEach(visit); return; }
-    if (typeof n === "object" && n !== null) {
-      const maybeEl = n as unknown as { props?: { children?: ReactNode } };
-      if (maybeEl.props && "children" in maybeEl.props) {
-        visit(maybeEl.props.children);
-      }
-    }
-  };
-  try { visit(node); } catch { /* ignore */ }
-  if (words < 50) return "3 min read";
-  return `${Math.max(1, Math.round(words / 200))} min read`;
-}
-
-/**
  * ArticleLayout — shared TechCrunch-style editorial shell.
  * Used by project detail pages and blog post pages so both surfaces
  * read like one publication.
@@ -79,7 +52,6 @@ function estimateReadTime(node: ReactNode): string {
 const ArticleLayout = ({
   kicker,
   date,
-  readTime,
   title,
   deck,
   author = "UOR Foundation",
