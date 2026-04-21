@@ -19,7 +19,7 @@ const HighlightsSection = () => {
             Updates
           </p>
           <h2 className="font-display font-bold text-foreground text-fluid-heading">
-            Recent research and releases.
+            Latest research and releases.
           </h2>
         </div>
 

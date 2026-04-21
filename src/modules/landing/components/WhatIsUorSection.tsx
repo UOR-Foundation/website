@@ -112,7 +112,7 @@ const WhatIsUorSection = () => {
             How it works
           </p>
           <h2 className="font-display font-bold text-foreground text-fluid-heading">
-            Content-derived addresses.
+            Addresses derived from content.
           </h2>
         </div>
         <div className="rule-prime" />
