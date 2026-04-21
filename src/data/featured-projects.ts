@@ -12,6 +12,7 @@ export const featuredProjects = [
     maturity: "Sandbox" as MaturityLevel,
     license: "Apache-2.0",
     url: "https://github.com/UOR-Foundation/UOR-Framework",
+    imageKey: "uorIdentity",
   },
   {
     name: "Hologram",
@@ -21,6 +22,7 @@ export const featuredProjects = [
     maturity: "Sandbox" as MaturityLevel,
     license: "MIT",
     url: "https://gethologram.ai/",
+    imageKey: "hologram",
   },
   {
     name: "Atlas Embeddings",
@@ -30,5 +32,6 @@ export const featuredProjects = [
     maturity: "Sandbox" as MaturityLevel,
     license: "MIT",
     url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
+    imageKey: "atlas",
   },
 ];
