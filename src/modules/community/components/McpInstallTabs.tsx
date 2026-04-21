@@ -271,26 +271,10 @@ const McpInstallTabs = () => {
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary/80 mb-2 font-body">
           Verify it works
         </p>
-        <p className="text-[15.5px] text-foreground font-body leading-relaxed mb-3">
-          Ask your agent:
-        </p>
-        <CodeBlock code={VERIFY_PROMPT} language="prompt" />
+        <CodeBlock code={VERIFY_PROMPT} language="ask your agent" />
         <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">
-          The response will contain <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.passport</code> — a permanent 256-bit SHA-256 fingerprint of the
-          canonicalized response — and{" "}
-          <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.mcps.receipt</code>, an Ed25519 signature of that fingerprint that verifies locally with only
-          its embedded public key. <strong>No PKI, no registry, no third party.</strong>
-        </p>
-        <p className="text-[14px] text-muted-foreground font-body mt-3">
-          Source and reproducer scripts:{" "}
-          <a
-            href="https://github.com/humuhumu33/uor-passport"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline inline-flex items-center gap-1"
-          >
-            github.com/humuhumu33/uor-passport <ExternalLink size={12} />
-          </a>
+          The response carries <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.passport</code> — a 256-bit SHA-256 fingerprint of the canonicalized response — and{" "}
+          <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.mcps.receipt</code>, an Ed25519 signature that verifies locally with its embedded public key. <strong>No PKI, no registry, no third party.</strong>
         </p>
       </div>
     </div>
