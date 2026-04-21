@@ -216,15 +216,6 @@ const ArticleLayout = ({
 
         {/* Body — single 820px reading column */}
         <div className="container px-6 md:px-8 lg:px-10 mt-10 md:mt-14">
-          <div className="mx-auto max-w-[820px] mb-10">
-            <Link
-              to={backHref}
-              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors font-body normal-case"
-            >
-              <ArrowLeft size={14} />
-              {backLabel}
-            </Link>
-          </div>
           <div className="mx-auto max-w-[820px] prose-article">
             {deck && <p>{deck}</p>}
             {children}
