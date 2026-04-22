@@ -12,7 +12,7 @@ export const routeTable = [
   { path: "/blog/building-the-internets-knowledge-graph", label: "Blog: Knowledge Graph" },
   { path: "/blog/universal-mathematical-language", label: "Blog: Universal Language" },
   { path: "/blog/uor-framework-launch", label: "Blog: Framework Launch" },
-  { path: "/blog/universal-data-passport", label: "Blog: Universal Data Passport" },
+  { path: "/blog/universal-data-fingerprint", label: "Blog: Universal Data Fingerprint" },
   { path: "/research/atlas-embeddings", label: "Research: Atlas Embeddings" },
   { path: "/projects/hologram", label: "Project: Hologram" },
   { path: "/projects/atlas-embeddings", label: "Project: Atlas Embeddings" },

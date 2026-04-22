@@ -7,10 +7,10 @@ export type TagType = "Research" | "Announcement" | "Release";
 export const highlights = [
   {
     tag: "Release" as TagType,
-    title: "UOR Identity: A universal data passport for your AI agent",
+    title: "A universal data fingerprint for your AI agent",
     date: "April 21, 2026",
     imageKey: "uorIdentity",
-    href: "/blog/universal-data-passport",
+    href: "/blog/universal-data-fingerprint",
   },
   {
     tag: "Research" as TagType,
