@@ -204,9 +204,8 @@ const McpInstallTabs = () => {
             <CodeBlock code={CLAUDE_AGENT_PROMPT} language="prompt" />
 
             <p className="text-foreground/70">
-              After installing, restart Claude Code (or run{" "}
-              <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">/mcp</code> in the menu) for the
-              config to take effect.
+              After installing, quit and reopen Claude Code (or start a new session) for the server to connect — Claude
+              Code loads MCP servers at startup, not live.
             </p>
           </div>
         )}
