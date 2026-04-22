@@ -1,19 +1,12 @@
 import ArticleLayout from "@/modules/core/components/ArticleLayout";
 import coverImage from "@/assets/blog-uor-framework-launch.png";
-import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
-import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import { blogPosts } from "@/data/blog-posts";
+import { getBlogCover } from "@/data/blog-covers";
 import { GITHUB_FRAMEWORK_URL } from "@/data/external-links";
 import { Globe, ShieldCheck, Bot, Microscope, Layers, Rocket } from "lucide-react";
 import TldrAside from "../components/TldrAside";
 
 const SLUG = "/blog/uor-framework-launch";
-
-const coverMap: Record<string, string> = {
-  knowledgeGraph: blogKnowledgeGraph,
-  goldenSeed: blogGoldenSeed,
-  frameworkLaunch: coverImage,
-};
 
 const APPLICATIONS = [
   { icon: Globe, title: "Semantic Web", desc: "Give every piece of data a meaning machines can understand, making the web truly interoperable." },
@@ -41,7 +34,7 @@ const BlogPost3 = () => {
       title: p.title,
       href: p.href,
       meta: `${p.tag} · ${p.date}`,
-      image: coverMap[p.coverKey],
+      image: getBlogCover(p.coverKey),
     }));
 
   return (
