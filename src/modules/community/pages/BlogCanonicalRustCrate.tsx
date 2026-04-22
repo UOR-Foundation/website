@@ -60,6 +60,9 @@ const BlogCanonicalRustCrate = () => {
         <p className="font-body text-[14px] text-muted-foreground m-0 mt-2">
           Same data, same fingerprint, in any language or runtime.
         </p>
+        <p className="font-body text-[14px] text-muted-foreground m-0 mt-4 leading-[1.7]">
+          UOR provides content consistency, not channel security. A man-in-the-middle who replaces payload and fingerprint together is invisible to UOR alone — pair it with TLS / mTLS for channel integrity and with a key-binding layer (Sigstore, JWS+X.509, DIDs, OIDC) if you need to prove who produced the object.
+        </p>
       </aside>
 
       <FourHashesProof />
