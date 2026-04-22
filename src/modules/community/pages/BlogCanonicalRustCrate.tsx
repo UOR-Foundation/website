@@ -1,8 +1,9 @@
 import ArticleLayout from "@/modules/core/components/ArticleLayout";
 import { Link } from "react-router-dom";
-import { CRATE_URL, CRATE_DOCS_URL, GITHUB_ORG_URL } from "@/data/external-links";
+import { CRATE_URL } from "@/data/external-links";
 import { blogPosts } from "@/data/blog-posts";
 import McpInstallTabs from "../components/McpInstallTabs";
+import FourHashesProof from "../components/FourHashesProof";
 import heroImage from "@/assets/project-uor-identity.jpg";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
@@ -52,7 +53,16 @@ const BlogCanonicalRustCrate = () => {
         <p className="font-body leading-[1.75] text-foreground/85 m-0">
           When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>meaning</em>, not its bytes, so the same data hashes to the same address in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman.
         </p>
+        <pre className="not-prose mt-5 mb-2 p-4 rounded-lg bg-muted/60 border border-border text-[13px] font-mono text-foreground leading-relaxed overflow-x-auto">
+{`{"a": 1, "b": 2}     → 43258cff783fe7036d8a…
+{"b": 2, "a": 1}     → 43258cff783fe7036d8a…   (same object, different JSON, same address)`}
+        </pre>
+        <p className="font-body text-[14px] text-muted-foreground m-0 mt-2">
+          Same data, same fingerprint, in any language or runtime.
+        </p>
       </aside>
+
+      <FourHashesProof />
 
       <section>
         <h2>What it is</h2>
@@ -60,7 +70,7 @@ const BlogCanonicalRustCrate = () => {
           Two AI agents exchange a tool call. Today, neither one can prove the object that arrived is the object that was sent. Re-serialize the JSON, the hash changes. Sign the bytes, the signature breaks at the first parse. Add a PKI, now you operate a PKI.
         </p>
         <p>
-          <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, content-derived, self-verifying 256-bit identity, a universal data passport that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP, A2A, and any transport carrying typed data between agents.
+          <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, content-derived, self-verifying 256-bit identity, a universal data passport that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP today — and under any structured-data transport that carries JSON, including A2A.
         </p>
         <p>
           UOR is content-addressed, decentralized identity for digital objects — not identity-addressed identity for people. It answers <em>"what is this?"</em> with a 256-bit fingerprint, not <em>"who made this?"</em> The two questions compose: keep your existing identity layer (OAuth, mTLS, Sigstore, DIDs) for the second; UOR handles the first, everywhere, with no infrastructure.
@@ -83,10 +93,10 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>How it works</h2>
         <p>
-          Two steps: <strong>(1) normalize</strong> the object to a canonical form that factors out key order, string encoding, integer width, float representation (including <code>-0</code>, NaN, ±Inf), datetime spelling, and unspecified array ordering for set-typed fields; <strong>(2) SHA-256</strong> it. Same object, same fingerprint, on any runtime, in any language.
+          Two steps: <strong>(1) normalize</strong> the object to a canonical form that factors out key order, Unicode normalization (NFC), integer width (<code>1</code> vs <code>1.0</code>), float representation including <code>-0</code>, and whitespace; <strong>(2) SHA-256</strong> it. Same object, same fingerprint, on any runtime, in any language.
         </p>
         <p>
-          The normalization step is formally verified in Lean 4: a machine-checked proof that <em>any</em> two inputs equal under the type's equivalence relation produce identical canonical bytes. Determinism isn't a property we test for, it's a property we proved. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
+          The normalization is a pure function of the object's typed structure — deterministic by construction. A machine-checked Lean 4 formalization is in progress. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
         </p>
         <pre>{`object → normalize → SHA-256 → 256-bit fingerprint`}</pre>
       </section>
@@ -242,7 +252,7 @@ const BlogCanonicalRustCrate = () => {
             <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Canonical JSON differs across languages.</strong> <span className="text-muted-foreground">Node and Python produce different bytes for the same JSON.</span></td>
-                <td className="px-5 py-5 align-top text-foreground">Normalize structure, not bytes. Same object, same fingerprint, any runtime. Verified in Lean 4.</td>
+                <td className="px-5 py-5 align-top text-foreground">Normalize structure, not bytes. Same object, same fingerprint, any runtime. Deterministic by construction.</td>
               </tr>
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Downgrade attack.</strong> <span className="text-muted-foreground">Drop a key, server falls back to unsigned.</span></td>
@@ -258,7 +268,7 @@ const BlogCanonicalRustCrate = () => {
               </tr>
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Misattributed CVEs, fabricated endorsements.</strong> <span className="text-muted-foreground">Claims didn't hold up to review.</span></td>
-                <td className="px-5 py-5 align-top text-foreground">No social trust surface. 200 lines of Rust, one Lean 4 proof. Run it yourself.</td>
+                <td className="px-5 py-5 align-top text-foreground">No social trust surface. Around 1000 lines of Rust, public and auditable. Run it yourself.</td>
               </tr>
             </tbody>
           </table>
@@ -274,7 +284,7 @@ const BlogCanonicalRustCrate = () => {
           <li><strong>Provable agent-to-agent calls.</strong> The receiver knows the tool call, memory, or result it ran is bit-for-bit the one the sender produced, across any language or transport.</li>
           <li><strong>Free deduplication and caching.</strong> Identical objects collapse to one address. Caches, audit logs, and replay systems stop storing the same payload twice.</li>
           <li><strong>Portable provenance.</strong> Fork an object, move it between MCP servers, hand it to a different agent, the address still resolves to the same content.</li>
-          <li><strong>Zero trust infrastructure.</strong> No certificates to issue, rotate, or revoke. Verification is a local hash, not a network call.</li>
+          <li><strong>No trust infrastructure to operate.</strong> No certificates to issue, rotate, or revoke. Verification is a local hash, not a network call.</li>
         </ul>
         <p>
           <strong>Explicit non-goals.</strong> UOR is deliberately narrow so it composes cleanly with what you already run:
@@ -311,7 +321,7 @@ const BlogCanonicalRustCrate = () => {
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><code>uor.encode_address</code></td>
                 <td className="px-5 py-5 align-top text-foreground"><code>sha256:&lt;64-hex&gt;</code></td>
-                <td className="px-5 py-5 align-top text-muted-foreground">256-bit content address of a UTF-8 string (≤1000 chars), SHA-256 over RFC 8785 JCS.</td>
+                <td className="px-5 py-5 align-top text-muted-foreground">256-bit content address of any JSON value — string, number, bool, array, or object. NFC-normalized, RFC 8785 JCS-canonicalized, SHA-256 hashed. Canonical form up to 64&nbsp;KB.</td>
               </tr>
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><code>uor.verify_passport</code></td>
@@ -328,8 +338,8 @@ const BlogCanonicalRustCrate = () => {
         </figure>
         <p>
           Every response carries a <code>uor.passport</code> envelope in <code>_meta</code> — and a <code>uor.mcps.receipt</code> when MCPS is enabled. Reference Rust implementation at{" "}
-          <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">
-            github.com/uor-foundation
+          <a href="https://github.com/humuhumu33/uor-passport" target="_blank" rel="noopener noreferrer">
+            github.com/humuhumu33/uor-passport
           </a>
           .
         </p>
