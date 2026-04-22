@@ -189,11 +189,11 @@ const BlogCanonicalRustCrate = () => {
             <text x="700" y="316" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 13, fontFamily: "ui-monospace, monospace" }}>match → trust locally</text>
 
             {/* ============ FOOTER ============ */}
-            <text x="411" y="372" textAnchor="middle" className="fill-foreground" style={{ fontSize: 18, fontWeight: 700 }}>
-              The address IS the content.
+            <text x="411" y="372" textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 700 }}>
+              The address is derived from the content — same object, same address.
             </text>
             <text x="411" y="398" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 14, fontFamily: "ui-monospace, monospace" }}>
-              no PKI · no registry · no third party
+              no PKI · no registry · no third party for verification
             </text>
           </svg>
           <figcaption className="mt-4 text-muted-foreground font-body text-center">
