@@ -292,6 +292,43 @@ const BlogCanonicalRustCrate = () => {
           </small>
         </p>
       </section>
+
+      <section>
+        <h2>Tools</h2>
+        <p>Three tools. Full surface. Source is 250 KB of Rust — review it yourself.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>What it does</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>uor.encode_address</code></td>
+              <td>Compute the 256-bit UOR content address (SHA-256 over RFC 8785 JCS) of a UTF-8 string up to 1000 characters. Returns <code>sha256:&lt;64-hex&gt;</code>.</td>
+            </tr>
+            <tr>
+              <td><code>uor.verify_passport</code></td>
+              <td>Re-derive the fingerprint of a content payload and compare to a claimed passport. Returns <code>{`{ valid: bool, reason?: string }`}</code>. Stateless.</td>
+            </tr>
+            <tr>
+              <td><code>uor.verify_receipt</code></td>
+              <td>Verify an Ed25519-signed MCPS receipt using only the public key embedded in the receipt itself. Returns <code>{`{ valid: bool, reason?: string }`}</code>. No network, no PKI.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <em>
+            Source:{" "}
+            <a href="https://github.com/humuhumu33/uor-passport" target="_blank" rel="noopener noreferrer">
+              github.com/humuhumu33/uor-passport
+            </a>
+            . Every tool response also carries a <code>uor.passport</code> envelope and, when{" "}
+            <code>UOR_MCPS_ENABLED=true</code>, a <code>uor.mcps.receipt</code> in <code>_meta</code> — no tool call required.
+          </em>
+        </p>
+      </section>
     </ArticleLayout>
   );
 };
