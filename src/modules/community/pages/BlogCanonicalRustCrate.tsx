@@ -62,6 +62,9 @@ const BlogCanonicalRustCrate = () => {
         <p>
           <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, content-derived, self-verifying 256-bit identity, a universal data passport that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP, A2A, and any transport carrying typed data between agents.
         </p>
+        <p>
+          UOR is content-addressed, decentralized identity for digital objects — not identity-addressed identity for people. It answers <em>"what is this?"</em> with a 256-bit fingerprint, not <em>"who made this?"</em> The two questions compose: keep your existing identity layer (OAuth, mTLS, Sigstore, DIDs) for the second; UOR handles the first, everywhere, with no infrastructure.
+        </p>
       </section>
 
       <section>
@@ -273,6 +276,17 @@ const BlogCanonicalRustCrate = () => {
           <li><strong>Portable provenance.</strong> Fork an object, move it between MCP servers, hand it to a different agent, the address still resolves to the same content.</li>
           <li><strong>Zero trust infrastructure.</strong> No certificates to issue, rotate, or revoke. Verification is a local hash, not a network call.</li>
         </ul>
+        <p>
+          <strong>Explicit non-goals.</strong> UOR is deliberately narrow so it composes cleanly with what you already run:
+        </p>
+        <ul>
+          <li><strong>Identity binding.</strong> A signed receipt proves a keypair signed it — not whose keypair. Layer Sigstore, JWS + X.509, OIDC, or DIDs for the "who" question.</li>
+          <li><strong>Replay protection.</strong> Receipt verification is stateless; valid receipts stay valid. Track nonces at the application layer if freshness matters.</li>
+          <li><strong>Payloads over 64&nbsp;KB.</strong> The reference server caps canonical-form size as a DoS guard. Split larger objects into chunks and compose their fingerprints.</li>
+        </ul>
+        <p>
+          These are scope choices, not gaps. They are what keeps UOR a primitive instead of a platform.
+        </p>
       </section>
 
       <section>
