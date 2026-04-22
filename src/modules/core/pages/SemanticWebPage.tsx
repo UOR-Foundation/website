@@ -1,7 +1,8 @@
-import Layout from "@/modules/core/components/Layout";
+import ArticleLayout from "@/modules/core/components/ArticleLayout";
 import { ExternalLink, ArrowRight } from "lucide-react";
 import { semanticWebLayers } from "@/data/semantic-web-layers";
 import { Link } from "react-router-dom";
+import heroImage from "@/assets/blog-knowledge-graph.png";
 
 const W3C_REFERENCE_URL = "https://www.w3.org/RDF/Metalog/docs/sw-easy";
 
@@ -119,184 +120,160 @@ const SemanticWebPage = () => {
   ];
 
   return (
-    <Layout>
-      {/* Hero */}
-      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
-          <h1 className="font-display text-fluid-page-title font-bold text-foreground text-balance animate-fade-in-up">
-            The Semantic Web, Powered by UOR
-          </h1>
-          <p className="mt-10 text-fluid-body text-muted-foreground font-body leading-relaxed animate-fade-in-up max-w-2xl" style={{ animationDelay: "0.15s" }}>
-            How UOR implements each layer of the W3C Semantic Web stack.
-          </p>
-          <blockquote className="mt-8 border-l-4 border-primary pl-6 py-2 max-w-3xl animate-fade-in-up opacity-0" style={{ animationDelay: "0.25s" }}>
-            <p className="text-foreground font-display text-fluid-lead font-medium italic leading-relaxed">
-              "The Semantic Web is an extension of the current web in which information is given well-defined meaning, better enabling computers and people to work in cooperation."
-            </p>
-            <footer className="mt-3 text-fluid-caption font-body text-muted-foreground">
-              Tim Berners-Lee, James Hendler, and Ora Lassila.{" "}
-              <a href="https://www-sop.inria.fr/acacia/cours/essi2006/Scientific%20American_%20Feature%20Article_%20The%20Semantic%20Web_%20May%202001.pdf" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">"The Semantic Web"</a>. Scientific American, May 2001.
-            </footer>
-          </blockquote>
-          <div className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0" style={{ animationDelay: "0.35s" }}>
-            <a href="#tower" className="btn-primary">See the Architecture</a>
-            <Link to="/framework" className="btn-outline">UOR Framework</Link>
-          </div>
+    <ArticleLayout
+      kicker="Standards"
+      title="The Semantic Web, powered by UOR"
+      heroImage={heroImage}
+      backHref="/framework"
+      backLabel="Back to Framework"
+      sourceUrl={W3C_REFERENCE_URL}
+      sourceLabel="W3C Semantic Web Reference"
+    >
+      <aside
+        aria-label="TL;DR"
+        className="not-prose mb-12 md:mb-14 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm px-6 md:px-8 py-6 md:py-7"
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-[11px] uppercase tracking-[0.24em] font-semibold text-primary/80 font-mono">
+            TL;DR
+          </span>
+          <span className="h-px flex-1 bg-border/60" />
         </div>
-      </section>
-
-      {/* Content A: Tower + Layer Details */}
-      <section id="tower" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
-            Architecture
+        <p className="font-body text-[15px] md:text-[16px] leading-[1.75] text-foreground/85 m-0">
+          The W3C Semantic Web stack — URI, RDF, Ontology, Logic, Proof, Trust — was a 2001 vision for a web of meaning, not just documents. UOR implements each layer with content-derived addresses, embedded schemas, deterministic canonicalization, and structural proofs. The result: a Semantic Web that actually works, where every object is self-describing, self-verifying, and interoperable across every system.
+        </p>
+        <blockquote className="mt-5 mb-0 not-prose border-l-2 border-primary/60 pl-5 py-1">
+          <p className="font-body italic text-[15px] md:text-[16px] leading-[1.7] text-foreground/85 m-0">
+            "The Semantic Web is an extension of the current web in which information is given well-defined meaning, better enabling computers and people to work in cooperation."
           </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-2">
-            The Semantic Web Tower
-          </h2>
-          <p className="text-fluid-caption text-muted-foreground font-body mb-golden-md">
-            Click any layer to jump to its description.{" "}
-            <a href={W3C_REFERENCE_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-              W3C Reference <ExternalLink className="w-3 h-3" />
-            </a>
-          </p>
+          <footer className="mt-3 text-[13.5px] font-body text-muted-foreground">
+            Tim Berners-Lee, James Hendler, and Ora Lassila.{" "}
+            <a href="https://www-sop.inria.fr/acacia/cours/essi2006/Scientific%20American_%20Feature%20Article_%20The%20Semantic%20Web_%20May%202001.pdf" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">"The Semantic Web"</a>. Scientific American, May 2001.
+          </footer>
+        </blockquote>
+      </aside>
 
+      <section id="tower" className="scroll-mt-28">
+        <h2>The Semantic Web tower</h2>
+        <p>
+          The W3C Semantic Web is specified as a stack of layers, each one building on the layer beneath it. Click any layer below to jump to its description, or read the full{" "}
+          <a href={W3C_REFERENCE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1">
+            W3C reference <ExternalLink className="w-3 h-3 inline" />
+          </a>
+          .
+        </p>
+        <div className="not-prose my-10">
           <SemanticWebTower />
-
-          {/* Layer details inline */}
-          <div className="mt-golden-lg pt-golden-lg border-t border-border">
-            <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
-              Layer by Layer
-            </p>
-            <h3 className="font-display text-fluid-card-title font-bold text-foreground mb-8">
-              What each layer does, and how UOR implements it
-            </h3>
-            <div className="space-y-5">
-              {allLayers.map((layer) => (
-                <LayerCard key={layer.number} layer={layer} />
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* Content B: Comparison */}
-      <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
-            Comparison
-          </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-golden-md">
-            Original proposal vs. UOR implementation
-          </h2>
+      <section>
+        <h2>What each layer does, and how UOR implements it</h2>
+        <p>
+          Every layer of the original specification has a direct, formally verifiable counterpart in UOR. The W3C tower defines the surface; UOR provides the substrate.
+        </p>
+        <div className="not-prose mt-8 space-y-5">
+          {allLayers.map((layer) => (
+            <LayerCard key={layer.number} layer={layer} />
+          ))}
+        </div>
+      </section>
 
-          <div className="hidden md:block rounded-2xl border border-border bg-card overflow-hidden">
-            <table className="w-full text-fluid-body font-body">
-              <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left px-6 py-3.5 font-semibold text-foreground w-[15%]">Layer</th>
-                  <th className="text-left px-6 py-3.5 font-semibold text-muted-foreground w-[42.5%]">Original Proposal</th>
-                  <th className="text-left px-6 py-3.5 font-semibold text-primary w-[42.5%]">UOR</th>
+      <section>
+        <h2>Original proposal vs. UOR implementation</h2>
+        <p>
+          Where the original Semantic Web depended on coordination, conventions, and external authorities, UOR derives the same guarantees from the structure of the data itself.
+        </p>
+        <div className="not-prose mt-8 hidden md:block rounded-2xl border border-border bg-card overflow-hidden">
+          <table className="w-full font-body text-[15px] md:text-[16px]">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left px-6 py-3.5 text-[11px] uppercase tracking-[0.24em] font-semibold text-foreground w-[15%]">Layer</th>
+                <th className="text-left px-6 py-3.5 text-[11px] uppercase tracking-[0.24em] font-semibold text-muted-foreground w-[42.5%]">Original Proposal</th>
+                <th className="text-left px-6 py-3.5 text-[11px] uppercase tracking-[0.24em] font-semibold text-primary w-[42.5%]">UOR</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comparisons.map((row, i) => (
+                <tr key={row.aspect} className={i < comparisons.length - 1 ? "border-b border-border" : ""}>
+                  <td className="px-6 py-4 font-display font-bold text-foreground align-top">{row.aspect}</td>
+                  <td className="px-6 py-4 text-muted-foreground leading-[1.7] align-top">{row.original}</td>
+                  <td className="px-6 py-4 text-foreground leading-[1.7] align-top bg-primary/[0.03]">{row.uor}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {comparisons.map((row, i) => (
-                  <tr key={row.aspect} className={i < comparisons.length - 1 ? "border-b border-border" : ""}>
-                    <td className="px-6 py-4 font-display font-bold text-foreground align-top">{row.aspect}</td>
-                    <td className="px-6 py-4 text-muted-foreground leading-relaxed align-top">{row.original}</td>
-                    <td className="px-6 py-4 text-foreground leading-relaxed align-top bg-primary/[0.03]">{row.uor}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="md:hidden space-y-3">
-            {comparisons.map((row) => (
-              <div key={row.aspect} className="rounded-2xl border border-border bg-card p-5">
-                <h3 className="font-display text-fluid-label font-bold text-foreground mb-3">{row.aspect}</h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-muted-foreground/50 mb-1">Original</p>
-                    <p className="text-fluid-body-sm font-body text-muted-foreground leading-relaxed">{row.original}</p>
-                  </div>
-                  <div className="rounded-lg bg-primary/5 border border-primary/10 p-3">
-                    <p className="text-fluid-caption font-body font-semibold tracking-widest uppercase text-primary mb-1">UOR</p>
-                    <p className="text-fluid-body-sm font-body text-foreground leading-relaxed">{row.uor}</p>
-                  </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="not-prose mt-8 md:hidden space-y-3">
+          {comparisons.map((row) => (
+            <div key={row.aspect} className="rounded-2xl border border-border bg-card p-5">
+              <h3 className="font-display text-[15px] font-bold text-foreground mb-3">{row.aspect}</h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.24em] font-semibold text-muted-foreground/60 mb-1">Original</p>
+                  <p className="font-body text-[14.5px] text-muted-foreground leading-[1.7]">{row.original}</p>
+                </div>
+                <div className="rounded-lg bg-primary/5 border border-primary/10 p-3">
+                  <p className="text-[11px] uppercase tracking-[0.24em] font-semibold text-primary mb-1">UOR</p>
+                  <p className="font-body text-[14.5px] text-foreground leading-[1.7]">{row.uor}</p>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* See It In Action */}
-      <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
-          <p className="text-fluid-label font-body font-medium tracking-widest uppercase text-muted-foreground/60 mb-3">
-            Live Demo
-          </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-4">
-            See it in action
-          </h2>
-          <p className="text-fluid-body text-muted-foreground font-body leading-relaxed mb-8 max-w-2xl">
-            The Oracle renders any URL or concept through the full Semantic Web stack in real time.
-            Every object is content-addressed, machine-queryable, and interoperable with W3C standards.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Link
-              to="/os?q=https://en.wikipedia.org/wiki/Semantic_Web"
-              className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all"
-            >
-              <span className="text-lg mb-2 block">🌐</span>
-              <p className="font-display font-bold text-foreground text-sm mb-1">Encode Wikipedia</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">Absorb the Semantic Web article into UOR space</p>
-            </Link>
-            <Link
-              to="/os?q=semantic+web"
-              className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all"
-            >
-              <span className="text-lg mb-2 block">🔮</span>
-              <p className="font-display font-bold text-foreground text-sm mb-1">Ask the Oracle</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">Generate a KnowledgeCard with full W3C layer mapping</p>
-            </Link>
-            <Link
-              to="/os"
-              className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all"
-            >
-              <span className="text-lg mb-2 block">🔗</span>
-              <p className="font-display font-bold text-foreground text-sm mb-1">Encode any URL</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">Paste any website and watch UOR absorb its semantics</p>
-            </Link>
-          </div>
+      <section>
+        <h2>See it in action</h2>
+        <p>
+          The Oracle renders any URL or concept through the full Semantic Web stack in real time. Every object is content-addressed, machine-queryable, and interoperable with W3C standards.
+        </p>
+        <div className="not-prose mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Link
+            to="/os?q=https://en.wikipedia.org/wiki/Semantic_Web"
+            className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all"
+          >
+            <span className="text-lg mb-2 block">🌐</span>
+            <p className="font-display font-bold text-foreground text-[14px] mb-1">Encode Wikipedia</p>
+            <p className="text-[13.5px] text-muted-foreground leading-[1.65]">Absorb the Semantic Web article into UOR space</p>
+          </Link>
+          <Link
+            to="/os?q=semantic+web"
+            className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all"
+          >
+            <span className="text-lg mb-2 block">🔮</span>
+            <p className="font-display font-bold text-foreground text-[14px] mb-1">Ask the Oracle</p>
+            <p className="text-[13.5px] text-muted-foreground leading-[1.65]">Generate a KnowledgeCard with full W3C layer mapping</p>
+          </Link>
+          <Link
+            to="/os"
+            className="group rounded-xl border border-border bg-card p-5 hover:border-primary/30 transition-all"
+          >
+            <span className="text-lg mb-2 block">🔗</span>
+            <p className="font-display font-bold text-foreground text-[14px] mb-1">Encode any URL</p>
+            <p className="text-[13.5px] text-muted-foreground leading-[1.65]">Paste any website and watch UOR absorb its semantics</p>
+          </Link>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-section-sm section-dark">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-6xl text-center mx-auto">
-          <h2 className="font-display text-fluid-heading font-bold text-section-dark-foreground mb-4">
-            Your device is the portal
-          </h2>
-          <p className="text-muted-foreground font-body text-fluid-body leading-relaxed max-w-md mx-auto mb-8">
-            Every layer is formally specified, implemented, and independently verifiable.
-            The same semantic surface serves humans and AI agents alike.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <Link to="/os" className="btn-primary inline-flex items-center gap-2">
-              Enter the Rendered Web <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link to="/framework" className="btn-outline inline-flex items-center gap-2">
-              Read the Framework <ArrowRight className="w-4 h-4" />
-            </Link>
-            <a href={W3C_REFERENCE_URL} target="_blank" rel="noopener noreferrer" className="btn-outline inline-flex items-center gap-2">
-              W3C Reference <ExternalLink className="w-4 h-4" />
-            </a>
-          </div>
+      <section>
+        <h2>Your device is the portal</h2>
+        <p>
+          Every layer is formally specified, implemented, and independently verifiable. The same semantic surface serves humans and AI agents alike.
+        </p>
+        <div className="not-prose mt-8 flex flex-col sm:flex-row flex-wrap gap-3">
+          <Link to="/os" className="btn-primary inline-flex items-center gap-2">
+            Enter the Rendered Web <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link to="/framework" className="btn-outline inline-flex items-center gap-2">
+            Read the Framework <ArrowRight className="w-4 h-4" />
+          </Link>
+          <a href={W3C_REFERENCE_URL} target="_blank" rel="noopener noreferrer" className="btn-outline inline-flex items-center gap-2">
+            W3C Reference <ExternalLink className="w-4 h-4" />
+          </a>
         </div>
       </section>
-    </Layout>
+    </ArticleLayout>
   );
 };
 
