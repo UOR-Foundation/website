@@ -99,10 +99,10 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>How it works</h2>
         <p>
-          Two steps: <strong>(1) normalize</strong> the object to a canonical form that factors out key order, Unicode normalization (NFC), integer width (<code>1</code> vs <code>1.0</code>), float representation including <code>-0</code>, and whitespace; <strong>(2) SHA-256</strong> it. Same object, same fingerprint, on any runtime, in any language.
+          The scheme is <strong><code>uor-sha256-v1</code></strong> — NFC Unicode normalization, then RFC 8785 JCS canonicalization, then SHA-256. It factors out key order, Unicode normalization form, integer width (<code>1</code> vs <code>1.0</code>), float representation including <code>-0</code>, and whitespace. Same object, same fingerprint, on any runtime, in any language.
         </p>
         <p>
-          The normalization is a pure function of the object's typed structure — deterministic by construction. A machine-checked Lean 4 formalization is in progress. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
+          NFC normalization is a documented UOR extension on top of RFC 8785. RFC 8785 JCS itself does not mandate NFC on input strings; UOR adds it so that <code>"café"</code> (NFC, U+00E9) and <code>"café"</code> (NFD, e + U+0301) produce the same fingerprint. The normalization is a pure function of the object's typed structure — deterministic by construction. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
         </p>
         <pre>{`object → normalize → SHA-256 → 256-bit fingerprint`}</pre>
       </section>
