@@ -25,23 +25,32 @@ const CLAUDE_AGENT_PROMPT = `Please add this MCP server to my Claude Code config
 Then verify by calling the uor.encode_address tool with content "hello"
 and showing me the full response including the _meta field.`;
 
-const VERIFY_PROMPT = `Use the uor.encode_address tool to fingerprint the string "hello". Then use the uor.verify_passport tool with the returned fingerprint and the content {"content": "hello"} to prove the round-trip. Show me both responses in full.`;
+const VERIFY_PROMPT = `Please exercise all three UOR tools and show me each response:
 
-const VERIFY_RESPONSE = `Step 1 — encode_address("hello")
+1. uor.encode_address — fingerprint the string "hello".
+2. uor.verify_passport — take the fingerprint from step 1 with the content
+   {"content":"hello"} to prove the round-trip.
+3. uor.verify_receipt — use the receipt below to prove an Ed25519 signature
+   verifies locally using only the public key embedded in the receipt itself:
 
+{
+  "passport":{"version":"uor.passport.v1","fingerprint":"5c8f96c88a648178c09bd73764639bb2cf4d8d5c8f72f077f0e872cab6a6be6f","algorithm":"uor-sha256-v1","content_type":"application/json","length":438,"timestamp":"2026-04-22T09:13:23.267811852+00:00"},
+  "signature":"NYrcXPG73LkP2h25qnlpVGxk4KrGqP1k4wk9kQY1vvci7kog8CSC6bhXHduEncI9JbkcDoZ1u8OKFYTT3aFyBA==",
+  "public_key":"xDeTB/iQ6lxHy3NQhfrtDPFDNvTi5ziRZjma33XzlT8=",
+  "nonce":"kGOVi38eoH91JUwiqYIuhQ==",
+  "timestamp":"2026-04-22T09:13:23.267833368+00:00",
+  "trust_level":"L1",
+  "algorithm":"ed25519"
+}`;
+
+const VERIFY_RESPONSE = `1 · encode_address ("hello")
   sha256:20b2dda940d741d9780897200aaef2ef356ab32b38c7de0d94306fb5a66b4a8e
 
-  { "address":     "sha256:20b2dda940d741d9...",
-    "fingerprint": "20b2dda940d741d9780897200aaef2ef356ab32b38c7de0d94306fb5a66b4a8e",
-    "algorithm":   "uor-sha256-v1",
-    "length":      19,
-    "canonicalization": "jcs-rfc8785" }
+2 · verify_passport (fingerprint + {"content":"hello"})
+  Passport is valid — fingerprint matches content.
 
-Step 2 — verify_passport with that fingerprint
-
-  { "valid": true,
-    "computed_fingerprint":  "20b2dda940d741d9...",
-    "expected_fingerprint":  "20b2dda940d741d9..." }`;
+3 · verify_receipt (inline receipt)
+  Receipt is valid — Ed25519 signature verifies against embedded public key.`;
 
 type TabId = "cursor" | "vscode" | "claude" | "chatgpt" | "other";
 
