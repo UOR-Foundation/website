@@ -1,55 +1,45 @@
 
 
-## Merge Tools into "Try it" — tighten, unify, remove repo reference
+## Land the single thesis in three places
 
-Goal: collapse two sections into one cohesive surface that reads as a single, deliberate "here's the endpoint, here are the clients, here's the surface" block. Match the visual language of the other tables in the article (same table chrome, same cell padding, same uppercase header tracking) so a technical reader's eye flows without friction.
+Three surgical copy edits to `src/modules/community/pages/BlogCanonicalRustCrate.tsx`. Locations confirmed against current file. No structural changes, no other sections touched.
 
-### Changes to `src/modules/community/pages/BlogCanonicalRustCrate.tsx`
+### Edit 1 — TL;DR (line 54)
 
-**1. Delete the standalone `<section><h2>Tools</h2>…</section>` block (lines 296–331)** entirely, including the humuhumu repo footer.
+Append the four-adjective payoff to the closing sentence.
 
-**2. Restructure the existing "Try it" section (lines 278–294)** into one clean flow:
+**Find:** `…with no PKI, no registry, no middleman.`
 
-```
-H2: Try it
+**Replace with:** `…with no PKI, no registry, no middleman — a decentralized, universal, self-verifying identity for any structured object.`
 
-[Lead paragraph — tightened]
-Connect any MCP-compatible agent in under a minute. No install, no signup, no config. 
-The same canonical endpoint works everywhere:
-  https://mcp.uor.foundation/mcp   [live pill]
+### Edit 2 — "What it is" first paragraph (line 73)
 
-[McpInstallTabs — unchanged]
+Insert `decentralized` so the four-adjective thesis reads in parallel.
 
-H3: The surface
-Three tools. That's the whole API.
+**Find:** `…a permanent, content-derived, self-verifying 256-bit identity, a universal data passport that travels…`
 
-[Tools table — restyled to match the comparison tables above:
- same `not-prose figure` wrapper, same border/card chrome,
- same uppercase tracking-[0.18em] muted headers,
- same px-5 py-5 cell padding, same text-[15px] md:text-base sizing]
+**Replace with:** `…a permanent, decentralized, content-derived, self-verifying 256-bit identity — a universal data passport that travels…`
 
-  TOOL                    | RETURNS              | WHAT IT DOES
-  uor.encode_address      | sha256:<64-hex>      | 256-bit content address of a UTF-8 string (≤1000 chars), SHA-256 over RFC 8785 JCS.
-  uor.verify_passport     | { valid, reason? }   | Re-derive a payload's fingerprint and compare to a claimed passport. Stateless.
-  uor.verify_receipt      | { valid, reason? }   | Verify an Ed25519-signed MCPS receipt using only the key embedded in it. No network, no PKI.
+(Comma → em-dash before "a universal data passport" for rhythm; matches Edit 1's punctuation.)
 
-[Closing line — single sentence, no italic block, no humuhumu link]
-Every response carries a `uor.passport` envelope in `_meta` — and a `uor.mcps.receipt` when MCPS is enabled. Reference Rust implementation at github.com/uor-foundation.
-```
+### Edit 3 — "Why it exists" closing paragraph (line 89)
 
-### Why this works
+Replace the mechanism-only ending with the payoff paragraph that names the gap, the move, and the four-adjective thesis.
 
-- **One section, one job.** "Try it" now answers both "how do I connect?" and "what can I call?" without making the reader scroll past a section break to find the API surface.
-- **Returns column promoted.** A technical reader scans return shapes first; splitting "What it does" from "Returns" makes the table readable at a glance instead of as prose-in-a-cell.
-- **Visual parity.** Same table chrome as the comparison and SEP-2395 tables → the article reads as one document, not three pages stitched together.
-- **No repo confusion.** The humuhumu reference is dropped; the canonical `github.com/uor-foundation` link (already imported as `GITHUB_ORG_URL`) is the single source of truth and stays in the closing line.
-- **Word count down by ~40%.** Removed "Source is 250 KB of Rust — review it yourself", "no tool call required", the duplicated "Roadmap and reference Rust implementation at…" small-tag, and the italic envelope block — all redundant with what the section already proves.
+**Find (the single `<p>` at line 88–89):**
 
-### Technical details
+> The obvious fix has already been tried. SEP-2395 (MCPS), which proposed canonical-JSON signing for MCP, was closed on **March 15, 2026** after canonical JSON was shown to produce different bytes in Node.js and Python. UOR solves this one level up, where re-serialization no longer breaks the hash.
 
-- Reuse the exact `<figure className="not-prose my-8 overflow-x-auto rounded-xl border border-border bg-card">` + `<table className="w-full text-[15px] md:text-base leading-relaxed">` pattern from the "How it compares" table.
-- Tool names and return shapes in `<code>` (the prose CSS already gives `<code>` the right monospace + subtle background).
-- `<h3>` for "The surface" (article prose styles already define h3 sizing — no custom classes needed, preserves uniform typography).
-- Drop the `<small>…Roadmap…</small>` line — the closing sentence absorbs that link.
-- Net: one section deleted, one section restructured, no new components, no new imports.
+**Replace with two paragraphs:**
+
+> The obvious fix has already been tried. SEP-2395 (MCPS), which proposed canonical-JSON signing for MCP, was closed on **March 15, 2026** after canonical JSON was shown to produce different bytes in Node.js and Python.
+>
+> Every serious attempt to fix integrity at this layer has routed through an authority — a CA, a signing service, a registry, a revocation list — because byte-identity is too fragile to stand on its own. UOR moves the identity one level up, onto the object itself. Same math, every runtime, no middleman. What falls out is the primitive no existing system provides at this layer: **decentralized, universal, content-addressable, self-verifying identity for any object.** The fingerprint is the address. The address is derivable from the object alone, in any language.
+
+The SEP-2395 link and `<strong>March 15, 2026</strong>` are preserved in the first sentence; only the trailing "UOR solves this one level up…" clause is removed and replaced with the new payoff paragraph.
+
+### Guardrails
+
+- No changes to: TL;DR demo block, "What it is" paragraphs 2+, comparison table, failure-modes table, architecture diagram, FourHashesProof, "Try it", "The surface", license, non-goals.
+- The four-adjective phrasing stays identical across all three locations: **decentralized, universal, [content-addressable / content-derived], self-verifying** — never "distributed", "permissionless", or "trust-free".
 
