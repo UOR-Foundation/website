@@ -90,7 +90,15 @@ const BlogCanonicalRustCrate = () => {
           The obvious fix has already been tried. <a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/2395" target="_blank" rel="noopener noreferrer">SEP-2395 (MCPS)</a>, which proposed canonical-JSON signing for MCP, was closed on <strong>March 15, 2026</strong> after canonical JSON was shown to produce different bytes in Node.js and Python.
         </p>
         <p>
-          Every serious attempt to fix integrity at this layer has routed through an authority — a CA, a signing service, a registry, a revocation list — because byte-identity is too fragile to stand on its own. UOR moves the identity one level up, onto the object itself. Same math, every runtime, no middleman. What falls out is the primitive no existing system provides at this layer: <strong>decentralized, universal, content-addressable, self-verifying identity for any object.</strong> The fingerprint is the address. The address is derivable from the object alone, in any language.
+          <strong>Where UOR sits relative to prior art.</strong> The pattern — canonicalize structure, hash canonical bytes, re-derive on receipt — is not new. IPFS CIDs do this over canonical CBOR / DAG-JSON. JSON-LD URDNA2015 does this over RDF graphs. Git does it over tree objects. UOR&rsquo;s contribution is not a new cryptographic primitive; it is the packaging:
+        </p>
+        <ul>
+          <li>IPFS CIDs require transcoding plain JSON into DAG-JSON or CBOR first. MCP and A2A speak plain JSON on the wire; asking every agent framework to adopt DAG-JSON is a larger ask than adopting a fingerprint field in <code>_meta</code>.</li>
+          <li>JSON-LD URDNA2015 requires the payload to be modeled as RDF. Most agent JSON isn&rsquo;t and won&rsquo;t be.</li>
+          <li>JCS + SHA-256 is what everyone converged on after SEP-2395. UOR&rsquo;s only addition on top of JCS is NFC normalization of strings — load-bearing for the cross-runtime claim, but small.</li>
+        </ul>
+        <p>
+          UOR is to MCP / A2A what CIDs are to content-addressable storage: the same pattern, applied in the ecosystem that needs it. The novelty is <em>where</em> it plugs in (a <code>_meta</code> field any MCP server can emit, any MCP client can verify, no protocol change) and the NFC extension that makes the universality claim actually hold on realistic string data. Not a new primitive.
         </p>
       </section>
 
@@ -122,7 +130,7 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>Architecture</h2>
         <p>
-          One pipeline, two ends. Sender derives the fingerprint and ships it alongside the payload. Receiver re-derives it from whatever arrived and compares. Match → trust. Mismatch → refuse. No third party in the loop.
+          One pipeline, two ends. Sender derives the fingerprint and ships it alongside the payload. Receiver re-derives it from whatever arrived and compares. Match → trust. Mismatch → refuse. No third party in the loop for verification.
         </p>
         <figure className="not-prose my-8 rounded-xl border border-border bg-card p-6 md:p-8">
           <svg
