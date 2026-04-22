@@ -90,11 +90,11 @@ const HeroSection = () => {
         <div
           className="absolute right-0 top-1/2 -translate-y-1/2"
           style={{
-            // Fluid scaling: bigger across the board, especially on large screens.
-            // Uses min(vw, vh) to stay proportional to the shorter axis.
-            width: "clamp(420px, min(72vw, 95vh), 1700px)",
-            height: "clamp(420px, min(72vw, 95vh), 1700px)",
-            marginRight: "clamp(-10%, -2vw, 0%)",
+            // Fluid scaling: aggressively grows on large screens while staying
+            // proportional to the shorter viewport axis so it never overflows.
+            width: "clamp(460px, min(82vw, 108vh), 2100px)",
+            height: "clamp(460px, min(82vw, 108vh), 2100px)",
+            marginRight: "clamp(-12%, -3vw, -1%)",
           }}
         >
           <GalaxyAnimation />
