@@ -17,6 +17,14 @@ const JSON_CONFIG = `{
 
 const CLAUDE_CMD = `claude mcp add --transport http uor-passport https://mcp.uor.foundation/mcp`;
 
+const CLAUDE_AGENT_PROMPT = `Please add this MCP server to my Claude Code config at
+~/.claude/settings.json (or the equivalent mcpServers location):
+
+  { "mcpServers": { "uor-passport": { "url": "https://mcp.uor.foundation/mcp" } } }
+
+Then verify by calling the uor.encode_address tool with content "hello"
+and showing me the full response including the _meta field.`;
+
 const VERIFY_PROMPT = `Use the uor.encode_address tool to fingerprint 'hello' and show me the full response including _meta.`;
 
 const VERIFY_RESPONSE = `"_meta": {
@@ -185,10 +193,20 @@ const McpInstallTabs = () => {
 
         {active === "claude" && (
           <div role="tabpanel" id="mcp-panel-claude" aria-labelledby="mcp-tab-claude" className="space-y-4">
-            <p>One terminal command adds the server to every Claude Code session:</p>
+            <p className="text-[12px] font-mono uppercase tracking-[0.18em] text-muted-foreground mt-2 mb-0">
+              If you're in a terminal
+            </p>
             <CodeBlock code={CLAUDE_CMD} language="terminal" />
-            <p>
-              Verify with <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">claude mcp list</code>.
+
+            <p className="text-[12px] font-mono uppercase tracking-[0.18em] text-muted-foreground mt-6 mb-0">
+              If you're already inside Claude Code — just paste this prompt
+            </p>
+            <CodeBlock code={CLAUDE_AGENT_PROMPT} language="prompt" />
+
+            <p className="text-foreground/70">
+              After installing, restart Claude Code (or run{" "}
+              <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[13px]">/mcp</code> in the menu) for the
+              config to take effect.
             </p>
           </div>
         )}
