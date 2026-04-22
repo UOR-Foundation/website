@@ -25,23 +25,32 @@ const CLAUDE_AGENT_PROMPT = `Please add this MCP server to my Claude Code config
 Then verify by calling the uor.encode_address tool with content "hello"
 and showing me the full response including the _meta field.`;
 
-const VERIFY_PROMPT = `Use the uor.encode_address tool to fingerprint the string "hello". Then use the uor.verify_passport tool with the returned fingerprint and the content {"content": "hello"} to prove the round-trip. Show me both responses in full.`;
+const VERIFY_PROMPT = `Please exercise all three UOR tools and show me each response:
 
-const VERIFY_RESPONSE = `Step 1 — encode_address("hello")
+1. uor.encode_address — fingerprint the string "hello".
+2. uor.verify_passport — take the fingerprint from step 1 with the content
+   {"content":"hello"} to prove the round-trip.
+3. uor.verify_receipt — use the receipt below to prove an Ed25519 signature
+   verifies locally using only the public key embedded in the receipt itself:
 
+{
+  "passport":{"version":"uor.passport.v1","fingerprint":"5c8f96c88a648178c09bd73764639bb2cf4d8d5c8f72f077f0e872cab6a6be6f","algorithm":"uor-sha256-v1","content_type":"application/json","length":438,"timestamp":"2026-04-22T09:13:23.267811852+00:00"},
+  "signature":"NYrcXPG73LkP2h25qnlpVGxk4KrGqP1k4wk9kQY1vvci7kog8CSC6bhXHduEncI9JbkcDoZ1u8OKFYTT3aFyBA==",
+  "public_key":"xDeTB/iQ6lxHy3NQhfrtDPFDNvTi5ziRZjma33XzlT8=",
+  "nonce":"kGOVi38eoH91JUwiqYIuhQ==",
+  "timestamp":"2026-04-22T09:13:23.267833368+00:00",
+  "trust_level":"L1",
+  "algorithm":"ed25519"
+}`;
+
+const VERIFY_RESPONSE = `1 · encode_address ("hello")
   sha256:20b2dda940d741d9780897200aaef2ef356ab32b38c7de0d94306fb5a66b4a8e
 
-  { "address":     "sha256:20b2dda940d741d9...",
-    "fingerprint": "20b2dda940d741d9780897200aaef2ef356ab32b38c7de0d94306fb5a66b4a8e",
-    "algorithm":   "uor-sha256-v1",
-    "length":      19,
-    "canonicalization": "jcs-rfc8785" }
+2 · verify_passport (fingerprint + {"content":"hello"})
+  Passport is valid — fingerprint matches content.
 
-Step 2 — verify_passport with that fingerprint
-
-  { "valid": true,
-    "computed_fingerprint":  "20b2dda940d741d9...",
-    "expected_fingerprint":  "20b2dda940d741d9..." }`;
+3 · verify_receipt (inline receipt)
+  Receipt is valid — Ed25519 signature verifies against embedded public key.`;
 
 type TabId = "cursor" | "vscode" | "claude" | "chatgpt" | "other";
 
@@ -298,10 +307,10 @@ const McpInstallTabs = () => {
         <CodeBlock code={VERIFY_PROMPT} language="ask your agent" />
         <CodeBlock code={VERIFY_RESPONSE} language="response · excerpt" />
         <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">
-          Step 1 computes the 256-bit SHA-256 fingerprint of the RFC 8785 JCS canonical form of the input — the UOR address. Step 2 hands that fingerprint back to the server, which re-derives it independently and confirms the round-trip. Two tool calls, two visible proofs, no client-side rendering tricks required.
+          Three proofs in under a minute. <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">encode_address</code> gives the 256-bit SHA-256 of the RFC 8785 JCS canonical form — the permanent UOR address. <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">verify_passport</code> hands that fingerprint back and confirms the round-trip. <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">verify_receipt</code> validates an Ed25519-signed MCPS receipt using only the public key inside the receipt itself — the "no PKI, no registry, no third party" claim, proved mathematically.
         </p>
         <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">
-          Every response also carries a <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.passport</code> envelope and an Ed25519-signed <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.mcps.receipt</code> — the fields that make verification possible without any PKI, registry, or third party. Some MCP clients (Cursor today) render only the tool's <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">content</code>, not <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta</code>; to see the <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta</code> envelope directly, run <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">npx @modelcontextprotocol/inspector</code>, connect to <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">https://mcp.uor.foundation/mcp</code>, and call <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">encode_address</code> from there. <strong>No PKI, no registry, no third party.</strong>
+          The inline receipt was captured from this same server and still verifies because verification is stateless. Every response also carries <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.passport</code> and <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.mcps.receipt</code> on the wire; clients that surface <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta</code> (Inspector, Claude Desktop) show them automatically, clients that don't (Cursor today) still see the full proof in the three tool responses above.
         </p>
       </div>
     </div>
