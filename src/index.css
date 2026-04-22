@@ -24,9 +24,9 @@
      * clamp(min, preferred, max) ensures legibility at every viewport.
      */
     --text-page-title:       clamp(2.5rem, 4.8vw, 5.75rem);
-    --text-section-heading:  clamp(2rem, 3.4vw, 4.25rem);
-    --text-card-title:       clamp(1.2rem, 1.5vw, 1.9rem);
-    --text-lead:             clamp(19px, 1.55vw, 28px);
+    --text-section-heading:  clamp(1.75rem, 3vw, 3.75rem);
+    --text-card-title:       clamp(1.15rem, 1.4vw, 1.8rem);
+    --text-lead:             clamp(17px, 1.4vw, 25px);
     --text-body:             clamp(16px, 1.25vw, 23px);
     --text-body-sm:          clamp(15px, 1.1vw, 20px);
     --text-label:            clamp(14px, 1.05vw, 19px);
@@ -37,9 +37,9 @@
      * Provides harmonious, proportional rhythm across the entire site.
      */
     --phi: 1.618;
-    --section-py-sm:   clamp(4rem, 8vw, 7.854rem);
-    --section-py-md:   clamp(5.5rem, 11vw, 10.472rem);
-    --section-py-lg:   clamp(7rem, 14vw, 14rem);
+    --section-py-sm:   clamp(4.75rem, 9.5vw, 9.25rem);
+    --section-py-md:   clamp(6.5rem, 13vw, 12.5rem);
+    --section-py-lg:   clamp(8.25rem, 16vw, 16.5rem);
     --content-gap-sm:  1.618rem;
     --content-gap-md:  2.618rem;
     --content-gap-lg:  4.236rem;
