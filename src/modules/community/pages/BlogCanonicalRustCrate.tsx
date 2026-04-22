@@ -15,7 +15,7 @@ const coverMap: Record<string, string> = {
   frameworkLaunch: blogFrameworkLaunch,
 };
 
-const SLUG = "/blog/canonical-rust-crate";
+const SLUG = "/blog/universal-data-fingerprint";
 
 const BlogCanonicalRustCrate = () => {
   const related = blogPosts
@@ -51,14 +51,14 @@ const BlogCanonicalRustCrate = () => {
           <span className="h-px flex-1 bg-border/60" />
         </div>
         <p className="font-body leading-[1.75] text-foreground/85 m-0">
-          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>meaning</em>, not its bytes, so the same data hashes to the same address in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman — a decentralized, universal, self-verifying identity for any structured object.
+          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>canonical structure</em>, not its bytes, so the same object hashes to the same address in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman for verification — a decentralized, universal, self-verifying identity for any structured object.
         </p>
         <pre className="not-prose mt-5 mb-2 p-4 rounded-lg bg-muted/60 border border-border text-[13px] font-mono text-foreground leading-relaxed overflow-x-auto">
 {`{"a": 1, "b": 2}     → 43258cff783fe7036d8a…
 {"b": 2, "a": 1}     → 43258cff783fe7036d8a…   (same object, different JSON, same address)`}
         </pre>
         <p className="font-body text-[14px] text-muted-foreground m-0 mt-2">
-          Same data, same fingerprint, in any language or runtime.
+          Same object, same fingerprint, in any language or runtime.
         </p>
         <p className="font-body text-[14px] text-muted-foreground m-0 mt-4 leading-[1.7]">
           UOR provides content consistency, not channel security. A man-in-the-middle who replaces payload and fingerprint together is invisible to UOR alone — pair it with TLS / mTLS for channel integrity and with a key-binding layer (Sigstore, JWS+X.509, DIDs, OIDC) if you need to prove who produced the object.
@@ -90,7 +90,15 @@ const BlogCanonicalRustCrate = () => {
           The obvious fix has already been tried. <a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/2395" target="_blank" rel="noopener noreferrer">SEP-2395 (MCPS)</a>, which proposed canonical-JSON signing for MCP, was closed on <strong>March 15, 2026</strong> after canonical JSON was shown to produce different bytes in Node.js and Python.
         </p>
         <p>
-          Every serious attempt to fix integrity at this layer has routed through an authority — a CA, a signing service, a registry, a revocation list — because byte-identity is too fragile to stand on its own. UOR moves the identity one level up, onto the object itself. Same math, every runtime, no middleman. What falls out is the primitive no existing system provides at this layer: <strong>decentralized, universal, content-addressable, self-verifying identity for any object.</strong> The fingerprint is the address. The address is derivable from the object alone, in any language.
+          <strong>Where UOR sits relative to prior art.</strong> The pattern — canonicalize structure, hash canonical bytes, re-derive on receipt — is not new. IPFS CIDs do this over canonical CBOR / DAG-JSON. JSON-LD URDNA2015 does this over RDF graphs. Git does it over tree objects. UOR&rsquo;s contribution is not a new cryptographic primitive; it is the packaging:
+        </p>
+        <ul>
+          <li>IPFS CIDs require transcoding plain JSON into DAG-JSON or CBOR first. MCP and A2A speak plain JSON on the wire; asking every agent framework to adopt DAG-JSON is a larger ask than adopting a fingerprint field in <code>_meta</code>.</li>
+          <li>JSON-LD URDNA2015 requires the payload to be modeled as RDF. Most agent JSON isn&rsquo;t and won&rsquo;t be.</li>
+          <li>JCS + SHA-256 is what everyone converged on after SEP-2395. UOR&rsquo;s only addition on top of JCS is NFC normalization of strings — load-bearing for the cross-runtime claim, but small.</li>
+        </ul>
+        <p>
+          UOR is to MCP / A2A what CIDs are to content-addressable storage: the same pattern, applied in the ecosystem that needs it. The novelty is <em>where</em> it plugs in (a <code>_meta</code> field any MCP server can emit, any MCP client can verify, no protocol change) and the NFC extension that makes the universality claim actually hold on realistic string data. Not a new primitive.
         </p>
       </section>
 
@@ -114,15 +122,42 @@ const BlogCanonicalRustCrate = () => {
           <li><strong>Identity binding.</strong> The public key embedded in an MCPS receipt proves a keypair was used to sign the fingerprint; it does not prove whose keypair. Anyone can generate an Ed25519 keypair, sign a receipt, and embed their own public key. If you need "this came from Alice, not Bob," layer Sigstore, JWS + X.509, OIDC, or a DID method on top.</li>
           <li><strong>Replay protection.</strong> Receipts are stateless; the same receipt verifies forever. If your protocol cares about freshness, track nonces or timestamps at the application layer.</li>
           <li><strong>Channel security.</strong> A MITM who replaces payload + fingerprint atomically is invisible to UOR alone. Use TLS / mTLS for the wire.</li>
-          <li><strong>Large-payload fingerprinting.</strong> Canonical form is capped at 64&nbsp;KB to bound DoS. Split larger objects into addressable chunks.</li>
           <li><strong>Content-addressable storage.</strong> UOR makes a CAS possible and interoperable across runtimes; it does not ship one. Deduplication and provenance are capabilities you build on top of the fingerprint.</li>
         </ul>
       </section>
 
       <section>
+        <h2>Limits today</h2>
+        <p>
+          The canonical form of a single fingerprinted object is capped at 64&nbsp;KB to bound worst-case canonicalization cost and prevent DoS against the server. Realistic MCP tool responses that carry long code snippets, multi-page search results, or dense structured data can exceed this.
+        </p>
+        <p><strong>Workarounds available now:</strong></p>
+        <ul>
+          <li>Chunk large payloads and fingerprint each chunk, storing chunk addresses in a manifest object you fingerprint separately.</li>
+          <li>Fingerprint the manifest, not the raw payload — the manifest is small and the chunk addresses carry the integrity guarantee transitively.</li>
+        </ul>
+        <p>
+          On the roadmap: <code>uor-sha256-v2</code> will use a Merkle tree over canonical chunks to lift the cap while preserving the single-address property. Versioning is explicit (<code>algorithm: &quot;uor-sha256-v1&quot;</code> today, <code>&quot;uor-sha256-v2&quot;</code> when shipped); <code>verify_passport</code> rejects unsupported versions, so migration is safe.
+        </p>
+      </section>
+
+      <section>
+        <h2>Why not just mTLS?</h2>
+        <p>
+          A reasonable question: if you already run mTLS between agents, don&rsquo;t you already have integrity and identity? For a single, direct two-agent call, largely yes — and UOR adds little. UOR earns its keep in the case mTLS does not cover: <strong>multi-hop agent pipelines.</strong>
+        </p>
+        <p>
+          In a LangGraph, CrewAI, AutoGen, or A2A pipeline, an object typically traverses several agents before it reaches the verifier. Every hop terminates TLS, parses the JSON, acts on it, re-serializes it, re-encrypts it, and forwards it. The wire-level integrity guarantee mTLS provided dies at hop 1. Only the object&rsquo;s structural content continues to the next hop — and, without UOR, there is no way for a downstream agent to prove the object it now holds is bit-for-bit what the originator emitted.
+        </p>
+        <p>
+          UOR&rsquo;s fingerprint rides with the object, through every hop, in <code>_meta.uor.passport</code>. Any downstream verifier re-derives it from the object alone and compares. <strong>mTLS secures the wire; UOR secures the payload across wires.</strong> Use both. They compose.
+        </p>
+      </section>
+
+      <section>
         <h2>Architecture</h2>
         <p>
-          One pipeline, two ends. Sender derives the fingerprint and ships it alongside the payload. Receiver re-derives it from whatever arrived and compares. Match → trust. Mismatch → refuse. No third party in the loop.
+          One pipeline, two ends. Sender derives the fingerprint and ships it alongside the payload. Receiver re-derives it from whatever arrived and compares. Match → trust. Mismatch → refuse. No third party in the loop for verification.
         </p>
         <figure className="not-prose my-8 rounded-xl border border-border bg-card p-6 md:p-8">
           <svg
@@ -181,11 +216,11 @@ const BlogCanonicalRustCrate = () => {
             <text x="700" y="316" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 13, fontFamily: "ui-monospace, monospace" }}>match → trust locally</text>
 
             {/* ============ FOOTER ============ */}
-            <text x="411" y="372" textAnchor="middle" className="fill-foreground" style={{ fontSize: 18, fontWeight: 700 }}>
-              The address IS the content.
+            <text x="411" y="372" textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 700 }}>
+              The address is derived from the content — same object, same address.
             </text>
             <text x="411" y="398" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 14, fontFamily: "ui-monospace, monospace" }}>
-              no PKI · no registry · no third party
+              no PKI · no registry · no third party for verification
             </text>
           </svg>
           <figcaption className="mt-4 text-muted-foreground font-body text-center">
@@ -285,8 +320,8 @@ const BlogCanonicalRustCrate = () => {
                 <td className="px-5 py-5 align-top text-foreground">Nothing to revoke. No keys, no lists. Change the object, change the address.</td>
               </tr>
               <tr>
-                <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Misattributed CVEs, fabricated endorsements.</strong> <span className="text-muted-foreground">Claims didn't hold up to review.</span></td>
-                <td className="px-5 py-5 align-top text-foreground">No social trust surface. Around 1000 lines of Rust, public and auditable. Run it yourself.</td>
+                <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">CVE attributions and endorsement claims contested during review.</strong> <span className="text-muted-foreground">Several supporting claims did not hold up under procedural review; see the SEP-2395 closure for details.</span></td>
+                <td className="px-5 py-5 align-top text-foreground">No social trust surface. Around 1000 lines of Rust — small enough that a full read takes an afternoon, and we'd welcome one. "Small" does not mean "audited"; if your use case is security-sensitive, read the code or fund a review.</td>
               </tr>
             </tbody>
           </table>
