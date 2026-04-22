@@ -107,7 +107,7 @@ const HeroSection = () => {
         <div className="max-w-[58%] lg:max-w-[50%] xl:max-w-[46%] 2xl:max-w-[42%]">
           <PhysicalTitle
             wrapperClass="font-display font-bold leading-[1.04] tracking-[0.06em] uppercase text-foreground animate-fade-in-up opacity-0 inline-block"
-            lineOneClass="text-[clamp(2.25rem,3.8vw,6.5rem)] block"
+            lineOneClass="text-[clamp(2.25rem,3.8vw,6.5rem)] block whitespace-nowrap"
             lineTwoClass="text-[clamp(2.75rem,5vw,8.75rem)] flex justify-between w-full mt-1"
             delay="0.29s"
           />
