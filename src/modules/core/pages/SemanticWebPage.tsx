@@ -3,6 +3,7 @@ import { ExternalLink, ArrowRight } from "lucide-react";
 import { semanticWebLayers } from "@/data/semantic-web-layers";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/blog-knowledge-graph.png";
+import TldrAside from "@/modules/community/components/TldrAside";
 
 const W3C_REFERENCE_URL = "https://www.w3.org/RDF/Metalog/docs/sw-easy";
 
@@ -129,29 +130,23 @@ const SemanticWebPage = () => {
       sourceUrl={W3C_REFERENCE_URL}
       sourceLabel="W3C Semantic Web Reference"
     >
-      <aside
-        aria-label="TL;DR"
-        className="not-prose mb-12 md:mb-14 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm px-6 md:px-8 py-6 md:py-7"
+      <TldrAside
+        extra={
+          <blockquote className="not-prose border-l-2 border-primary/60 pl-5 py-1">
+            <p className="font-body italic text-[15px] md:text-[16px] leading-[1.7] text-foreground/85 m-0">
+              "The Semantic Web is an extension of the current web in which information is given well-defined meaning, better enabling computers and people to work in cooperation."
+            </p>
+            <footer className="mt-3 text-[13.5px] font-body text-muted-foreground">
+              Tim Berners-Lee, James Hendler, and Ora Lassila.{" "}
+              <a href="https://www-sop.inria.fr/acacia/cours/essi2006/Scientific%20American_%20Feature%20Article_%20The%20Semantic%20Web_%20May%202001.pdf" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">"The Semantic Web"</a>. Scientific American, May 2001.
+            </footer>
+          </blockquote>
+        }
       >
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-[11px] uppercase tracking-[0.24em] font-semibold text-primary/80 font-mono">
-            TL;DR
-          </span>
-          <span className="h-px flex-1 bg-border/60" />
-        </div>
-        <p className="font-body text-[15px] md:text-[16px] leading-[1.75] text-foreground/85 m-0">
+        <p>
           The W3C Semantic Web stack — URI, RDF, Ontology, Logic, Proof, Trust — was a 2001 vision for a web of meaning, not just documents. UOR implements each layer with content-derived addresses, embedded schemas, deterministic canonicalization, and structural proofs. The result: a Semantic Web that actually works, where every object is self-describing, self-verifying, and interoperable across every system.
         </p>
-        <blockquote className="mt-5 mb-0 not-prose border-l-2 border-primary/60 pl-5 py-1">
-          <p className="font-body italic text-[15px] md:text-[16px] leading-[1.7] text-foreground/85 m-0">
-            "The Semantic Web is an extension of the current web in which information is given well-defined meaning, better enabling computers and people to work in cooperation."
-          </p>
-          <footer className="mt-3 text-[13.5px] font-body text-muted-foreground">
-            Tim Berners-Lee, James Hendler, and Ora Lassila.{" "}
-            <a href="https://www-sop.inria.fr/acacia/cours/essi2006/Scientific%20American_%20Feature%20Article_%20The%20Semantic%20Web_%20May%202001.pdf" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">"The Semantic Web"</a>. Scientific American, May 2001.
-          </footer>
-        </blockquote>
-      </aside>
+      </TldrAside>
 
       <section id="tower" className="scroll-mt-28">
         <h2>The Semantic Web tower</h2>

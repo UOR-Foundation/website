@@ -3,6 +3,7 @@ import coverImage from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import { blogPosts } from "@/data/blog-posts";
+import TldrAside from "../components/TldrAside";
 
 const SLUG = "/blog/building-the-internets-knowledge-graph";
 
@@ -33,20 +34,11 @@ const BlogPost1 = () => {
       related={related}
       heroImage={coverImage}
     >
-      <aside
-        aria-label="TL;DR"
-        className="not-prose mb-12 md:mb-14 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm px-6 md:px-8 py-6 md:py-7"
-      >
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-[11px] uppercase tracking-[0.24em] font-semibold text-primary/80 font-mono">
-            TL;DR
-          </span>
-          <span className="h-px flex-1 bg-border/60" />
-        </div>
-        <p className="font-body text-[15px] md:text-[16px] leading-[1.75] text-foreground/85 m-0">
+      <TldrAside>
+        <p>
           A single addressing system could turn the internet from a chaotic collection of disconnected documents into a unified, navigable knowledge graph. UOR (Universal Object Reference) gives every object — physical, digital, or conceptual — a mathematically-derived identifier that preserves its meaning and relationships across every system. Search becomes discovery, data keeps its context as it travels, and new insight emerges from the connections themselves.
         </p>
-      </aside>
+      </TldrAside>
 
       <section>
         <h2>Introduction</h2>
