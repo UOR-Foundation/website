@@ -1,43 +1,52 @@
 import ArticleLayout from "@/modules/core/components/ArticleLayout";
 import coverImage from "@/assets/blog-knowledge-graph.png";
+import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
+import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import { blogPosts } from "@/data/blog-posts";
 
 const SLUG = "/blog/building-the-internets-knowledge-graph";
+
+const coverMap: Record<string, string> = {
+  knowledgeGraph: coverImage,
+  goldenSeed: blogGoldenSeed,
+  frameworkLaunch: blogFrameworkLaunch,
+};
 
 const BlogPost1 = () => {
   const related = blogPosts
     .filter((p) => p.href !== SLUG)
     .slice(0, 3)
-    .map((p) => ({ title: p.title, href: p.href, meta: `${p.tag} · ${p.date}` }));
+    .map((p) => ({
+      title: p.title,
+      href: p.href,
+      meta: `${p.tag} · ${p.date}`,
+      image: coverMap[p.coverKey],
+    }));
 
   return (
     <ArticleLayout
       kicker="Vision"
       date="December 21, 2023"
       title="UOR: Building the Internet's Knowledge Graph"
-      deck="How a single addressing system could turn the internet into a structured, navigable knowledge graph."
       backHref="/research#blog"
       backLabel="Back to Research"
       related={related}
       heroImage={coverImage}
-      heroCaption="UOR Foundation — turning the web into a navigable knowledge graph"
     >
-      <figure className="my-8 not-prose">
-        <div className="rounded-xl overflow-hidden border border-border aspect-video bg-muted/40">
-          <iframe
-            className="w-full h-full"
-            src="https://www.youtube.com/embed/WWAySQvHcr0?rel=0&origin=https://univeral-coordinate-hub.lovable.app"
-            title="From SEAL Missions to Graph Theory: A Diverse Journey with Alex Flom"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerPolicy="strict-origin-when-cross-origin"
-            allowFullScreen
-            loading="lazy"
-          />
+      <aside
+        aria-label="TL;DR"
+        className="not-prose mb-12 md:mb-14 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm px-6 md:px-8 py-6 md:py-7"
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-[11px] uppercase tracking-[0.24em] font-semibold text-primary/80 font-mono">
+            TL;DR
+          </span>
+          <span className="h-px flex-1 bg-border/60" />
         </div>
-        <figcaption className="mt-3 text-[11px] uppercase tracking-[0.22em] font-mono text-muted-foreground/80">
-          Watch: From SEAL Missions to Graph Theory — a conversation with Alex Flom
-        </figcaption>
-      </figure>
+        <p className="font-body text-[15px] md:text-[16px] leading-[1.75] text-foreground/85 m-0">
+          A single addressing system could turn the internet from a chaotic collection of disconnected documents into a unified, navigable knowledge graph. UOR (Universal Object Reference) gives every object — physical, digital, or conceptual — a mathematically-derived identifier that preserves its meaning and relationships across every system. Search becomes discovery, data keeps its context as it travels, and new insight emerges from the connections themselves.
+        </p>
+      </aside>
 
       <section>
         <h2>Introduction</h2>
@@ -160,6 +169,26 @@ const BlogPost1 = () => {
         <blockquote>
           The knowledge graph awaits. Are you ready to help build it?
         </blockquote>
+      </section>
+
+      <section>
+        <h2>Watch</h2>
+        <figure className="my-8 not-prose">
+          <div className="rounded-xl overflow-hidden border border-border aspect-video bg-muted/40">
+            <iframe
+              className="w-full h-full"
+              src="https://www.youtube.com/embed/WWAySQvHcr0?rel=0&origin=https://univeral-coordinate-hub.lovable.app"
+              title="From SEAL Missions to Graph Theory: A Diverse Journey with Alex Flom"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+              loading="lazy"
+            />
+          </div>
+          <figcaption className="mt-3 text-[11px] uppercase tracking-[0.22em] font-mono text-muted-foreground/80">
+            Watch: From SEAL Missions to Graph Theory — a conversation with Alex Flom
+          </figcaption>
+        </figure>
       </section>
     </ArticleLayout>
   );

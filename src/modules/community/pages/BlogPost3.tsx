@@ -1,10 +1,18 @@
 import ArticleLayout from "@/modules/core/components/ArticleLayout";
 import coverImage from "@/assets/blog-uor-framework-launch.png";
+import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
+import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import { blogPosts } from "@/data/blog-posts";
 import { GITHUB_FRAMEWORK_URL } from "@/data/external-links";
 import { Globe, ShieldCheck, Bot, Microscope, Layers, Rocket } from "lucide-react";
 
 const SLUG = "/blog/uor-framework-launch";
+
+const coverMap: Record<string, string> = {
+  knowledgeGraph: blogKnowledgeGraph,
+  goldenSeed: blogGoldenSeed,
+  frameworkLaunch: coverImage,
+};
 
 const APPLICATIONS = [
   { icon: Globe, title: "Semantic Web", desc: "Give every piece of data a meaning machines can understand, making the web truly interoperable." },
@@ -28,22 +36,40 @@ const BlogPost3 = () => {
   const related = blogPosts
     .filter((p) => p.href !== SLUG)
     .slice(0, 3)
-    .map((p) => ({ title: p.title, href: p.href, meta: `${p.tag} · ${p.date}` }));
+    .map((p) => ({
+      title: p.title,
+      href: p.href,
+      meta: `${p.tag} · ${p.date}`,
+      image: coverMap[p.coverKey],
+    }));
 
   return (
     <ArticleLayout
       kicker="Open Research"
       date="February 19, 2026"
       title="What If Every Piece of Data Had One Permanent Address?"
-      deck="The open specification is live. Browse the full framework, review the architecture, and start building."
       heroImage={coverImage}
-      heroCaption="The UOR Framework — your universal coordinate system for information"
       backHref="/research#blog"
       backLabel="Back to Research"
       sourceUrl={GITHUB_FRAMEWORK_URL}
       sourceLabel="github.com/UOR-Foundation/UOR-Framework"
       related={related}
     >
+      <aside
+        aria-label="TL;DR"
+        className="not-prose mb-12 md:mb-14 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm px-6 md:px-8 py-6 md:py-7"
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-[11px] uppercase tracking-[0.24em] font-semibold text-primary/80 font-mono">
+            TL;DR
+          </span>
+          <span className="h-px flex-1 bg-border/60" />
+        </div>
+        <p className="font-body text-[15px] md:text-[16px] leading-[1.75] text-foreground/85 m-0">
+          The open specification is live. Browse the full framework, review the architecture, and start building.
+        </p>
+      </aside>
+
       <p>
         Every file you have ever shared, every dataset you have ever published, every piece of research you have ever cited, lives at an address that someone else controls. Move it, and the link breaks. Copy it, and you lose track of which version is real. Send it to another system, and half the meaning disappears.
       </p>
