@@ -25,22 +25,23 @@ const CLAUDE_AGENT_PROMPT = `Please add this MCP server to my Claude Code config
 Then verify by calling the uor.encode_address tool with content "hello"
 and showing me the full response including the _meta field.`;
 
-const VERIFY_PROMPT = `Use the uor.encode_address tool to fingerprint 'hello' and show me the full response including _meta.`;
+const VERIFY_PROMPT = `Use the uor.encode_address tool to fingerprint the string "hello". Then use the uor.verify_passport tool with the returned fingerprint and the content {"content": "hello"} to prove the round-trip. Show me both responses in full.`;
 
-const VERIFY_RESPONSE = `"_meta": {
-  "uor.passport": {
-    "fingerprint": "5c8f96c88a648178c09bd73764639bb2cf4d8d5c8f72f077f0e872cab6a6be6f",
-    "algorithm": "uor-sha256-v1",
-    "length": 438,
-    "timestamp": "2026-04-21T19:59:02Z"
-  },
-  "uor.mcps.receipt": {
-    "signature": "3FB+nfc9Fy2er4ThCaBfXuMoyzahO1ZcZlaftiRp...",
-    "public_key": "Y/JdKNj9CIhpSBPBJ0I9oKBXDJnCwZ5/xtvpsjIc8PY=",
-    "algorithm": "ed25519",
-    "trust_level": "L1"
-  }
-}`;
+const VERIFY_RESPONSE = `Step 1 — encode_address("hello")
+
+  sha256:20b2dda940d741d9780897200aaef2ef356ab32b38c7de0d94306fb5a66b4a8e
+
+  { "address":     "sha256:20b2dda940d741d9...",
+    "fingerprint": "20b2dda940d741d9780897200aaef2ef356ab32b38c7de0d94306fb5a66b4a8e",
+    "algorithm":   "uor-sha256-v1",
+    "length":      19,
+    "canonicalization": "jcs-rfc8785" }
+
+Step 2 — verify_passport with that fingerprint
+
+  { "valid": true,
+    "computed_fingerprint":  "20b2dda940d741d9...",
+    "expected_fingerprint":  "20b2dda940d741d9..." }`;
 
 type TabId = "cursor" | "vscode" | "claude" | "chatgpt" | "other";
 
@@ -297,8 +298,10 @@ const McpInstallTabs = () => {
         <CodeBlock code={VERIFY_PROMPT} language="ask your agent" />
         <CodeBlock code={VERIFY_RESPONSE} language="response · excerpt" />
         <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">
-          The response carries <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.passport</code> — a 256-bit SHA-256 fingerprint of the canonicalized response — and{" "}
-          <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.mcps.receipt</code>, an Ed25519 signature that verifies locally with its embedded public key. <strong>No PKI, no registry, no third party.</strong>
+          Step 1 computes the 256-bit SHA-256 fingerprint of the RFC 8785 JCS canonical form of the input — the UOR address. Step 2 hands that fingerprint back to the server, which re-derives it independently and confirms the round-trip. Two tool calls, two visible proofs, no client-side rendering tricks required.
+        </p>
+        <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">
+          Every response also carries a <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.passport</code> envelope and an Ed25519-signed <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.mcps.receipt</code> — the fields that make verification possible without any PKI, registry, or third party. Some MCP clients (Cursor today) render only the tool's <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">content</code>, not <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta</code>; to see the <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta</code> envelope directly, run <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">npx @modelcontextprotocol/inspector</code>, connect to <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">https://mcp.uor.foundation/mcp</code>, and call <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">encode_address</code> from there. <strong>No PKI, no registry, no third party.</strong>
         </p>
       </div>
     </div>
