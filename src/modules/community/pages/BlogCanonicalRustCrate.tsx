@@ -32,7 +32,7 @@ const BlogCanonicalRustCrate = () => {
     <ArticleLayout
       kicker="Standards"
       date="April 21, 2026"
-      title="UOR: A universal data fingerprint for your AI agent"
+      title="A universal data fingerprint for your AI agent"
       heroImage={heroImage}
       backHref="/research#blog"
       backLabel="Back to Research"
