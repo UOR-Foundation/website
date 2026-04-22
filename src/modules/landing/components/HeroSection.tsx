@@ -90,11 +90,11 @@ const HeroSection = () => {
         <div
           className="absolute right-0 top-1/2 -translate-y-1/2"
           style={{
-            // Fluid scaling: small on md (so title breathes), grows aggressively on lg/xl/2xl,
-            // capped on ultrawide. Uses min(vw, vh) to stay proportional to the shorter axis.
-            width: "clamp(380px, min(60vw, 78vh), 1400px)",
-            height: "clamp(380px, min(60vw, 78vh), 1400px)",
-            marginRight: "clamp(-6%, -1vw, 2%)",
+            // Fluid scaling: bigger across the board, especially on large screens.
+            // Uses min(vw, vh) to stay proportional to the shorter axis.
+            width: "clamp(420px, min(72vw, 95vh), 1700px)",
+            height: "clamp(420px, min(72vw, 95vh), 1700px)",
+            marginRight: "clamp(-10%, -2vw, 0%)",
           }}
         >
           <GalaxyAnimation />
@@ -104,11 +104,11 @@ const HeroSection = () => {
       <div className="hidden md:flex relative z-10 h-full flex-col px-[5%] lg:px-[6%] xl:px-[7%] pointer-events-none">
         <div className="basis-[34%] shrink-0" />
         {/* Title column: wider on md (orb is smaller), narrower on xl+ to leave breathing room */}
-        <div className="max-w-[64%] lg:max-w-[58%] xl:max-w-[54%] 2xl:max-w-[50%]">
+        <div className="max-w-[58%] lg:max-w-[50%] xl:max-w-[46%] 2xl:max-w-[42%]">
           <PhysicalTitle
             wrapperClass="font-display font-bold leading-[1.04] tracking-[0.06em] uppercase text-foreground animate-fade-in-up opacity-0 inline-block"
-            lineOneClass="text-[clamp(2.25rem,4vw,7rem)] block"
-            lineTwoClass="text-[clamp(2.75rem,5.4vw,9.5rem)] flex justify-between w-full mt-1"
+            lineOneClass="text-[clamp(1.85rem,3.1vw,5.25rem)] block"
+            lineTwoClass="text-[clamp(2.25rem,4.2vw,7.25rem)] flex justify-between w-full mt-1"
             delay="0.29s"
           />
           <p
