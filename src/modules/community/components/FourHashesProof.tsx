@@ -25,15 +25,21 @@ const PROVE_AGENT_RESPONSE = `computed_fingerprint: 9e8d55e66dd35b318d2cb0fa1cc4
 const PROVE_PYTHON_CMD = `pip install rfc8785
 
 python -c "
-import rfc8785, hashlib
-obj = {'z': 1, 'a': 2.0, 'msg': 'café'}
-canonical = rfc8785.dumps(obj)
-print('canonical :', canonical)
-print('sha256    :', hashlib.sha256(canonical).hexdigest())
+import rfc8785, hashlib, unicodedata
+
+def uor_hash(obj):
+    # NFC-normalize every string in the tree (UOR's extension over JCS)
+    def nfc(v):
+        if isinstance(v, str):  return unicodedata.normalize('NFC', v)
+        if isinstance(v, list): return [nfc(x) for x in v]
+        if isinstance(v, dict): return {nfc(k): nfc(x) for k, x in v.items()}
+        return v
+    return hashlib.sha256(rfc8785.dumps(nfc(obj))).hexdigest()
+
+print(uor_hash({'z': 1, 'a': 2.0, 'msg': 'café'}))
 "`;
 
-const PROVE_PYTHON_OUTPUT = `canonical : b'{"a":2,"msg":"caf\\xc3\\xa9","z":1}'
-sha256    : 9e8d55e66dd35b318d2cb0fa1cc47ed93ebea3ce529c9b69e47b17df2645a553`;
+const PROVE_PYTHON_OUTPUT = `9e8d55e66dd35b318d2cb0fa1cc47ed93ebea3ce529c9b69e47b17df2645a553`;
 
 const CodeBlock = ({ code, language }: { code: string; language?: string }) => {
   const [copied, setCopied] = useState(false);
@@ -104,7 +110,7 @@ const FourHashesProof = () => (
         <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">Output:</p>
         <CodeBlock code={PROVE_PYTHON_OUTPUT} language="output" />
         <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">
-          <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">rfc8785</code> is an independent Python implementation of RFC 8785 JCS — zero shared code with the UOR Rust server. Same spec, same canonical bytes, same fingerprint. Two binaries, two runtimes, one answer.
+          A bare <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">rfc8785.dumps(...)</code> matches the UOR server only on already-NFC input. For full cross-runtime convergence, any independent implementation must apply NFC normalization before JCS, as shown above. This is what makes <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">uor-sha256-v1</code> a complete scheme rather than a library call.
         </p>
       </div>
     </details>

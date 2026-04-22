@@ -60,6 +60,9 @@ const BlogCanonicalRustCrate = () => {
         <p className="font-body text-[14px] text-muted-foreground m-0 mt-2">
           Same data, same fingerprint, in any language or runtime.
         </p>
+        <p className="font-body text-[14px] text-muted-foreground m-0 mt-4 leading-[1.7]">
+          UOR provides content consistency, not channel security. A man-in-the-middle who replaces payload and fingerprint together is invisible to UOR alone — pair it with TLS / mTLS for channel integrity and with a key-binding layer (Sigstore, JWS+X.509, DIDs, OIDC) if you need to prove who produced the object.
+        </p>
       </aside>
 
       <FourHashesProof />
@@ -96,12 +99,26 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>How it works</h2>
         <p>
-          Two steps: <strong>(1) normalize</strong> the object to a canonical form that factors out key order, Unicode normalization (NFC), integer width (<code>1</code> vs <code>1.0</code>), float representation including <code>-0</code>, and whitespace; <strong>(2) SHA-256</strong> it. Same object, same fingerprint, on any runtime, in any language.
+          The scheme is <strong><code>uor-sha256-v1</code></strong> — NFC Unicode normalization, then RFC 8785 JCS canonicalization, then SHA-256. It factors out key order, Unicode normalization form, integer width (<code>1</code> vs <code>1.0</code>), float representation including <code>-0</code>, and whitespace. Same object, same fingerprint, on any runtime, in any language.
         </p>
         <p>
-          The normalization is a pure function of the object's typed structure — deterministic by construction. A machine-checked Lean 4 formalization is in progress. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
+          NFC normalization is a documented UOR extension on top of RFC 8785. RFC 8785 JCS itself does not mandate NFC on input strings; UOR adds it so that <code>"café"</code> (NFC, U+00E9) and <code>"café"</code> (NFD, e + U+0301) produce the same fingerprint. The normalization is a pure function of the object's typed structure — deterministic by construction. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
         </p>
         <pre>{`object → normalize → SHA-256 → 256-bit fingerprint`}</pre>
+      </section>
+
+      <section>
+        <h2>What UOR does not do</h2>
+        <p>
+          UOR Passport provides content integrity — proof that the bytes you hold are bit-for-bit the canonical form the content producer produced. It does not provide:
+        </p>
+        <ul>
+          <li><strong>Identity binding.</strong> The public key embedded in an MCPS receipt proves a keypair was used to sign the fingerprint; it does not prove whose keypair. Anyone can generate an Ed25519 keypair, sign a receipt, and embed their own public key. If you need "this came from Alice, not Bob," layer Sigstore, JWS + X.509, OIDC, or a DID method on top.</li>
+          <li><strong>Replay protection.</strong> Receipts are stateless; the same receipt verifies forever. If your protocol cares about freshness, track nonces or timestamps at the application layer.</li>
+          <li><strong>Channel security.</strong> A MITM who replaces payload + fingerprint atomically is invisible to UOR alone. Use TLS / mTLS for the wire.</li>
+          <li><strong>Large-payload fingerprinting.</strong> Canonical form is capped at 64&nbsp;KB to bound DoS. Split larger objects into addressable chunks.</li>
+          <li><strong>Content-addressable storage.</strong> UOR makes a CAS possible and interoperable across runtimes; it does not ship one. Deduplication and provenance are capabilities you build on top of the fingerprint.</li>
+        </ul>
       </section>
 
       <section>
@@ -289,17 +306,6 @@ const BlogCanonicalRustCrate = () => {
           <li><strong>Portable provenance.</strong> Fork an object, move it between MCP servers, hand it to a different agent, the address still resolves to the same content.</li>
           <li><strong>No trust infrastructure to operate.</strong> No certificates to issue, rotate, or revoke. Verification is a local hash, not a network call.</li>
         </ul>
-        <p>
-          <strong>Explicit non-goals.</strong> UOR is deliberately narrow so it composes cleanly with what you already run:
-        </p>
-        <ul>
-          <li><strong>Identity binding.</strong> A signed receipt proves a keypair signed it — not whose keypair. Layer Sigstore, JWS + X.509, OIDC, or DIDs for the "who" question.</li>
-          <li><strong>Replay protection.</strong> Receipt verification is stateless; valid receipts stay valid. Track nonces at the application layer if freshness matters.</li>
-          <li><strong>Payloads over 64&nbsp;KB.</strong> The reference server caps canonical-form size as a DoS guard. Split larger objects into chunks and compose their fingerprints.</li>
-        </ul>
-        <p>
-          These are scope choices, not gaps. They are what keeps UOR a primitive instead of a platform.
-        </p>
       </section>
 
       <section>
@@ -324,7 +330,7 @@ const BlogCanonicalRustCrate = () => {
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><code>uor.encode_address</code></td>
                 <td className="px-5 py-5 align-top text-foreground"><code>sha256:&lt;64-hex&gt;</code></td>
-                <td className="px-5 py-5 align-top text-muted-foreground">256-bit content address of any JSON value — string, number, bool, array, or object. NFC-normalized, RFC 8785 JCS-canonicalized, SHA-256 hashed. Canonical form up to 64&nbsp;KB.</td>
+                <td className="px-5 py-5 align-top text-muted-foreground">256-bit content address of any JSON value — string, number, bool, array, or object. Computed via the <code>uor-sha256-v1</code> scheme (NFC + RFC 8785 JCS + SHA-256). Canonical form up to 64&nbsp;KB.</td>
               </tr>
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><code>uor.verify_passport</code></td>
