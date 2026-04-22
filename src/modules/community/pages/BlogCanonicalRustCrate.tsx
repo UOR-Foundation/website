@@ -350,6 +350,7 @@ const BlogCanonicalRustCrate = () => {
           </a>
           .
         </p>
+        <FourHashesProof />
       </section>
     </ArticleLayout>
   );
