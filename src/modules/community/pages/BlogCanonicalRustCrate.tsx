@@ -45,22 +45,22 @@ const BlogCanonicalRustCrate = () => {
         className="not-prose mb-12 md:mb-14 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm px-6 md:px-8 py-6 md:py-7"
       >
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-[11px] md:text-[12px] uppercase tracking-[0.24em] font-semibold text-primary/80 font-mono">
+          <span className="text-[11px] uppercase tracking-[0.24em] font-semibold text-primary/80 font-mono">
             TL;DR
           </span>
           <span className="h-px flex-1 bg-border/60" />
         </div>
-        <p className="font-body leading-[1.75] text-foreground/85 m-0">
+        <p className="font-body text-[15px] md:text-[16px] leading-[1.75] text-foreground/85 m-0">
           When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>canonical structure</em>, not its bytes, so the same object hashes to the same identifier in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman for verification — a decentralized, universal, self-verifying identifier for any structured object.
         </p>
-        <pre className="not-prose mt-5 mb-2 p-4 rounded-lg bg-muted/60 border border-border text-[13px] font-mono text-foreground leading-relaxed overflow-x-auto">
+        <pre className="not-prose mt-5 mb-2 p-4 rounded-lg bg-muted/60 border border-border text-[13.5px] font-mono text-foreground leading-relaxed overflow-x-auto">
 {`{"a": 1, "b": 2}     → 43258cff783fe7036d8a…
 {"b": 2, "a": 1}     → 43258cff783fe7036d8a…   (same object, different JSON, same identifier)`}
         </pre>
-        <p className="font-body text-[14px] text-muted-foreground m-0 mt-2">
+        <p className="font-body text-[13.5px] text-muted-foreground m-0 mt-2">
           Same object, same fingerprint, in any language or runtime.
         </p>
-        <p className="font-body text-[14px] text-muted-foreground m-0 mt-4 leading-[1.7]">
+        <p className="font-body text-[15px] md:text-[16px] text-muted-foreground m-0 mt-4 leading-[1.7]">
           UOR provides content consistency, not channel security. A man-in-the-middle who replaces payload and fingerprint together is invisible to UOR alone — pair it with TLS / mTLS for channel integrity and with a key-binding layer (Sigstore, JWS+X.509, DIDs, OIDC) if you need to prove who produced the object.
         </p>
       </aside>
@@ -238,10 +238,10 @@ const BlogCanonicalRustCrate = () => {
           <table className="w-full text-[15px] md:text-base leading-relaxed">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left">
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">System</th>
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">What it hashes</th>
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Survives re-serialization</th>
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Needs PKI / registry</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">System</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">What it hashes</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Survives re-serialization</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Needs PKI / registry</th>
               </tr>
             </thead>
             <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
@@ -298,8 +298,8 @@ const BlogCanonicalRustCrate = () => {
           <table className="w-full text-[15px] md:text-base leading-relaxed">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left">
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[42%]">SEP-2395 failure</th>
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">How UOR resolves it</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[42%]">SEP-2395 failure</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">How UOR resolves it</th>
               </tr>
             </thead>
             <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
@@ -354,9 +354,9 @@ const BlogCanonicalRustCrate = () => {
           <table className="w-full text-[15px] md:text-base leading-relaxed">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left">
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[28%]">Tool</th>
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[26%]">Returns</th>
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">What it does</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[28%]">Tool</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[26%]">Returns</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">What it does</th>
               </tr>
             </thead>
             <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
