@@ -112,6 +112,10 @@ const FourHashesProof = () => (
         <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">
           A bare <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">rfc8785.dumps(...)</code> matches the UOR server only on already-NFC input. For full cross-runtime convergence, any independent implementation must apply NFC normalization before JCS, as shown above. This is what makes <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">uor-sha256-v1</code> a complete scheme rather than a library call.
         </p>
+        <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">
+          <strong>Reference implementations.</strong> Rust (server + verifier) and Python (verifier, via <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">rfc8785</code> + NFC preprocessing as shown above) today. The full scheme is small enough — NFC pass, JCS serialization, SHA-256 — that a port to Node, Go, Java, or Swift is roughly 50 lines and an afternoon&rsquo;s work. Contributions welcome at{" "}
+          <a href="https://github.com/humuhumu33/uor-passport" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">github.com/humuhumu33/uor-passport</a>.
+        </p>
       </div>
     </details>
   </div>
