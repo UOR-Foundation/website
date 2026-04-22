@@ -122,9 +122,36 @@ const BlogCanonicalRustCrate = () => {
           <li><strong>Identity binding.</strong> The public key embedded in an MCPS receipt proves a keypair was used to sign the fingerprint; it does not prove whose keypair. Anyone can generate an Ed25519 keypair, sign a receipt, and embed their own public key. If you need "this came from Alice, not Bob," layer Sigstore, JWS + X.509, OIDC, or a DID method on top.</li>
           <li><strong>Replay protection.</strong> Receipts are stateless; the same receipt verifies forever. If your protocol cares about freshness, track nonces or timestamps at the application layer.</li>
           <li><strong>Channel security.</strong> A MITM who replaces payload + fingerprint atomically is invisible to UOR alone. Use TLS / mTLS for the wire.</li>
-          <li><strong>Large-payload fingerprinting.</strong> Canonical form is capped at 64&nbsp;KB to bound DoS. Split larger objects into addressable chunks.</li>
           <li><strong>Content-addressable storage.</strong> UOR makes a CAS possible and interoperable across runtimes; it does not ship one. Deduplication and provenance are capabilities you build on top of the fingerprint.</li>
         </ul>
+      </section>
+
+      <section>
+        <h2>Limits today</h2>
+        <p>
+          The canonical form of a single fingerprinted object is capped at 64&nbsp;KB to bound worst-case canonicalization cost and prevent DoS against the server. Realistic MCP tool responses that carry long code snippets, multi-page search results, or dense structured data can exceed this.
+        </p>
+        <p><strong>Workarounds available now:</strong></p>
+        <ul>
+          <li>Chunk large payloads and fingerprint each chunk, storing chunk addresses in a manifest object you fingerprint separately.</li>
+          <li>Fingerprint the manifest, not the raw payload — the manifest is small and the chunk addresses carry the integrity guarantee transitively.</li>
+        </ul>
+        <p>
+          On the roadmap: <code>uor-sha256-v2</code> will use a Merkle tree over canonical chunks to lift the cap while preserving the single-address property. Versioning is explicit (<code>algorithm: &quot;uor-sha256-v1&quot;</code> today, <code>&quot;uor-sha256-v2&quot;</code> when shipped); <code>verify_passport</code> rejects unsupported versions, so migration is safe.
+        </p>
+      </section>
+
+      <section>
+        <h2>Why not just mTLS?</h2>
+        <p>
+          A reasonable question: if you already run mTLS between agents, don&rsquo;t you already have integrity and identity? For a single, direct two-agent call, largely yes — and UOR adds little. UOR earns its keep in the case mTLS does not cover: <strong>multi-hop agent pipelines.</strong>
+        </p>
+        <p>
+          In a LangGraph, CrewAI, AutoGen, or A2A pipeline, an object typically traverses several agents before it reaches the verifier. Every hop terminates TLS, parses the JSON, acts on it, re-serializes it, re-encrypts it, and forwards it. The wire-level integrity guarantee mTLS provided dies at hop 1. Only the object&rsquo;s structural content continues to the next hop — and, without UOR, there is no way for a downstream agent to prove the object it now holds is bit-for-bit what the originator emitted.
+        </p>
+        <p>
+          UOR&rsquo;s fingerprint rides with the object, through every hop, in <code>_meta.uor.passport</code>. Any downstream verifier re-derives it from the object alone and compares. <strong>mTLS secures the wire; UOR secures the payload across wires.</strong> Use both. They compose.
+        </p>
       </section>
 
       <section>
