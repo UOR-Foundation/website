@@ -16,8 +16,8 @@ const CommunitySection = () => {
     { name: "150+", role: "contributors", image: "", link: "", description: "", isCount: true },
   ];
 
-  const hexSize = "w-[5rem] h-[5rem] md:w-[5.5rem] md:h-[5.5rem] lg:w-[6.5rem] lg:h-[6.5rem]";
-  const cellWidth = "w-[6.5rem] md:w-[8rem] lg:w-[9.5rem]";
+  const hexSize = "w-[5rem] h-[5rem] md:w-[7rem] md:h-[7rem] lg:w-[8.5rem] lg:h-[8.5rem]";
+  const cellWidth = "w-[6.5rem] md:w-[10rem] lg:w-[12rem]";
 
   const renderHex = (member: any, idx: number, rowDelay: number) => {
     const delay = `${rowDelay + idx * 0.04}s`;
@@ -33,10 +33,10 @@ const CommunitySection = () => {
             className={`${hexSize} border border-black/10 md:border-foreground/10 flex items-center justify-center`}
             style={{ clipPath: HEX_CLIP }}
           >
-            <span className="font-mono text-black/30 md:text-foreground/40 text-xl">+</span>
+            <span className="font-mono text-black/30 md:text-foreground/40 text-2xl md:text-3xl">+</span>
           </div>
-          <p className="font-display font-bold text-black md:text-foreground text-base md:text-base lg:text-lg leading-tight mt-3">150+</p>
-          <p className="font-body text-black/70 md:text-foreground/45 text-[12px] md:text-sm mt-0.5 font-medium">contributors</p>
+          <p className="font-display font-bold text-black md:text-foreground text-base md:text-xl lg:text-2xl leading-tight mt-3">150+</p>
+          <p className="font-body text-black/70 md:text-foreground/45 text-[12px] md:text-base lg:text-lg mt-1 font-medium">contributors</p>
         </div>
       );
     }
@@ -61,10 +61,10 @@ const CommunitySection = () => {
             loading="lazy"
           />
         </div>
-        <p className="font-display font-bold text-black md:text-foreground leading-tight text-[15px] md:text-lg lg:text-xl mt-3 tracking-[0.01em]">
+        <p className="font-display font-bold text-black md:text-foreground leading-tight text-[15px] md:text-xl lg:text-2xl mt-4 tracking-[0.01em]">
           {member.name.split(" ")[0]}
         </p>
-        <p className="font-body text-black/70 md:text-foreground/50 leading-snug mt-0.5 text-[12px] md:text-base font-medium">
+        <p className="font-body text-black/70 md:text-foreground/50 leading-snug mt-1 text-[12px] md:text-base lg:text-lg font-medium">
           {member.role}
         </p>
       </a>
