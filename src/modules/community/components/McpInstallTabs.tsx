@@ -25,22 +25,23 @@ const CLAUDE_AGENT_PROMPT = `Please add this MCP server to my Claude Code config
 Then verify by calling the uor.encode_address tool with content "hello"
 and showing me the full response including the _meta field.`;
 
-const VERIFY_PROMPT = `Use the uor.encode_address tool to fingerprint 'hello' and show me the full response including _meta.`;
+const VERIFY_PROMPT = `Use the uor.encode_address tool to fingerprint the string "hello". Then use the uor.verify_passport tool with the returned fingerprint and the content {"content": "hello"} to prove the round-trip. Show me both responses in full.`;
 
-const VERIFY_RESPONSE = `"_meta": {
-  "uor.passport": {
-    "fingerprint": "5c8f96c88a648178c09bd73764639bb2cf4d8d5c8f72f077f0e872cab6a6be6f",
-    "algorithm": "uor-sha256-v1",
-    "length": 438,
-    "timestamp": "2026-04-21T19:59:02Z"
-  },
-  "uor.mcps.receipt": {
-    "signature": "3FB+nfc9Fy2er4ThCaBfXuMoyzahO1ZcZlaftiRp...",
-    "public_key": "Y/JdKNj9CIhpSBPBJ0I9oKBXDJnCwZ5/xtvpsjIc8PY=",
-    "algorithm": "ed25519",
-    "trust_level": "L1"
-  }
-}`;
+const VERIFY_RESPONSE = `Step 1 — encode_address("hello")
+
+  sha256:20b2dda940d741d9780897200aaef2ef356ab32b38c7de0d94306fb5a66b4a8e
+
+  { "address":     "sha256:20b2dda940d741d9...",
+    "fingerprint": "20b2dda940d741d9780897200aaef2ef356ab32b38c7de0d94306fb5a66b4a8e",
+    "algorithm":   "uor-sha256-v1",
+    "length":      19,
+    "canonicalization": "jcs-rfc8785" }
+
+Step 2 — verify_passport with that fingerprint
+
+  { "valid": true,
+    "computed_fingerprint":  "20b2dda940d741d9...",
+    "expected_fingerprint":  "20b2dda940d741d9..." }`;
 
 type TabId = "cursor" | "vscode" | "claude" | "chatgpt" | "other";
 
