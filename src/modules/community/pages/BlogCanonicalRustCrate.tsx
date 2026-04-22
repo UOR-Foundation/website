@@ -108,6 +108,20 @@ const BlogCanonicalRustCrate = () => {
       </section>
 
       <section>
+        <h2>What UOR does not do</h2>
+        <p>
+          UOR Passport provides content integrity — proof that the bytes you hold are bit-for-bit the canonical form the content producer produced. It does not provide:
+        </p>
+        <ul>
+          <li><strong>Identity binding.</strong> The public key embedded in an MCPS receipt proves a keypair was used to sign the fingerprint; it does not prove whose keypair. Anyone can generate an Ed25519 keypair, sign a receipt, and embed their own public key. If you need "this came from Alice, not Bob," layer Sigstore, JWS + X.509, OIDC, or a DID method on top.</li>
+          <li><strong>Replay protection.</strong> Receipts are stateless; the same receipt verifies forever. If your protocol cares about freshness, track nonces or timestamps at the application layer.</li>
+          <li><strong>Channel security.</strong> A MITM who replaces payload + fingerprint atomically is invisible to UOR alone. Use TLS / mTLS for the wire.</li>
+          <li><strong>Large-payload fingerprinting.</strong> Canonical form is capped at 64&nbsp;KB to bound DoS. Split larger objects into addressable chunks.</li>
+          <li><strong>Content-addressable storage.</strong> UOR makes a CAS possible and interoperable across runtimes; it does not ship one. Deduplication and provenance are capabilities you build on top of the fingerprint.</li>
+        </ul>
+      </section>
+
+      <section>
         <h2>Architecture</h2>
         <p>
           One pipeline, two ends. Sender derives the fingerprint and ships it alongside the payload. Receiver re-derives it from whatever arrived and compares. Match → trust. Mismatch → refuse. No third party in the loop.
