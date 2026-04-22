@@ -232,7 +232,7 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>How it compares</h2>
         <p>
-          Content addressing is well-trodden ground. Git shipped it in 2005, IPFS generalized it in 2015, Sigstore bolted PKI around it. Each is the right tool inside its lane. The unsolved part — and what UOR targets — is <strong>an identity that holds through re-serialization</strong> (which happens on every parse, mutation, and hop between agents) <strong>without standing up a signing stack to keep it alive</strong>.
+          Content addressing is well-trodden ground. Git shipped it in 2005, IPFS generalized it in 2015, Sigstore bolted PKI around it. Each is the right tool inside its lane. The unsolved part — and what UOR targets — is <strong>an address that holds through re-serialization</strong> (which happens on every parse, mutation, and hop between agents) <strong>without standing up a signing stack to keep it alive</strong>.
         </p>
         <figure className="not-prose my-8 overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full text-[15px] md:text-base leading-relaxed">
