@@ -1,18 +1,11 @@
 import ArticleLayout from "@/modules/core/components/ArticleLayout";
 import coverImage from "@/assets/blog-golden-seed-vector.png";
-import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
-import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import { blogPosts } from "@/data/blog-posts";
+import { getBlogCover } from "@/data/blog-covers";
 import { GITHUB_ATLAS_URL } from "@/data/external-links";
 import TldrAside from "../components/TldrAside";
 
 const SLUG = "/blog/universal-mathematical-language";
-
-const coverMap: Record<string, string> = {
-  knowledgeGraph: blogKnowledgeGraph,
-  goldenSeed: coverImage,
-  frameworkLaunch: blogFrameworkLaunch,
-};
 
 const BlogPost2 = () => {
   const related = blogPosts
@@ -22,7 +15,7 @@ const BlogPost2 = () => {
       title: p.title,
       href: p.href,
       meta: `${p.tag} · ${p.date}`,
-      image: coverMap[p.coverKey],
+      image: getBlogCover(p.coverKey),
     }));
 
   return (

@@ -6,15 +6,7 @@ import McpInstallTabs from "../components/McpInstallTabs";
 import FourHashesProof from "../components/FourHashesProof";
 import TldrAside from "../components/TldrAside";
 import heroImage from "@/assets/project-uor-identity.jpg";
-import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
-import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
-import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
-
-const coverMap: Record<string, string> = {
-  knowledgeGraph: blogKnowledgeGraph,
-  goldenSeed: blogGoldenSeed,
-  frameworkLaunch: blogFrameworkLaunch,
-};
+import { getBlogCover } from "@/data/blog-covers";
 
 const SLUG = "/blog/universal-data-fingerprint";
 
@@ -26,7 +18,7 @@ const BlogCanonicalRustCrate = () => {
       title: p.title,
       href: p.href,
       meta: `${p.tag} · ${p.date}`,
-      image: coverMap[p.coverKey],
+      image: getBlogCover(p.coverKey),
     }));
 
   return (

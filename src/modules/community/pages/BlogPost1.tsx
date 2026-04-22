@@ -1,17 +1,10 @@
 import ArticleLayout from "@/modules/core/components/ArticleLayout";
 import coverImage from "@/assets/blog-knowledge-graph.png";
-import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
-import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import { blogPosts } from "@/data/blog-posts";
+import { getBlogCover } from "@/data/blog-covers";
 import TldrAside from "../components/TldrAside";
 
 const SLUG = "/blog/building-the-internets-knowledge-graph";
-
-const coverMap: Record<string, string> = {
-  knowledgeGraph: coverImage,
-  goldenSeed: blogGoldenSeed,
-  frameworkLaunch: blogFrameworkLaunch,
-};
 
 const BlogPost1 = () => {
   const related = blogPosts
@@ -21,7 +14,7 @@ const BlogPost1 = () => {
       title: p.title,
       href: p.href,
       meta: `${p.tag} · ${p.date}`,
-      image: coverMap[p.coverKey],
+      image: getBlogCover(p.coverKey),
     }));
 
   return (
