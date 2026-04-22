@@ -1,6 +1,6 @@
 import ArticleLayout from "@/modules/core/components/ArticleLayout";
 import { Link } from "react-router-dom";
-import { CRATE_URL, CRATE_DOCS_URL, GITHUB_ORG_URL } from "@/data/external-links";
+import { CRATE_URL } from "@/data/external-links";
 import { blogPosts } from "@/data/blog-posts";
 import McpInstallTabs from "../components/McpInstallTabs";
 import FourHashesProof from "../components/FourHashesProof";
