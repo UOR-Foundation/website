@@ -2,7 +2,7 @@ import ArticleLayout from "@/modules/core/components/ArticleLayout";
 import { ExternalLink, ArrowRight } from "lucide-react";
 import { semanticWebLayers } from "@/data/semantic-web-layers";
 import { Link } from "react-router-dom";
-import heroImage from "@/assets/blog-knowledge-graph.png";
+import heroImage from "@/assets/blog-semantic-web.jpg";
 import TldrAside from "@/modules/community/components/TldrAside";
 
 const W3C_REFERENCE_URL = "https://www.w3.org/RDF/Metalog/docs/sw-easy";
