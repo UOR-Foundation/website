@@ -52,6 +52,40 @@ const VERIFY_RESPONSE = `1 · encode_address ("hello")
 3 · verify_receipt (inline receipt)
   Receipt is valid — Ed25519 signature verifies against embedded public key.`;
 
+const FOUR_HASHES = `Input: {"z": 1, "a": 2.0, "msg": "café"}
+
+Python json.dumps (default)
+  bytes   {"z": 1, "a": 2.0, "msg": "caf\\u00e9"}
+  sha256  550fc94cbb2fd57391d634788e08b45fd0d6632b7bb41d18d7eca6e47c7ea840
+
+Node JSON.stringify (default)
+  bytes   {"z":1,"a":2,"msg":"café"}
+  sha256  d0c31a49f78a1fac09174e97c6673eeaee0a123110d6b97630f5ee585900913a
+
+UOR canonical form (RFC 8785 JCS)
+  bytes   {"a":2,"msg":"café","z":1}
+  sha256  9e8d55e66dd35b318d2cb0fa1cc47ed93ebea3ce529c9b69e47b17df2645a553
+            ↑ the UOR passport fingerprint — same answer in every JCS runtime`;
+
+const PROVE_AGENT_PROMPT = `Use uor.verify_passport with content
+{"z": 1, "a": 2.0, "msg": "caf\\u00e9"}
+and a dummy fingerprint of 64 zeros.`;
+
+const PROVE_AGENT_RESPONSE = `computed_fingerprint: 9e8d55e66dd35b318d2cb0fa1cc47ed93ebea3ce529c9b69e47b17df2645a553`;
+
+const PROVE_PYTHON_CMD = `pip install rfc8785
+
+python -c "
+import rfc8785, hashlib
+obj = {'z': 1, 'a': 2.0, 'msg': 'café'}
+canonical = rfc8785.dumps(obj)
+print('canonical :', canonical)
+print('sha256    :', hashlib.sha256(canonical).hexdigest())
+"`;
+
+const PROVE_PYTHON_OUTPUT = `canonical : b'{"a":2,"msg":"caf\\xc3\\xa9","z":1}'
+sha256    : 9e8d55e66dd35b318d2cb0fa1cc47ed93ebea3ce529c9b69e47b17df2645a553`;
+
 type TabId = "cursor" | "vscode" | "claude" | "chatgpt" | "other";
 
 const TABS: { id: TabId; label: string }[] = [
