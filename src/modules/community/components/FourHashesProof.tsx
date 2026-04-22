@@ -63,7 +63,7 @@ const CodeBlock = ({ code, language }: { code: string; language?: string }) => {
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <pre className="p-4 text-[13.5px] font-mono text-foreground leading-relaxed overflow-x-auto m-0">
+      <pre className="p-4 text-[13.5px] font-mono text-foreground leading-[1.65] overflow-x-auto m-0">
         {code}
       </pre>
     </div>
