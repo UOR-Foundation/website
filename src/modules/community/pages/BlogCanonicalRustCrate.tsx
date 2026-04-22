@@ -51,11 +51,11 @@ const BlogCanonicalRustCrate = () => {
           <span className="h-px flex-1 bg-border/60" />
         </div>
         <p className="font-body leading-[1.75] text-foreground/85 m-0">
-          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>canonical structure</em>, not its bytes, so the same object hashes to the same address in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman for verification — a decentralized, universal, self-verifying address for any structured object.
+          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>canonical structure</em>, not its bytes, so the same object hashes to the same identifier in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman for verification — a decentralized, universal, self-verifying identifier for any structured object.
         </p>
         <pre className="not-prose mt-5 mb-2 p-4 rounded-lg bg-muted/60 border border-border text-[13px] font-mono text-foreground leading-relaxed overflow-x-auto">
 {`{"a": 1, "b": 2}     → 43258cff783fe7036d8a…
-{"b": 2, "a": 1}     → 43258cff783fe7036d8a…   (same object, different JSON, same address)`}
+{"b": 2, "a": 1}     → 43258cff783fe7036d8a…   (same object, different JSON, same identifier)`}
         </pre>
         <p className="font-body text-[14px] text-muted-foreground m-0 mt-2">
           Same object, same fingerprint, in any language or runtime.
@@ -71,10 +71,10 @@ const BlogCanonicalRustCrate = () => {
           Two AI agents exchange a tool call. Today, neither one can prove the object that arrived is the object that was sent. Re-serialize the JSON, the hash changes. Sign the bytes, the signature breaks at the first parse. Add a PKI, now you operate a PKI.
         </p>
         <p>
-          <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, decentralized, content-derived, self-verifying 256-bit address — a universal data fingerprint that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP today — and under any structured-data transport that carries JSON, including A2A.
+          <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, decentralized, content-derived, self-verifying 256-bit identifier — a universal data fingerprint that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP today — and under any structured-data transport that carries JSON, including A2A.
         </p>
         <p>
-          UOR is a content-addressing scheme for digital objects — not an identity system for people. It answers <em>"what is this?"</em> with a 256-bit address, not <em>"who made this?"</em> The two questions compose: keep your existing identity layer (OAuth, mTLS, Sigstore, DIDs) for the second; UOR handles the first, everywhere, with no infrastructure.
+          UOR is a content-addressing scheme for digital objects — not an identity system for people. It answers <em>"what is this?"</em> with a 256-bit identifier, not <em>"who made this?"</em> The two questions compose: keep your existing identity layer (OAuth, mTLS, Sigstore, DIDs) for the second; UOR handles the first, everywhere, with no infrastructure.
         </p>
       </section>
 
@@ -133,11 +133,11 @@ const BlogCanonicalRustCrate = () => {
         </p>
         <p><strong>Workarounds available now:</strong></p>
         <ul>
-          <li>Chunk large payloads and fingerprint each chunk, storing chunk addresses in a manifest object you fingerprint separately.</li>
-          <li>Fingerprint the manifest, not the raw payload — the manifest is small and the chunk addresses carry the integrity guarantee transitively.</li>
+          <li>Chunk large payloads and fingerprint each chunk, storing chunk identifiers in a manifest object you fingerprint separately.</li>
+          <li>Fingerprint the manifest, not the raw payload — the manifest is small and the chunk identifiers carry the integrity guarantee transitively.</li>
         </ul>
         <p>
-          On the roadmap: <code>uor-sha256-v2</code> will use a Merkle tree over canonical chunks to lift the cap while preserving the single-address property. Versioning is explicit (<code>algorithm: &quot;uor-sha256-v1&quot;</code> today, <code>&quot;uor-sha256-v2&quot;</code> when shipped); <code>verify_passport</code> rejects unsupported versions, so migration is safe.
+          On the roadmap: <code>uor-sha256-v2</code> will use a Merkle tree over canonical chunks to lift the cap while preserving the single-identifier property. Versioning is explicit (<code>algorithm: &quot;uor-sha256-v1&quot;</code> today, <code>&quot;uor-sha256-v2&quot;</code> when shipped); <code>verify_passport</code> rejects unsupported versions, so migration is safe.
         </p>
       </section>
 
@@ -163,7 +163,7 @@ const BlogCanonicalRustCrate = () => {
           <svg
             viewBox="0 0 820 420"
             role="img"
-            aria-label="Agent A sends a payload sealed with a UOR fingerprint to Agent B over MCP or A2A. Agent B re-derives the fingerprint locally and compares. The address is the content. No third-party authority is involved."
+            aria-label="Agent A sends a payload sealed with a UOR fingerprint to Agent B over MCP or A2A. Agent B re-derives the fingerprint locally and compares. The identifier is derived from the content. No third-party authority is involved."
             className="w-full h-auto text-foreground"
           >
             <defs>
@@ -217,7 +217,7 @@ const BlogCanonicalRustCrate = () => {
 
             {/* ============ FOOTER ============ */}
             <text x="411" y="372" textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 700 }}>
-              The address is derived from the content — same object, same address.
+              The identifier is derived from the content — same object, same identifier.
             </text>
             <text x="411" y="398" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 14, fontFamily: "ui-monospace, monospace" }}>
               no PKI · no registry · no third party for verification
@@ -232,7 +232,7 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>How it compares</h2>
         <p>
-          Content addressing is well-trodden ground. Git shipped it in 2005, IPFS generalized it in 2015, Sigstore bolted PKI around it. Each is the right tool inside its lane. The unsolved part — and what UOR targets — is <strong>an address that holds through re-serialization</strong> (which happens on every parse, mutation, and hop between agents) <strong>without standing up a signing stack to keep it alive</strong>.
+          Content addressing is well-trodden ground. Git shipped it in 2005, IPFS generalized it in 2015, Sigstore bolted PKI around it. Each is the right tool inside its lane. The unsolved part — and what UOR targets — is <strong>an identifier that holds through re-serialization</strong> (which happens on every parse, mutation, and hop between agents) <strong>without standing up a signing stack to keep it alive</strong>.
         </p>
         <figure className="not-prose my-8 overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full text-[15px] md:text-base leading-relaxed">
@@ -309,7 +309,7 @@ const BlogCanonicalRustCrate = () => {
               </tr>
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Downgrade attack.</strong> <span className="text-muted-foreground">Drop a key, server falls back to unsigned.</span></td>
-                <td className="px-5 py-5 align-top text-foreground">No signed mode to fall back from. The fingerprint <em>is</em> the address.</td>
+                <td className="px-5 py-5 align-top text-foreground">No signed mode to fall back from. The fingerprint <em>is</em> the identifier.</td>
               </tr>
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Self-signed trust anchors.</strong> <span className="text-muted-foreground">An anchor could stamp itself L4.</span></td>
@@ -317,7 +317,7 @@ const BlogCanonicalRustCrate = () => {
               </tr>
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Fail-open revocation.</strong> <span className="text-muted-foreground">Unauthenticated revocation lists failed open.</span></td>
-                <td className="px-5 py-5 align-top text-foreground">Nothing to revoke. No keys, no lists. Change the object, change the address.</td>
+                <td className="px-5 py-5 align-top text-foreground">Nothing to revoke. No keys, no lists. Change the object, change the identifier.</td>
               </tr>
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">CVE attributions and endorsement claims contested during review.</strong> <span className="text-muted-foreground">Several supporting claims did not hold up under procedural review; see the SEP-2395 closure for details.</span></td>
@@ -335,8 +335,8 @@ const BlogCanonicalRustCrate = () => {
         <h2>What this unlocks</h2>
         <ul>
           <li><strong>Provable agent-to-agent calls.</strong> The receiver knows the tool call, memory, or result it ran is bit-for-bit the one the sender produced, across any language or transport.</li>
-          <li><strong>Free deduplication and caching.</strong> Identical objects collapse to one address. Caches, audit logs, and replay systems stop storing the same payload twice.</li>
-          <li><strong>Portable provenance.</strong> Fork an object, move it between MCP servers, hand it to a different agent, the address still resolves to the same content.</li>
+          <li><strong>Free deduplication and caching.</strong> Identical objects collapse to one identifier. Caches, audit logs, and replay systems stop storing the same payload twice.</li>
+          <li><strong>Portable provenance.</strong> Fork an object, move it between MCP servers, hand it to a different agent, the identifier still resolves to the same content.</li>
           <li><strong>No trust infrastructure to operate.</strong> No certificates to issue, rotate, or revoke. Verification is a local hash, not a network call.</li>
         </ul>
       </section>
