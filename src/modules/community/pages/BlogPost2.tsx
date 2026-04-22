@@ -1,30 +1,56 @@
 import ArticleLayout from "@/modules/core/components/ArticleLayout";
 import coverImage from "@/assets/blog-golden-seed-vector.png";
+import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
+import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import { blogPosts } from "@/data/blog-posts";
 import { GITHUB_ATLAS_URL } from "@/data/external-links";
 
 const SLUG = "/blog/universal-mathematical-language";
 
+const coverMap: Record<string, string> = {
+  knowledgeGraph: blogKnowledgeGraph,
+  goldenSeed: coverImage,
+  frameworkLaunch: blogFrameworkLaunch,
+};
+
 const BlogPost2 = () => {
   const related = blogPosts
     .filter((p) => p.href !== SLUG)
     .slice(0, 3)
-    .map((p) => ({ title: p.title, href: p.href, meta: `${p.tag} · ${p.date}` }));
+    .map((p) => ({
+      title: p.title,
+      href: p.href,
+      meta: `${p.tag} · ${p.date}`,
+      image: coverMap[p.coverKey],
+    }));
 
   return (
     <ArticleLayout
       kicker="Open Research"
       date="October 10, 2025"
       title="Unveiling a Universal Mathematical Language"
-      deck="A breakthrough that reveals the hidden order behind nature's most complex systems and could reshape the future of open science, next-generation AI, and quantum computing."
       heroImage={coverImage}
-      heroCaption="The Golden Seed Vector — open-sourcing the mathematical universe"
       backHref="/research#blog"
       backLabel="Back to Research"
       sourceUrl={GITHUB_ATLAS_URL}
       sourceLabel="github.com/UOR-Foundation/research/atlas-embeddings"
       related={related}
     >
+      <aside
+        aria-label="TL;DR"
+        className="not-prose mb-12 md:mb-14 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm px-6 md:px-8 py-6 md:py-7"
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-[11px] uppercase tracking-[0.24em] font-semibold text-primary/80 font-mono">
+            TL;DR
+          </span>
+          <span className="h-px flex-1 bg-border/60" />
+        </div>
+        <p className="font-body text-[15px] md:text-[16px] leading-[1.75] text-foreground/85 m-0">
+          A breakthrough that reveals the hidden order behind nature&rsquo;s most complex systems and could reshape the future of open science, next-generation AI, and quantum computing.
+        </p>
+      </aside>
+
       <p>
         <strong>DENVER, October 10th, 2025</strong> — The UOR Foundation today announced the discovery of a Universal Mathematical Language, a breakthrough that reveals the hidden order behind nature's most complex systems and could reshape the future of science, artificial intelligence, and quantum computing.
       </p>
