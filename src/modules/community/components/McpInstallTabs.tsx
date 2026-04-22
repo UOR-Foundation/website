@@ -29,7 +29,7 @@ const VERIFY_PROMPT = `Please exercise all three UOR tools and show me each resp
 
 1. uor.encode_address — fingerprint the string "hello".
 2. uor.verify_passport — take the fingerprint from step 1 with the content
-   {"content":"hello"} to prove the round-trip.
+   "hello" to prove the round-trip.
 3. uor.verify_receipt — use the receipt below to prove an Ed25519 signature
    verifies locally using only the public key embedded in the receipt itself:
 
@@ -44,9 +44,9 @@ const VERIFY_PROMPT = `Please exercise all three UOR tools and show me each resp
 }`;
 
 const VERIFY_RESPONSE = `1 · encode_address ("hello")
-  sha256:20b2dda940d741d9780897200aaef2ef356ab32b38c7de0d94306fb5a66b4a8e
+  sha256:5aa762ae383fbb727af3c7a36d4940a5b8c40a989452d2304fc958ff3f354e7a
 
-2 · verify_passport (fingerprint + {"content":"hello"})
+2 · verify_passport (fingerprint + "hello")
   Passport is valid — fingerprint matches content.
 
 3 · verify_receipt (inline receipt)
