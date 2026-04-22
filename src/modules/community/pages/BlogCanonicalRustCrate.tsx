@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { CRATE_URL, CRATE_DOCS_URL, GITHUB_ORG_URL } from "@/data/external-links";
 import { blogPosts } from "@/data/blog-posts";
 import McpInstallTabs from "../components/McpInstallTabs";
+import FourHashesProof from "../components/FourHashesProof";
 import heroImage from "@/assets/project-uor-identity.jpg";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
@@ -52,7 +53,16 @@ const BlogCanonicalRustCrate = () => {
         <p className="font-body leading-[1.75] text-foreground/85 m-0">
           When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>meaning</em>, not its bytes, so the same data hashes to the same address in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman.
         </p>
+        <pre className="not-prose mt-5 mb-2 p-4 rounded-lg bg-muted/60 border border-border text-[13px] font-mono text-foreground leading-relaxed overflow-x-auto">
+{`{"a": 1, "b": 2}     → 43258cff783fe7036d8a…
+{"b": 2, "a": 1}     → 43258cff783fe7036d8a…   (same object, different JSON, same address)`}
+        </pre>
+        <p className="font-body text-[14px] text-muted-foreground m-0 mt-2">
+          Same data, same fingerprint, in any language or runtime.
+        </p>
       </aside>
+
+      <FourHashesProof />
 
       <section>
         <h2>What it is</h2>
