@@ -238,10 +238,10 @@ const BlogCanonicalRustCrate = () => {
           <table className="w-full text-[15px] md:text-base leading-relaxed">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left">
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">System</th>
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">What it hashes</th>
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Survives re-serialization</th>
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Needs PKI / registry</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">System</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">What it hashes</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Survives re-serialization</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Needs PKI / registry</th>
               </tr>
             </thead>
             <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
@@ -298,8 +298,8 @@ const BlogCanonicalRustCrate = () => {
           <table className="w-full text-[15px] md:text-base leading-relaxed">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left">
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[42%]">SEP-2395 failure</th>
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">How UOR resolves it</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[42%]">SEP-2395 failure</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">How UOR resolves it</th>
               </tr>
             </thead>
             <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
@@ -354,9 +354,9 @@ const BlogCanonicalRustCrate = () => {
           <table className="w-full text-[15px] md:text-base leading-relaxed">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left">
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[28%]">Tool</th>
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[26%]">Returns</th>
-                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">What it does</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[28%]">Tool</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[26%]">Returns</th>
+                <th className="px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">What it does</th>
               </tr>
             </thead>
             <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
