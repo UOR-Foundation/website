@@ -1,45 +1,74 @@
 
 
-## Land the single thesis in three places
+## Align all blog posts to the Universal Data Fingerprint format
 
-Three surgical copy edits to `src/modules/community/pages/BlogCanonicalRustCrate.tsx`. Locations confirmed against current file. No structural changes, no other sections touched.
+Make every blog post share the same editorial shell and rhythm as `/blog/universal-data-fingerprint`, so the four posts read as one publication.
 
-### Edit 1 — TL;DR (line 54)
+### The reference format (Universal Data Fingerprint)
 
-Append the four-adjective payoff to the closing sentence.
+The target structure, top to bottom:
 
-**Find:** `…with no PKI, no registry, no middleman.`
+1. **Centered kicker** (e.g. `Standards`, `Vision`, `Open Research`) — small uppercase eyebrow.
+2. **Hero image** — golden-ratio (φ:1) cover, no caption underneath.
+3. **Large headline** — single confident H1, no subtitle/deck below it.
+4. **Author + date hairline** — `UOR Foundation · <date>`.
+5. **Inline share row.**
+6. **TL;DR aside** — bordered card with a one-paragraph summary, opening the body.
+7. **Sectioned body** — `<h2>` + `<p>` blocks, same prose typography across the site.
+8. **Source link + Read next strip** at the foot, with cover thumbnails.
 
-**Replace with:** `…with no PKI, no registry, no middleman — a decentralized, universal, self-verifying identity for any structured object.`
+`ArticleLayout` already enforces 1, 3, 4, 5, 8. The drift is in 2, 6, and the use of `deck` / `heroCaption` on the older posts.
 
-### Edit 2 — "What it is" first paragraph (line 73)
+### What changes per post
 
-Insert `decentralized` so the four-adjective thesis reads in parallel.
+**BlogPost1 — UOR: Building the Internet's Knowledge Graph**
+- Keep existing hero image (`blog-knowledge-graph.png`).
+- Remove `heroCaption` so no "Image credits:" line appears under the cover (matches Fingerprint).
+- Move the YouTube embed from the very top of the body down to a later section (inside a "Watch" section near the end). The body should open with a TL;DR aside, not a video.
+- Add a TL;DR aside at the top of the body with a one-paragraph summary distilled from the existing intro.
+- No `deck` (already none).
 
-**Find:** `…a permanent, content-derived, self-verifying 256-bit identity, a universal data passport that travels…`
+**BlogPost2 — Unveiling a Universal Mathematical Language**
+- Keep existing hero image (`blog-golden-seed-vector.png`).
+- Remove the `deck` prop and the `heroCaption` prop so the masthead matches Fingerprint exactly.
+- Add a TL;DR aside at the top of the body. Pull its one-paragraph text from the current `deck` so nothing is lost.
 
-**Replace with:** `…a permanent, decentralized, content-derived, self-verifying 256-bit identity — a universal data passport that travels…`
+**BlogPost3 — What If Every Piece of Data Had One Permanent Address?**
+- Keep existing hero image (`blog-uor-framework-launch.png`).
+- Remove the `deck` prop and the `heroCaption` prop.
+- Add a TL;DR aside at the top of the body, sourced from the current `deck` text.
 
-(Comma → em-dash before "a universal data passport" for rhythm; matches Edit 1's punctuation.)
+**BlogCanonicalRustCrate (Universal Data Fingerprint)**
+- No structural changes. It is the reference.
 
-### Edit 3 — "Why it exists" closing paragraph (line 89)
+### Shared TL;DR aside pattern
 
-Replace the mechanism-only ending with the payoff paragraph that names the gap, the move, and the four-adjective thesis.
+Every post uses the exact same component markup (extracted inline, identical classes to the Fingerprint post) so spacing, border, padding, label, and typography are pixel-identical:
 
-**Find (the single `<p>` at line 88–89):**
+```text
+┌───────────────────────────────────────────────┐
+│  TL;DR ─────────────────────────────────────  │
+│                                               │
+│  One paragraph. 2–4 sentences. Same           │
+│  font-size and leading as Fingerprint TL;DR.  │
+└───────────────────────────────────────────────┘
+```
 
-> The obvious fix has already been tried. SEP-2395 (MCPS), which proposed canonical-JSON signing for MCP, was closed on **March 15, 2026** after canonical JSON was shown to produce different bytes in Node.js and Python. UOR solves this one level up, where re-serialization no longer breaks the hash.
+Classes mirror BlogCanonicalRustCrate lines 43–66 exactly: `not-prose mb-12 md:mb-14 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm px-6 md:px-8 py-6 md:py-7`, with the same `TL;DR` eyebrow row and `font-body text-[15px] md:text-[16px] leading-[1.75] text-foreground/85` paragraph.
 
-**Replace with two paragraphs:**
+### Related-strip thumbnails
 
-> The obvious fix has already been tried. SEP-2395 (MCPS), which proposed canonical-JSON signing for MCP, was closed on **March 15, 2026** after canonical JSON was shown to produce different bytes in Node.js and Python.
->
-> Every serious attempt to fix integrity at this layer has routed through an authority — a CA, a signing service, a registry, a revocation list — because byte-identity is too fragile to stand on its own. UOR moves the identity one level up, onto the object itself. Same math, every runtime, no middleman. What falls out is the primitive no existing system provides at this layer: **decentralized, universal, content-addressable, self-verifying identity for any object.** The fingerprint is the address. The address is derivable from the object alone, in any language.
+`BlogPost1`, `BlogPost2`, and `BlogPost3` currently build their `related` array without `image`, so the bottom "Read next" cards render without covers. They will be updated to map `coverKey` through the same `coverMap` used in BlogCanonicalRustCrate, so every post's related strip shows thumbnails — another consistency win.
 
-The SEP-2395 link and `<strong>March 15, 2026</strong>` are preserved in the first sentence; only the trailing "UOR solves this one level up…" clause is removed and replaced with the new payoff paragraph.
+### Files touched
 
-### Guardrails
+- `src/modules/community/pages/BlogPost1.tsx`
+- `src/modules/community/pages/BlogPost2.tsx`
+- `src/modules/community/pages/BlogPost3.tsx`
 
-- No changes to: TL;DR demo block, "What it is" paragraphs 2+, comparison table, failure-modes table, architecture diagram, FourHashesProof, "Try it", "The surface", license, non-goals.
-- The four-adjective phrasing stays identical across all three locations: **decentralized, universal, [content-addressable / content-derived], self-verifying** — never "distributed", "permissionless", or "trust-free".
+No changes to `ArticleLayout`, `blog-posts.ts`, routing, or assets. No new images required — every post already has a cover.
+
+### Acceptance check
+
+After the edits, opening each of the four blog posts in sequence should show: same masthead rhythm (kicker → hero → title → byline → share), same TL;DR card immediately under the share row, same body prose scale, same related-strip with cover thumbnails.
 
