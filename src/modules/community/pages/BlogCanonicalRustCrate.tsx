@@ -320,8 +320,8 @@ const BlogCanonicalRustCrate = () => {
                 <td className="px-5 py-5 align-top text-foreground">Nothing to revoke. No keys, no lists. Change the object, change the address.</td>
               </tr>
               <tr>
-                <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">Misattributed CVEs, fabricated endorsements.</strong> <span className="text-muted-foreground">Claims didn't hold up to review.</span></td>
-                <td className="px-5 py-5 align-top text-foreground">No social trust surface. Around 1000 lines of Rust, public and auditable. Run it yourself.</td>
+                <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">CVE attributions and endorsement claims contested during review.</strong> <span className="text-muted-foreground">Several supporting claims did not hold up under procedural review; see the SEP-2395 closure for details.</span></td>
+                <td className="px-5 py-5 align-top text-foreground">No social trust surface. Around 1000 lines of Rust — small enough that a full read takes an afternoon, and we'd welcome one. "Small" does not mean "audited"; if your use case is security-sensitive, read the code or fund a review.</td>
               </tr>
             </tbody>
           </table>
