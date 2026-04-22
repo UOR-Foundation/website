@@ -15,7 +15,7 @@ const coverMap: Record<string, string> = {
   frameworkLaunch: blogFrameworkLaunch,
 };
 
-const SLUG = "/blog/canonical-rust-crate";
+const SLUG = "/blog/universal-data-fingerprint";
 
 const BlogCanonicalRustCrate = () => {
   const related = blogPosts
@@ -51,14 +51,14 @@ const BlogCanonicalRustCrate = () => {
           <span className="h-px flex-1 bg-border/60" />
         </div>
         <p className="font-body leading-[1.75] text-foreground/85 m-0">
-          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>meaning</em>, not its bytes, so the same data hashes to the same address in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman — a decentralized, universal, self-verifying identity for any structured object.
+          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>canonical structure</em>, not its bytes, so the same object hashes to the same address in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman for verification — a decentralized, universal, self-verifying identity for any structured object.
         </p>
         <pre className="not-prose mt-5 mb-2 p-4 rounded-lg bg-muted/60 border border-border text-[13px] font-mono text-foreground leading-relaxed overflow-x-auto">
 {`{"a": 1, "b": 2}     → 43258cff783fe7036d8a…
 {"b": 2, "a": 1}     → 43258cff783fe7036d8a…   (same object, different JSON, same address)`}
         </pre>
         <p className="font-body text-[14px] text-muted-foreground m-0 mt-2">
-          Same data, same fingerprint, in any language or runtime.
+          Same object, same fingerprint, in any language or runtime.
         </p>
         <p className="font-body text-[14px] text-muted-foreground m-0 mt-4 leading-[1.7]">
           UOR provides content consistency, not channel security. A man-in-the-middle who replaces payload and fingerprint together is invisible to UOR alone — pair it with TLS / mTLS for channel integrity and with a key-binding layer (Sigstore, JWS+X.509, DIDs, OIDC) if you need to prove who produced the object.
