@@ -282,51 +282,42 @@ const BlogCanonicalRustCrate = () => {
           <code>https://mcp.uor.foundation/mcp</code> <span className="not-prose inline-flex items-center gap-1.5 align-middle ml-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-mono uppercase tracking-[0.14em]"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />live</span>.
         </p>
         <McpInstallTabs />
+        <h3>The surface</h3>
+        <p>Three tools. That's the whole API.</p>
+        <figure className="not-prose my-8 overflow-x-auto rounded-xl border border-border bg-card">
+          <table className="w-full text-[15px] md:text-base leading-relaxed">
+            <thead>
+              <tr className="border-b border-border bg-muted/40 text-left">
+                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[28%]">Tool</th>
+                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[26%]">Returns</th>
+                <th className="px-5 py-4 text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">What it does</th>
+              </tr>
+            </thead>
+            <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
+              <tr>
+                <td className="px-5 py-5 align-top text-foreground"><code>uor.encode_address</code></td>
+                <td className="px-5 py-5 align-top text-foreground"><code>sha256:&lt;64-hex&gt;</code></td>
+                <td className="px-5 py-5 align-top text-muted-foreground">256-bit content address of a UTF-8 string (≤1000 chars), SHA-256 over RFC 8785 JCS.</td>
+              </tr>
+              <tr>
+                <td className="px-5 py-5 align-top text-foreground"><code>uor.verify_passport</code></td>
+                <td className="px-5 py-5 align-top text-foreground"><code>{`{ valid, reason? }`}</code></td>
+                <td className="px-5 py-5 align-top text-muted-foreground">Re-derive a payload's fingerprint and compare to a claimed passport. Stateless.</td>
+              </tr>
+              <tr>
+                <td className="px-5 py-5 align-top text-foreground"><code>uor.verify_receipt</code></td>
+                <td className="px-5 py-5 align-top text-foreground"><code>{`{ valid, reason? }`}</code></td>
+                <td className="px-5 py-5 align-top text-muted-foreground">Verify an Ed25519-signed MCPS receipt using only the key embedded in it. No network, no PKI.</td>
+              </tr>
+            </tbody>
+          </table>
+        </figure>
         <p>
-          <small>
-            Roadmap and reference Rust implementation at{" "}
-            <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">
-              github.com/uor-foundation
-            </a>
-            .
-          </small>
-        </p>
-      </section>
-
-      <section>
-        <h2>Tools</h2>
-        <p>Three tools. Full surface. Source is 250 KB of Rust — review it yourself.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Tool</th>
-              <th>What it does</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>uor.encode_address</code></td>
-              <td>Compute the 256-bit UOR content address (SHA-256 over RFC 8785 JCS) of a UTF-8 string up to 1000 characters. Returns <code>sha256:&lt;64-hex&gt;</code>.</td>
-            </tr>
-            <tr>
-              <td><code>uor.verify_passport</code></td>
-              <td>Re-derive the fingerprint of a content payload and compare to a claimed passport. Returns <code>{`{ valid: bool, reason?: string }`}</code>. Stateless.</td>
-            </tr>
-            <tr>
-              <td><code>uor.verify_receipt</code></td>
-              <td>Verify an Ed25519-signed MCPS receipt using only the public key embedded in the receipt itself. Returns <code>{`{ valid: bool, reason?: string }`}</code>. No network, no PKI.</td>
-            </tr>
-          </tbody>
-        </table>
-        <p>
-          <em>
-            Source:{" "}
-            <a href="https://github.com/humuhumu33/uor-passport" target="_blank" rel="noopener noreferrer">
-              github.com/humuhumu33/uor-passport
-            </a>
-            . Every tool response also carries a <code>uor.passport</code> envelope and, when{" "}
-            <code>UOR_MCPS_ENABLED=true</code>, a <code>uor.mcps.receipt</code> in <code>_meta</code> — no tool call required.
-          </em>
+          Every response carries a <code>uor.passport</code> envelope in <code>_meta</code> — and a <code>uor.mcps.receipt</code> when MCPS is enabled. Reference Rust implementation at{" "}
+          <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer">
+            github.com/uor-foundation
+          </a>
+          .
         </p>
       </section>
     </ArticleLayout>
