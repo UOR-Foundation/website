@@ -276,6 +276,17 @@ const BlogCanonicalRustCrate = () => {
           <li><strong>Portable provenance.</strong> Fork an object, move it between MCP servers, hand it to a different agent, the address still resolves to the same content.</li>
           <li><strong>Zero trust infrastructure.</strong> No certificates to issue, rotate, or revoke. Verification is a local hash, not a network call.</li>
         </ul>
+        <p>
+          <strong>Explicit non-goals.</strong> UOR is deliberately narrow so it composes cleanly with what you already run:
+        </p>
+        <ul>
+          <li><strong>Identity binding.</strong> A signed receipt proves a keypair signed it — not whose keypair. Layer Sigstore, JWS + X.509, OIDC, or DIDs for the "who" question.</li>
+          <li><strong>Replay protection.</strong> Receipt verification is stateless; valid receipts stay valid. Track nonces at the application layer if freshness matters.</li>
+          <li><strong>Payloads over 64&nbsp;KB.</strong> The reference server caps canonical-form size as a DoS guard. Split larger objects into chunks and compose their fingerprints.</li>
+        </ul>
+        <p>
+          These are scope choices, not gaps. They are what keeps UOR a primitive instead of a platform.
+        </p>
       </section>
 
       <section>
