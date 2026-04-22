@@ -51,11 +51,11 @@ const BlogCanonicalRustCrate = () => {
           <span className="h-px flex-1 bg-border/60" />
         </div>
         <p className="font-body leading-[1.75] text-foreground/85 m-0">
-          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>canonical structure</em>, not its bytes, so the same object hashes to the same address in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman for verification — a decentralized, universal, self-verifying address for any structured object.
+          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>canonical structure</em>, not its bytes, so the same object hashes to the same identifier in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman for verification — a decentralized, universal, self-verifying identifier for any structured object.
         </p>
         <pre className="not-prose mt-5 mb-2 p-4 rounded-lg bg-muted/60 border border-border text-[13px] font-mono text-foreground leading-relaxed overflow-x-auto">
 {`{"a": 1, "b": 2}     → 43258cff783fe7036d8a…
-{"b": 2, "a": 1}     → 43258cff783fe7036d8a…   (same object, different JSON, same address)`}
+{"b": 2, "a": 1}     → 43258cff783fe7036d8a…   (same object, different JSON, same identifier)`}
         </pre>
         <p className="font-body text-[14px] text-muted-foreground m-0 mt-2">
           Same object, same fingerprint, in any language or runtime.
@@ -71,10 +71,10 @@ const BlogCanonicalRustCrate = () => {
           Two AI agents exchange a tool call. Today, neither one can prove the object that arrived is the object that was sent. Re-serialize the JSON, the hash changes. Sign the bytes, the signature breaks at the first parse. Add a PKI, now you operate a PKI.
         </p>
         <p>
-          <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, decentralized, content-derived, self-verifying 256-bit address — a universal data fingerprint that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP today — and under any structured-data transport that carries JSON, including A2A.
+          <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, decentralized, content-derived, self-verifying 256-bit identifier — a universal data fingerprint that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP today — and under any structured-data transport that carries JSON, including A2A.
         </p>
         <p>
-          UOR is a content-addressing scheme for digital objects — not an identity system for people. It answers <em>"what is this?"</em> with a 256-bit address, not <em>"who made this?"</em> The two questions compose: keep your existing identity layer (OAuth, mTLS, Sigstore, DIDs) for the second; UOR handles the first, everywhere, with no infrastructure.
+          UOR is a content-addressing scheme for digital objects — not an identity system for people. It answers <em>"what is this?"</em> with a 256-bit identifier, not <em>"who made this?"</em> The two questions compose: keep your existing identity layer (OAuth, mTLS, Sigstore, DIDs) for the second; UOR handles the first, everywhere, with no infrastructure.
         </p>
       </section>
 
