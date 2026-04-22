@@ -51,7 +51,7 @@ const BlogCanonicalRustCrate = () => {
           <span className="h-px flex-1 bg-border/60" />
         </div>
         <p className="font-body leading-[1.75] text-foreground/85 m-0">
-          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>meaning</em>, not its bytes, so the same data hashes to the same address in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman.
+          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>meaning</em>, not its bytes, so the same data hashes to the same address in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman — a decentralized, universal, self-verifying identity for any structured object.
         </p>
         <pre className="not-prose mt-5 mb-2 p-4 rounded-lg bg-muted/60 border border-border text-[13px] font-mono text-foreground leading-relaxed overflow-x-auto">
 {`{"a": 1, "b": 2}     → 43258cff783fe7036d8a…
@@ -70,7 +70,7 @@ const BlogCanonicalRustCrate = () => {
           Two AI agents exchange a tool call. Today, neither one can prove the object that arrived is the object that was sent. Re-serialize the JSON, the hash changes. Sign the bytes, the signature breaks at the first parse. Add a PKI, now you operate a PKI.
         </p>
         <p>
-          <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, content-derived, self-verifying 256-bit identity, a universal data passport that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP today — and under any structured-data transport that carries JSON, including A2A.
+          <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, decentralized, content-derived, self-verifying 256-bit identity — a universal data passport that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP today — and under any structured-data transport that carries JSON, including A2A.
         </p>
         <p>
           UOR is content-addressed, decentralized identity for digital objects — not identity-addressed identity for people. It answers <em>"what is this?"</em> with a 256-bit fingerprint, not <em>"who made this?"</em> The two questions compose: keep your existing identity layer (OAuth, mTLS, Sigstore, DIDs) for the second; UOR handles the first, everywhere, with no infrastructure.
@@ -86,7 +86,10 @@ const BlogCanonicalRustCrate = () => {
           Existing fixes hash bytes. The instant a JSON library re-orders keys, normalizes a number, or re-encodes a string (routine across LangGraph, AutoGen, CrewAI), the hash changes and trust breaks. Signing the bytes (<a href="https://www.rfc-editor.org/rfc/rfc8785" target="_blank" rel="noopener noreferrer">JCS</a>, JWS) doesn't help: the guarantee dies at the first deserialize.
         </p>
         <p>
-          The obvious fix has already been tried. <a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/2395" target="_blank" rel="noopener noreferrer">SEP-2395 (MCPS)</a>, which proposed canonical-JSON signing for MCP, was closed on <strong>March 15, 2026</strong> after canonical JSON was shown to produce different bytes in Node.js and Python. UOR solves this one level up, where re-serialization no longer breaks the hash.
+          The obvious fix has already been tried. <a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/2395" target="_blank" rel="noopener noreferrer">SEP-2395 (MCPS)</a>, which proposed canonical-JSON signing for MCP, was closed on <strong>March 15, 2026</strong> after canonical JSON was shown to produce different bytes in Node.js and Python.
+        </p>
+        <p>
+          Every serious attempt to fix integrity at this layer has routed through an authority — a CA, a signing service, a registry, a revocation list — because byte-identity is too fragile to stand on its own. UOR moves the identity one level up, onto the object itself. Same math, every runtime, no middleman. What falls out is the primitive no existing system provides at this layer: <strong>decentralized, universal, content-addressable, self-verifying identity for any object.</strong> The fingerprint is the address. The address is derivable from the object alone, in any language.
         </p>
       </section>
 
