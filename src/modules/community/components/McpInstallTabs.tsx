@@ -298,8 +298,10 @@ const McpInstallTabs = () => {
         <CodeBlock code={VERIFY_PROMPT} language="ask your agent" />
         <CodeBlock code={VERIFY_RESPONSE} language="response · excerpt" />
         <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">
-          The response carries <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.passport</code> — a 256-bit SHA-256 fingerprint of the canonicalized response — and{" "}
-          <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.mcps.receipt</code>, an Ed25519 signature that verifies locally with its embedded public key. <strong>No PKI, no registry, no third party.</strong>
+          Step 1 computes the 256-bit SHA-256 fingerprint of the RFC 8785 JCS canonical form of the input — the UOR address. Step 2 hands that fingerprint back to the server, which re-derives it independently and confirms the round-trip. Two tool calls, two visible proofs, no client-side rendering tricks required.
+        </p>
+        <p className="text-[14.5px] text-foreground/80 font-body leading-relaxed mt-3">
+          Every response also carries a <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.passport</code> envelope and an Ed25519-signed <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta.uor.mcps.receipt</code> — the fields that make verification possible without any PKI, registry, or third party. Some MCP clients (Cursor today) render only the tool's <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">content</code>, not <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta</code>; to see the <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">_meta</code> envelope directly, run <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">npx @modelcontextprotocol/inspector</code>, connect to <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">https://mcp.uor.foundation/mcp</code>, and call <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[12.5px]">encode_address</code> from there. <strong>No PKI, no registry, no third party.</strong>
         </p>
       </div>
     </div>
