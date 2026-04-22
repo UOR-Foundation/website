@@ -5,6 +5,7 @@ import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import { blogPosts } from "@/data/blog-posts";
 import { GITHUB_FRAMEWORK_URL } from "@/data/external-links";
 import { Globe, ShieldCheck, Bot, Microscope, Layers, Rocket } from "lucide-react";
+import TldrAside from "../components/TldrAside";
 
 const SLUG = "/blog/uor-framework-launch";
 
@@ -55,20 +56,11 @@ const BlogPost3 = () => {
       sourceLabel="github.com/UOR-Foundation/UOR-Framework"
       related={related}
     >
-      <aside
-        aria-label="TL;DR"
-        className="not-prose mb-12 md:mb-14 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm px-6 md:px-8 py-6 md:py-7"
-      >
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-[11px] uppercase tracking-[0.24em] font-semibold text-primary/80 font-mono">
-            TL;DR
-          </span>
-          <span className="h-px flex-1 bg-border/60" />
-        </div>
-        <p className="font-body text-[15px] md:text-[16px] leading-[1.75] text-foreground/85 m-0">
+      <TldrAside>
+        <p>
           The open specification is live. Browse the full framework, review the architecture, and start building.
         </p>
-      </aside>
+      </TldrAside>
 
       <p>
         Every file you have ever shared, every dataset you have ever published, every piece of research you have ever cited, lives at an address that someone else controls. Move it, and the link breaks. Copy it, and you lose track of which version is real. Send it to another system, and half the meaning disappears.
