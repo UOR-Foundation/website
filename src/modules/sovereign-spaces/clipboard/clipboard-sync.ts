@@ -37,7 +37,7 @@ export async function readClipboard(): Promise<string> {
   if (isLocal()) {
     try {
       // @ts-ignore — Tauri plugin only available in desktop builds
-      const mod = await import("@tauri-apps/plugin-clipboard-manager");
+      const mod = await import(/* @vite-ignore */ "@tauri-apps/plugin-clipboard-manager");
       const text = await mod.readText();
       return text ?? "";
     } catch {
@@ -59,7 +59,7 @@ export async function writeClipboard(content: string): Promise<void> {
   if (isLocal()) {
     try {
       // @ts-ignore — Tauri plugin only available in desktop builds
-      const mod = await import("@tauri-apps/plugin-clipboard-manager");
+      const mod = await import(/* @vite-ignore */ "@tauri-apps/plugin-clipboard-manager");
       await mod.writeText(content);
       _lastContent = content;
       return;
