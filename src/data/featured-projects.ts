@@ -5,13 +5,22 @@ export type MaturityLevel = "Graduated" | "Incubating" | "Sandbox";
 
 export const featuredProjects = [
   {
-    name: "UOR Identity",
-    slug: "uor-identity",
-    category: "Identity",
-    description: "A sovereign, content-addressed identity system. Names, keys, and profiles resolved through the UOR coordinate space — no central registrar required.",
+    name: "Atlas Embeddings",
+    slug: "atlas-embeddings",
+    category: "Open Science",
+    description: "Research showing that five of the most complex structures in mathematics share a single origin, revealing a deeper order beneath the surface.",
     maturity: "Sandbox" as MaturityLevel,
-    license: "Apache-2.0",
-    url: "https://github.com/UOR-Foundation/UOR-Framework",
+    license: "MIT",
+    url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
+  },
+  {
+    name: "Atomic Language Model",
+    slug: "atomic-language-model",
+    category: "Systems",
+    description: "A language model where every output follows defined rules and is fully traceable. No black boxes. Fits in under 50 kilobytes.",
+    maturity: "Sandbox" as MaturityLevel,
+    license: "MIT",
+    url: "https://github.com/dkypuros/atomic-lang-model",
   },
   {
     name: "Hologram",
@@ -21,14 +30,5 @@ export const featuredProjects = [
     maturity: "Sandbox" as MaturityLevel,
     license: "MIT",
     url: "https://gethologram.ai/",
-  },
-  {
-    name: "Atlas Embeddings",
-    slug: "atlas-embeddings",
-    category: "Open Science",
-    description: "Research showing that five of the most complex structures in mathematics share a single origin, revealing a deeper order beneath the surface.",
-    maturity: "Sandbox" as MaturityLevel,
-    license: "MIT",
-    url: "https://github.com/UOR-Foundation/research/tree/main/atlas-embeddings",
   },
 ];
