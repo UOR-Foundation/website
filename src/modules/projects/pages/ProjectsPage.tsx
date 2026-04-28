@@ -88,31 +88,6 @@ const Projects = () => {
         </div>
       </section>
 
-      {/* Maturity Model. compact inline reference */}
-      <section id="maturity" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
-            Project Maturity
-          </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">How Projects Advance</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {maturityInfo.map((stage, idx) => (
-              <div
-                key={stage.level}
-                className={`rounded-2xl border p-5 flex items-start gap-3 ${maturityBgColors[stage.level]} animate-fade-in-up opacity-0`}
-                style={{ animationDelay: `${idx * 0.1}s` }}
-              >
-                <span className={`mt-1.5 w-3 h-3 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
-                <div>
-                  <h3 className="font-display text-fluid-card-title font-bold text-foreground">{stage.level}</h3>
-                  <p className="text-fluid-body text-foreground/70 font-body leading-relaxed mt-1">{stage.tagline}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* All Projects. flat grid */}
       <section id="projects-list" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
@@ -148,6 +123,31 @@ const Projects = () => {
                   )}
                 </div>
               </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Maturity Model. compact inline reference */}
+      <section id="maturity" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Project Maturity
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">How Projects Advance</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {maturityInfo.map((stage, idx) => (
+              <div
+                key={stage.level}
+                className={`rounded-2xl border p-5 flex items-start gap-3 ${maturityBgColors[stage.level]} animate-fade-in-up opacity-0`}
+                style={{ animationDelay: `${idx * 0.1}s` }}
+              >
+                <span className={`mt-1.5 w-3 h-3 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
+                <div>
+                  <h3 className="font-display text-fluid-card-title font-bold text-foreground">{stage.level}</h3>
+                  <p className="text-fluid-body text-foreground/70 font-body leading-relaxed mt-1">{stage.tagline}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
