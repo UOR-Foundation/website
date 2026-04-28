@@ -52,15 +52,6 @@ export const projects: ProjectData[] = [
     imageKey: "prism",
   },
   {
-    name: "UOR MCP",
-    slug: "uor-mcp",
-    category: "Developer Tools",
-    description: "A server that connects AI models to the UOR verification engine. Every response is graded, traceable, and independently verifiable.",
-    maturity: "Sandbox",
-    url: "https://github.com/UOR-Foundation/uor-mcp",
-    imageKey: "uorMcp",
-  },
-  {
     name: "UOR Name Service (UNS)",
     slug: "uns",
     category: "Core Infrastructure",
