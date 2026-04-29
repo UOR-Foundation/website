@@ -10,8 +10,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
  */
 const GalaxyAnimation = () => {
   const isMobile = useIsMobile();
-  const galaxyCount = isMobile ? 1 : 2;
-  const starsPerGalaxy = isMobile ? 8 : 20;
+  // Always render both galaxies so the orb is a full circle on mobile too.
+  // Reduce stars on mobile to keep node count low.
+  const galaxyCount = 2;
+  const starsPerGalaxy = isMobile ? 12 : 20;
 
   return (
     <div className="galaxy-viewport">
