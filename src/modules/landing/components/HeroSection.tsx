@@ -28,9 +28,9 @@ const HeroSection = () => {
         <div className="flex-[0.9] min-h-[1rem]" />
 
         <PhysicalTitle
-          wrapperClass="font-display font-bold leading-[1.08] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2 inline-block shrink-0"
-          lineOneClass="text-[clamp(1.1rem,4.6vw,1.7rem)] block whitespace-nowrap w-full text-center"
-          lineTwoClass="text-[clamp(2.2rem,9vw,3.5rem)] flex justify-between w-full mt-0.5"
+          wrapperClass="font-display font-bold leading-[1.05] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2 inline-block shrink-0"
+          lineOneClass="text-[clamp(1.45rem,6.05vw,2.25rem)] block whitespace-nowrap w-full text-center"
+          lineTwoClass="text-[clamp(2.85rem,11.9vw,4.4rem)] flex justify-between w-full mt-1"
           delay="0.29s"
         />
 
