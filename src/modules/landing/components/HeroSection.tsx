@@ -29,7 +29,7 @@ const HeroSection = () => {
 
         <PhysicalTitle
           wrapperClass="font-display font-bold leading-[1.08] tracking-[0.05em] uppercase text-foreground text-center animate-fade-in-up opacity-0 px-2 inline-block shrink-0"
-          lineOneClass="text-[clamp(1.8rem,7.5vw,2.75rem)] block"
+          lineOneClass="text-[clamp(1.1rem,4.6vw,1.7rem)] block whitespace-nowrap w-full text-center"
           lineTwoClass="text-[clamp(2.2rem,9vw,3.5rem)] flex justify-between w-full mt-0.5"
           delay="0.29s"
         />
@@ -53,18 +53,17 @@ const HeroSection = () => {
         {/* Stats bar */}
         <div className="w-2/5 mx-auto h-px bg-gradient-to-r from-transparent via-foreground/12 to-transparent mb-4 animate-fade-in-up opacity-0 shrink-0" style={{ animationDelay: "0.6s" }} />
         <div
-          className="w-full grid grid-cols-4 gap-1 px-3 pb-[max(1.75rem,calc(env(safe-area-inset-bottom,1rem)+1rem))] animate-fade-in-up opacity-0 pointer-events-none shrink-0"
+          className="w-full grid grid-cols-3 gap-2 px-6 pb-[max(1.75rem,calc(env(safe-area-inset-bottom,1rem)+1rem))] animate-fade-in-up opacity-0 pointer-events-none shrink-0"
           style={{ animationDelay: "0.65s" }}
         >
           {[
             { value: "1", label: "Standard" },
-            { value: "11", label: "Projects" },
             { value: "150+", label: "Contributors" },
             { value: "Open", label: "Governance" },
           ].map((stat) => (
-            <div key={stat.label} className="text-center min-w-0 px-0.5">
-              <p className="font-display font-bold text-foreground text-[clamp(1.1rem,4.5vw,1.6rem)] leading-none">{stat.value}</p>
-              <p className="font-mono text-foreground/55 text-[9px] uppercase tracking-[0.04em] mt-2 leading-tight break-words">{stat.label}</p>
+            <div key={stat.label} className="text-center min-w-0 px-1">
+              <p className="font-display font-bold text-foreground text-[clamp(1.4rem,5.5vw,2rem)] leading-none">{stat.value}</p>
+              <p className="font-mono text-foreground/55 text-[10px] uppercase tracking-[0.08em] mt-2 leading-tight">{stat.label}</p>
             </div>
           ))}
         </div>
