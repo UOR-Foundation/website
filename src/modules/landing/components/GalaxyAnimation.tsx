@@ -4,8 +4,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 /**
  * Galaxy animation.
- *  Desktop: 2 galaxies × 16 stars × 28 dots ≈ 900 nodes.
- *  Mobile:  2 galaxies × 8  stars × 24 dots ≈ 380 nodes.
+ *  Desktop: 2 galaxies × 20 stars × 35 dots = 1400 nodes (CSS-positioned).
+ *  Mobile:  2 galaxies × 12 stars × 28 dots = 672 nodes.
  * Wrapper uses aspect-ratio 1/1 and scales to fill its flex parent
  * via max-height:100% + max-width:100%, keeping a perfect circle.
  *
@@ -16,8 +16,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const GalaxyAnimation = () => {
   const isMobile = useIsMobile();
   const galaxyCount = 2;
-  const starsPerGalaxy = isMobile ? 8 : 16;
-  const dotsPerStar = isMobile ? 24 : 28;
+  // Star positions are pre-defined in galaxy.css for indexes 1..20 at
+  // 18° increments; reducing stars on desktop would leave a visible gap,
+  // so we keep the full set there. Mobile drops to every 30° (12 stars).
+  const starsPerGalaxy = isMobile ? 12 : 20;
+  // Inner dots (indexes 28..35) have scale ≤ 0.19 and are nearly invisible;
+  // dropping them on mobile is imperceptible.
+  const dotsPerStar = isMobile ? 28 : 35;
   const viewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
