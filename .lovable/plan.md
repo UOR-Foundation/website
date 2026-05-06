@@ -1,49 +1,91 @@
 ## Goal
 
-Every "highlight card" across the site (landing updates, blog index, research latest posts, projects grid, news featured/grid) currently uses different combinations of borders, corner radii, hover shadows, and no consistent focus state. Unify them under a single, reusable card chrome so the site feels confident and harmonious.
+Turn `/framework` (the "Learn" tab) into the shortest, clearest path for a developer who has never heard of UOR to: **understand it → see it → install it → build with it**. Cut jargon, cut redundancy, surface the newly published Rust crate as a first-class entry point.
 
-## Audit
+## What's there today
 
-| Surface | Border | Radius | Hover | Focus |
-|---|---|---|---|---|
-| Landing `HighlightsSection` | none | none on shell, `rounded-lg` on image | image scale only | none |
-| `BlogIndexPage` | `border-border` | `rounded-xl` | `shadow-lg` + `border-primary/20` | none |
-| `ResearchPage` latest posts | `border-border` | `rounded-xl` | `shadow-lg` + `border-primary/20` | none |
-| `ProjectsPage` grid | `border-border/70` | `rounded-2xl` | primary glow + `border-primary/40` | none |
-| `NewsCard` | `border-border/70` | `rounded-lg` | `-translate-y-0.5` + `shadow-md` + `border-primary/30` | none |
-| `FeaturedNews` | `border-border/60` | `rounded-xl` | `shadow-lg` + `border-primary/40` | none |
+The page has a hero, a 3-card "Start here" (Overview / Architecture / Quick Start, all linking to GitHub Pages docs), a 6-card "Use Cases" grid, and a CTA repeating the same three buttons from the hero. The Rust crate is a tertiary button. Nothing on the page actually *shows* UOR — every link kicks the user out to GitHub.
 
-## Decision: one canonical chrome
+Issues:
+- Hero, Start-here, and CTA all repeat the same 3 destinations.
+- "Use Cases" sits between learning steps and breaks momentum.
+- The crate (the most concrete, runnable thing we have) is buried.
+- No "show" — the user never sees what a UOR identity looks like.
+- "Architecture" / "specification" language assumes prior context.
 
-Add a single utility `.highlight-card` (composed in `src/index.css` with `@apply`) used by every card surface above:
+## Proposed structure (top to bottom)
 
-- `relative isolate flex flex-col overflow-hidden bg-card`
-- `border border-border/70`
-- `rounded-phi-lg` (existing φ token; consistent with site rhythm)
-- `transition-all duration-300 ease-out`
-- `hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.25)]`
-- `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary/40`
-- Inner image wrapper standardised to `aspect-phi overflow-hidden` (no inner rounding — outer `overflow-hidden` clips to the shared radius).
+```text
+1. Hero — one sentence + two buttons
+2. What is UOR? — 3 plain-English tiles (show + tell)
+3. See it work — live, inline UOR identity demo
+4. Pick your path — Rust crate · Read the spec · Browse on GitHub
+5. Where it applies — condensed use cases (kept, trimmed)
+6. Next step — single CTA into /projects (Build)
+```
 
-Featured/hero variant `.highlight-card--feature` extends the base with stronger hover (`hover:border-primary/40` and a slightly larger shadow) but keeps identical radius, border weight, and focus ring.
+### 1. Hero
+- H1: **Learn UOR**
+- Sub: "A universal way to give every piece of data a verifiable identity. Read it, run it, build on it — in that order."
+- Two buttons only: **See how it works** (anchor to §3) · **Install the crate** (crates.io).
 
-## Changes
+### 2. What is UOR? (replaces "Start here")
+Three tiles, each ~25 words, **no doc links** — the page itself answers the question:
+- **The idea** — Same data, same identity. Anywhere. Forever.
+- **How it works** — Canonicalize → hash → address. One deterministic path.
+- **Why it matters** — Verifiable AI, reproducible science, interoperable data.
 
-1. **`src/index.css`** — add `.highlight-card` and `.highlight-card--feature` in the `@layer components` block.
-2. **`src/modules/landing/components/HighlightsSection.tsx`** — replace the bare `<a>` chrome with `highlight-card`; drop inner `rounded-lg` on the image wrapper; move padding to `p-golden-md`.
-3. **`src/modules/community/pages/BlogIndexPage.tsx`** — replace `rounded-xl border border-border bg-card … hover:shadow-lg hover:border-primary/20` with `highlight-card`; remove `aspect-phi`'s redundant wrapper styling.
-4. **`src/modules/community/pages/ResearchPage.tsx`** (Latest Posts grid) — same swap as BlogIndex; drop inner `rounded-lg`.
-5. **`src/modules/projects/pages/ProjectsPage.tsx`** — replace `rounded-2xl border border-border/70 …` with `highlight-card`; drop inner `rounded-lg` on the cover.
-6. **`src/modules/community/pages/NewsPage.tsx`** — `NewsCard` uses `highlight-card`; `FeaturedNews` uses `highlight-card highlight-card--feature` (radius + border now match the rest).
+Each tile has a small "Read more" link to the matching docs page (Overview, Architecture, Use Cases).
+
+### 3. See it work (new — the "show")
+A small interactive panel rendered inline:
+- Left: editable JSON-LD textarea (prefilled with a 4-line example).
+- Right: the resulting **UOR identity** (`uor:…`) updating live, plus the canonical N-Quads it was hashed from.
+- Caption: "This is exactly what the Rust crate produces. Same input → same identity, on any machine."
+
+Reuse the existing `singleProofHash` / canonicalization pipeline already in the codebase — no new logic. If a synchronous in-browser path isn't available on this page, fall back to a static before/after snapshot with a "Run in playground" link.
+
+### 4. Pick your path (replaces the redundant bottom CTA)
+Three equally-weighted cards, each one concrete next action:
+- **Use the Rust crate** — `cargo add uor-foundation` shown in a copyable code block · links to crates.io + docs.rs.  ← *new prominence*
+- **Read the spec** — Links to GitHub Pages docs (Overview → Architecture → API).
+- **Read the source** — Links to the GitHub repo.
+
+### 5. Where it applies
+Keep the existing 6 application cards but:
+- Move below "Pick your path" so it doesn't interrupt the learn flow.
+- Tighten heading to **Where it applies** (drop the duplicate "Use Cases" eyebrow).
+
+### 6. Next step
+One line + one button: **"Ready to build? See projects using UOR →"** linking to `/projects`. Replaces the current 3-button repeat-CTA.
+
+## Link audit
+
+Verify and keep:
+- `GITHUB_FRAMEWORK_URL` → repo
+- `GITHUB_FRAMEWORK_DOCS_URL` + `/docs/overview.html`, `/docs/architecture.html`
+- `CRATE_URL` (crates.io), `CRATE_DOCS_URL` (docs.rs)
+
+Add:
+- A constant for the docs API/quick-start page if one exists under `GITHUB_FRAMEWORK_DOCS_URL` (confirm during implementation; otherwise link to repo README).
+
+Remove duplicate references — every external link should appear at most once on the page.
+
+## Copy principles applied
+
+- No "specification", "canonicalization", "URDNA2015", "manifold" in body copy. Those terms stay in linked docs.
+- Every sentence answers either *what* or *what next*.
+- Max 2 buttons per section.
+
+## Technical notes
+
+- File: `src/modules/core/pages/StandardPage.tsx` — rewrite sections, keep Layout, tokens, and `highlight-card` patterns.
+- Reuse `applications` data as-is.
+- For the live demo (§3): try importing the existing canonical-hash util used elsewhere in the app; if it's WASM-gated and async, render with a `useEffect` and a loading skeleton. Fallback: static side-by-side example + link to an existing playground route if one exists.
+- Add a copy-to-clipboard affordance on the `cargo add` snippet (use existing pattern if present, else a tiny inline handler).
+- All styling via existing semantic tokens and `highlight-card` utility — no new colors.
 
 ## Out of scope
 
-- Article hero covers inside `ArticleLayout` and individual blog posts — those are hero media, not cards.
-- Aspect ratios already converged on φ (`aspect-phi` / `aspect-[1.618/1]`) — no change.
-- Colors, typography, and grid gaps stay as they are.
-
-## Acceptance
-
-- Every highlight card on Landing, Blog index, Research, Projects, and News shares identical border colour/weight, corner radius, hover lift+glow, and a visible keyboard focus ring.
-- No raw `rounded-xl` / `rounded-2xl` / `rounded-lg` survives on these card shells.
-- Tab-navigating the cards on each page shows the same focus ring.
+- No changes to nav labels, routes, or other pages.
+- No new docs content — only restructuring and surfacing existing resources.
