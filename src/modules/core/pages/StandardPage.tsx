@@ -253,6 +253,8 @@ const LiveDemo = () => {
   const formMap = useRef<Map<string, unknown>>(new Map());
   const kind = detectAddressKind(address);
   const [showCode, setShowCode] = useState(false);
+  const [showTrace, setShowTrace] = useState(false);
+  const [decodeReceipt, setDecodeReceipt] = useState<EnrichedReceipt | null>(null);
 
   useEffect(() => {
     let cancelled = false;
