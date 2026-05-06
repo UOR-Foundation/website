@@ -169,7 +169,7 @@ const BlogSustainableAiUganda = () => {
             <div key={item.title} className="rounded-xl border border-border bg-card p-5">
               <item.icon size={20} className="text-primary mb-3" />
               <h3 className="font-display text-[1.05em] font-semibold text-foreground mb-2">{item.title}</h3>
-              <p className="text-[0.95em] text-muted-foreground leading-[1.7]">{item.desc}</p>
+              <p className="text-[1em] text-muted-foreground leading-[1.7]">{item.desc}</p>
             </div>
           ))}
         </div>
