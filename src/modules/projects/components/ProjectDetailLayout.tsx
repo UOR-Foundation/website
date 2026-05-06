@@ -189,7 +189,6 @@ const ProjectDetailLayout = ({
       "uor:category": category,
       "uor:description": tagline,
       "uor:repository": repoUrl,
-      "uor:maturity": "Sandbox",
     };
     setSourceEnvelope(envelope);
     generateCertificate(`project:${slug}`, envelope).then(setCertificate);

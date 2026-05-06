@@ -1,21 +1,9 @@
 import Layout from "@/modules/core/components/Layout";
 import { ExternalLink, Send, CheckCircle2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { projects as projectsData, maturityInfo, type MaturityLevel } from "@/data/projects";
+import { projects as projectsData } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
 import { supabase } from "@/integrations/supabase/client";
-
-const maturityDotColors: Record<MaturityLevel, string> = {
-  Graduated: "bg-primary",
-  Incubating: "bg-accent",
-  Sandbox: "bg-muted-foreground/50",
-};
-
-const maturityBgColors: Record<MaturityLevel, string> = {
-  Graduated: "border-primary/20 bg-primary/5",
-  Incubating: "border-accent/20 bg-accent/5",
-  Sandbox: "border-border bg-muted/30",
-};
 
 const Projects = () => {
   const [formData, setFormData] = useState({
@@ -92,31 +80,6 @@ const Projects = () => {
         </div>
       </section>
 
-      {/* Maturity Model. compact inline reference */}
-      <section id="maturity" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
-            Project Maturity
-          </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">How Projects Advance</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {maturityInfo.map((stage, idx) => (
-              <div
-                key={stage.level}
-                className={`rounded-2xl border p-5 flex items-start gap-3 ${maturityBgColors[stage.level]} animate-fade-in-up opacity-0`}
-                style={{ animationDelay: `${idx * 0.1}s` }}
-              >
-                <span className={`mt-1.5 w-3 h-3 rounded-full shrink-0 ${maturityDotColors[stage.level]}`} />
-                <div>
-                  <h3 className="font-display text-fluid-card-title font-bold text-foreground">{stage.level}</h3>
-                  <p className="text-fluid-body text-foreground/70 font-body leading-relaxed mt-1">{stage.tagline}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Submit a Project */}
       <section id="submit" className="section-dark py-section-sm scroll-mt-28">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
@@ -138,7 +101,7 @@ const Projects = () => {
                 </div>
               </div>
               <h3 className="font-display text-fluid-page-title font-bold text-section-dark-foreground mb-5">You're In.</h3>
-              <p className="text-xl text-section-dark-foreground/70 font-body mb-4">Your project has been submitted for Sandbox review.</p>
+              <p className="text-xl text-section-dark-foreground/70 font-body mb-4">Your project has been submitted for review.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
                 <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity font-body">
                   Join Our Discord <ExternalLink size={14} />
