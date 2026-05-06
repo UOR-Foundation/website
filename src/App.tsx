@@ -42,7 +42,7 @@ const OraclePage = lazy(() => import("@/modules/oracle/pages/OraclePage"));
 const SearchPage = lazy(() => import("@/modules/oracle/pages/ResolvePage"));
 const DesktopSearch = lazy(() => import("@/modules/desktop/DesktopShell"));
 const ProjectUorPrivacy = lazy(() => import("@/modules/core/pages/ProjectUorTerms"));
-const ProjectCertificate = lazy(() => import("@/modules/projects/pages/ProjectCertificate"));
+const ProjectSeveranceAi = lazy(() => import("@/modules/projects/pages/ProjectSeveranceAi"));
 const StandardPage = lazy(() => import("@/modules/core/pages/StandardPage"));
 const SemanticWebPage = lazy(() => import("@/modules/core/pages/SemanticWebPage"));
 const UnsExplainer = lazy(() => import("@/pages/UnsExplainer"));
@@ -142,7 +142,8 @@ const App = () => {
               <Route path="/projects/hologram-sdk" element={<ProjectHologramSdk />} />
               <Route path="/projects/uor-identity" element={<ProjectUorIdentity />} />
               <Route path="/projects/uor-privacy" element={<ProjectUorPrivacy />} />
-              <Route path="/projects/uor-certificate" element={<ProjectCertificate />} />
+              <Route path="/projects/project-severance-ai" element={<ProjectSeveranceAi />} />
+              <Route path="/projects/uor-certificate" element={<Navigate to="/projects/project-severance-ai" replace />} />
 
               {/* Catch-all */}
               <Route path="*" element={<Navigate to="/" replace />} />
