@@ -458,6 +458,28 @@
     @apply text-foreground;
   }
 
+  /* ── Unified highlight card chrome ───────────────────────────────
+   * One canonical surface for every "card" across Landing, Blog,
+   * Research, Projects, and News. Identical border, radius, hover,
+   * and focus state — site-wide harmony.
+   * ─────────────────────────────────────────────────────────────── */
+  .highlight-card {
+    @apply relative isolate flex flex-col overflow-hidden bg-card
+           border border-border/70 rounded-phi-lg
+           transition-all duration-300 ease-out
+           hover:-translate-y-0.5 hover:border-primary/30
+           hover:shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.25)]
+           focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-primary/60 focus-visible:ring-offset-2
+           focus-visible:ring-offset-background
+           focus-visible:border-primary/40;
+  }
+
+  .highlight-card--feature {
+    @apply hover:border-primary/40
+           hover:shadow-[0_14px_44px_-16px_hsl(var(--primary)/0.32)];
+  }
+
   .section-dark {
     @apply bg-section-dark text-section-dark-foreground;
   }
