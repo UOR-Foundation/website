@@ -326,7 +326,9 @@ const PrimeConstellationBg = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
+    // Recover the DPR actually used for the backing store from canvas
+    // dimensions so it matches the (capped) value set in resize().
+    const dpr = canvas.width / window.innerWidth || 1;
     const w = canvas.width / dpr;
     const h = canvas.height / dpr;
     const scrollFrac = scrollRef.current;
