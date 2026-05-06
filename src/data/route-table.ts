@@ -20,7 +20,7 @@ export const routeTable = [
   { path: "/projects/hologram", label: "Project: Hologram" },
   { path: "/projects/atlas-embeddings", label: "Project: Atlas Embeddings" },
   { path: "/projects/atomic-language-model", label: "Project: Atomic Language Model" },
-  { path: "/projects/prism", label: "Project: Prism" },
+  { path: "/projects/anunix", label: "Project: Anunix" },
   { path: "/projects/uor-mcp", label: "Project: UOR MCP" },
   { path: "/projects/prism-btc", label: "Project: prism-btc" },
   { path: "/projects/qr-cartridge", label: "Project: QR Cartridge" },
