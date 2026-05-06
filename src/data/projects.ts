@@ -57,6 +57,7 @@ export const projects: ProjectData[] = [
     category: "Core Infrastructure",
     description: "A complete network infrastructure platform where every resource is findable, verifiable, and protected. Trust is built into the address itself.",
     maturity: "Sandbox",
+    url: "https://github.com/UOR-Foundation",
     imageKey: "uns",
   },
   {
@@ -65,6 +66,7 @@ export const projects: ProjectData[] = [
     category: "Core Infrastructure",
     description: "A self-verifying receipt for any digital object. Proves authenticity through mathematics, not authorities. Anyone can verify, anywhere, with no special access required.",
     maturity: "Sandbox",
+    url: "https://github.com/UOR-Foundation",
     imageKey: "uorCertificate",
   },
 ];
