@@ -210,12 +210,20 @@ const Research = () => {
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             Blog
           </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
-            Latest Posts
-          </h2>
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+            <h2 className="font-display text-fluid-heading font-bold text-foreground">
+              Latest Posts
+            </h2>
+            <Link
+              to="/blog"
+              className="inline-flex items-center gap-1.5 text-fluid-label font-medium text-primary/80 hover:text-primary transition-colors font-body"
+            >
+              View all posts <ArrowRight size={13} />
+            </Link>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {blogPosts.map((post, index) => (
+            {blogPosts.slice(0, 3).map((post, index) => (
               <Link
                 key={post.title}
                 to={post.href}
@@ -245,6 +253,15 @@ const Research = () => {
                 </div>
               </Link>
             ))}
+          </div>
+
+          <div className="mt-10">
+            <Link
+              to="/blog"
+              className="inline-flex items-center gap-2 text-fluid-label font-medium text-primary hover:underline font-body transition-colors"
+            >
+              View all posts <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </section>
