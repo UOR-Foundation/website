@@ -14,11 +14,12 @@ const Index = () => {
   const [bgReady, setBgReady] = useState(false);
   useEffect(() => {
     if (isMobile || deviceClass === "low") return;
+    const w = window as any;
     const id = "requestIdleCallback" in window
-      ? (window as any).requestIdleCallback(() => setBgReady(true), { timeout: 1500 })
-      : window.setTimeout(() => setBgReady(true), 600);
+      ? w.requestIdleCallback(() => setBgReady(true), { timeout: 1500 })
+      : w.setTimeout(() => setBgReady(true), 600);
     return () => {
-      if ("cancelIdleCallback" in window) (window as any).cancelIdleCallback(id);
+      if ("cancelIdleCallback" in window) w.cancelIdleCallback(id);
       else clearTimeout(id);
     };
   }, [isMobile, deviceClass]);
