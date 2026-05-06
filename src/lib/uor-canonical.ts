@@ -268,6 +268,26 @@ function createDocumentLoader() {
         document: { "@context": UOR_V1_INLINE_CONTEXT },
       };
     }
+
+    // Serve schema.org locally to avoid CORS / network failures in the browser.
+    // A simple @vocab mapping is sufficient for URDNA2015: every bare term
+    // resolves to https://schema.org/<term>, producing identical N-Quads on
+    // any machine.
+    if (
+      url === "https://schema.org" ||
+      url === "https://schema.org/" ||
+      url === "http://schema.org" ||
+      url === "http://schema.org/" ||
+      url.startsWith("https://schema.org/docs/jsonldcontext") ||
+      url.startsWith("http://schema.org/docs/jsonldcontext")
+    ) {
+      return {
+        contextUrl: null,
+        documentUrl: url,
+        document: { "@context": { "@vocab": "https://schema.org/" } },
+      };
+    }
+
     if (defaultLoader) {
       return defaultLoader(url);
     }
