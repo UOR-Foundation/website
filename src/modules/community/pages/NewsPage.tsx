@@ -72,11 +72,11 @@ const NewsPage = () => {
             Latest Announcements
           </h1>
           <p
-            className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl"
+            className="mt-10 text-fluid-body text-foreground/75 font-body leading-relaxed animate-fade-in-up max-w-3xl"
             style={{ animationDelay: "0.15s" }}
           >
-            Engineering updates, open research, and community milestones from the
-            UOR Foundation.
+            Releases, research, and milestones from the UOR Foundation —
+            updated as the work ships.
           </p>
         </div>
       </section>
