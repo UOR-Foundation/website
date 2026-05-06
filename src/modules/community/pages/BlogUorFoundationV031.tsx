@@ -113,7 +113,16 @@ const BlogUorFoundationV031 = () => {
       kicker="Engineering"
       date="May 5, 2026"
       title="uor-foundation v0.3.1 is live on crates.io"
-      heroImage={heroImage}
+      heroOverride={
+        <div className="bg-muted/40 w-full overflow-hidden rounded-xl flex items-center justify-center">
+          <img
+            src={heroImage}
+            alt="Terminal showing cargo add uor-foundation v0.3.1"
+            className="w-full h-auto object-contain"
+            loading="eager"
+          />
+        </div>
+      }
       backHref="/news"
       backLabel="Back to News"
       sourceUrl={CRATE_URL}
