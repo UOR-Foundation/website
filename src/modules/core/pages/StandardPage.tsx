@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { Copy, Check, BookOpen, Github, Package, ArrowRight } from "lucide-react";
+import { Copy, Check, BookOpen, Github, Package, ArrowRight, Code2 } from "lucide-react";
 import {
   GITHUB_FRAMEWORK_URL,
   GITHUB_FRAMEWORK_DOCS_URL,
@@ -8,6 +8,28 @@ import {
   CRATE_DOCS_URL,
 } from "@/data/external-links";
 import { encode, decode, type EnrichedReceipt } from "@/lib/uor-codec";
+
+// Verbatim source of the encode / decode entry points. Shown in the
+// "view code" panel so anyone can audit what UOR actually runs.
+const ENCODER_SOURCE = `// src/lib/uor-codec.ts
+import { computeAndRegister, lookupReceipt } from "@/modules/oracle/lib/receipt-registry";
+
+// Content → Address. Deterministic. Lossless. WASM-anchored.
+//   1. URDNA2015 canonicalization (JSON-LD → N-Quads)
+//   2. SHA-256 (Web Crypto, hardware-accelerated)
+//   3. WASM Rust ring algebra (uor-foundation crate)
+//   4. Four identity forms: address, glyph, IPv6, CID
+export const encode = computeAndRegister;`;
+
+const DECODER_SOURCE = `// src/lib/uor-codec.ts
+// Address → Content. Accepts uor:<hex>, Braille glyph, IPv6, or CID.
+export function decode(address: string): unknown | undefined {
+  return lookupReceipt(address)?.source;
+}
+
+export function isEncoded(address: string): boolean {
+  return lookupReceipt(address) !== undefined;
+}`;
 
 const DEMO_DEFAULT = `{
   "@context": "https://schema.org",
