@@ -13,7 +13,7 @@ const CATEGORIES: ("All" | NewsCategory)[] = [
   "All",
   "Engineering",
   "Research",
-  "Company",
+  "Foundation",
   "Community",
 ];
 

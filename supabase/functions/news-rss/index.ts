@@ -7,7 +7,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-type Category = "Engineering" | "Research" | "Company" | "Community";
+type Category = "Engineering" | "Research" | "Foundation" | "Community";
 
 interface NewsItem {
   title: string;
@@ -73,7 +73,7 @@ const NEWS_ITEMS: NewsItem[] = [
       "How a single addressing system could turn the internet into a structured, navigable knowledge graph.",
     date: "December 21, 2023",
     isoDate: "2023-12-21",
-    category: "Company",
+    category: "Foundation",
     href: "/blog/building-the-internets-knowledge-graph",
   },
   {
@@ -114,7 +114,7 @@ Deno.serve((req: Request) => {
 
   const url = new URL(req.url);
   const categoryParam = url.searchParams.get("category");
-  const allowed = new Set<string>(["All", "Engineering", "Research", "Company", "Community"]);
+  const allowed = new Set<string>(["All", "Engineering", "Research", "Foundation", "Community"]);
   const category = allowed.has(categoryParam ?? "") ? (categoryParam as string) : "Engineering";
 
   const items = (category === "All"

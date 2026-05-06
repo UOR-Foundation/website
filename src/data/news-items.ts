@@ -2,7 +2,7 @@
  * News items. Announcements, releases, research notes, and community updates.
  * Serializable data for UOR certification.
  */
-export type NewsCategory = "Engineering" | "Research" | "Company" | "Community";
+export type NewsCategory = "Engineering" | "Research" | "Foundation" | "Community";
 
 export type NewsItem = {
   title: string;
@@ -72,7 +72,7 @@ export const newsItems: NewsItem[] = [
       "How a single addressing system could turn the internet into a structured, navigable knowledge graph.",
     date: "December 21, 2023",
     isoDate: "2023-12-21",
-    category: "Company",
+    category: "Foundation",
     href: "/blog/building-the-internets-knowledge-graph",
     coverKey: "knowledgeGraph",
   },
