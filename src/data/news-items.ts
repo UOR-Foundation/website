@@ -17,6 +17,16 @@ export type NewsItem = {
 
 export const newsItems: NewsItem[] = [
   {
+    title: "uor-foundation v0.3.1 released on crates.io",
+    excerpt:
+      "The complete UOR Foundation ontology as typed Rust traits — 34 namespaces, 471 OWL classes, 948 properties, plus the uor! proc macro for compile-time DSL. cargo add uor-foundation.",
+    date: "May 6, 2026",
+    isoDate: "2026-05-06",
+    category: "Engineering",
+    href: "https://crates.io/crates/uor-foundation",
+    external: true,
+  },
+  {
     title: "The Path to Sustainable AI: Notes from the Uganda Deep Tech Summit",
     excerpt:
       "Alex Flom represented the UOR Foundation in Kampala. The pitch: compute once, lookup forever — AI that runs on devices people already own, with data that stays local.",
