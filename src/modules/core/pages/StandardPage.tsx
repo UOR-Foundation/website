@@ -16,6 +16,66 @@ const DEMO_DEFAULT = `{
   "author": "you"
 }`;
 
+/**
+ * Parse a JSON.parse error message and try to point at the offending location
+ * with a short snippet of context. Returns a user-readable string.
+ */
+function formatJsonError(input: string): string {
+  try {
+    JSON.parse(input);
+    return "";
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    const posMatch = msg.match(/position\s+(\d+)/i);
+    if (posMatch) {
+      const pos = Number(posMatch[1]);
+      const upTo = input.slice(0, pos);
+      const line = upTo.split("\n").length;
+      const col = pos - upTo.lastIndexOf("\n");
+      const snippet = input.slice(Math.max(0, pos - 12), pos + 12).replace(/\n/g, "⏎");
+      return `Invalid JSON at line ${line}, col ${col}: ${msg.replace(/^.*?:\s*/, "")} — near "${snippet}"`;
+    }
+    return `Invalid JSON: ${msg}`;
+  }
+}
+
+/**
+ * Lightweight schema check for the UOR demo input. The canonical pipeline
+ * accepts any JSON-LD object, but we surface the most common authoring
+ * mistakes with precise messages before hashing.
+ */
+function validateUorInput(value: unknown): string | null {
+  if (value === null) return "Top-level value must be an object, not null.";
+  if (Array.isArray(value)) return "Top-level value must be an object, not an array.";
+  if (typeof value !== "object") {
+    return `Top-level value must be an object, not ${typeof value}.`;
+  }
+  const obj = value as Record<string, unknown>;
+  if (Object.keys(obj).length === 0) {
+    return "Object is empty — add at least @context and @type.";
+  }
+  if (!("@context" in obj)) {
+    return 'Missing "@context" — required for JSON-LD canonicalization.';
+  }
+  const ctx = obj["@context"];
+  if (
+    typeof ctx !== "string" &&
+    !(ctx && typeof ctx === "object")
+  ) {
+    return '"@context" must be a string IRI or an object.';
+  }
+  if (!("@type" in obj)) {
+    return 'Missing "@type" — required to identify the kind of thing.';
+  }
+  if (typeof obj["@type"] !== "string" && !Array.isArray(obj["@type"])) {
+    return '"@type" must be a string or array of strings.';
+  }
+  if ("@id" in obj && typeof obj["@id"] !== "string") {
+    return '"@id" must be a string IRI.';
+  }
+  return null;
+}
+
 const LiveDemo = () => {
   const [input, setInput] = useState(DEMO_DEFAULT);
   const [result, setResult] = useState<{ derivationId: string; glyph: string } | null>(null);
