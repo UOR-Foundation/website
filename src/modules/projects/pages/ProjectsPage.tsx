@@ -87,7 +87,7 @@ const Projects = () => {
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             All Projects
           </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-10">Browse the Catalog</h2>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-10">Build with UOR</h2>
           <ProjectAwesomeList />
         </div>
       </section>
