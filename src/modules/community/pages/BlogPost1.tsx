@@ -1,5 +1,4 @@
 import ArticleLayout from "@/modules/core/components/ArticleLayout";
-import coverImage from "@/assets/blog-knowledge-graph.png";
 import { blogPosts } from "@/data/blog-posts";
 import { getBlogCover } from "@/data/blog-covers";
 import TldrAside from "../components/TldrAside";
@@ -25,7 +24,24 @@ const BlogPost1 = () => {
       backHref="/research#blog"
       backLabel="Back to Research"
       related={related}
-      heroImage={coverImage}
+      hideHero
+      heroOverride={
+        <figure className="my-0 not-prose">
+          <div className="rounded-xl overflow-hidden border border-border aspect-video bg-muted/40">
+            <iframe
+              className="w-full h-full"
+              src="https://www.youtube.com/embed/WWAySQvHcr0?rel=0"
+              title="From SEAL Missions to Graph Theory: A Diverse Journey with Alex Flom"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+          </div>
+          <figcaption className="mt-3 text-[11px] uppercase tracking-[0.22em] font-mono text-muted-foreground/80">
+            Watch: From SEAL Missions to Graph Theory — a conversation with Alex Flom
+          </figcaption>
+        </figure>
+      }
     >
       <TldrAside>
         <p>
@@ -154,26 +170,6 @@ const BlogPost1 = () => {
         <blockquote>
           The knowledge graph awaits. Are you ready to help build it?
         </blockquote>
-      </section>
-
-      <section>
-        <h2>Watch</h2>
-        <figure className="my-8 not-prose">
-          <div className="rounded-xl overflow-hidden border border-border aspect-video bg-muted/40">
-            <iframe
-              className="w-full h-full"
-              src="https://www.youtube.com/embed/WWAySQvHcr0?rel=0&origin=https://univeral-coordinate-hub.lovable.app"
-              title="From SEAL Missions to Graph Theory: A Diverse Journey with Alex Flom"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-              loading="lazy"
-            />
-          </div>
-          <figcaption className="mt-3 text-[11px] uppercase tracking-[0.22em] font-mono text-muted-foreground/80">
-            Watch: From SEAL Missions to Graph Theory — a conversation with Alex Flom
-          </figcaption>
-        </figure>
       </section>
     </ArticleLayout>
   );
