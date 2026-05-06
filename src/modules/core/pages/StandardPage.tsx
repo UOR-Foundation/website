@@ -413,6 +413,7 @@ const LiveDemo = () => {
               <p className="text-[14px] font-body text-foreground/60 leading-[1.6]">
                 128-bit ContentAddress per the <code className="font-mono">uor-foundation</code> crate. The Braille glyph is the same address rendered visually. IPv6 and IPFS CID are byte-level canonical projections of the same content hash.
               </p>
+              {showTrace && <PipelineTrace receipt={receipt} title="Encode trace" />}
               <button
                 type="button"
                 onClick={useDerivedAddress}
@@ -465,6 +466,9 @@ const LiveDemo = () => {
             </span>
           )}
         </div>
+        {showTrace && decodeReceipt && decoded !== undefined && (
+          <PipelineTrace receipt={decodeReceipt} title="Decode re-encode trace (proves round-trip)" />
+        )}
       </div>
     </div>
   );
