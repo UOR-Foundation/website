@@ -14,7 +14,6 @@ export interface FeaturedProject {
   name: string;
   category: string;
   description: string;
-  maturity: "Graduated" | "Incubating" | "Sandbox";
   url?: string;
 }
 

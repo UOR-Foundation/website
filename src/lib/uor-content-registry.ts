@@ -15,7 +15,7 @@ import { featuredProjects } from "@/data/featured-projects";
 import { frameworkLayers } from "@/data/framework-layers";
 import { researchCategories } from "@/data/research-categories";
 import { blogPosts } from "@/data/blog-posts";
-import { projects, maturityInfo } from "@/data/projects";
+import { projects } from "@/data/projects";
 import { governanceBoard } from "@/data/governance";
 import { routeTable } from "@/data/route-table";
 import { teamMembers } from "@/data/team-members";
@@ -73,7 +73,6 @@ const CERTIFIABLE_CONTENT: Array<{
   { subjectId: "content:research-categories", label: "Research Categories", data: researchCategories },
   { subjectId: "content:blog-posts", label: "Blog Posts", data: blogPosts },
   { subjectId: "content:projects", label: "Project Catalog", data: projects },
-  { subjectId: "content:maturity-model", label: "Maturity Model", data: maturityInfo },
   { subjectId: "content:governance-board", label: "Governance Board", data: governanceBoard },
   { subjectId: "content:team-members", label: "Team Members", data: teamMembers },
   { subjectId: "content:events", label: "Community Events", data: events },
