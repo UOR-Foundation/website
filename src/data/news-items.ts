@@ -23,8 +23,7 @@ export const newsItems: NewsItem[] = [
     date: "May 5, 2026",
     isoDate: "2026-05-05",
     category: "Engineering",
-    href: "https://crates.io/crates/uor-foundation",
-    external: true,
+    href: "/blog/uor-foundation-v0-3-1",
     coverKey: "uorFoundationCrate",
   },
   {
