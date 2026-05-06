@@ -47,6 +47,7 @@ const PrimeGrid = () => {
   const rafRef = useRef(0);
   const angleRef = useRef(0);
   const lastFrameRef = useRef(0);
+  const inViewRef = useRef(true);
   const reducedMotionRef = useRef(
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
