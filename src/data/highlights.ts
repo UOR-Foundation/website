@@ -2,7 +2,7 @@
  * Community highlights. serializable data for UOR certification.
  * Image imports are mapped at the component level.
  */
-export type TagType = "Research" | "Announcement" | "Release" | "Field Notes" | "Engineering" | "Vision";
+export type TagType = "Research" | "Announcement" | "Release" | "Field Notes" | "Engineering" | "Vision" | "Open Research";
 
 export const highlights = [
   {
@@ -20,10 +20,10 @@ export const highlights = [
     href: "/blog/uor-foundation-v0-3-1",
   },
   {
-    tag: "Vision" as TagType,
-    title: "UOR: Building the Internet's Knowledge Graph",
-    date: "December 21, 2023",
-    imageKey: "knowledgeGraph",
-    href: "/blog/building-the-internets-knowledge-graph",
+    tag: "Open Research" as TagType,
+    title: "Unveiling a Universal Mathematical Language",
+    date: "October 10, 2025",
+    imageKey: "goldenSeed",
+    href: "/blog/universal-mathematical-language",
   },
 ];

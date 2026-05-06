@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ExternalLink, ArrowRight, Plus } from "lucide-react";
 import { blogPosts } from "@/data/blog-posts";
 import { getBlogCover } from "@/data/blog-covers";
+import { highlights } from "@/data/highlights";
 import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_RESEARCH_URL } from "@/data/external-links";
 import { categoryResearch } from "@/data/research-papers";
 import DiscordIcon from "@/modules/core/components/icons/DiscordIcon";
@@ -214,7 +215,10 @@ const Research = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {blogPosts.slice(0, 3).map((post, index) => (
+            {highlights
+              .map((h) => blogPosts.find((p) => p.href === h.href))
+              .filter((p): p is (typeof blogPosts)[number] => Boolean(p))
+              .map((post, index) => (
               <Link
                 key={post.title}
                 to={post.href}
