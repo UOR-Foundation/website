@@ -15,6 +15,7 @@ export const routeTable = [
   { path: "/blog/universal-data-fingerprint", label: "Blog: Universal Data Fingerprint" },
   { path: "/blog/uor-framework-origin", label: "Blog: UOR Framework Origin" },
   { path: "/blog/sustainable-ai-uganda", label: "Blog: Sustainable AI in Uganda" },
+  { path: "/blog/uor-foundation-v0-3-1", label: "Blog: uor-foundation v0.3.1" },
   { path: "/research/atlas-embeddings", label: "Research: Atlas Embeddings" },
   { path: "/projects/hologram", label: "Project: Hologram" },
   { path: "/projects/atlas-embeddings", label: "Project: Atlas Embeddings" },
