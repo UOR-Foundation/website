@@ -106,10 +106,10 @@ const NewsPage = () => {
       {/* Newsroom */}
       <section className="pt-10 md:pt-14 pb-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-10 lg:gap-16">
+          <div className="grid grid-cols-1 lg:grid-cols-[230px_1fr] gap-10 lg:gap-16">
             {/* Sidebar */}
             <aside className="lg:sticky lg:top-28 self-start">
-              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[12px] mb-3">
+              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[13px] mb-3">
                 Filter
               </p>
               <ul className="flex lg:flex-col flex-wrap gap-0.5">
@@ -119,7 +119,7 @@ const NewsPage = () => {
                     <li key={cat}>
                       <button
                         onClick={() => setFilter(cat)}
-                        className={`group w-full flex items-center justify-between gap-3 pl-3 pr-2 py-2 rounded-md text-[15px] font-body transition-colors border-l-2 ${
+                        className={`group w-full flex items-center justify-between gap-3 pl-3 pr-2 py-2.5 rounded-md text-[16px] font-body transition-colors border-l-2 ${
                           active
                             ? "border-primary text-primary bg-primary/[0.06]"
                             : "border-transparent text-foreground/65 hover:text-foreground hover:bg-foreground/[0.03]"
@@ -127,7 +127,7 @@ const NewsPage = () => {
                       >
                         <span>{cat}</span>
                         <span
-                          className={`text-[13px] tabular-nums min-w-[20px] text-right ${
+                          className={`text-[14px] tabular-nums min-w-[20px] text-right ${
                             active ? "text-primary/80" : "text-foreground/35"
                           }`}
                         >
@@ -139,20 +139,20 @@ const NewsPage = () => {
                 })}
               </ul>
 
-              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[12px] mt-7 mb-2.5">
+              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[13px] mt-7 mb-2.5">
                 Subscribe
               </p>
               <a
                 href={rssUrl(filter)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border/70 bg-card text-[13px] font-body text-foreground/75 hover:text-primary hover:border-primary/40 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-border/70 bg-card text-[14px] font-body text-foreground/75 hover:text-primary hover:border-primary/40 transition-colors"
                 aria-label={`RSS feed for ${filter} news`}
               >
-                <Rss size={14} /> RSS · {filter}
+                <Rss size={15} /> RSS · {filter}
               </a>
 
-              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[12px] mt-7 mb-2.5">
+              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[13px] mt-7 mb-2.5">
                 Sort by
               </p>
               <div className="inline-flex rounded-md border border-border/70 bg-card p-0.5">
@@ -160,7 +160,7 @@ const NewsPage = () => {
                   <button
                     key={s}
                     onClick={() => setSort(s)}
-                    className={`px-3 py-1.5 rounded text-[13px] font-body transition-colors ${
+                    className={`px-3.5 py-2 rounded text-[14px] font-body transition-colors ${
                       sort === s
                         ? "bg-primary/10 text-primary"
                         : "text-foreground/60 hover:text-foreground"
@@ -171,7 +171,7 @@ const NewsPage = () => {
                 ))}
               </div>
 
-              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[12px] mt-7 mb-2.5">
+              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[13px] mt-7 mb-2.5">
                 View
               </p>
               <div className="inline-flex rounded-md border border-border/70 bg-card p-0.5">
@@ -179,25 +179,25 @@ const NewsPage = () => {
                   onClick={() => setView("list")}
                   aria-label="List view"
                   aria-pressed={view === "list"}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[13px] font-body transition-colors ${
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded text-[14px] font-body transition-colors ${
                     view === "list"
                       ? "bg-primary/10 text-primary"
                       : "text-foreground/60 hover:text-foreground"
                   }`}
                 >
-                  <List size={14} /> List
+                  <List size={15} /> List
                 </button>
                 <button
                   onClick={() => setView("grid")}
                   aria-label="Grid view"
                   aria-pressed={view === "grid"}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[13px] font-body transition-colors ${
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded text-[14px] font-body transition-colors ${
                     view === "grid"
                       ? "bg-primary/10 text-primary"
                       : "text-foreground/60 hover:text-foreground"
                   }`}
                 >
-                  <LayoutGrid size={14} /> Grid
+                  <LayoutGrid size={15} /> Grid
                 </button>
               </div>
             </aside>
