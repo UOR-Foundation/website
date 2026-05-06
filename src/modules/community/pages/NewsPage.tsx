@@ -1,9 +1,13 @@
 import { useMemo, useState } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, LayoutGrid, List } from "lucide-react";
+import { ArrowRight, ArrowUpRight, LayoutGrid, List, Rss } from "lucide-react";
 import { newsItems, type NewsCategory, type NewsItem } from "@/data/news-items";
 import { getBlogCover } from "@/data/blog-covers";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const rssUrl = (category: "All" | NewsCategory) =>
+  `${SUPABASE_URL ?? ""}/functions/v1/news-rss?category=${encodeURIComponent(category)}`;
 
 const CATEGORIES: ("All" | NewsCategory)[] = [
   "All",
@@ -116,6 +120,19 @@ const NewsPage = () => {
                   );
                 })}
               </ul>
+
+              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[12px] mt-7 mb-2.5">
+                Subscribe
+              </p>
+              <a
+                href={rssUrl(filter)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border/70 bg-card text-[13px] font-body text-foreground/75 hover:text-primary hover:border-primary/40 transition-colors"
+                aria-label={`RSS feed for ${filter} news`}
+              >
+                <Rss size={14} /> RSS · {filter}
+              </a>
 
               <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[12px] mt-7 mb-2.5">
                 Sort by
