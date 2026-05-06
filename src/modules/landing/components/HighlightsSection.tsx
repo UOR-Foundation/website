@@ -1,16 +1,6 @@
 import { ArrowRight } from "lucide-react";
-import highlightKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
-import highlightFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
-import highlightSemanticWeb from "@/assets/highlight-semantic-web.jpg";
-import highlightUorIdentity from "@/assets/project-uor-identity.jpg";
 import { highlights } from "@/data/highlights";
-
-const imageMap: Record<string, string> = {
-  knowledgeGraph: highlightKnowledgeGraph,
-  frameworkLaunch: highlightFrameworkLaunch,
-  semanticWeb: highlightSemanticWeb,
-  uorIdentity: highlightUorIdentity,
-};
+import { getBlogCover } from "@/data/blog-covers";
 
 const HighlightsSection = () => {
   return (
@@ -36,7 +26,7 @@ const HighlightsSection = () => {
             >
               <div className="relative aspect-[5/3] overflow-hidden">
                 <img
-                  src={imageMap[item.imageKey]}
+                  src={getBlogCover(item.imageKey)}
                   alt={item.title}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   loading="lazy"
