@@ -114,6 +114,7 @@ const App = () => {
 
               {/* Blog & Research */}
               <Route path="/blog" element={<BlogIndexPage />} />
+              <Route path="/news" element={<NewsPage />} />
               <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
               <Route path="/blog/universal-mathematical-language" element={<BlogPost2 />} />
               <Route path="/blog/uor-framework-launch" element={<BlogPost3 />} />
