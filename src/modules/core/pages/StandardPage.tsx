@@ -195,6 +195,29 @@ function uorAddress(hashHex: string): string {
   return `uor:${hashHex.slice(0, 32)}`;
 }
 
+/** Detect which canonical form an input string represents. */
+type AddressKind = "uor" | "glyph" | "ipv6" | "cid" | "unknown";
+function detectAddressKind(raw: string): AddressKind {
+  const s = raw.trim();
+  if (!s) return "unknown";
+  if (/^uor:[0-9a-f]+$/i.test(s)) return "uor";
+  // Braille glyph: any character in U+2800..U+28FF
+  if (/^[\u2800-\u28FF]+$/.test(s)) return "glyph";
+  // IPv6 ULA used by UOR (fd00:0075:6f72:…) — accept any well-formed v6 too
+  if (/^[0-9a-f:]+$/i.test(s) && s.includes(":")) return "ipv6";
+  // IPFS CIDv1 base32: starts with "b" followed by base32 chars
+  if (/^b[a-z2-7]{20,}$/i.test(s)) return "cid";
+  return "unknown";
+}
+
+const KIND_LABEL: Record<AddressKind, string> = {
+  uor: "UOR address",
+  glyph: "Braille glyph",
+  ipv6: "IPv6",
+  cid: "IPFS CID",
+  unknown: "—",
+};
+
 const LiveDemo = () => {
   const [input, setInput] = useState(DEMO_DEFAULT);
   const [receipt, setReceipt] = useState<EnrichedReceipt | null>(null);
@@ -202,9 +225,11 @@ const LiveDemo = () => {
   const [address, setAddress] = useState("");
   const [decoded, setDecoded] = useState<unknown | undefined>(undefined);
   const [verifyState, setVerifyState] = useState<"idle" | "ok" | "mismatch">("idle");
-  // Local map: short uor:<hex> address → source object (the registry indexes
-  // by long derivation ID; we add the short form here so decode works for it).
-  const shortMap = useRef<Map<string, unknown>>(new Map());
+  // Local map: every surface form (uor, glyph, ipv6, cid) → source object.
+  // The shared registry indexes by long derivation ID / cid / triword / ipv6;
+  // we mirror all forms here so decode works for the short uor: and glyph too.
+  const formMap = useRef<Map<string, unknown>>(new Map());
+  const kind = detectAddressKind(address);
 
   useEffect(() => {
     let cancelled = false;
@@ -225,7 +250,10 @@ const LiveDemo = () => {
       .then((r) => {
         if (cancelled) return;
         setReceipt(r);
-        shortMap.current.set(uorAddress(r.hashHex), parsed);
+        formMap.current.set(uorAddress(r.hashHex), parsed);
+        formMap.current.set(r.glyph, parsed);
+        formMap.current.set(r.ipv6.toLowerCase(), parsed);
+        formMap.current.set(r.cid, parsed);
       })
       .catch((e) => {
         if (cancelled) return;
@@ -243,8 +271,10 @@ const LiveDemo = () => {
       setVerifyState("idle");
       return;
     }
-    const value = decode(address.trim());
-    const resolved = value !== undefined ? value : shortMap.current.get(address.trim());
+    const key = address.trim();
+    const lookupKey = detectAddressKind(key) === "ipv6" ? key.toLowerCase() : key;
+    const value = decode(key);
+    const resolved = value !== undefined ? value : formMap.current.get(lookupKey);
     setDecoded(resolved);
     if (resolved !== undefined && receipt) {
       // Re-encode to verify round-trip determinism
