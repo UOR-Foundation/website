@@ -156,7 +156,7 @@ const NewsPage = () => {
             </aside>
 
             {/* Content */}
-            <div className="max-w-[920px] w-full">
+            <div className="w-full min-w-0">
               {/* Toolbar */}
               <div className="flex items-end justify-between gap-4 mb-3">
                 <p className="text-[11px] uppercase tracking-[0.14em] text-foreground/45 font-body tabular-nums">
@@ -206,7 +206,7 @@ const NewsRow = ({ item }: { item: NewsItem }) => {
   return (
     <Wrapper
       {...wrapperProps}
-      className="group grid grid-cols-[88px_1fr_20px] md:grid-cols-[104px_1fr_24px] items-start gap-5 md:gap-8 py-5 md:py-6 px-3 -mx-3 rounded-md transition-colors hover:bg-foreground/[0.02]"
+      className="group grid grid-cols-[88px_1fr_20px] md:grid-cols-[112px_180px_1fr_24px] items-start gap-5 md:gap-8 py-5 md:py-6 px-3 -mx-3 rounded-md transition-colors hover:bg-foreground/[0.02]"
     >
       {/* Date */}
       <time
@@ -216,6 +216,19 @@ const NewsRow = ({ item }: { item: NewsItem }) => {
         {formatShortDate(item.isoDate)}
       </time>
 
+      {/* Cover thumbnail */}
+      <div className="hidden md:block overflow-hidden rounded-md bg-card border border-border/50 aspect-[16/10]">
+        {item.coverKey ? (
+          <img
+            src={getBlogCover(item.coverKey)}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+        ) : null}
+      </div>
+
       {/* Title + excerpt */}
       <div className="min-w-0">
         <p className="text-[10px] font-semibold font-body uppercase tracking-[0.16em] text-primary/75 mb-1.5">
@@ -224,13 +237,13 @@ const NewsRow = ({ item }: { item: NewsItem }) => {
         <h2 className="font-display text-fluid-card-title font-semibold text-foreground leading-[1.2] tracking-tight transition-colors duration-200 group-hover:text-primary">
           {item.title}
         </h2>
-        <p className="mt-2 text-[14px] md:text-[15px] text-foreground/60 font-body leading-relaxed line-clamp-2 max-w-2xl">
+        <p className="mt-2 text-[14px] md:text-[15px] text-foreground/60 font-body leading-relaxed line-clamp-2 max-w-3xl">
           {item.excerpt}
         </p>
       </div>
 
       {/* Affordance */}
-      <span className="hidden md:inline-flex pt-[26px] text-foreground/25 transition-all duration-200 group-hover:text-primary group-hover:translate-x-0.5">
+      <span className="hidden md:inline-flex justify-end pt-[26px] text-foreground/25 transition-all duration-200 group-hover:text-primary group-hover:translate-x-0.5">
         {item.external ? <ArrowUpRight size={16} /> : <ArrowRight size={16} />}
       </span>
     </Wrapper>
