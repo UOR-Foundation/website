@@ -212,7 +212,7 @@ const ProjectAwesomeList = () => {
       </div>
 
       {view === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-golden-lg gap-y-golden-xl">
           {ordered.map((p) => {
             const img = p.imageKey ? projectImageMap[p.imageKey] : undefined;
             return (
@@ -220,7 +220,7 @@ const ProjectAwesomeList = () => {
                 key={p.slug}
                 className="group flex flex-col rounded-2xl border border-border/70 bg-card overflow-hidden hover:border-primary/40 hover:shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.25)] transition-all duration-300"
               >
-                <div className="relative aspect-[16/9] overflow-hidden bg-muted/40">
+                <div className="relative aspect-[1.618/1] overflow-hidden bg-muted/40 rounded-lg">
                   {img ? (
                     <img
                       src={img}

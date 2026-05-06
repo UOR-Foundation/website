@@ -214,7 +214,7 @@ const Research = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-golden-lg gap-y-golden-xl">
             {highlights
               .map((h) => blogPosts.find((p) => p.href === h.href))
               .filter((p): p is (typeof blogPosts)[number] => Boolean(p))
@@ -225,7 +225,7 @@ const Research = () => {
                 className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/20 animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="aspect-video overflow-hidden">
+                <div className="aspect-[1.618/1] overflow-hidden rounded-lg">
                   <img
                     src={getBlogCover(post.coverKey)}
                     alt={post.title}
