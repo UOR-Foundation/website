@@ -3,13 +3,15 @@ import PrimeGrid from "@/modules/landing/components/PrimeGrid";
 import PhysicalTitle from "@/modules/landing/components/PhysicalTitle";
 import { ArrowRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useDeviceClass } from "@/hooks/use-device-class";
 
 const HeroSection = () => {
   const isMobile = useIsMobile();
+  const deviceClass = useDeviceClass();
   return (
     <section className="relative overflow-hidden h-[100svh] min-h-[600px]">
       {/* Living prime number field. desktop only */}
-      {!isMobile && <PrimeGrid />}
+      {!isMobile && deviceClass !== "low" && <PrimeGrid />}
 
       {/* Mobile: fill the viewport, golden-ratio vertical distribution */}
       <div className="md:hidden relative z-10 h-full flex flex-col items-center px-6 pointer-events-none">
