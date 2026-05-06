@@ -1,5 +1,5 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, Send, CheckCircle2, Github, LayoutGrid, List, Box, Cpu, Prism, Atom, Network, BadgeCheck } from "lucide-react";
+import { ExternalLink, Send, CheckCircle2, Github, LayoutGrid, List, Box, Cpu, Triangle, Atom, Network, BadgeCheck, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { projects as projectsData } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
@@ -20,10 +20,10 @@ const projectImageMap: Record<string, string> = {
   uorCertificate: imgUorCertificate,
 };
 
-const projectIconMap: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>> = {
+const projectIconMap: Record<string, LucideIcon> = {
   hologram: Box,
   atomicLang: Cpu,
-  prism: Prism,
+  prism: Triangle,
   atlas: Atom,
   uns: Network,
   uorCertificate: BadgeCheck,
