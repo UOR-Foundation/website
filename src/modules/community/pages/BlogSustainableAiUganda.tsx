@@ -27,7 +27,7 @@ const PILLARS = [
   {
     icon: Smartphone,
     title: "Runs on your own device",
-    desc: "Heavy AI work happens locally at the edge — almost zero energy and no centralized cloud dependency.",
+    desc: "Heavy AI work happens on your device, with almost no energy use and no dependency on a central cloud.",
   },
   {
     icon: ShieldCheck,
@@ -42,7 +42,7 @@ const PILLARS = [
   {
     icon: Zap,
     title: "Compute once, reuse forever",
-    desc: "Every operation receives a permanent UOR address based on what it is — future uses become instant zero-cost lookups.",
+    desc: "Every result gets a permanent address based on what it is. Future uses become instant, free lookups.",
   },
 ];
 
@@ -136,7 +136,7 @@ const BlogSustainableAiUganda = () => {
       <p>
         The challenges are clear: top talent leaving for opportunities abroad, valuable local data flowing
         out of the country, and computing power locked in foreign data centers. These are not just policy
-        issues. They are holding back real national progress — for Uganda and beyond.
+        issues. They are holding back real national progress, for Uganda and beyond.
       </p>
 
       <section>
@@ -144,7 +144,7 @@ const BlogSustainableAiUganda = () => {
         <p>
           Every time you use AI today, the answer is computed from scratch in a giant centralized data
           center. The more we use it, the more energy it burns and the more data it captures. The data of
-          billions is extracted to build these systems — then rented back to us. This is not sustainable.
+          billions of people is collected to build these systems, then rented back to us. This is not sustainable.
         </p>
       </section>
 
@@ -152,8 +152,8 @@ const BlogSustainableAiUganda = () => {
         <h2>Compute Once. Lookup Forever.</h2>
         <p>
           The UOR Foundation is pursuing a disciplined, long-term research effort to solve this at the root.
-          We are developing the <em>Universal Object Reference</em> data addressing standard — a new
-          foundation for sustainable AI.
+          We are developing the <em>Universal Object Reference</em>, a new way to give every piece of
+          information a permanent address, and a new foundation for sustainable AI.
         </p>
         <p>
           Instead of computing every AI task from scratch in centralized data centers, we pre-compile the
@@ -184,7 +184,7 @@ const BlogSustainableAiUganda = () => {
         </p>
         <p>
           We are openly sharing our research and tooling with Uganda's builders and developers. If you are
-          creating AI that delivers results for your country, we would love to hear from you —{" "}
+          creating AI that delivers results for your country, we would love to hear from you at{" "}
           <a href="mailto:hi@uor.foundation">hi@uor.foundation</a>.
         </p>
       </section>
