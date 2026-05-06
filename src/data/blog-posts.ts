@@ -27,4 +27,12 @@ export const blogPosts = [
     href: "/blog/uor-framework-launch",
     coverKey: "frameworkLaunch",
   },
+  {
+    title: "A Universal Data Fingerprint for Your AI Agent",
+    excerpt: "Two agents, one verifiable identifier. UOR derives a 256-bit fingerprint from canonical structure — same object, same hash, in any language or runtime.",
+    date: "April 21, 2026",
+    tag: "Standards",
+    href: "/blog/universal-data-fingerprint",
+    coverKey: "universalDataFingerprint",
+  },
 ];
