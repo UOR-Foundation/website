@@ -233,6 +233,52 @@ const PrimeConstellationBg = () => {
   const lastFrameRef = useRef(0);
   const FRAME_INTERVAL = 1000 / 30; // 30fps cap
 
+  // Cached offscreen sprites for constellation star glows, keyed by
+  // `${hue}|${brightness}`. Each sprite holds the nebula + inner glow at
+  // alpha 1; the per-frame draw modulates with globalAlpha.
+  const glowSpriteCache = useRef<Map<string, HTMLCanvasElement>>(new Map());
+
+  const getGlowSprite = (hue: string, brightness: number, useAmber: boolean) => {
+    const key = `${hue}|${brightness.toFixed(2)}|${useAmber ? 1 : 0}`;
+    const cache = glowSpriteCache.current;
+    const cached = cache.get(key);
+    if (cached) return cached;
+
+    const starR = 1.2 * brightness;
+    const nebulaR = starR * (useAmber ? 14 : 10);
+    const size = Math.ceil(nebulaR * 2 + 2);
+    const c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    const cx = size / 2;
+    const cy = size / 2;
+    const cctx = c.getContext("2d");
+    if (!cctx) return c;
+
+    // Nebula halo
+    const nebula = cctx.createRadialGradient(cx, cy, 0, cx, cy, nebulaR);
+    nebula.addColorStop(0, `hsla(${hue}, ${useAmber ? 0.15 : 0.1})`);
+    nebula.addColorStop(0.4, `hsla(${hue}, 0.03)`);
+    nebula.addColorStop(1, `hsla(${hue}, 0)`);
+    cctx.fillStyle = nebula;
+    cctx.beginPath();
+    cctx.arc(cx, cy, nebulaR, 0, Math.PI * 2);
+    cctx.fill();
+
+    // Inner glow
+    const innerR = starR * 3.5;
+    const inner = cctx.createRadialGradient(cx, cy, 0, cx, cy, innerR);
+    inner.addColorStop(0, `hsla(${hue}, 0.5)`);
+    inner.addColorStop(1, `hsla(${hue}, 0)`);
+    cctx.fillStyle = inner;
+    cctx.beginPath();
+    cctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+    cctx.fill();
+
+    cache.set(key, c);
+    return c;
+  };
+
   const draw = useCallback((now: number = 0) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
