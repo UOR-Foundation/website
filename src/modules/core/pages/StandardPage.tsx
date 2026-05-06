@@ -472,6 +472,32 @@ const AddressRow = ({ label, value, mono, large }: { label: string; value: strin
   );
 };
 
+const CodeBlock = ({ label, source }: { label: string; source: string }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="rounded-lg border border-border/70 bg-background/60 overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/60">
+        <span className="text-[10.5px] tracking-[0.18em] uppercase text-foreground/50 font-body">{label}</span>
+        <button
+          type="button"
+          onClick={() => {
+            navigator.clipboard.writeText(source);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1200);
+          }}
+          className="inline-flex items-center gap-1 text-[11px] font-body text-foreground/60 hover:text-foreground transition-colors"
+        >
+          {copied ? <Check size={11} className="text-primary" /> : <Copy size={11} />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <pre className="font-mono text-[12px] leading-[1.6] text-foreground/85 px-4 py-3 overflow-x-auto whitespace-pre">
+{source}
+      </pre>
+    </div>
+  );
+};
+
 const CopyableCommand = ({ value }: { value: string }) => {
   const [copied, setCopied] = useState(false);
   return (
