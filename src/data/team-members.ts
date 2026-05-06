@@ -32,7 +32,7 @@ export const teamMembers = [
     role: "Solutions Architect @ DoD Business Systems",
     description: "Enterprise solutions architecture for defense business systems.",
     image: "/images/profiles/john-haines.jpg",
-    link: "",
+    link: "https://www.linkedin.com/in/john-haines-62504a35/",
   },
   {
     name: "Ilya Paveliev",
