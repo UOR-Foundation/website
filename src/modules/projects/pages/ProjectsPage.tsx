@@ -77,9 +77,6 @@ const Projects = () => {
             <a href="#submit" className="btn-primary">
               Submit a Project
             </a>
-            <a href={GITHUB_ORG_URL} target="_blank" rel="noopener noreferrer" className="btn-outline inline-flex items-center gap-2">
-              View on GitHub <ExternalLink size={14} />
-            </a>
           </div>
         </div>
       </section>
