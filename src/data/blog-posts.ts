@@ -35,4 +35,12 @@ export const blogPosts = [
     href: "/blog/universal-data-fingerprint",
     coverKey: "universalDataFingerprint",
   },
+  {
+    title: "The UOR Framework: Everything Is an Object",
+    excerpt: "The original framework introduction. Universal Object Reference reframes information systems around content-derived addresses, attribute queries, and embedded runtimes.",
+    date: "July 13, 2022",
+    tag: "Origin",
+    href: "/blog/uor-framework-origin",
+    coverKey: "uorFrameworkOrigin",
+  },
 ];
