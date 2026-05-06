@@ -31,7 +31,7 @@ export const teamMembers = [
     name: "John Haines",
     role: "Solutions Architect @ DoD Business Systems",
     description: "Enterprise solutions architecture for defense business systems.",
-    image: "/images/profiles/john-haines.jpg",
+    image: "/images/profiles/john-haines-v2.jpg",
     link: "https://www.linkedin.com/in/john-haines-62504a35/",
   },
   {

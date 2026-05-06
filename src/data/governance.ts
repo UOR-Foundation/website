@@ -35,7 +35,7 @@ export const governanceBoard = [
     name: "John Haines",
     role: "Secretary",
     bio: "Operations and governance lead ensuring the foundation runs with transparency and accountability.",
-    image: "/images/profiles/john-haines.jpg",
+    image: "/images/profiles/john-haines-v2.jpg",
     link: "https://www.linkedin.com/in/john-haines-62504a35/",
   },
 ];
