@@ -1,13 +1,12 @@
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { Calendar, ExternalLink, ArrowRight, Plus } from "lucide-react";
+import { ExternalLink, ArrowRight, Plus } from "lucide-react";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import { blogPosts } from "@/data/blog-posts";
 import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_RESEARCH_URL } from "@/data/external-links";
 import { categoryResearch } from "@/data/research-papers";
-import { events } from "@/data/events";
 import DiscordIcon from "@/modules/core/components/icons/DiscordIcon";
 
 const coverMap: Record<string, string> = {
