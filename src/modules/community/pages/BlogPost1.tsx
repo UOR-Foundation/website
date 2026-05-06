@@ -27,7 +27,7 @@ const BlogPost1 = () => {
       hideHero
       heroOverride={
         <figure className="my-0 not-prose">
-          <div className="rounded-xl overflow-hidden border border-border aspect-video bg-muted/40">
+          <div className="rounded-xl overflow-hidden border border-border aspect-phi bg-muted/40">
             <iframe
               className="w-full h-full"
               src="https://www.youtube.com/embed/WWAySQvHcr0?rel=0"

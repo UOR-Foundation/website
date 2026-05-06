@@ -232,7 +232,7 @@ const NewsPage = () => {
                   ))}
                 </ul>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-golden-lg gap-y-golden-xl">
                   {listItems.map((item) => (
                     <NewsCard key={item.href} item={item} />
                   ))}
@@ -316,7 +316,7 @@ const NewsRow = ({ item }: { item: NewsItem }) => {
       className="group grid grid-cols-[1fr_auto] md:grid-cols-[280px_1fr_140px] items-start gap-5 md:gap-10 py-6 md:py-7 px-3 -mx-3 rounded-md transition-colors hover:bg-foreground/[0.02]"
     >
       {/* Cover thumbnail */}
-      <div className="hidden md:block overflow-hidden rounded-lg bg-card border border-border/50 aspect-[16/10]">
+      <div className="hidden md:block overflow-hidden rounded-lg bg-card border border-border/50 aspect-phi">
         {item.coverKey ? (
           <img
             src={getBlogCover(item.coverKey)}
@@ -378,7 +378,7 @@ const NewsCard = ({ item }: { item: NewsItem }) => {
       className="group flex flex-col rounded-lg border border-border/70 bg-card overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
     >
       {item.coverKey && (
-        <div className="overflow-hidden bg-card aspect-[16/10]">
+        <div className="overflow-hidden bg-card aspect-phi">
           <img
             src={getBlogCover(item.coverKey)}
             alt={item.title}
