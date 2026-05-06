@@ -1,5 +1,5 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, Send, CheckCircle2, Github, LayoutGrid, List } from "lucide-react";
+import { ExternalLink, Send, CheckCircle2, Github, LayoutGrid, List, Box, Cpu, Triangle, Atom, Network, BadgeCheck, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { projects as projectsData } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
@@ -18,6 +18,15 @@ const projectImageMap: Record<string, string> = {
   prism: imgPrism,
   uns: imgUns,
   uorCertificate: imgUorCertificate,
+};
+
+const projectIconMap: Record<string, LucideIcon> = {
+  hologram: Box,
+  atomicLang: Cpu,
+  prism: Triangle,
+  atlas: Atom,
+  uns: Network,
+  uorCertificate: BadgeCheck,
 };
 
 const Projects = () => {
@@ -252,36 +261,46 @@ const ProjectAwesomeList = () => {
           })}
         </div>
       ) : (
-        <ul className="divide-y divide-border/60 rounded-2xl border border-border/70 bg-card overflow-hidden">
-          {ordered.map((p) => (
-            <li
-              key={p.slug}
-              className="group flex flex-col md:flex-row md:items-center gap-3 md:gap-6 p-5 hover:bg-primary/5 transition-colors"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <h4 className="font-display text-fluid-card-title font-semibold text-foreground leading-tight">
-                    {p.name}
-                  </h4>
-                  <span className="text-fluid-label font-semibold uppercase tracking-[0.14em] text-primary/70 font-body">
-                    {p.category}
-                  </span>
-                </div>
-                <p className="mt-1.5 text-foreground/65 font-body text-fluid-body leading-relaxed">
-                  {p.description}
-                </p>
-              </div>
-              <a
-                href={p.url ?? GITHUB_ORG_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-[0.14em] text-foreground/80 hover:text-primary transition-colors font-body shrink-0"
+        <ul className="rounded-2xl border border-border/70 bg-card overflow-hidden divide-y divide-border/70">
+          {ordered.map((p, i) => {
+            const Icon = (p.imageKey && projectIconMap[p.imageKey]) || Box;
+            return (
+              <li
+                key={p.slug}
+                className={`group flex flex-col md:flex-row md:items-center gap-4 md:gap-6 px-5 md:px-6 py-4 md:py-5 transition-colors hover:bg-primary/[0.06] ${
+                  i % 2 === 1 ? "bg-foreground/[0.025]" : "bg-transparent"
+                }`}
               >
-                <Github size={14} strokeWidth={2} />
-                GitHub
-              </a>
-            </li>
-          ))}
+                <div className="flex items-center gap-4 md:gap-5 flex-1 min-w-0">
+                  <div className="shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-lg border border-border/70 bg-background/60 flex items-center justify-center text-primary/80 group-hover:border-primary/40 group-hover:text-primary transition-colors">
+                    <Icon size={18} strokeWidth={1.75} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h4 className="font-display text-fluid-card-title font-semibold text-foreground leading-tight">
+                        {p.name}
+                      </h4>
+                      <span className="text-fluid-label font-semibold uppercase tracking-[0.14em] text-primary/70 font-body">
+                        {p.category}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-foreground/65 font-body text-fluid-body leading-relaxed">
+                      {p.description}
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href={p.url ?? GITHUB_ORG_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-[0.14em] text-foreground/80 hover:text-primary transition-colors font-body shrink-0 self-start md:self-center pl-14 md:pl-0"
+                >
+                  <Github size={14} strokeWidth={2} />
+                  GitHub
+                </a>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
