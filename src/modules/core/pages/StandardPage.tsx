@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { Copy, Check, BookOpen, Github, Package, ArrowRight } from "lucide-react";
+import { Copy, Check, BookOpen, Github, Package, ArrowRight, Code2 } from "lucide-react";
 import {
   GITHUB_FRAMEWORK_URL,
   GITHUB_FRAMEWORK_DOCS_URL,
@@ -8,6 +8,28 @@ import {
   CRATE_DOCS_URL,
 } from "@/data/external-links";
 import { encode, decode, type EnrichedReceipt } from "@/lib/uor-codec";
+
+// Verbatim source of the encode / decode entry points. Shown in the
+// "view code" panel so anyone can audit what UOR actually runs.
+const ENCODER_SOURCE = `// src/lib/uor-codec.ts
+import { computeAndRegister, lookupReceipt } from "@/modules/oracle/lib/receipt-registry";
+
+// Content → Address. Deterministic. Lossless. WASM-anchored.
+//   1. URDNA2015 canonicalization (JSON-LD → N-Quads)
+//   2. SHA-256 (Web Crypto, hardware-accelerated)
+//   3. WASM Rust ring algebra (uor-foundation crate)
+//   4. Four identity forms: address, glyph, IPv6, CID
+export const encode = computeAndRegister;`;
+
+const DECODER_SOURCE = `// src/lib/uor-codec.ts
+// Address → Content. Accepts uor:<hex>, Braille glyph, IPv6, or CID.
+export function decode(address: string): unknown | undefined {
+  return lookupReceipt(address)?.source;
+}
+
+export function isEncoded(address: string): boolean {
+  return lookupReceipt(address) !== undefined;
+}`;
 
 const DEMO_DEFAULT = `{
   "@context": "https://schema.org",
@@ -230,6 +252,7 @@ const LiveDemo = () => {
   // we mirror all forms here so decode works for the short uor: and glyph too.
   const formMap = useRef<Map<string, unknown>>(new Map());
   const kind = detectAddressKind(address);
+  const [showCode, setShowCode] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -331,8 +354,31 @@ const LiveDemo = () => {
           <ArrowRight size={22} />
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
-          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · UOR address — derived from the data itself</div>
-          {error ? (
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · UOR address — derived from the data itself</div>
+            <button
+              type="button"
+              onClick={() => setShowCode((v) => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-body transition-colors ${
+                showCode
+                  ? "border-primary/60 bg-primary/10 text-foreground"
+                  : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
+              }`}
+              title="View the actual encode/decode source"
+            >
+              <Code2 size={12} />
+              {showCode ? "Hide code" : "View code"}
+            </button>
+          </div>
+          {showCode ? (
+            <div className="flex flex-col gap-3">
+              <CodeBlock label="encoder · src/lib/uor-codec.ts" source={ENCODER_SOURCE} />
+              <CodeBlock label="decoder · src/lib/uor-codec.ts" source={DECODER_SOURCE} />
+              <p className="text-[12px] font-body text-foreground/55 leading-[1.6]">
+                Two functions. <code className="font-mono">encode</code> runs URDNA2015 → SHA-256 → WASM ring algebra from the <code className="font-mono">uor-foundation</code> crate. <code className="font-mono">decode</code> is a pure lookup — no server, no registry service.
+              </p>
+            </div>
+          ) : error ? (
             <div className="font-mono text-[13px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/55 min-h-[88px]">
               {error}
             </div>
@@ -422,6 +468,32 @@ const AddressRow = ({ label, value, mono, large }: { label: string; value: strin
           {copied ? <Check size={11} className="text-primary" /> : <Copy size={11} />}
         </span>
       </button>
+    </div>
+  );
+};
+
+const CodeBlock = ({ label, source }: { label: string; source: string }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="rounded-lg border border-border/70 bg-background/60 overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/60">
+        <span className="text-[10.5px] tracking-[0.18em] uppercase text-foreground/50 font-body">{label}</span>
+        <button
+          type="button"
+          onClick={() => {
+            navigator.clipboard.writeText(source);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1200);
+          }}
+          className="inline-flex items-center gap-1 text-[11px] font-body text-foreground/60 hover:text-foreground transition-colors"
+        >
+          {copied ? <Check size={11} className="text-primary" /> : <Copy size={11} />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <pre className="font-mono text-[12px] leading-[1.6] text-foreground/85 px-4 py-3 overflow-x-auto whitespace-pre">
+{source}
+      </pre>
     </div>
   );
 };
