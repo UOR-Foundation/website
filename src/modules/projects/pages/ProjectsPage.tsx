@@ -180,17 +180,6 @@ const ProjectAwesomeList = () => {
     <div className="space-y-14">
       {grouped.map(({ category, items }) => (
         <div key={category}>
-          <div className="flex items-baseline justify-between mb-5">
-            <h3
-              id={`cat-${category.toLowerCase().replace(/\s+/g, "-")}`}
-              className="font-body text-fluid-label font-semibold tracking-[0.22em] uppercase text-primary/70 scroll-mt-28"
-            >
-              {category}
-            </h3>
-            <span className="font-mono text-[11px] text-foreground/30 tabular-nums">
-              {String(items.length).padStart(2, "0")}
-            </span>
-          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {items.map((p) => {
               const img = p.imageKey ? projectImageMap[p.imageKey] : undefined;
@@ -221,7 +210,7 @@ const ProjectAwesomeList = () => {
                     </p>
 
                     <div className="mt-5 pt-4 border-t border-border/50 flex items-center justify-between gap-3">
-                      <span className="text-fluid-label font-semibold uppercase tracking-[0.14em] text-foreground/55 font-body">
+                      <span className="text-fluid-label font-semibold uppercase tracking-[0.14em] text-primary/70 font-body">
                         {p.category}
                       </span>
                       <a
