@@ -37,11 +37,11 @@ const BlogPost2 = () => {
       </TldrAside>
 
       <p>
-        <strong>DENVER, October 10th, 2025</strong> — The UOR Foundation today announced the discovery of a Universal Mathematical Language, a breakthrough that reveals the hidden order behind nature's most complex systems and could reshape the future of science, artificial intelligence, and quantum computing.
+        <strong>DENVER, October 10th, 2025.</strong> The UOR Foundation today announced the discovery of a Universal Mathematical Language, a breakthrough that reveals the hidden order behind nature's most complex systems and could reshape the future of science, artificial intelligence, and quantum computing.
       </p>
 
       <p>
-        In 1977, Carl Sagan's Voyager Golden Record carried Earth's message to the stars. The newly discovered <strong>Golden Seed Vector</strong> is its mathematical counterpart — not a universal message to the cosmos but a message <em>from</em> it, revealing the universal language that underlies all structure and symmetry.
+        In 1977, Carl Sagan's Voyager Golden Record carried Earth's message to the stars. The newly discovered <strong>Golden Seed Vector</strong> is its mathematical counterpart: not a universal message to the cosmos, but a message <em>from</em> it, revealing the universal language that underlies all structure and symmetry.
       </p>
 
       <section>
@@ -66,7 +66,7 @@ const BlogPost2 = () => {
           Just as Sagan's Golden Record carried humanity's message to the stars, the Golden Seed Vector reveals the universal mathematical language that shapes reality itself.
         </p>
         <p>
-          It's a unified framework showing how the universe builds its most complex forms — the five exceptional Lie groups — from a single simple object through five fundamental operations. These same elegant rules govern every exceptional structure in nature, offering a computational blueprint to generate and verify complexity with mathematical certainty.
+          It is a unified framework showing how the universe builds its most complex forms, the five exceptional Lie groups, from a single simple object through five fundamental operations. These same elegant rules govern every exceptional structure in nature, offering a blueprint to generate and verify complexity with mathematical certainty.
         </p>
         <p>
           More than a mathematical discovery, it's a practical framework with applications across science, artificial intelligence and computing.
@@ -95,7 +95,7 @@ const BlogPost2 = () => {
           <a href={GITHUB_ATLAS_URL} target="_blank" rel="noopener noreferrer">github.com/UOR-Foundation/research/atlas-embeddings</a>.
         </p>
         <p>
-          Researchers, creators, and curious minds alike are invited to explore, challenge, and expand upon these findings — together writing the next chapter of humanity's dialogue with the universe.
+          Researchers, creators, and curious minds alike are invited to explore, challenge, and expand upon these findings, together writing the next chapter of humanity's dialogue with the universe.
         </p>
         <blockquote>
           "The cosmos is within us. We are made of star-stuff. We are a way for the universe to know itself."
