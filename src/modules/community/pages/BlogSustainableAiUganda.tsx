@@ -129,7 +129,7 @@ const BlogSustainableAiUganda = () => {
     >
       <p>
         <strong>
-          Last week Alexander Flom represented the UOR Foundation at the Uganda Deep Tech Summit in Kampala.
+          Last week <a href="https://www.linkedin.com/in/alexander-flom/" target="_blank" rel="noopener noreferrer">Alexander Flom</a> represented the UOR Foundation at the Uganda Deep Tech Summit in Kampala.
         </strong>{" "}
         Uganda is quickly emerging as East Africa's gateway for applied AI.
       </p>
