@@ -12,7 +12,7 @@ export const whatWeDoCards = [
   {
     iconKey: "Rocket",
     title: "Project Launchpad",
-    desc: "Projects move through three stages: Sandbox, Incubating, Graduated, with community review at every step.",
+    desc: "A home for open-source projects built on the UOR Framework, with community review at every step.",
   },
 ];
 
