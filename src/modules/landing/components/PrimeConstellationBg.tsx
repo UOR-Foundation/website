@@ -233,10 +233,34 @@ const PrimeConstellationBg = () => {
   const lastFrameRef = useRef(0);
   const FRAME_INTERVAL = 1000 / 30; // 30fps cap
 
-  // Pre-baked field-star sprite (all 180 stars rendered once per resize).
-  // Per-frame: drawImage + globalAlpha modulation for collective twinkle.
-  const fieldSpriteRef = useRef<HTMLCanvasElement | null>(null);
-  const fieldSpriteWHRef = useRef({ w: 0, h: 0 });
+  // Field-star glow sprites, one per hue (5 total). Built lazily; draw
+  // at unit size and scale via drawImage instead of building a fresh
+  // createRadialGradient for every star every frame (the biggest hot path).
+  const fieldGlowSpritesRef = useRef<HTMLCanvasElement[]>([]);
+
+  const buildFieldGlowSprites = () => {
+    if (fieldGlowSpritesRef.current.length) return fieldGlowSpritesRef.current;
+    const SIZE = 32; // unit sprite, scaled per draw
+    const out: HTMLCanvasElement[] = [];
+    for (const hue of STAR_HUES) {
+      const c = document.createElement("canvas");
+      c.width = SIZE;
+      c.height = SIZE;
+      const cctx = c.getContext("2d");
+      if (cctx) {
+        const cx = SIZE / 2;
+        const grad = cctx.createRadialGradient(cx, cx, 0, cx, cx, cx);
+        grad.addColorStop(0, `hsla(${hue}, 0.6)`);
+        grad.addColorStop(0.3, `hsla(${hue}, 0.15)`);
+        grad.addColorStop(1, `hsla(${hue}, 0)`);
+        cctx.fillStyle = grad;
+        cctx.fillRect(0, 0, SIZE, SIZE);
+      }
+      out.push(c);
+    }
+    fieldGlowSpritesRef.current = out;
+    return out;
+  };
 
   // Cached offscreen sprites for constellation star glows, keyed by
   // `${hue}|${brightness}`. Each sprite holds the nebula + inner glow at
