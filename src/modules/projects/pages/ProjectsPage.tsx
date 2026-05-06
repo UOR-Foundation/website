@@ -1,5 +1,5 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, Send, CheckCircle2, Github, LayoutGrid, List, Box, Cpu, Triangle, Atom, Network, ShieldCheck, type LucideIcon } from "lucide-react";
+import { ExternalLink, Send, CheckCircle2, Github, LayoutGrid, List, Box, Cpu, Triangle, Atom, Bitcoin, ShieldCheck, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { projects as projectsData } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
@@ -8,7 +8,7 @@ import imgHologram from "@/assets/project-hologram.jpg";
 import imgAtlas from "@/assets/project-atlas.png";
 import imgAtomicLang from "@/assets/project-atomic-lang.jpg";
 import imgPrism from "@/assets/project-prism.png";
-import imgUns from "@/assets/project-uns.jpg";
+import imgPrismBtc from "@/assets/project-prism-btc.jpg";
 import imgSeveranceAi from "@/assets/project-severance-ai.jpg";
 
 const projectImageMap: Record<string, string> = {
@@ -16,7 +16,7 @@ const projectImageMap: Record<string, string> = {
   atlas: imgAtlas,
   atomicLang: imgAtomicLang,
   prism: imgPrism,
-  uns: imgUns,
+  prismBtc: imgPrismBtc,
   severanceAi: imgSeveranceAi,
 };
 
@@ -25,7 +25,7 @@ const projectIconMap: Record<string, LucideIcon> = {
   atomicLang: Cpu,
   prism: Triangle,
   atlas: Atom,
-  uns: Network,
+  prismBtc: Bitcoin,
   severanceAi: ShieldCheck,
 };
 
@@ -172,7 +172,7 @@ const DISPLAY_ORDER = [
   "atomic-language-model",
   "prism",
   "atlas-embeddings",
-  "uns",
+  "prism-btc",
   "project-severance-ai",
 ];
 

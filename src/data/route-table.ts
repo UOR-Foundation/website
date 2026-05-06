@@ -22,7 +22,7 @@ export const routeTable = [
   { path: "/projects/atomic-language-model", label: "Project: Atomic Language Model" },
   { path: "/projects/prism", label: "Project: Prism" },
   { path: "/projects/uor-mcp", label: "Project: UOR MCP" },
-  { path: "/projects/uns", label: "Project: UoR Name Service" },
+  { path: "/projects/prism-btc", label: "Project: prism-btc" },
   { path: "/projects/qr-cartridge", label: "Project: QR Cartridge" },
   { path: "/projects/hologram-sdk", label: "Project: Hologram SDK" },
   { path: "/projects/uor-identity", label: "Project: UOR Identity" },
