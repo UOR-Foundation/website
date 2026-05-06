@@ -25,6 +25,7 @@ export const newsItems: NewsItem[] = [
     category: "Engineering",
     href: "https://crates.io/crates/uor-foundation",
     external: true,
+    coverKey: "uorFoundationCrate",
   },
   {
     title: "The Path to Sustainable AI: Notes from the Uganda Deep Tech Summit",
