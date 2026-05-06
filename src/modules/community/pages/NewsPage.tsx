@@ -206,31 +206,23 @@ const NewsRow = ({ item }: { item: NewsItem }) => {
   return (
     <Wrapper
       {...wrapperProps}
-      className="group grid grid-cols-[88px_1fr_20px] md:grid-cols-[112px_180px_1fr_24px] items-start gap-5 md:gap-8 py-5 md:py-6 px-3 -mx-3 rounded-md transition-colors hover:bg-foreground/[0.02]"
+      className="group grid grid-cols-[1fr_auto] md:grid-cols-[280px_1fr_140px] items-start gap-5 md:gap-10 py-6 md:py-7 px-3 -mx-3 rounded-md transition-colors hover:bg-foreground/[0.02]"
     >
-      {/* Date */}
-      <time
-        dateTime={item.isoDate}
-        className="text-[11px] uppercase tracking-[0.12em] font-body text-foreground/45 tabular-nums whitespace-nowrap pt-1.5"
-      >
-        {formatShortDate(item.isoDate)}
-      </time>
-
       {/* Cover thumbnail */}
-      <div className="hidden md:block overflow-hidden rounded-md bg-card border border-border/50 aspect-[16/10]">
+      <div className="hidden md:block overflow-hidden rounded-lg bg-card border border-border/50 aspect-[16/10]">
         {item.coverKey ? (
           <img
             src={getBlogCover(item.coverKey)}
             alt=""
             aria-hidden="true"
             loading="lazy"
-            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.04]"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           />
         ) : null}
       </div>
 
       {/* Title + excerpt */}
-      <div className="min-w-0">
+      <div className="min-w-0 pt-1">
         <p className="text-[10px] font-semibold font-body uppercase tracking-[0.16em] text-primary/75 mb-1.5">
           {item.category}
         </p>
@@ -242,10 +234,26 @@ const NewsRow = ({ item }: { item: NewsItem }) => {
         </p>
       </div>
 
-      {/* Affordance */}
-      <span className="hidden md:inline-flex justify-end pt-[26px] text-foreground/25 transition-all duration-200 group-hover:text-primary group-hover:translate-x-0.5">
-        {item.external ? <ArrowUpRight size={16} /> : <ArrowRight size={16} />}
-      </span>
+      {/* Date + affordance (right rail) */}
+      <div className="hidden md:flex items-center justify-end gap-3 pt-2 whitespace-nowrap">
+        <time
+          dateTime={item.isoDate}
+          className="text-[11px] uppercase tracking-[0.14em] font-body text-foreground/45 tabular-nums"
+        >
+          {formatShortDate(item.isoDate)}
+        </time>
+        <span className="text-foreground/25 transition-all duration-200 group-hover:text-primary group-hover:translate-x-0.5">
+          {item.external ? <ArrowUpRight size={16} /> : <ArrowRight size={16} />}
+        </span>
+      </div>
+
+      {/* Mobile date */}
+      <time
+        dateTime={item.isoDate}
+        className="md:hidden text-[11px] uppercase tracking-[0.14em] font-body text-foreground/45 tabular-nums pt-1.5 self-start"
+      >
+        {formatShortDate(item.isoDate)}
+      </time>
     </Wrapper>
   );
 };
