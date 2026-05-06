@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { Copy, Check, BookOpen, Github, Package, ArrowRight, Code2 } from "lucide-react";
+import { Copy, Check, BookOpen, Github, Package, ArrowRight, Code2, ListOrdered } from "lucide-react";
 import {
   GITHUB_FRAMEWORK_URL,
   GITHUB_FRAMEWORK_DOCS_URL,
@@ -253,6 +253,8 @@ const LiveDemo = () => {
   const formMap = useRef<Map<string, unknown>>(new Map());
   const kind = detectAddressKind(address);
   const [showCode, setShowCode] = useState(false);
+  const [showTrace, setShowTrace] = useState(false);
+  const [decodeReceipt, setDecodeReceipt] = useState<EnrichedReceipt | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -304,10 +306,15 @@ const LiveDemo = () => {
       encode(resolved)
         .then((r2) => {
           setVerifyState(r2.derivationId === receipt.derivationId ? "ok" : "mismatch");
+          setDecodeReceipt(r2);
         })
-        .catch(() => setVerifyState("mismatch"));
+        .catch(() => {
+          setVerifyState("mismatch");
+          setDecodeReceipt(null);
+        });
     } else {
       setVerifyState("idle");
+      setDecodeReceipt(null);
     }
   }, [address, receipt]);
 
@@ -356,19 +363,34 @@ const LiveDemo = () => {
         <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
             <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · UOR address — derived from the data itself</div>
-            <button
-              type="button"
-              onClick={() => setShowCode((v) => !v)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-body transition-colors ${
-                showCode
-                  ? "border-primary/60 bg-primary/10 text-foreground"
-                  : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
-              }`}
-              title="View the actual encode/decode source"
-            >
-              <Code2 size={12} />
-              {showCode ? "Hide code" : "View code"}
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setShowTrace((v) => !v)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-body transition-colors ${
+                  showTrace
+                    ? "border-primary/60 bg-primary/10 text-foreground"
+                    : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
+                }`}
+                title="Show step-by-step pipeline trace"
+              >
+                <ListOrdered size={12} />
+                {showTrace ? "Hide trace" : "View trace"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCode((v) => !v)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-body transition-colors ${
+                  showCode
+                    ? "border-primary/60 bg-primary/10 text-foreground"
+                    : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
+                }`}
+                title="View the actual encode/decode source"
+              >
+                <Code2 size={12} />
+                {showCode ? "Hide code" : "View code"}
+              </button>
+            </div>
           </div>
           {showCode ? (
             <div className="flex flex-col gap-3">
@@ -391,6 +413,7 @@ const LiveDemo = () => {
               <p className="text-[14px] font-body text-foreground/60 leading-[1.6]">
                 128-bit ContentAddress per the <code className="font-mono">uor-foundation</code> crate. The Braille glyph is the same address rendered visually. IPv6 and IPFS CID are byte-level canonical projections of the same content hash.
               </p>
+              {showTrace && <PipelineTrace receipt={receipt} title="Encode trace" />}
               <button
                 type="button"
                 onClick={useDerivedAddress}
@@ -443,6 +466,9 @@ const LiveDemo = () => {
             </span>
           )}
         </div>
+        {showTrace && decodeReceipt && decoded !== undefined && (
+          <PipelineTrace receipt={decodeReceipt} title="Decode re-encode trace (proves round-trip)" />
+        )}
       </div>
     </div>
   );
@@ -497,6 +523,64 @@ const CodeBlock = ({ label, source }: { label: string; source: string }) => {
     </div>
   );
 };
+
+const PipelineTrace = ({ receipt, title }: { receipt: EnrichedReceipt; title: string }) => {
+  // Truncate N-Quads if very long, but show full hash bytes
+  const nquadsPreview = receipt.nquads.length > 600
+    ? receipt.nquads.slice(0, 600) + `\n… (${receipt.nquads.length - 600} more chars)`
+    : receipt.nquads;
+  const factors = receipt.ringFactors.length ? receipt.ringFactors.join(" × ") : "—";
+  const basis = receipt.ringBasis.length ? receipt.ringBasis.map((b) => `2^${b}`).join(" + ") : "0";
+  return (
+    <div className="rounded-lg border border-border/70 bg-background/60 overflow-hidden">
+      <div className="px-3 py-1.5 border-b border-border/60 flex items-center justify-between">
+        <span className="text-[10.5px] tracking-[0.18em] uppercase text-foreground/50 font-body">{title}</span>
+        <span className="text-[10.5px] font-body text-foreground/50">
+          engine: <span className="text-foreground/80">{receipt.engine}</span>
+          {receipt.crateVersion && <span className="text-foreground/50"> · v{receipt.crateVersion}</span>}
+        </span>
+      </div>
+      <div className="flex flex-col divide-y divide-border/50">
+        <TraceStep n={1} label="URDNA2015 canonical N-Quads" body={nquadsPreview} />
+        <TraceStep n={2} label="SHA-256 (hex)" body={receipt.hashHex} />
+        <TraceStep
+          n={3}
+          label="WASM ring algebra (uor-foundation)"
+          body={[
+            `ringByte         = 0x${receipt.ringByte.toString(16).padStart(2, "0")}  (${receipt.ringByte})`,
+            `partition        = ${receipt.ringPartition}`,
+            `factors          = ${factors}`,
+            `basis            = ${basis}`,
+            `popcount         = ${receipt.ringPopcount}`,
+            `criticalIdentity = ${receipt.ringCriticalIdentity ? "✓ x ⊕ ¬x = 0xFF" : "✗"}`,
+          ].join("\n")}
+        />
+        <TraceStep
+          n={4}
+          label="Identity forms"
+          body={[
+            `address = uor:${receipt.hashHex.slice(0, 32)}`,
+            `glyph   = ${receipt.glyph}`,
+            `ipv6    = ${receipt.ipv6}`,
+            `cid     = ${receipt.cid}`,
+          ].join("\n")}
+        />
+      </div>
+    </div>
+  );
+};
+
+const TraceStep = ({ n, label, body }: { n: number; label: string; body: string }) => (
+  <div className="px-3 py-2.5 flex flex-col gap-1">
+    <div className="flex items-center gap-2">
+      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary/15 text-primary text-[10px] font-body">{n}</span>
+      <span className="text-[10.5px] tracking-[0.18em] uppercase text-foreground/55 font-body">{label}</span>
+    </div>
+    <pre className="font-mono text-[11.5px] leading-[1.55] text-foreground/85 whitespace-pre-wrap break-all">
+{body}
+    </pre>
+  </div>
+);
 
 const CopyableCommand = ({ value }: { value: string }) => {
   const [copied, setCopied] = useState(false);
