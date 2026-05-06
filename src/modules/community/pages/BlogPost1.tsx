@@ -38,14 +38,14 @@ const BlogPost1 = () => {
             />
           </div>
           <figcaption className="mt-3 text-[11px] uppercase tracking-[0.22em] font-mono text-muted-foreground/80">
-            Watch: From SEAL Missions to Graph Theory — a conversation with Alex Flom
+            Watch: From SEAL Missions to Graph Theory, a conversation with Alex Flom
           </figcaption>
         </figure>
       }
     >
       <TldrAside>
         <p>
-          A single addressing system could turn the internet from a chaotic collection of disconnected documents into a unified, navigable knowledge graph. UOR (Universal Object Reference) gives every object — physical, digital, or conceptual — a mathematically-derived identifier that preserves its meaning and relationships across every system. Search becomes discovery, data keeps its context as it travels, and new insight emerges from the connections themselves.
+          A single addressing system could turn the internet from a chaotic collection of disconnected documents into a unified, navigable knowledge graph. Universal Object Reference (UOR) gives every object, whether physical, digital, or conceptual, a unique identifier that preserves its meaning and relationships across every system. Search becomes discovery, data keeps its context as it travels, and new insight emerges from the connections themselves.
         </p>
       </TldrAside>
 
