@@ -1,5 +1,5 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, Send, CheckCircle2, Github, LayoutGrid, List, Box, Cpu, Triangle, Atom, Network, BadgeCheck, type LucideIcon } from "lucide-react";
+import { ExternalLink, Send, CheckCircle2, Github, LayoutGrid, List, Box, Cpu, Triangle, Atom, Network, ShieldCheck, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { projects as projectsData } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
@@ -9,7 +9,7 @@ import imgAtlas from "@/assets/project-atlas.png";
 import imgAtomicLang from "@/assets/project-atomic-lang.jpg";
 import imgPrism from "@/assets/project-prism.png";
 import imgUns from "@/assets/project-uns.jpg";
-import imgUorCertificate from "@/assets/project-uor-certificate.jpg";
+import imgSeveranceAi from "@/assets/project-severance-ai.jpg";
 
 const projectImageMap: Record<string, string> = {
   hologram: imgHologram,
@@ -17,7 +17,7 @@ const projectImageMap: Record<string, string> = {
   atomicLang: imgAtomicLang,
   prism: imgPrism,
   uns: imgUns,
-  uorCertificate: imgUorCertificate,
+  severanceAi: imgSeveranceAi,
 };
 
 const projectIconMap: Record<string, LucideIcon> = {
@@ -26,7 +26,7 @@ const projectIconMap: Record<string, LucideIcon> = {
   prism: Triangle,
   atlas: Atom,
   uns: Network,
-  uorCertificate: BadgeCheck,
+  severanceAi: ShieldCheck,
 };
 
 const Projects = () => {
@@ -173,7 +173,7 @@ const DISPLAY_ORDER = [
   "prism",
   "atlas-embeddings",
   "uns",
-  "uor-certificate",
+  "project-severance-ai",
 ];
 
 const ProjectAwesomeList = () => {
