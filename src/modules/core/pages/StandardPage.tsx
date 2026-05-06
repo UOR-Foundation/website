@@ -195,6 +195,29 @@ function uorAddress(hashHex: string): string {
   return `uor:${hashHex.slice(0, 32)}`;
 }
 
+/** Detect which canonical form an input string represents. */
+type AddressKind = "uor" | "glyph" | "ipv6" | "cid" | "unknown";
+function detectAddressKind(raw: string): AddressKind {
+  const s = raw.trim();
+  if (!s) return "unknown";
+  if (/^uor:[0-9a-f]+$/i.test(s)) return "uor";
+  // Braille glyph: any character in U+2800..U+28FF
+  if (/^[\u2800-\u28FF]+$/.test(s)) return "glyph";
+  // IPv6 ULA used by UOR (fd00:0075:6f72:…) — accept any well-formed v6 too
+  if (/^[0-9a-f:]+$/i.test(s) && s.includes(":")) return "ipv6";
+  // IPFS CIDv1 base32: starts with "b" followed by base32 chars
+  if (/^b[a-z2-7]{20,}$/i.test(s)) return "cid";
+  return "unknown";
+}
+
+const KIND_LABEL: Record<AddressKind, string> = {
+  uor: "UOR address",
+  glyph: "Braille glyph",
+  ipv6: "IPv6",
+  cid: "IPFS CID",
+  unknown: "—",
+};
+
 const LiveDemo = () => {
   const [input, setInput] = useState(DEMO_DEFAULT);
   const [receipt, setReceipt] = useState<EnrichedReceipt | null>(null);
@@ -202,9 +225,11 @@ const LiveDemo = () => {
   const [address, setAddress] = useState("");
   const [decoded, setDecoded] = useState<unknown | undefined>(undefined);
   const [verifyState, setVerifyState] = useState<"idle" | "ok" | "mismatch">("idle");
-  // Local map: short uor:<hex> address → source object (the registry indexes
-  // by long derivation ID; we add the short form here so decode works for it).
-  const shortMap = useRef<Map<string, unknown>>(new Map());
+  // Local map: every surface form (uor, glyph, ipv6, cid) → source object.
+  // The shared registry indexes by long derivation ID / cid / triword / ipv6;
+  // we mirror all forms here so decode works for the short uor: and glyph too.
+  const formMap = useRef<Map<string, unknown>>(new Map());
+  const kind = detectAddressKind(address);
 
   useEffect(() => {
     let cancelled = false;
@@ -225,7 +250,10 @@ const LiveDemo = () => {
       .then((r) => {
         if (cancelled) return;
         setReceipt(r);
-        shortMap.current.set(uorAddress(r.hashHex), parsed);
+        formMap.current.set(uorAddress(r.hashHex), parsed);
+        formMap.current.set(r.glyph, parsed);
+        formMap.current.set(r.ipv6.toLowerCase(), parsed);
+        formMap.current.set(r.cid, parsed);
       })
       .catch((e) => {
         if (cancelled) return;
@@ -243,8 +271,10 @@ const LiveDemo = () => {
       setVerifyState("idle");
       return;
     }
-    const value = decode(address.trim());
-    const resolved = value !== undefined ? value : shortMap.current.get(address.trim());
+    const key = address.trim();
+    const lookupKey = detectAddressKind(key) === "ipv6" ? key.toLowerCase() : key;
+    const value = decode(key);
+    const resolved = value !== undefined ? value : formMap.current.get(lookupKey);
     setDecoded(resolved);
     if (resolved !== undefined && receipt) {
       // Re-encode to verify round-trip determinism
@@ -332,7 +362,14 @@ const LiveDemo = () => {
       {/* Stage 3 : Decode */}
       <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">3 · Decode — address back to content</div>
+          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">
+            3 · Decode — address back to content
+            {address.trim() && (
+              <span className="ml-3 normal-case tracking-normal text-foreground/55">
+                detected: <span className="text-foreground/80">{KIND_LABEL[kind]}</span>
+              </span>
+            )}
+          </div>
           {decoded !== undefined && verifyState === "ok" && (
             <span className="inline-flex items-center gap-1.5 text-[12px] font-body text-primary">
               <Check size={13} /> Round-trip verified — same content, same address
@@ -345,7 +382,7 @@ const LiveDemo = () => {
         <input
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          placeholder="Paste a uor:<hex> address (or click the link above)"
+          placeholder="Paste any form: UOR address, Braille glyph, IPv6, or IPFS CID"
           spellCheck={false}
           className="w-full font-mono text-[13px] bg-background/60 border border-border/70 rounded-lg px-4 py-3 text-foreground/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
         />
