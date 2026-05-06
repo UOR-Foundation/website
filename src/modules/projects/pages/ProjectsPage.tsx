@@ -1,5 +1,5 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, Send, CheckCircle2, Github, LayoutGrid, List, Box, Cpu, Terminal, Atom, Bitcoin, ShieldCheck, type LucideIcon } from "lucide-react";
+import { ExternalLink, Send, CheckCircle2, Github, Globe, LayoutGrid, List, Box, Cpu, Terminal, Atom, Bitcoin, ShieldCheck, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { projects as projectsData } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
@@ -245,15 +245,21 @@ const ProjectAwesomeList = () => {
                     <span className="text-fluid-label font-semibold uppercase tracking-[0.14em] text-primary/70 font-body">
                       {p.category}
                     </span>
-                    <a
-                      href={p.url ?? GITHUB_ORG_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-[0.14em] text-foreground/80 hover:text-primary transition-colors font-body"
-                    >
-                      <Github size={14} strokeWidth={2} />
-                      GitHub
-                    </a>
+                    {(() => {
+                      const href = p.url ?? GITHUB_ORG_URL;
+                      const isGithub = href.includes("github.com");
+                      return (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-[0.14em] text-foreground/80 hover:text-primary transition-colors font-body"
+                        >
+                          {isGithub ? <Github size={14} strokeWidth={2} /> : <Globe size={14} strokeWidth={2} />}
+                          {isGithub ? "GitHub" : "Website"}
+                        </a>
+                      );
+                    })()}
                   </div>
                 </div>
               </article>
@@ -289,15 +295,21 @@ const ProjectAwesomeList = () => {
                     </p>
                   </div>
                 </div>
-                <a
-                  href={p.url ?? GITHUB_ORG_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-[0.14em] text-foreground/80 hover:text-primary transition-colors font-body shrink-0 self-start md:self-center pl-14 md:pl-0"
-                >
-                  <Github size={14} strokeWidth={2} />
-                  GitHub
-                </a>
+                {(() => {
+                  const href = p.url ?? GITHUB_ORG_URL;
+                  const isGithub = href.includes("github.com");
+                  return (
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-[0.14em] text-foreground/80 hover:text-primary transition-colors font-body shrink-0 self-start md:self-center pl-14 md:pl-0"
+                    >
+                      {isGithub ? <Github size={14} strokeWidth={2} /> : <Globe size={14} strokeWidth={2} />}
+                      {isGithub ? "GitHub" : "Website"}
+                    </a>
+                  );
+                })()}
               </li>
             );
           })}
