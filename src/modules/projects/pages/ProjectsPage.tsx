@@ -1,8 +1,7 @@
 import Layout from "@/modules/core/components/Layout";
-import { Link } from "react-router-dom";
-import { ExternalLink, ChevronRight, Send, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
-import { projects as projectsData, maturityInfo, type MaturityLevel, type ProjectData } from "@/data/projects";
+import { ExternalLink, Send, CheckCircle2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { projects as projectsData, maturityInfo, type MaturityLevel } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -94,37 +93,8 @@ const Projects = () => {
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             All Projects
           </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">Browse the Catalog</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projectsData.map((project, index) => (
-              <Link
-                key={project.slug}
-                to={`/projects/${project.slug}`}
-                className="group rounded-2xl border border-border bg-card p-5 hover:shadow-lg hover:border-primary/20 transition-all duration-300 animate-fade-in-up opacity-0 flex flex-col"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-fluid-label font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary font-body truncate">{project.category}</span>
-                  <span className={`text-fluid-label font-medium px-2 py-0.5 rounded-full border font-body shrink-0 ${maturityColors[project.maturity]}`}>{project.maturity}</span>
-                </div>
-                <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{project.name}</h3>
-                <p className="text-foreground/65 font-body text-fluid-body leading-relaxed flex-1">{project.description}</p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="flex items-center gap-1 text-primary text-fluid-label font-medium font-body group-hover:gap-2 transition-all">
-                    Learn more <ChevronRight size={14} />
-                  </span>
-                  {project.url && (
-                    <span
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(project.url, "_blank"); }}
-                      className="text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      <ExternalLink size={14} />
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-10">Browse the Catalog</h2>
+          <ProjectAwesomeList />
         </div>
       </section>
 
@@ -221,3 +191,57 @@ const Projects = () => {
 };
 
 export default Projects;
+
+const CATEGORY_ORDER = ["Core Infrastructure", "Systems", "Open Science"] as const;
+
+const ProjectAwesomeList = () => {
+  const grouped = useMemo(() => {
+    const map = new Map<string, typeof projectsData>();
+    for (const p of projectsData) {
+      const arr = map.get(p.category) ?? [];
+      arr.push(p);
+      map.set(p.category, arr);
+    }
+    const known = CATEGORY_ORDER.filter((c) => map.has(c));
+    const extras = [...map.keys()].filter((c) => !CATEGORY_ORDER.includes(c as typeof CATEGORY_ORDER[number])).sort();
+    return [...known, ...extras].map((c) => ({ category: c, items: map.get(c)! }));
+  }, []);
+
+  return (
+    <div className="space-y-12">
+      {grouped.map(({ category, items }) => (
+        <div key={category}>
+          <h3
+            id={`cat-${category.toLowerCase().replace(/\s+/g, "-")}`}
+            className="font-body text-fluid-label font-semibold tracking-[0.2em] uppercase text-primary/70 mb-3 scroll-mt-28"
+          >
+            {category}
+          </h3>
+          <ul className="divide-y divide-border/60 border-y border-border/60">
+            {items.map((p) => (
+              <li key={p.slug}>
+                <a
+                  href={p.url ?? "#"}
+                  target={p.url ? "_blank" : undefined}
+                  rel={p.url ? "noopener noreferrer" : undefined}
+                  className="group flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-3 hover:bg-muted/30 -mx-3 px-3 rounded-md transition-colors"
+                >
+                  <span className="font-body font-medium text-foreground text-fluid-body group-hover:text-primary transition-colors sm:shrink-0 sm:min-w-[14rem] inline-flex items-center gap-1.5">
+                    {p.name}
+                    {p.url && (
+                      <ExternalLink size={12} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </span>
+                  <span className="text-foreground/60 font-body text-fluid-body leading-relaxed">
+                    <span className="hidden sm:inline text-foreground/30 mr-2">—</span>
+                    {p.description}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+};
