@@ -272,7 +272,7 @@ const Research = () => {
             Join the Community
           </h2>
           <p className="text-section-dark-foreground/60 font-body text-fluid-body leading-relaxed max-w-xl mx-auto mb-10">
-            Connect with us on Discord, contribute on GitHub, or attend an upcoming event.
+            Connect with us on Discord and contribute on GitHub.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
