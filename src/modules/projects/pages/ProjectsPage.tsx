@@ -5,12 +5,6 @@ import { projects as projectsData, maturityInfo, type MaturityLevel } from "@/da
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
 import { supabase } from "@/integrations/supabase/client";
 
-const maturityColors: Record<MaturityLevel, string> = {
-  Graduated: "bg-primary/15 text-primary border-primary/20",
-  Incubating: "bg-accent/15 text-accent border-accent/20",
-  Sandbox: "bg-muted text-muted-foreground border-border",
-};
-
 const maturityDotColors: Record<MaturityLevel, string> = {
   Graduated: "bg-primary",
   Incubating: "bg-accent",
