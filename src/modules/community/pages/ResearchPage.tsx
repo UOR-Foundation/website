@@ -222,10 +222,10 @@ const Research = () => {
               <Link
                 key={post.title}
                 to={post.href}
-                className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/20 animate-fade-in-up opacity-0"
+                className="highlight-card group animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="aspect-[1.618/1] overflow-hidden rounded-lg">
+                <div className="aspect-phi overflow-hidden">
                   <img
                     src={getBlogCover(post.coverKey)}
                     alt={post.title}

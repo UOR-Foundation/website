@@ -256,11 +256,11 @@ const FeaturedNews = ({ item }: { item: NewsItem }) => {
   return (
     <Wrapper
       {...wrapperProps}
-      className="group block mb-[1.618rem] md:mb-[2.618rem] rounded-xl overflow-hidden border border-border/60 bg-card transition-all duration-300 hover:border-primary/40 hover:shadow-lg"
+      className="highlight-card highlight-card--feature group block mb-[1.618rem] md:mb-[2.618rem]"
     >
       <div className="grid grid-cols-1 md:grid-cols-[1.618fr_1fr]">
         {item.coverKey && (
-          <div className="overflow-hidden bg-background/40 aspect-[1.618/1] md:aspect-[1.618/1]">
+          <div className="overflow-hidden bg-background/40 aspect-phi">
             <img
               src={getBlogCover(item.coverKey)}
               alt=""
@@ -375,7 +375,7 @@ const NewsCard = ({ item }: { item: NewsItem }) => {
   return (
     <Wrapper
       {...wrapperProps}
-      className="group flex flex-col rounded-lg border border-border/70 bg-card overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+      className="highlight-card group"
     >
       {item.coverKey && (
         <div className="overflow-hidden bg-card aspect-phi">

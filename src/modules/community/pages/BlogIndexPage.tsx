@@ -40,7 +40,7 @@ const BlogIndexPage = () => {
               <Link
                 key={post.href}
                 to={post.href}
-                className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/20 animate-fade-in-up opacity-0"
+                className="highlight-card group animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
                 <div className="aspect-phi overflow-hidden">
