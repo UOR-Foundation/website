@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, LayoutGrid, List, Rss } from "lucide-react";
@@ -33,6 +33,24 @@ const NewsPage = () => {
   const [filter, setFilter] = useState<"All" | NewsCategory>("All");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [view, setView] = useState<ViewMode>("list");
+
+  // RSS autodiscovery: expose two <link rel="alternate"> tags so feed
+  // readers and browsers can find the All and Engineering feeds.
+  useEffect(() => {
+    const links: HTMLLinkElement[] = [];
+    const add = (title: string, href: string) => {
+      const el = document.createElement("link");
+      el.rel = "alternate";
+      el.type = "application/rss+xml";
+      el.title = title;
+      el.href = href;
+      document.head.appendChild(el);
+      links.push(el);
+    };
+    add("UOR Foundation, all news (RSS)", rssUrl("All"));
+    add("UOR Foundation, Engineering (RSS)", rssUrl("Engineering"));
+    return () => links.forEach((l) => l.remove());
+  }, []);
 
   const counts = useMemo(() => {
     const map: Record<string, number> = { All: newsItems.length };
