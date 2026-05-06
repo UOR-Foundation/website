@@ -15,16 +15,16 @@ const HighlightsSection = () => {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-golden-lg gap-y-golden-xl">
           {highlights.map((item, index) => (
             <a
               key={item.title}
               href={item.href}
               {...(item.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              className="group flex flex-col overflow-hidden border-t border-foreground/8 transition-all duration-300 animate-fade-in-up opacity-0"
+              className="group flex flex-col overflow-hidden transition-all duration-300 animate-fade-in-up opacity-0"
               style={{ animationDelay: `${0.11 + index * 0.11}s` }}
             >
-              <div className="relative aspect-[5/3] overflow-hidden">
+              <div className="relative aspect-[1.618/1] overflow-hidden rounded-lg">
                 <img
                   src={getBlogCover(item.imageKey)}
                   alt={item.title}
