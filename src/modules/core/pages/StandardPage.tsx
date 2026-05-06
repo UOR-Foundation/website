@@ -252,6 +252,7 @@ const LiveDemo = () => {
   // we mirror all forms here so decode works for the short uor: and glyph too.
   const formMap = useRef<Map<string, unknown>>(new Map());
   const kind = detectAddressKind(address);
+  const [showCode, setShowCode] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -353,8 +354,31 @@ const LiveDemo = () => {
           <ArrowRight size={22} />
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
-          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · UOR address — derived from the data itself</div>
-          {error ? (
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · UOR address — derived from the data itself</div>
+            <button
+              type="button"
+              onClick={() => setShowCode((v) => !v)}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-body transition-colors ${
+                showCode
+                  ? "border-primary/60 bg-primary/10 text-foreground"
+                  : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
+              }`}
+              title="View the actual encode/decode source"
+            >
+              <Code2 size={12} />
+              {showCode ? "Hide code" : "View code"}
+            </button>
+          </div>
+          {showCode ? (
+            <div className="flex flex-col gap-3">
+              <CodeBlock label="encoder · src/lib/uor-codec.ts" source={ENCODER_SOURCE} />
+              <CodeBlock label="decoder · src/lib/uor-codec.ts" source={DECODER_SOURCE} />
+              <p className="text-[12px] font-body text-foreground/55 leading-[1.6]">
+                Two functions. <code className="font-mono">encode</code> runs URDNA2015 → SHA-256 → WASM ring algebra from the <code className="font-mono">uor-foundation</code> crate. <code className="font-mono">decode</code> is a pure lookup — no server, no registry service.
+              </p>
+            </div>
+          ) : error ? (
             <div className="font-mono text-[13px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/55 min-h-[88px]">
               {error}
             </div>
