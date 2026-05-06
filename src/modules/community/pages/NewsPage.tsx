@@ -1,9 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, LayoutGrid, List } from "lucide-react";
+import { ArrowRight, ArrowUpRight, LayoutGrid, List, Rss } from "lucide-react";
 import { newsItems, type NewsCategory, type NewsItem } from "@/data/news-items";
 import { getBlogCover } from "@/data/blog-covers";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const rssUrl = (category: "All" | NewsCategory) =>
+  `${SUPABASE_URL ?? ""}/functions/v1/news-rss?category=${encodeURIComponent(category)}`;
 
 const CATEGORIES: ("All" | NewsCategory)[] = [
   "All",
@@ -29,6 +33,24 @@ const NewsPage = () => {
   const [filter, setFilter] = useState<"All" | NewsCategory>("All");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [view, setView] = useState<ViewMode>("list");
+
+  // RSS autodiscovery: expose two <link rel="alternate"> tags so feed
+  // readers and browsers can find the All and Engineering feeds.
+  useEffect(() => {
+    const links: HTMLLinkElement[] = [];
+    const add = (title: string, href: string) => {
+      const el = document.createElement("link");
+      el.rel = "alternate";
+      el.type = "application/rss+xml";
+      el.title = title;
+      el.href = href;
+      document.head.appendChild(el);
+      links.push(el);
+    };
+    add("UOR Foundation, all news (RSS)", rssUrl("All"));
+    add("UOR Foundation, Engineering (RSS)", rssUrl("Engineering"));
+    return () => links.forEach((l) => l.remove());
+  }, []);
 
   const counts = useMemo(() => {
     const map: Record<string, number> = { All: newsItems.length };
@@ -116,6 +138,19 @@ const NewsPage = () => {
                   );
                 })}
               </ul>
+
+              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[12px] mt-7 mb-2.5">
+                Subscribe
+              </p>
+              <a
+                href={rssUrl(filter)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border/70 bg-card text-[13px] font-body text-foreground/75 hover:text-primary hover:border-primary/40 transition-colors"
+                aria-label={`RSS feed for ${filter} news`}
+              >
+                <Rss size={14} /> RSS · {filter}
+              </a>
 
               <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[12px] mt-7 mb-2.5">
                 Sort by
