@@ -14,7 +14,7 @@ function sievePrimes(max: number): Set<number> {
 }
 
 /* ── Constants ───────────────────────────────────────────────── */
-const MAX_N = 4000;
+const MAX_N = 2500;
 const GOLDEN_ANGLE = 2.3999632297286533; // π * (3 - √5)
 const SPOTLIGHT_RADIUS = 220;
 
@@ -151,7 +151,7 @@ const PrimeGrid = () => {
     };
 
     const loop = (now: number = 0) => {
-      if (document.hidden) {
+      if (document.hidden || !inViewRef.current) {
         rafRef.current = requestAnimationFrame(loop);
         return;
       }
@@ -176,6 +176,13 @@ const PrimeGrid = () => {
     const parent = canvas.parentElement;
     if (parent) observer.observe(parent);
 
+    // Pause work when the hero section is off-screen.
+    const io = new IntersectionObserver(
+      ([entry]) => { inViewRef.current = entry.isIntersecting; },
+      { rootMargin: "100px" },
+    );
+    if (parent) io.observe(parent);
+
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("mouseleave", onMouseLeave);
     canvas.addEventListener("touchmove", onTouchMove, { passive: true });
@@ -185,6 +192,7 @@ const PrimeGrid = () => {
 
     return () => {
       observer.disconnect();
+      io.disconnect();
       canvas.removeEventListener("mousemove", onMouseMove);
       canvas.removeEventListener("mouseleave", onMouseLeave);
       canvas.removeEventListener("touchmove", onTouchMove);
