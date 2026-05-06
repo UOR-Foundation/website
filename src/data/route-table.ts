@@ -27,5 +27,5 @@ export const routeTable = [
   { path: "/projects/hologram-sdk", label: "Project: Hologram SDK" },
   { path: "/projects/uor-identity", label: "Project: UOR Identity" },
   { path: "/projects/uor-privacy", label: "Project: UOR Privacy" },
-  { path: "/projects/uor-certificate", label: "Project: UOR Certificate" },
+  { path: "/projects/project-severance-ai", label: "Project: Severance AI" },
 ];
