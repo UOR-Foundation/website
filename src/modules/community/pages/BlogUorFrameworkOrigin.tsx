@@ -10,7 +10,7 @@ const COMPONENTS = [
   {
     icon: Box,
     title: "UOR Model",
-    desc: "A standard for referencing any object by its attributes — size, media type, digest, and any extension schemas a community defines. Shared schemas turn collections of objects into datasets.",
+    desc: "A standard for referencing any object by its attributes, including size, media type, digest, and any extension schemas a community defines. Shared schemas turn collections of objects into datasets.",
   },
   {
     icon: Database,
@@ -25,7 +25,7 @@ const COMPONENTS = [
   {
     icon: Network,
     title: "Attribution",
-    desc: "Datasets carry intent. By combining attributes with embedded runtimes, a dataset can convey behavior to an expert system — making it possible to reason about objects across domains.",
+    desc: "Datasets carry intent. By combining attributes with embedded runtimes, a dataset can convey behavior to an expert system, making it possible to reason about objects across domains.",
   },
 ];
 
@@ -73,10 +73,10 @@ const BlogUorFrameworkOrigin = () => {
         <strong>Universal Object Reference (UOR) is a radically different approach to serverless and decentralized systems.</strong>
       </p>
       <p>
-        The phrase "everything is an object" is familiar from object-oriented programming. UOR takes the idea one step further: what if we treated <em>every</em> piece of information in an information system the same way — websites, videos, CI pipelines, network addresses, DNS zones, Terraform configurations — and gave each one a unique reference derived from its content?
+        The phrase "everything is an object" is familiar from object-oriented programming. UOR takes the idea one step further: what if we treated <em>every</em> piece of information the same way, including websites, videos, build pipelines, network addresses, DNS zones, and infrastructure configurations, and gave each one a unique reference derived from its content?
       </p>
       <p>
-        A hash digest can uniquely represent any object, but a digest alone tells you nothing about what the object <em>is</em>. The only thing we can really know about an object is the description we attach to it — its attributes. Addressing objects by their attributes is the heart of Universal Object Reference, and it is what gives the framework its name.
+        A unique fingerprint can represent any object, but a fingerprint alone tells you nothing about what the object <em>is</em>. The only thing we can really know about an object is the description we attach to it: its attributes. Addressing objects by their attributes is the heart of Universal Object Reference, and it is what gives the framework its name.
       </p>
 
       <section>
@@ -109,7 +109,7 @@ const BlogUorFrameworkOrigin = () => {
           ))}
         </div>
         <p className="mt-6">
-          A blog post illustrates the pattern: the post itself is a mutable singular object that points at an immutable record of its body, while its comments — unbounded and arriving over time — live as a mutable array.
+          A blog post illustrates the pattern: the post itself is a single object that can be updated and points at a permanent record of its body, while its comments, which arrive over time, live as a growing list.
         </p>
       </section>
 
@@ -124,14 +124,14 @@ const BlogUorFrameworkOrigin = () => {
           <li><strong>Objects can be executable.</strong> Datasets carry the runtime needed to render or process them, no central server required.</li>
         </ul>
         <p>
-          Combine those three, and a dataset stops being a passive blob. It becomes an end-to-end provisioning configuration, a renderable webpage, a queryable knowledge graph, or training material for an expert system — all addressable, verifiable, and portable across every system that speaks UOR.
+          Combine those three, and a dataset stops being a passive bundle of files. It becomes a complete setup configuration, a webpage you can render, a knowledge graph you can query, or training material for an expert system, all addressable, verifiable, and portable across every system that speaks UOR.
         </p>
       </section>
 
       <section>
         <h2>Looking Ahead</h2>
         <p>
-          By shifting how we perceive information systems, UOR makes the efficiencies of serverless and decentralized computing reachable while turning fragmented data into homogeneous, attribute-addressable datasets ready for expert reasoning. The framework was — and still is — being cultivated in the open. Everything published since builds on this foundation.
+          By shifting how we perceive information systems, UOR makes the efficiencies of serverless and decentralized computing reachable, while turning scattered data into consistent, attribute-addressable datasets ready for expert reasoning. The framework was, and still is, being cultivated in the open. Everything published since builds on this foundation.
         </p>
         <p>
           Originally written by Alex Flom and Andrew Block on the{" "}

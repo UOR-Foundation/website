@@ -5,7 +5,7 @@
 export const blogPosts = [
   {
     title: "The Path to Sustainable AI: Notes from the Uganda Deep Tech Summit",
-    excerpt: "Alex Flom represented the UOR Foundation in Kampala. The pitch: compute once, lookup forever — AI that runs on devices people already own, with data that stays local.",
+    excerpt: "Alex Flom represented the UOR Foundation in Kampala. The pitch: compute once, lookup forever. AI that runs on devices people already own, with data that stays local.",
     date: "May 6, 2026",
     tag: "Field Notes",
     href: "/blog/sustainable-ai-uganda",
@@ -37,7 +37,7 @@ export const blogPosts = [
   },
   {
     title: "A Universal Data Fingerprint for Your AI Agent",
-    excerpt: "Two agents, one verifiable identifier. UOR derives a 256-bit fingerprint from canonical structure — same object, same hash, in any language or runtime.",
+    excerpt: "Two agents, one verifiable identifier. UOR derives a 256-bit fingerprint from canonical structure. same object, same hash, in any language or runtime.",
     date: "April 21, 2026",
     tag: "Standards",
     href: "/blog/universal-data-fingerprint",

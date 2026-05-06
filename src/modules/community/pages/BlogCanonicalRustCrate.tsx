@@ -44,13 +44,13 @@ const BlogCanonicalRustCrate = () => {
               Same object, same fingerprint, in any language or runtime.
             </p>
             <p className="font-body text-[15px] md:text-[16px] text-muted-foreground m-0 mt-4 leading-[1.7]">
-              UOR provides content consistency, not channel security. A man-in-the-middle who replaces payload and fingerprint together is invisible to UOR alone — pair it with TLS / mTLS for channel integrity and with a key-binding layer (Sigstore, JWS+X.509, DIDs, OIDC) if you need to prove who produced the object.
+              UOR provides content consistency, not channel security. A man-in-the-middle who replaces payload and fingerprint together is invisible to UOR alone, pair it with TLS / mTLS for channel integrity and with a key-binding layer (Sigstore, JWS+X.509, DIDs, OIDC) if you need to prove who produced the object.
             </p>
           </>
         }
       >
         <p>
-          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent — re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>canonical structure</em>, not its bytes, so the same object hashes to the same identifier in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman for verification — a decentralized, universal, self-verifying identifier for any structured object.
+          When two agents exchange data, the receiver can&rsquo;t prove what arrived is what was sent, re-serialization breaks every signature. UOR derives a 256-bit fingerprint from the object&rsquo;s <em>canonical structure</em>, not its bytes, so the same object hashes to the same identifier in any language or runtime. The result: agents verify each other directly, with no PKI, no registry, no middleman for verification, a decentralized, universal, self-verifying identifier for any structured object.
         </p>
       </TldrAside>
 
@@ -60,10 +60,10 @@ const BlogCanonicalRustCrate = () => {
           Two AI agents exchange a tool call. Today, neither one can prove the object that arrived is the object that was sent. Re-serialize the JSON, the hash changes. Sign the bytes, the signature breaks at the first parse. Add a PKI, now you operate a PKI.
         </p>
         <p>
-          <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, decentralized, content-derived, self-verifying 256-bit identifier — a universal data fingerprint that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP today — and under any structured-data transport that carries JSON, including A2A.
+          <strong>UOR</strong> (Universal Object Reference) gives every structured object a permanent, decentralized, content-derived, self-verifying 256-bit identifier, a universal data fingerprint that travels with the object across languages, runtimes, and re-serializations. It is an open standard with a reference Rust implementation, <a href={CRATE_URL} target="_blank" rel="noopener noreferrer"><code>uor-foundation</code></a>, designed to sit underneath MCP today, and under any structured-data transport that carries JSON, including A2A.
         </p>
         <p>
-          UOR is a content-addressing scheme for digital objects — not an identity system for people. It answers <em>"what is this?"</em> with a 256-bit identifier, not <em>"who made this?"</em> The two questions compose: keep your existing identity layer (OAuth, mTLS, Sigstore, DIDs) for the second; UOR handles the first, everywhere, with no infrastructure.
+          UOR is a content-addressing scheme for digital objects, not an identity system for people. It answers <em>"what is this?"</em> with a 256-bit identifier, not <em>"who made this?"</em> The two questions compose: keep your existing identity layer (OAuth, mTLS, Sigstore, DIDs) for the second; UOR handles the first, everywhere, with no infrastructure.
         </p>
       </section>
 
@@ -79,12 +79,12 @@ const BlogCanonicalRustCrate = () => {
           The obvious fix has already been tried. <a href="https://github.com/modelcontextprotocol/modelcontextprotocol/issues/2395" target="_blank" rel="noopener noreferrer">SEP-2395 (MCPS)</a>, which proposed canonical-JSON signing for MCP, was closed on <strong>March 15, 2026</strong> after canonical JSON was shown to produce different bytes in Node.js and Python.
         </p>
         <p>
-          <strong>Where UOR sits relative to prior art.</strong> The pattern — canonicalize structure, hash canonical bytes, re-derive on receipt — is not new. IPFS CIDs do this over canonical CBOR / DAG-JSON. JSON-LD URDNA2015 does this over RDF graphs. Git does it over tree objects. UOR&rsquo;s contribution is not a new cryptographic primitive; it is the packaging:
+          <strong>Where UOR sits relative to prior art.</strong> The pattern, canonicalize structure, hash canonical bytes, re-derive on receipt, is not new. IPFS CIDs do this over canonical CBOR / DAG-JSON. JSON-LD URDNA2015 does this over RDF graphs. Git does it over tree objects. UOR&rsquo;s contribution is not a new cryptographic primitive; it is the packaging:
         </p>
         <ul>
           <li>IPFS CIDs require transcoding plain JSON into DAG-JSON or CBOR first. MCP and A2A speak plain JSON on the wire; asking every agent framework to adopt DAG-JSON is a larger ask than adopting a fingerprint field in <code>_meta</code>.</li>
           <li>JSON-LD URDNA2015 requires the payload to be modeled as RDF. Most agent JSON isn&rsquo;t and won&rsquo;t be.</li>
-          <li>JCS + SHA-256 is what everyone converged on after SEP-2395. UOR&rsquo;s only addition on top of JCS is NFC normalization of strings — load-bearing for the cross-runtime claim, but small.</li>
+          <li>JCS + SHA-256 is what everyone converged on after SEP-2395. UOR&rsquo;s only addition on top of JCS is NFC normalization of strings, load-bearing for the cross-runtime claim, but small.</li>
         </ul>
         <p>
           UOR is to MCP / A2A what CIDs are to content-addressable storage: the same pattern, applied in the ecosystem that needs it. The novelty is <em>where</em> it plugs in (a <code>_meta</code> field any MCP server can emit, any MCP client can verify, no protocol change) and the NFC extension that makes the universality claim actually hold on realistic string data. Not a new primitive.
@@ -94,10 +94,10 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>How it works</h2>
         <p>
-          The scheme is <strong><code>uor-sha256-v1</code></strong> — NFC Unicode normalization, then RFC 8785 JCS canonicalization, then SHA-256. It factors out key order, Unicode normalization form, integer width (<code>1</code> vs <code>1.0</code>), float representation including <code>-0</code>, and whitespace. Same object, same fingerprint, on any runtime, in any language.
+          The scheme is <strong><code>uor-sha256-v1</code></strong>, NFC Unicode normalization, then RFC 8785 JCS canonicalization, then SHA-256. It factors out key order, Unicode normalization form, integer width (<code>1</code> vs <code>1.0</code>), float representation including <code>-0</code>, and whitespace. Same object, same fingerprint, on any runtime, in any language.
         </p>
         <p>
-          NFC normalization is a documented UOR extension on top of RFC 8785. RFC 8785 JCS itself does not mandate NFC on input strings; UOR adds it so that <code>"café"</code> (NFC, U+00E9) and <code>"café"</code> (NFD, e + U+0301) produce the same fingerprint. The normalization is a pure function of the object's typed structure — deterministic by construction. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
+          NFC normalization is a documented UOR extension on top of RFC 8785. RFC 8785 JCS itself does not mandate NFC on input strings; UOR adds it so that <code>"café"</code> (NFC, U+00E9) and <code>"café"</code> (NFD, e + U+0301) produce the same fingerprint. The normalization is a pure function of the object's typed structure, deterministic by construction. Collision resistance is SHA-256, the same primitive Git and IPFS rely on.
         </p>
         <pre>{`object → normalize → SHA-256 → 256-bit fingerprint`}</pre>
       </section>
@@ -105,7 +105,7 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>What UOR does not do</h2>
         <p>
-          UOR Passport provides content integrity — proof that the bytes you hold are bit-for-bit the canonical form the content producer produced. It does not provide:
+          UOR Passport provides content integrity, proof that the bytes you hold are bit-for-bit the canonical form the content producer produced. It does not provide:
         </p>
         <ul>
           <li><strong>Identity binding.</strong> The public key embedded in an MCPS receipt proves a keypair was used to sign the fingerprint; it does not prove whose keypair. Anyone can generate an Ed25519 keypair, sign a receipt, and embed their own public key. If you need "this came from Alice, not Bob," layer Sigstore, JWS + X.509, OIDC, or a DID method on top.</li>
@@ -123,7 +123,7 @@ const BlogCanonicalRustCrate = () => {
         <p><strong>Workarounds available now:</strong></p>
         <ul>
           <li>Chunk large payloads and fingerprint each chunk, storing chunk identifiers in a manifest object you fingerprint separately.</li>
-          <li>Fingerprint the manifest, not the raw payload — the manifest is small and the chunk identifiers carry the integrity guarantee transitively.</li>
+          <li>Fingerprint the manifest, not the raw payload, the manifest is small and the chunk identifiers carry the integrity guarantee transitively.</li>
         </ul>
         <p>
           On the roadmap: <code>uor-sha256-v2</code> will use a Merkle tree over canonical chunks to lift the cap while preserving the single-identifier property. Versioning is explicit (<code>algorithm: &quot;uor-sha256-v1&quot;</code> today, <code>&quot;uor-sha256-v2&quot;</code> when shipped); <code>verify_passport</code> rejects unsupported versions, so migration is safe.
@@ -133,10 +133,10 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>Why not just mTLS?</h2>
         <p>
-          A reasonable question: if you already run mTLS between agents, don&rsquo;t you already have integrity and identity? For a single, direct two-agent call, largely yes — and UOR adds little. UOR earns its keep in the case mTLS does not cover: <strong>multi-hop agent pipelines.</strong>
+          A reasonable question: if you already run mTLS between agents, don&rsquo;t you already have integrity and identity? For a single, direct two-agent call, largely yes, and UOR adds little. UOR earns its keep in the case mTLS does not cover: <strong>multi-hop agent pipelines.</strong>
         </p>
         <p>
-          In a LangGraph, CrewAI, AutoGen, or A2A pipeline, an object typically traverses several agents before it reaches the verifier. Every hop terminates TLS, parses the JSON, acts on it, re-serializes it, re-encrypts it, and forwards it. The wire-level integrity guarantee mTLS provided dies at hop 1. Only the object&rsquo;s structural content continues to the next hop — and, without UOR, there is no way for a downstream agent to prove the object it now holds is bit-for-bit what the originator emitted.
+          In a LangGraph, CrewAI, AutoGen, or A2A pipeline, an object typically traverses several agents before it reaches the verifier. Every hop terminates TLS, parses the JSON, acts on it, re-serializes it, re-encrypts it, and forwards it. The wire-level integrity guarantee mTLS provided dies at hop 1. Only the object&rsquo;s structural content continues to the next hop, and, without UOR, there is no way for a downstream agent to prove the object it now holds is bit-for-bit what the originator emitted.
         </p>
         <p>
           UOR&rsquo;s fingerprint rides with the object, through every hop, in <code>_meta.uor.passport</code>. Any downstream verifier re-derives it from the object alone and compares. <strong>mTLS secures the wire; UOR secures the payload across wires.</strong> Use both. They compose.
@@ -206,7 +206,7 @@ const BlogCanonicalRustCrate = () => {
 
             {/* ============ FOOTER ============ */}
             <text x="411" y="372" textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 700 }}>
-              The identifier is derived from the content — same object, same identifier.
+              The identifier is derived from the content, same object, same identifier.
             </text>
             <text x="411" y="398" textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 14, fontFamily: "ui-monospace, monospace" }}>
               no PKI · no registry · no third party for verification
@@ -221,7 +221,7 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>How it compares</h2>
         <p>
-          Content addressing is well-trodden ground. Git shipped it in 2005, IPFS generalized it in 2015, Sigstore bolted PKI around it. Each is the right tool inside its lane. The unsolved part — and what UOR targets — is <strong>an identifier that holds through re-serialization</strong> (which happens on every parse, mutation, and hop between agents) <strong>without standing up a signing stack to keep it alive</strong>.
+          Content addressing is well-trodden ground. Git shipped it in 2005, IPFS generalized it in 2015, Sigstore bolted PKI around it. Each is the right tool inside its lane. The unsolved part, and what UOR targets, is <strong>an identifier that holds through re-serialization</strong> (which happens on every parse, mutation, and hop between agents) <strong>without standing up a signing stack to keep it alive</strong>.
         </p>
         <figure className="not-prose my-8 overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full text-[15px] md:text-base leading-relaxed">
@@ -310,7 +310,7 @@ const BlogCanonicalRustCrate = () => {
               </tr>
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><strong className="font-semibold text-foreground">CVE attributions and endorsement claims contested during review.</strong> <span className="text-muted-foreground">Several supporting claims did not hold up under procedural review; see the SEP-2395 closure for details.</span></td>
-                <td className="px-5 py-5 align-top text-foreground">No social trust surface. Around 1000 lines of Rust — small enough that a full read takes an afternoon, and we'd welcome one. "Small" does not mean "audited"; if your use case is security-sensitive, read the code or fund a review.</td>
+                <td className="px-5 py-5 align-top text-foreground">No social trust surface. Around 1000 lines of Rust, small enough that a full read takes an afternoon, and we'd welcome one. "Small" does not mean "audited"; if your use case is security-sensitive, read the code or fund a review.</td>
               </tr>
             </tbody>
           </table>
@@ -333,7 +333,7 @@ const BlogCanonicalRustCrate = () => {
       <section>
         <h2>Try it</h2>
         <p>
-          Connect any MCP-compatible agent to UOR's hosted server in under a minute. <strong>No install, no signup, no config.</strong> Pick your client below — the same canonical endpoint works everywhere:{" "}
+          Connect any MCP-compatible agent to UOR's hosted server in under a minute. <strong>No install, no signup, no config.</strong> Pick your client below, the same canonical endpoint works everywhere:{" "}
           <code>https://mcp.uor.foundation/mcp</code> <span className="not-prose inline-flex items-center gap-1.5 align-middle ml-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-mono uppercase tracking-[0.14em]"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />live</span>.
         </p>
         <McpInstallTabs />
@@ -352,7 +352,7 @@ const BlogCanonicalRustCrate = () => {
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><code>uor.encode_address</code></td>
                 <td className="px-5 py-5 align-top text-foreground"><code>sha256:&lt;64-hex&gt;</code></td>
-                <td className="px-5 py-5 align-top text-muted-foreground">256-bit content address of any JSON value — string, number, bool, array, or object. Computed via the <code>uor-sha256-v1</code> scheme (NFC + RFC 8785 JCS + SHA-256). Canonical form up to 64&nbsp;KB.</td>
+                <td className="px-5 py-5 align-top text-muted-foreground">256-bit content address of any JSON value, string, number, bool, array, or object. Computed via the <code>uor-sha256-v1</code> scheme (NFC + RFC 8785 JCS + SHA-256). Canonical form up to 64&nbsp;KB.</td>
               </tr>
               <tr>
                 <td className="px-5 py-5 align-top text-foreground"><code>uor.verify_passport</code></td>
@@ -368,7 +368,7 @@ const BlogCanonicalRustCrate = () => {
           </table>
         </figure>
         <p>
-          Every response carries a <code>uor.passport</code> envelope in <code>_meta</code> — and a <code>uor.mcps.receipt</code> when MCPS is enabled. Reference Rust implementation at{" "}
+          Every response carries a <code>uor.passport</code> envelope in <code>_meta</code>, and a <code>uor.mcps.receipt</code> when MCPS is enabled. Reference Rust implementation at{" "}
           <a href="https://github.com/humuhumu33/uor-passport" target="_blank" rel="noopener noreferrer">
             github.com/humuhumu33/uor-passport
           </a>
