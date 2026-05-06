@@ -348,6 +348,7 @@ const PrimeConstellationBg = () => {
     ctx.scale(dpr, dpr);
 
     const globalAngle = angleRef.current;
+    const fieldSprites = buildFieldGlowSprites();
 
     // ── Phase 1: Field stars with orbital drift ────────────────
     for (const star of fieldStars) {
@@ -375,15 +376,16 @@ const PrimeConstellationBg = () => {
       const r = star.size * localT * 1.1;
       const hue = STAR_HUES[star.hueIdx];
 
+      // Halo: draw the cached unit-glow sprite scaled to glowR, modulated
+      // with globalAlpha. ~10x faster than building a radial gradient.
       const glowR = r * 4;
-      const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowR);
-      glow.addColorStop(0, `hsla(${hue}, ${alpha * 0.6})`);
-      glow.addColorStop(0.3, `hsla(${hue}, ${alpha * 0.15})`);
-      glow.addColorStop(1, `hsla(${hue}, 0)`);
-      ctx.beginPath();
-      ctx.arc(sx, sy, glowR, 0, Math.PI * 2);
-      ctx.fillStyle = glow;
-      ctx.fill();
+      const sprite = fieldSprites[star.hueIdx];
+      if (sprite) {
+        ctx.globalAlpha = Math.min(1, alpha);
+        const d = glowR * 2;
+        ctx.drawImage(sprite, sx - glowR, sy - glowR, d, d);
+        ctx.globalAlpha = 1;
+      }
 
       ctx.beginPath();
       ctx.arc(sx, sy, Math.max(r * 0.35, 0.4), 0, Math.PI * 2);
@@ -443,26 +445,17 @@ const PrimeConstellationBg = () => {
           const useAmber = c.isFocalCluster && star.brightness >= 1.4;
           const hue = useAmber ? AMBER_HUE : baseHue;
 
-          // Subtle nebula halo
-          const nebulaR = starR * (useAmber ? 14 : 10);
-          const nebula = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, nebulaR);
-          nebula.addColorStop(0, `hsla(${hue}, ${starAlpha * (useAmber ? 0.15 : 0.1)})`);
-          nebula.addColorStop(0.4, `hsla(${hue}, ${starAlpha * 0.03})`);
-          nebula.addColorStop(1, `hsla(${hue}, 0)`);
-          ctx.beginPath();
-          ctx.arc(star.x, star.y, nebulaR, 0, Math.PI * 2);
-          ctx.fillStyle = nebula;
-          ctx.fill();
-
-          // Inner glow
-          const innerR = starR * 3.5;
-          const inner = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, innerR);
-          inner.addColorStop(0, `hsla(${hue}, ${starAlpha * 0.5})`);
-          inner.addColorStop(1, `hsla(${hue}, 0)`);
-          ctx.beginPath();
-          ctx.arc(star.x, star.y, innerR, 0, Math.PI * 2);
-          ctx.fillStyle = inner;
-          ctx.fill();
+          // Use a cached sprite (nebula + inner glow baked in) and modulate
+          // via globalAlpha. Brightness/breathe vary per frame, but binning
+          // brightness to 0.1 keeps the cache to ~25 entries total.
+          const brightnessKey = Math.round(star.brightness * 10) / 10;
+          const sprite = getGlowSprite(hue, brightnessKey, useAmber);
+          const breatheScale = breathe;
+          const dw = sprite.width * breatheScale;
+          const dh = sprite.height * breatheScale;
+          ctx.globalAlpha = Math.min(1, starAlpha);
+          ctx.drawImage(sprite, star.x - dw / 2, star.y - dh / 2, dw, dh);
+          ctx.globalAlpha = 1;
 
           // Bright core
           ctx.beginPath();
