@@ -1,5 +1,5 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, Send, CheckCircle2, Github, ArrowUpRight } from "lucide-react";
+import { ExternalLink, Send, CheckCircle2, Github } from "lucide-react";
 import { useMemo, useState } from "react";
 import { projects as projectsData } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
