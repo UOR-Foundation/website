@@ -45,12 +45,12 @@ export const projects: ProjectData[] = [
     imageKey: "prism",
   },
   {
-    name: "UOR Name Service (UNS)",
-    slug: "uns",
+    name: "prism-btc",
+    slug: "prism-btc",
     category: "Core Infrastructure",
-    description: "A complete network infrastructure platform where every resource is findable, verifiable, and protected. Trust is built into the address itself.",
-    url: "https://github.com/UOR-Foundation/uns",
-    imageKey: "uns",
+    description: "Bitcoin mining reframed as a UOR shape-preserving morphism search. Every block hash is a certified Grounded type, mining is a σ-convergence loop, and termination is formally proven in Lean 4.",
+    url: "https://github.com/afflom/prism-btc",
+    imageKey: "prismBtc",
   },
   {
     name: "Project Severance AI",
