@@ -1,9 +1,24 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, Send, CheckCircle2 } from "lucide-react";
+import { ExternalLink, Send, CheckCircle2, Github, ArrowUpRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { projects as projectsData } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
 import { supabase } from "@/integrations/supabase/client";
+import imgHologram from "@/assets/project-hologram.jpg";
+import imgAtlas from "@/assets/project-atlas.png";
+import imgAtomicLang from "@/assets/project-atomic-lang.jpg";
+import imgPrism from "@/assets/project-prism.png";
+import imgUns from "@/assets/project-uns.jpg";
+import imgUorCertificate from "@/assets/project-uor-certificate.jpg";
+
+const projectImageMap: Record<string, string> = {
+  hologram: imgHologram,
+  atlas: imgAtlas,
+  atomicLang: imgAtomicLang,
+  prism: imgPrism,
+  uns: imgUns,
+  uorCertificate: imgUorCertificate,
+};
 
 const Projects = () => {
   const [formData, setFormData] = useState({
