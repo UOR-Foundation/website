@@ -187,7 +187,28 @@ const LiveDemo = () => {
   }, [input]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap gap-2">
+        {PRESETS.map((p) => {
+          const active = input.trim() === p.value.trim();
+          return (
+            <button
+              key={p.label}
+              type="button"
+              onClick={() => setInput(p.value)}
+              title={p.hint}
+              className={`px-3.5 py-1.5 rounded-full border text-[13px] font-body transition-colors ${
+                active
+                  ? "border-primary/60 bg-primary/10 text-foreground"
+                  : "border-border text-foreground/70 hover:border-primary/40 hover:text-foreground"
+              }`}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="rounded-2xl border border-border bg-card p-5">
         <textarea
           value={input}
@@ -204,6 +225,7 @@ const LiveDemo = () => {
         <div className="font-mono text-[22px] leading-[1.4] break-all bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/90 min-h-[88px]">
           {result?.glyph ?? ""}
         </div>
+      </div>
       </div>
     </div>
   );
