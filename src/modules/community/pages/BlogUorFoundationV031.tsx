@@ -175,7 +175,7 @@ const BlogUorFoundationV031 = () => {
         <pre className="not-prose mt-4 mb-2 p-4 rounded-lg bg-muted/60 border border-border text-[13.5px] font-mono text-foreground leading-relaxed overflow-x-auto">
 {`$ cargo add uor-foundation`}
         </pre>
-        <p className="text-muted-foreground text-[14px]">
+        <p className="text-muted-foreground text-[15px] md:text-[16px] leading-[1.7]">
           Or pin it explicitly in <code>Cargo.toml</code>:
         </p>
         <pre className="not-prose mb-2 p-4 rounded-lg bg-muted/60 border border-border text-[13.5px] font-mono text-foreground leading-relaxed overflow-x-auto">
@@ -220,7 +220,7 @@ let address = post.address(); // permanent, content-derived address`}
                   {group.label}
                 </span>
               </div>
-              <ul className="space-y-2.5 text-[14.5px] leading-[1.65] text-foreground/90">
+              <ul className="space-y-2.5 text-[15px] md:text-[16px] leading-[1.7] text-foreground/90">
                 {group.items.map((item) => (
                   <li key={item} className="flex gap-2">
                     <span className="mt-2 h-1 w-1 rounded-full bg-primary/70 shrink-0" />
@@ -240,7 +240,7 @@ let address = post.address(); // permanent, content-derived address`}
           with <code>use uor_foundation::prelude::*;</code> and grow from there.
         </p>
         <figure className="not-prose my-6 overflow-x-auto rounded-xl border border-border bg-card">
-          <table className="w-full text-[14.5px] leading-relaxed">
+          <table className="w-full text-[15px] md:text-[16px] leading-[1.7]">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-left">
                 <th className="px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[38%]">
@@ -271,21 +271,21 @@ let address = post.address(); // permanent, content-derived address`}
           <div className="rounded-xl border border-border bg-card p-5">
             <Scale size={18} className="text-primary mb-3" />
             <div className="font-display text-[1.05em] font-semibold text-foreground">Apache-2.0</div>
-            <p className="mt-1 text-[13.5px] text-muted-foreground leading-[1.6]">
+            <p className="mt-1 text-[15px] md:text-[16px] text-muted-foreground leading-[1.7]">
               Free for commercial and personal use. Patent grant included.
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
             <Terminal size={18} className="text-primary mb-3" />
             <div className="font-display text-[1.05em] font-semibold text-foreground">Rust 1.75+</div>
-            <p className="mt-1 text-[13.5px] text-muted-foreground leading-[1.6]">
+            <p className="mt-1 text-[15px] md:text-[16px] text-muted-foreground leading-[1.7]">
               Builds on the current stable toolchain. No nightly required.
             </p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5">
             <ShieldCheck size={18} className="text-primary mb-3" />
             <div className="font-display text-[1.05em] font-semibold text-foreground">No unsafe</div>
-            <p className="mt-1 text-[13.5px] text-muted-foreground leading-[1.6]">
+            <p className="mt-1 text-[15px] md:text-[16px] text-muted-foreground leading-[1.7]">
               <code>#![forbid(unsafe_code)]</code> across the crate. Zero network dependencies at runtime.
             </p>
           </div>
