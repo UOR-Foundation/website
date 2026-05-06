@@ -544,6 +544,35 @@
   .btn-outline:visited {
     color: hsl(0 0% 100% / 0.7);
   }
+
+  /* ── φ Layout Primitives ────────────────────────────────────────
+   * Reusable scaffolds so callers stop hand-rolling gaps and splits.
+   * All gaps and proportions resolve to the φ ladder.
+   */
+  .phi-stack       { display: flex; flex-direction: column; gap: var(--phi-4); }
+  .phi-stack-sm    { display: flex; flex-direction: column; gap: var(--phi-3); }
+  .phi-stack-lg    { display: flex; flex-direction: column; gap: var(--phi-5); }
+  .phi-row         { display: flex; flex-wrap: wrap; gap: var(--phi-3); align-items: center; }
+  .phi-row-sm      { display: flex; flex-wrap: wrap; gap: var(--phi-2); align-items: center; }
+  .phi-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--phi-5);
+  }
+  @media (min-width: 768px) {
+    .phi-grid-2 { grid-template-columns: 1fr 1.618fr; }
+  }
+  .phi-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--phi-5);
+  }
+  @media (min-width: 768px) {
+    .phi-grid-3 { grid-template-columns: 1fr 1.618fr 2.618fr; }
+  }
+  .phi-measure    { max-width: var(--measure-md); }
+  .phi-measure-sm { max-width: var(--measure-sm); }
+  .phi-measure-lg { max-width: var(--measure-lg); }
 }
 
 @layer utilities {
