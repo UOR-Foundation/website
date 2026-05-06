@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { Copy, Check, BookOpen, Github, Package, ArrowRight, Code2, ListOrdered } from "lucide-react";
+import { Copy, Check, BookOpen, Github, Package, ArrowRight, Code2 } from "lucide-react";
 import {
   GITHUB_FRAMEWORK_URL,
   GITHUB_FRAMEWORK_DOCS_URL,
@@ -27,19 +27,19 @@ const PIPELINE_SOURCES: ReadonlyArray<{
   githubUrl: string;
 }> = [
   {
-    label: "encode / decode",
+    label: "encode / decode entry",
     path: "src/lib/uor-codec.ts",
     source: uorCodecSource,
     githubUrl: "https://github.com/UOR-Foundation/UOR-Framework/blob/main/src/lib/uor-codec.ts",
   },
   {
-    label: "canonicalization + hash",
+    label: "normalize + hash",
     path: "src/lib/uor-canonical.ts",
     source: uorCanonicalSource,
     githubUrl: "https://github.com/UOR-Foundation/UOR-Framework/blob/main/src/lib/uor-canonical.ts",
   },
   {
-    label: "WASM ring + registry",
+    label: "registry + lookup",
     path: "src/modules/oracle/lib/receipt-registry.ts",
     source: receiptRegistrySource,
     githubUrl: "https://github.com/UOR-Foundation/UOR-Framework/blob/main/src/modules/oracle/lib/receipt-registry.ts",
@@ -268,7 +268,6 @@ const LiveDemo = () => {
   const formMap = useRef<Map<string, unknown>>(new Map());
   const kind = detectAddressKind(address);
   const [showCode, setShowCode] = useState(false);
-  const [showTrace, setShowTrace] = useState(false);
   const [decodeReceipt, setDecodeReceipt] = useState<EnrichedReceipt | null>(null);
 
   useEffect(() => {
@@ -363,26 +362,13 @@ const LiveDemo = () => {
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => setShowTrace((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] font-body transition-colors ${
-              showTrace
-                ? "border-primary/60 bg-primary/10 text-foreground"
-                : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
-            }`}
-            title="Show step-by-step pipeline trace"
-          >
-            <ListOrdered size={14} />
-            {showTrace ? "Hide trace" : "View trace"}
-          </button>
-          <button
-            type="button"
             onClick={() => setShowCode((v) => !v)}
             className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] font-body transition-colors ${
               showCode
                 ? "border-primary/60 bg-primary/10 text-foreground"
                 : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
             }`}
-            title="View the actual encode/decode source"
+            title="See the actual source files and the values from this run"
           >
             <Code2 size={14} />
             {showCode ? "Hide code" : "View code"}
@@ -408,7 +394,7 @@ const LiveDemo = () => {
         <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
           <div className="text-[14px] tracking-[0.16em] uppercase text-foreground/55 font-body">2 · UOR address</div>
           {showCode ? (
-            <SourceAudit />
+            <SourceAudit encodeReceipt={receipt} />
           ) : error ? (
             <div className="font-mono text-[14px] leading-[1.65] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/55 min-h-[88px]">
               {error}
@@ -419,7 +405,6 @@ const LiveDemo = () => {
               <AddressRow label="glyph" value={receipt.glyph} />
               <AddressRow label="ipv6" value={receipt.ipv6} />
               <AddressRow label="cid" value={receipt.cid} />
-              {showTrace && <PipelineTrace receipt={receipt} title="Encode trace" />}
               <button
                 type="button"
                 onClick={useDerivedAddress}
@@ -472,8 +457,11 @@ const LiveDemo = () => {
             </span>
           )}
         </div>
-        {showTrace && decodeReceipt && decoded !== undefined && (
-          <PipelineTrace receipt={decodeReceipt} title="Decode re-encode trace (proves round-trip)" />
+        {showCode && decodeReceipt && decoded !== undefined && (
+          <PipelineTrace
+            receipt={decodeReceipt}
+            title="Run output — decode (re-encoded to verify round-trip)"
+          />
         )}
       </div>
     </div>
@@ -522,25 +510,40 @@ const useSha256Hex = (text: string) => {
   return hex;
 };
 
-const SourceAudit = () => {
+const SourceAudit = ({ encodeReceipt }: { encodeReceipt: EnrichedReceipt | null }) => {
+  // Tab 0 = "Run output" (values from this encode), 1..N = source files
   const [activeIdx, setActiveIdx] = useState(0);
   const [copied, setCopied] = useState(false);
-  const file = PIPELINE_SOURCES[activeIdx];
-  const lines = file.source.split("\n");
+  const isRunTab = activeIdx === 0;
+  const file = isRunTab ? null : PIPELINE_SOURCES[activeIdx - 1];
+  const lines = file ? file.source.split("\n") : [];
   const lineCount = lines.length;
-  const byteCount = new TextEncoder().encode(file.source).length;
-  const sha = useSha256Hex(file.source);
+  const byteCount = file ? new TextEncoder().encode(file.source).length : 0;
+  const sha = useSha256Hex(file?.source ?? "");
   return (
     <div className="flex flex-col gap-2">
-      {/* File tabs */}
+      {/* Tabs: Run output + source files */}
       <div className="flex flex-wrap gap-1">
+        <button
+          type="button"
+          onClick={() => setActiveIdx(0)}
+          className={`px-2.5 py-1 rounded-md text-[11px] font-body transition-colors border ${
+            isRunTab
+              ? "border-primary/60 bg-primary/10 text-foreground"
+              : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
+          }`}
+          title="Intermediate values from this encode"
+        >
+          Run output
+        </button>
         {PIPELINE_SOURCES.map((f, i) => {
-          const active = i === activeIdx;
+          const tabIdx = i + 1;
+          const active = tabIdx === activeIdx;
           return (
             <button
               key={f.path}
               type="button"
-              onClick={() => setActiveIdx(i)}
+              onClick={() => setActiveIdx(tabIdx)}
               className={`px-2.5 py-1 rounded-md text-[11px] font-body transition-colors border ${
                 active
                   ? "border-primary/60 bg-primary/10 text-foreground"
@@ -555,14 +558,22 @@ const SourceAudit = () => {
         })}
       </div>
 
-      {/* File header: full path, byte/line count, SHA-256, copy, GitHub */}
+      {isRunTab ? (
+        encodeReceipt ? (
+          <PipelineTrace receipt={encodeReceipt} title="Run output — encode" />
+        ) : (
+          <div className="rounded-lg border border-border/70 bg-background/60 p-4 font-body text-[12px] text-foreground/55">
+            Computing…
+          </div>
+        )
+      ) : (
       <div className="rounded-lg border border-border/70 bg-background/60 overflow-hidden">
         <div className="flex items-center justify-between gap-3 px-3 py-1.5 border-b border-border/60 flex-wrap">
-          <span className="font-mono text-[11px] text-foreground/70 break-all">{file.path}</span>
+          <span className="font-mono text-[11px] text-foreground/70 break-all">{file!.path}</span>
           <div className="flex items-center gap-3 text-[10.5px] font-body text-foreground/55">
             <span>{lineCount} lines · {byteCount} bytes</span>
             <a
-              href={file.githubUrl}
+              href={file!.githubUrl}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1 text-foreground/60 hover:text-foreground transition-colors"
@@ -574,7 +585,7 @@ const SourceAudit = () => {
             <button
               type="button"
               onClick={() => {
-                navigator.clipboard.writeText(file.source);
+                navigator.clipboard.writeText(file!.source);
                 setCopied(true);
                 setTimeout(() => setCopied(false), 1200);
               }}
@@ -609,21 +620,21 @@ const SourceAudit = () => {
           </table>
         </div>
       </div>
+      )}
 
       <p className="text-[12px] font-body text-foreground/55 leading-[1.6]">
-        These are the actual files this page imports and runs — loaded verbatim at build time via Vite's <code className="font-mono">?raw</code> loader. The SHA-256 above fingerprints exactly what your browser is executing. Copy any file and diff it against the GitHub source to verify there's no hidden behaviour between content and address.
+        {isRunTab
+          ? "Live values from your last encode — what each step produced before reaching the final address. Switch tabs to read the actual source that ran."
+          : "Verbatim source loaded at build time via Vite's ?raw loader. The SHA-256 above fingerprints exactly what your browser is executing — diff it against GitHub to confirm nothing's hidden between input and address."}
       </p>
     </div>
   );
 };
 
 const PipelineTrace = ({ receipt, title }: { receipt: EnrichedReceipt; title: string }) => {
-  // Truncate N-Quads if very long, but show full hash bytes
   const nquadsPreview = receipt.nquads.length > 600
     ? receipt.nquads.slice(0, 600) + `\n… (${receipt.nquads.length - 600} more chars)`
     : receipt.nquads;
-  const factors = receipt.ringFactors.length ? receipt.ringFactors.join(" × ") : "—";
-  const basis = receipt.ringBasis.length ? receipt.ringBasis.map((b) => `2^${b}`).join(" + ") : "0";
   return (
     <div className="rounded-lg border border-border/70 bg-background/60 overflow-hidden">
       <div className="px-3 py-1.5 border-b border-border/60 flex items-center justify-between">
@@ -634,23 +645,11 @@ const PipelineTrace = ({ receipt, title }: { receipt: EnrichedReceipt; title: st
         </span>
       </div>
       <div className="flex flex-col divide-y divide-border/50">
-        <TraceStep n={1} label="URDNA2015 canonical N-Quads" body={nquadsPreview} />
-        <TraceStep n={2} label="SHA-256 (hex)" body={receipt.hashHex} />
+        <TraceStep n={1} label="Normalized input (canonical string)" body={nquadsPreview} />
+        <TraceStep n={2} label="SHA-256 hash (hex)" body={receipt.hashHex} />
         <TraceStep
           n={3}
-          label="WASM ring algebra (uor-foundation)"
-          body={[
-            `ringByte         = 0x${receipt.ringByte.toString(16).padStart(2, "0")}  (${receipt.ringByte})`,
-            `partition        = ${receipt.ringPartition}`,
-            `factors          = ${factors}`,
-            `basis            = ${basis}`,
-            `popcount         = ${receipt.ringPopcount}`,
-            `criticalIdentity = ${receipt.ringCriticalIdentity ? "✓ x ⊕ ¬x = 0xFF" : "✗"}`,
-          ].join("\n")}
-        />
-        <TraceStep
-          n={4}
-          label="Identity forms"
+          label="Output addresses (derived from the hash)"
           body={[
             `address = uor:${receipt.hashHex.slice(0, 32)}`,
             `glyph   = ${receipt.glyph}`,
