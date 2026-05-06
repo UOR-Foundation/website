@@ -310,8 +310,10 @@ const LiveDemo = () => {
             <div className="flex flex-col gap-3">
               <AddressRow label="address" value={uorAddress(receipt.hashHex)} />
               <AddressRow label="glyph" value={receipt.glyph} large />
+              <AddressRow label="ipv6" value={receipt.ipv6} />
+              <AddressRow label="cid" value={receipt.cid} />
               <p className="text-[11.5px] font-body text-foreground/45 leading-[1.55]">
-                128-bit ContentAddress per the <code className="font-mono">uor-foundation</code> crate. The Braille glyph is the same address, rendered visually.
+                128-bit ContentAddress per the <code className="font-mono">uor-foundation</code> crate. The Braille glyph is the same address rendered visually. IPv6 and IPFS CID are byte-level canonical projections of the same content hash.
               </p>
               <button
                 type="button"
