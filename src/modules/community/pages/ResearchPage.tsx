@@ -1,19 +1,11 @@
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
 import { ExternalLink, ArrowRight, Plus } from "lucide-react";
-import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
-import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
-import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import { blogPosts } from "@/data/blog-posts";
+import { getBlogCover } from "@/data/blog-covers";
 import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_RESEARCH_URL } from "@/data/external-links";
 import { categoryResearch } from "@/data/research-papers";
 import DiscordIcon from "@/modules/core/components/icons/DiscordIcon";
-
-const coverMap: Record<string, string> = {
-  knowledgeGraph: blogKnowledgeGraph,
-  goldenSeed: blogGoldenSeed,
-  frameworkLaunch: blogFrameworkLaunch,
-};
 
 const tagStyles: Record<string, string> = {
   "Open Research": "bg-primary/10 text-primary",
@@ -231,7 +223,7 @@ const Research = () => {
               >
                 <div className="aspect-video overflow-hidden">
                   <img
-                    src={coverMap[post.coverKey]}
+                    src={getBlogCover(post.coverKey)}
                     alt={post.title}
                     className="w-full h-full object-contain bg-card transition-transform duration-500 group-hover:scale-105"
                   />
