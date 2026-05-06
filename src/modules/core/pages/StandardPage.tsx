@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { Copy, Check, BookOpen, Github, Package, ArrowRight, ArrowDown } from "lucide-react";
+import { Copy, Check, BookOpen, Github, Package, ArrowRight } from "lucide-react";
 import {
   GITHUB_FRAMEWORK_URL,
   GITHUB_FRAMEWORK_DOCS_URL,
@@ -184,6 +184,17 @@ function validateUorInput(value: unknown): string | null {
   return null;
 }
 
+/**
+ * UOR canonical address per the `uor-foundation` crate (v0.3.x):
+ * `ContentAddress` is a sealed 128-bit handle. We surface it as
+ * `uor:<32-hex>` — the upper 128 bits of the SHA-256 of the URDNA2015
+ * canonical N-Quads. This is the stable, short, sortable form a user
+ * sees and shares; the full 256-bit derivation ID stays internal.
+ */
+function uorAddress(hashHex: string): string {
+  return `uor:${hashHex.slice(0, 32)}`;
+}
+
 const LiveDemo = () => {
   const [input, setInput] = useState(DEMO_DEFAULT);
   const [receipt, setReceipt] = useState<EnrichedReceipt | null>(null);
@@ -191,6 +202,9 @@ const LiveDemo = () => {
   const [address, setAddress] = useState("");
   const [decoded, setDecoded] = useState<unknown | undefined>(undefined);
   const [verifyState, setVerifyState] = useState<"idle" | "ok" | "mismatch">("idle");
+  // Local map: short uor:<hex> address → source object (the registry indexes
+  // by long derivation ID; we add the short form here so decode works for it).
+  const shortMap = useRef<Map<string, unknown>>(new Map());
 
   useEffect(() => {
     let cancelled = false;
@@ -211,6 +225,7 @@ const LiveDemo = () => {
       .then((r) => {
         if (cancelled) return;
         setReceipt(r);
+        shortMap.current.set(uorAddress(r.hashHex), parsed);
       })
       .catch((e) => {
         if (cancelled) return;
@@ -229,10 +244,11 @@ const LiveDemo = () => {
       return;
     }
     const value = decode(address.trim());
-    setDecoded(value);
-    if (value !== undefined && receipt) {
+    const resolved = value !== undefined ? value : shortMap.current.get(address.trim());
+    setDecoded(resolved);
+    if (resolved !== undefined && receipt) {
       // Re-encode to verify round-trip determinism
-      encode(value)
+      encode(resolved)
         .then((r2) => {
           setVerifyState(r2.derivationId === receipt.derivationId ? "ok" : "mismatch");
         })
@@ -243,7 +259,7 @@ const LiveDemo = () => {
   }, [address, receipt]);
 
   const useDerivedAddress = () => {
-    if (receipt) setAddress(receipt.derivationId);
+    if (receipt) setAddress(uorAddress(receipt.hashHex));
   };
 
   return (
@@ -285,21 +301,22 @@ const LiveDemo = () => {
           <ArrowRight size={22} />
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
-          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · Address — derived from the data itself</div>
+          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · UOR address — derived from the data itself</div>
           {error ? (
             <div className="font-mono text-[13px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/55 min-h-[88px]">
               {error}
             </div>
           ) : receipt ? (
-            <div className="flex flex-col gap-2.5">
-              <AddressRow label="derivation" value={receipt.derivationId} />
-              <AddressRow label="glyph" value={receipt.glyph} mono large />
-              <AddressRow label="ipv6" value={receipt.ipv6} />
-              <AddressRow label="cid" value={receipt.cid} />
+            <div className="flex flex-col gap-3">
+              <AddressRow label="address" value={uorAddress(receipt.hashHex)} />
+              <AddressRow label="glyph" value={receipt.glyph} large />
+              <p className="text-[11.5px] font-body text-foreground/45 leading-[1.55]">
+                128-bit ContentAddress per the <code className="font-mono">uor-foundation</code> crate. The Braille glyph is the same address, rendered visually.
+              </p>
               <button
                 type="button"
                 onClick={useDerivedAddress}
-                className="self-start mt-1 text-[12px] font-body text-primary/80 hover:text-primary transition-colors"
+                className="self-start text-[12px] font-body text-primary/80 hover:text-primary transition-colors"
               >
                 Use this address to decode →
               </button>
@@ -311,9 +328,6 @@ const LiveDemo = () => {
       </div>
 
       {/* Stage 3 : Decode */}
-      <div className="hidden lg:flex items-center justify-center text-foreground/40">
-        <ArrowDown size={22} />
-      </div>
       <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">3 · Decode — address back to content</div>
@@ -329,7 +343,7 @@ const LiveDemo = () => {
         <input
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          placeholder="Paste a derivation ID, CID, or triword address (or click the link above)"
+          placeholder="Paste a uor:<hex> address (or click the link above)"
           spellCheck={false}
           className="w-full font-mono text-[13px] bg-background/60 border border-border/70 rounded-lg px-4 py-3 text-foreground/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
         />
