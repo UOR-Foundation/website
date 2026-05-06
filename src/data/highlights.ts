@@ -2,7 +2,7 @@
  * Community highlights. serializable data for UOR certification.
  * Image imports are mapped at the component level.
  */
-export type TagType = "Research" | "Announcement" | "Release" | "Field Notes" | "Engineering" | "Vision";
+export type TagType = "Research" | "Announcement" | "Release" | "Field Notes" | "Engineering" | "Vision" | "Open Research";
 
 export const highlights = [
   {
