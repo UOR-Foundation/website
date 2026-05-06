@@ -15,6 +15,16 @@ const CATEGORIES: ("All" | NewsCategory)[] = [
 
 type ViewMode = "list" | "grid";
 
+const formatShortDate = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
 const NewsPage = () => {
   const [filter, setFilter] = useState<"All" | NewsCategory>("All");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
@@ -41,7 +51,7 @@ const NewsPage = () => {
   return (
     <Layout>
       {/* Hero */}
-      <section className="hero-gradient pt-44 md:pt-56 pb-12 md:pb-20">
+      <section className="hero-gradient pt-44 md:pt-56 pb-8 md:pb-10">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             News
@@ -60,31 +70,31 @@ const NewsPage = () => {
       </section>
 
       {/* Newsroom */}
-      <section className="py-section-sm bg-background border-b border-border/40">
+      <section className="pt-10 md:pt-14 pb-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-10 lg:gap-14">
+          <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-10 lg:gap-16">
             {/* Sidebar */}
-            <aside className="lg:sticky lg:top-32 self-start">
-              <p className="font-semibold tracking-[0.2em] uppercase text-foreground/55 font-body text-fluid-caption mb-4">
+            <aside className="lg:sticky lg:top-28 self-start">
+              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/45 font-body text-[10px] mb-3">
                 Filter
               </p>
-              <ul className="flex lg:flex-col flex-wrap gap-1">
+              <ul className="flex lg:flex-col flex-wrap gap-0.5">
                 {CATEGORIES.map((cat) => {
                   const active = filter === cat;
                   return (
                     <li key={cat}>
                       <button
                         onClick={() => setFilter(cat)}
-                        className={`group w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-fluid-label font-body transition-colors ${
+                        className={`group w-full flex items-center justify-between gap-3 pl-3 pr-2 py-1.5 rounded-md text-[13px] font-body transition-colors border-l-2 ${
                           active
-                            ? "bg-primary/10 text-primary"
-                            : "text-foreground/70 hover:text-foreground hover:bg-card"
+                            ? "border-primary text-primary bg-primary/[0.06]"
+                            : "border-transparent text-foreground/65 hover:text-foreground hover:bg-foreground/[0.03]"
                         }`}
                       >
                         <span>{cat}</span>
                         <span
-                          className={`text-fluid-caption tabular-nums ${
-                            active ? "text-primary/80" : "text-foreground/40"
+                          className={`text-[11px] tabular-nums min-w-[20px] text-right ${
+                            active ? "text-primary/80" : "text-foreground/35"
                           }`}
                         >
                           {counts[cat] ?? 0}
@@ -95,15 +105,15 @@ const NewsPage = () => {
                 })}
               </ul>
 
-              <p className="font-semibold tracking-[0.2em] uppercase text-foreground/55 font-body text-fluid-caption mt-8 mb-3">
+              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/45 font-body text-[10px] mt-7 mb-2.5">
                 Sort by
               </p>
-              <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
+              <div className="inline-flex rounded-md border border-border/70 bg-card p-0.5">
                 {(["newest", "oldest"] as const).map((s) => (
                   <button
                     key={s}
                     onClick={() => setSort(s)}
-                    className={`px-3 py-1.5 rounded-md text-fluid-caption font-body transition-colors ${
+                    className={`px-2.5 py-1 rounded text-[11px] font-body transition-colors ${
                       sort === s
                         ? "bg-primary/10 text-primary"
                         : "text-foreground/60 hover:text-foreground"
@@ -114,46 +124,46 @@ const NewsPage = () => {
                 ))}
               </div>
 
-              <p className="font-semibold tracking-[0.2em] uppercase text-foreground/55 font-body text-fluid-caption mt-8 mb-3">
+              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/45 font-body text-[10px] mt-7 mb-2.5">
                 View
               </p>
-              <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
+              <div className="inline-flex rounded-md border border-border/70 bg-card p-0.5">
                 <button
                   onClick={() => setView("list")}
                   aria-label="List view"
                   aria-pressed={view === "list"}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-fluid-caption font-body transition-colors ${
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-body transition-colors ${
                     view === "list"
                       ? "bg-primary/10 text-primary"
                       : "text-foreground/60 hover:text-foreground"
                   }`}
                 >
-                  <List size={14} /> List
+                  <List size={12} /> List
                 </button>
                 <button
                   onClick={() => setView("grid")}
                   aria-label="Grid view"
                   aria-pressed={view === "grid"}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-fluid-caption font-body transition-colors ${
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-body transition-colors ${
                     view === "grid"
                       ? "bg-primary/10 text-primary"
                       : "text-foreground/60 hover:text-foreground"
                   }`}
                 >
-                  <LayoutGrid size={14} /> Grid
+                  <LayoutGrid size={12} /> Grid
                 </button>
               </div>
             </aside>
 
             {/* Content */}
-            <div>
+            <div className="max-w-[920px] w-full">
               {/* Toolbar */}
-              <div className="flex items-end justify-between gap-4 mb-6 pb-4 border-b border-border/60">
-                <p className="text-fluid-caption text-foreground/55 font-body tabular-nums">
+              <div className="flex items-end justify-between gap-4 mb-3">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-foreground/45 font-body tabular-nums">
                   {items.length} {items.length === 1 ? "item" : "items"}
                   {filter !== "All" && (
                     <>
-                      {" "}in <span className="text-foreground/80">{filter}</span>
+                      {" "}in <span className="text-foreground/70">{filter}</span>
                     </>
                   )}
                 </p>
@@ -164,7 +174,7 @@ const NewsPage = () => {
                   No items in this category yet.
                 </p>
               ) : view === "list" ? (
-                <ul className="divide-y divide-border/60">
+                <ul className="divide-y divide-border/40 border-t border-border/40">
                   {items.map((item) => (
                     <li key={item.href}>
                       <NewsRow item={item} />
@@ -196,34 +206,32 @@ const NewsRow = ({ item }: { item: NewsItem }) => {
   return (
     <Wrapper
       {...wrapperProps}
-      className="group grid grid-cols-[110px_1fr_auto] md:grid-cols-[140px_1fr_auto] items-baseline gap-5 md:gap-8 py-6 md:py-7 transition-colors"
+      className="group grid grid-cols-[88px_1fr_20px] md:grid-cols-[104px_1fr_24px] items-start gap-5 md:gap-8 py-5 md:py-6 px-3 -mx-3 rounded-md transition-colors hover:bg-foreground/[0.02]"
     >
       {/* Date */}
       <time
         dateTime={item.isoDate}
-        className="text-fluid-caption font-body text-foreground/50 tabular-nums tracking-wide whitespace-nowrap pt-0.5"
+        className="text-[11px] uppercase tracking-[0.12em] font-body text-foreground/45 tabular-nums whitespace-nowrap pt-1.5"
       >
-        {item.date}
+        {formatShortDate(item.isoDate)}
       </time>
 
       {/* Title + excerpt */}
       <div className="min-w-0">
-        <div className="flex items-center gap-3 mb-1.5">
-          <span className="text-fluid-caption font-medium font-body uppercase tracking-[0.14em] text-primary/80">
-            {item.category}
-          </span>
-        </div>
-        <h2 className="font-display text-fluid-card-title font-semibold text-foreground leading-snug transition-colors duration-200 group-hover:text-primary">
+        <p className="text-[10px] font-semibold font-body uppercase tracking-[0.16em] text-primary/75 mb-1.5">
+          {item.category}
+        </p>
+        <h2 className="font-display text-fluid-card-title font-semibold text-foreground leading-[1.2] tracking-tight transition-colors duration-200 group-hover:text-primary">
           {item.title}
         </h2>
-        <p className="mt-2 text-fluid-body text-foreground/65 font-body leading-relaxed line-clamp-2 max-w-3xl">
+        <p className="mt-2 text-[14px] md:text-[15px] text-foreground/60 font-body leading-relaxed line-clamp-2 max-w-2xl">
           {item.excerpt}
         </p>
       </div>
 
       {/* Affordance */}
-      <span className="hidden md:inline-flex self-center text-foreground/30 transition-all duration-200 group-hover:text-primary group-hover:translate-x-0.5">
-        {item.external ? <ArrowUpRight size={18} /> : <ArrowRight size={18} />}
+      <span className="hidden md:inline-flex pt-[26px] text-foreground/25 transition-all duration-200 group-hover:text-primary group-hover:translate-x-0.5">
+        {item.external ? <ArrowUpRight size={16} /> : <ArrowRight size={16} />}
       </span>
     </Wrapper>
   );
@@ -239,10 +247,10 @@ const NewsCard = ({ item }: { item: NewsItem }) => {
   return (
     <Wrapper
       {...wrapperProps}
-      className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/20"
+      className="group flex flex-col rounded-lg border border-border/70 bg-card overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
     >
       {item.coverKey && (
-        <div className="overflow-hidden bg-card aspect-video">
+        <div className="overflow-hidden bg-card aspect-[16/10]">
           <img
             src={getBlogCover(item.coverKey)}
             alt={item.title}
@@ -251,23 +259,23 @@ const NewsCard = ({ item }: { item: NewsItem }) => {
           />
         </div>
       )}
-      <div className="flex flex-col flex-1 p-5">
+      <div className="flex flex-col flex-1 p-6">
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-fluid-caption font-medium font-body uppercase tracking-[0.14em] text-primary/80">
+          <span className="text-[10px] font-semibold font-body uppercase tracking-[0.16em] text-primary/75">
             {item.category}
           </span>
-          <span className="text-fluid-caption text-foreground/50 font-body tabular-nums">
-            {item.date}
+          <span className="text-[11px] text-foreground/45 font-body tabular-nums uppercase tracking-[0.12em]">
+            {formatShortDate(item.isoDate)}
           </span>
         </div>
-        <h2 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary">
+        <h2 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 leading-[1.2] tracking-tight transition-colors duration-300 group-hover:text-primary">
           {item.title}
         </h2>
-        <p className="text-fluid-body text-foreground/70 font-body leading-relaxed">
+        <p className="text-[14px] md:text-[15px] text-foreground/65 font-body leading-relaxed line-clamp-3">
           {item.excerpt}
         </p>
-        <span className="inline-flex items-center gap-1.5 mt-auto pt-4 text-fluid-label font-medium text-foreground/45 group-hover:text-primary transition-colors duration-200 font-body">
-          Read more {item.external ? <ArrowUpRight size={13} /> : <ArrowRight size={13} />}
+        <span className="inline-flex items-center gap-1.5 mt-4 text-[12px] font-medium text-foreground/50 group-hover:text-primary transition-colors duration-200 font-body">
+          Read more {item.external ? <ArrowUpRight size={12} /> : <ArrowRight size={12} />}
         </span>
       </div>
     </Wrapper>
