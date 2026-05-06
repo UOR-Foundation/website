@@ -6,7 +6,7 @@
   "description": "Research, blog posts, events, and community engagement pages.",
   "uor:specification": "1.0.0",
   "uor:namespaces": ["proof:", "derivation:"],
-  "exports": ["ResearchPage", "BlogPost1", "BlogPost2", "BlogPost3", "ResearchPaperAtlasEmbeddings"],
+  "exports": ["ResearchPage", "BlogPost1", "BlogPost2", "BlogPost3", "BlogUorFrameworkOrigin", "ResearchPaperAtlasEmbeddings"],
   "dependencies": {
     "core": "^1.0.0"
   },
@@ -15,6 +15,7 @@
     "/blog/building-the-internets-knowledge-graph",
     "/blog/universal-mathematical-language",
     "/blog/uor-framework-launch",
+    "/blog/uor-framework-origin",
     "/research/atlas-embeddings"
   ],
   "api_endpoints": [],

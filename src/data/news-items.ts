@@ -56,4 +56,14 @@ export const newsItems: NewsItem[] = [
     href: "/blog/building-the-internets-knowledge-graph",
     coverKey: "knowledgeGraph",
   },
+  {
+    title: "The UOR Framework: Everything Is an Object",
+    excerpt:
+      "The original framework introduction. Universal Object Reference reframes information systems around content-derived addresses, attribute queries, and embedded runtimes.",
+    date: "July 13, 2022",
+    isoDate: "2022-07-13",
+    category: "Research",
+    href: "/blog/uor-framework-origin",
+    coverKey: "uorFrameworkOrigin",
+  },
 ];

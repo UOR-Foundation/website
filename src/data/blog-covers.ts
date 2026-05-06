@@ -10,6 +10,7 @@ import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import projectIdentity from "@/assets/project-uor-identity.jpg";
+import blogUorFrameworkOrigin from "@/assets/blog-uor-framework-origin.jpg";
 
 /** Add new covers here when introducing a new blog post. */
 export const blogCoverMap: Record<string, string> = {
@@ -17,6 +18,7 @@ export const blogCoverMap: Record<string, string> = {
   goldenSeed: blogGoldenSeed,
   frameworkLaunch: blogFrameworkLaunch,
   universalDataFingerprint: projectIdentity,
+  uorFrameworkOrigin: blogUorFrameworkOrigin,
 };
 
 /**
