@@ -3,7 +3,7 @@ import { CRATE_URL } from "@/data/external-links";
 import { blogPosts } from "@/data/blog-posts";
 import { getBlogCover } from "@/data/blog-covers";
 import heroImage from "@/assets/blog-uor-foundation-crate.jpg";
-import { Package, Boxes, Wand2, ShieldCheck, Terminal, ExternalLink } from "lucide-react";
+import { Package, Boxes, Wand2, ShieldCheck, Terminal, ExternalLink, Sparkles, Wrench, Bug, Scale } from "lucide-react";
 import { usePageMeta } from "@/modules/core/hooks/usePageMeta";
 
 const SLUG = "/blog/uor-foundation-v0-3-1";
@@ -40,6 +40,49 @@ const HIGHLIGHTS = [
     body:
       "Stable API surface, semantic versioning, no unsafe code, and zero runtime dependencies on the network. Drop it into any Rust project today.",
   },
+];
+
+const RELEASE_NOTES: Array<{
+  icon: typeof Sparkles;
+  label: string;
+  items: string[];
+}> = [
+  {
+    icon: Sparkles,
+    label: "New",
+    items: [
+      "Complete UOR Foundation vocabulary: 34 namespaces, 471 classes, 948 properties, all available as typed Rust traits.",
+      "uor! procedural macro for writing canonical objects in plain Rust.",
+      "Built-in helpers to compute the permanent address of any object with a single call.",
+      "Generated docs on docs.rs covering every namespace and trait.",
+    ],
+  },
+  {
+    icon: Wrench,
+    label: "Improved",
+    items: [
+      "Faster compile times through smaller, focused modules per namespace.",
+      "Clearer error messages when a required field is missing or has the wrong type.",
+      "Smaller binary footprint by tree-shaking unused namespaces at build time.",
+    ],
+  },
+  {
+    icon: Bug,
+    label: "Fixed",
+    items: [
+      "Edge cases in canonical ordering for nested arrays.",
+      "Property aliases that previously resolved to the wrong namespace.",
+      "Documentation links for cross-referenced classes.",
+    ],
+  },
+];
+
+const MODULES: Array<{ name: string; purpose: string }> = [
+  { name: "uor_foundation::core", purpose: "Base types, traits, and the address pipeline shared by every namespace." },
+  { name: "uor_foundation::ontology", purpose: "Generated traits for all 34 namespaces in the UOR vocabulary." },
+  { name: "uor_foundation::macros", purpose: "The uor! macro and supporting derive macros for canonical objects." },
+  { name: "uor_foundation::address", purpose: "Deterministic, content-derived address computation and verification." },
+  { name: "uor_foundation::prelude", purpose: "One-line import that brings the most common types into scope." },
 ];
 
 const BlogUorFoundationV031 = () => {
@@ -150,6 +193,92 @@ let address = post.address(); // permanent, content-derived address`}
         <p>
           The same object always produces the same address, in any language and on any machine.
         </p>
+      </section>
+
+      <section>
+        <h2>Release notes</h2>
+        <p className="text-muted-foreground">
+          What changed in v0.3.1, at a glance.
+        </p>
+        <div className="not-prose mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {RELEASE_NOTES.map((group) => (
+            <div key={group.label} className="rounded-xl border border-border bg-card p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <group.icon size={16} className="text-primary" />
+                <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-muted-foreground">
+                  {group.label}
+                </span>
+              </div>
+              <ul className="space-y-2.5 text-[14.5px] leading-[1.65] text-foreground/90">
+                {group.items.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="mt-2 h-1 w-1 rounded-full bg-primary/70 shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2>Module structure</h2>
+        <p>
+          The crate is organized so you can pull in just the pieces you need. Most projects start
+          with <code>use uor_foundation::prelude::*;</code> and grow from there.
+        </p>
+        <figure className="not-prose my-6 overflow-x-auto rounded-xl border border-border bg-card">
+          <table className="w-full text-[14.5px] leading-relaxed">
+            <thead>
+              <tr className="border-b border-border bg-muted/40 text-left">
+                <th className="px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground w-[38%]">
+                  Module
+                </th>
+                <th className="px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  What it provides
+                </th>
+              </tr>
+            </thead>
+            <tbody className="[&>tr]:border-b [&>tr]:border-border [&>tr:last-child]:border-0">
+              {MODULES.map((m) => (
+                <tr key={m.name}>
+                  <td className="px-5 py-4 align-top">
+                    <code className="text-foreground">{m.name}</code>
+                  </td>
+                  <td className="px-5 py-4 align-top text-muted-foreground">{m.purpose}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </figure>
+      </section>
+
+      <section>
+        <h2>License & compatibility</h2>
+        <div className="not-prose mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="rounded-xl border border-border bg-card p-5">
+            <Scale size={18} className="text-primary mb-3" />
+            <div className="font-display text-[1.05em] font-semibold text-foreground">Apache-2.0</div>
+            <p className="mt-1 text-[13.5px] text-muted-foreground leading-[1.6]">
+              Free for commercial and personal use. Patent grant included.
+            </p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-5">
+            <Terminal size={18} className="text-primary mb-3" />
+            <div className="font-display text-[1.05em] font-semibold text-foreground">Rust 1.75+</div>
+            <p className="mt-1 text-[13.5px] text-muted-foreground leading-[1.6]">
+              Builds on the current stable toolchain. No nightly required.
+            </p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-5">
+            <ShieldCheck size={18} className="text-primary mb-3" />
+            <div className="font-display text-[1.05em] font-semibold text-foreground">No unsafe</div>
+            <p className="mt-1 text-[13.5px] text-muted-foreground leading-[1.6]">
+              <code>#![forbid(unsafe_code)]</code> across the crate. Zero network dependencies at runtime.
+            </p>
+          </div>
+        </div>
       </section>
 
       <section>
