@@ -406,7 +406,7 @@ const LiveDemo = () => {
           <ArrowRight size={22} />
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
-          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · UOR address — derived from the data itself</div>
+          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · UOR address</div>
           {showCode ? (
             <SourceAudit />
           ) : error ? (
@@ -416,17 +416,14 @@ const LiveDemo = () => {
           ) : receipt ? (
             <div className="flex flex-col gap-3">
               <AddressRow label="address" value={uorAddress(receipt.hashHex)} />
-              <AddressRow label="glyph" value={receipt.glyph} large />
+              <AddressRow label="glyph" value={receipt.glyph} />
               <AddressRow label="ipv6" value={receipt.ipv6} />
               <AddressRow label="cid" value={receipt.cid} />
-              <p className="text-[14px] font-body text-foreground/60 leading-[1.6]">
-                128-bit ContentAddress per the <code className="font-mono">uor-foundation</code> crate. The Braille glyph is the same address rendered visually. IPv6 and IPFS CID are byte-level canonical projections of the same content hash.
-              </p>
               {showTrace && <PipelineTrace receipt={receipt} title="Encode trace" />}
               <button
                 type="button"
                 onClick={useDerivedAddress}
-                className="self-start text-[12px] font-body text-primary/80 hover:text-primary transition-colors"
+                className="self-start text-[13px] font-body text-primary/80 hover:text-primary transition-colors"
               >
                 Use this address to decode →
               </button>
@@ -483,11 +480,11 @@ const LiveDemo = () => {
   );
 };
 
-const AddressRow = ({ label, value, mono, large }: { label: string; value: string; mono?: boolean; large?: boolean }) => {
+const AddressRow = ({ label, value }: { label: string; value: string }) => {
   const [copied, setCopied] = useState(false);
   return (
     <div className="flex items-start gap-3 group">
-      <div className="text-[10.5px] tracking-[0.18em] uppercase text-foreground/45 font-body w-[72px] shrink-0 pt-2">{label}</div>
+      <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/45 font-body w-[72px] shrink-0 pt-2.5">{label}</div>
       <button
         type="button"
         onClick={() => {
@@ -495,7 +492,7 @@ const AddressRow = ({ label, value, mono, large }: { label: string; value: strin
           setCopied(true);
           setTimeout(() => setCopied(false), 1200);
         }}
-        className={`flex-1 text-left font-mono ${large ? "text-[20px] leading-[1.3]" : "text-[12.5px] leading-[1.55]"} bg-background/60 border border-border/70 rounded-lg px-3 py-2 text-foreground/90 hover:border-primary/40 transition-colors break-all`}
+        className="flex-1 text-left font-mono text-[13px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg px-3 py-2 text-foreground/90 hover:border-primary/40 transition-colors break-all"
         title="Copy"
       >
         {value}
