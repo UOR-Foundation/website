@@ -478,7 +478,11 @@ const PrimeConstellationBg = () => {
     if (!canvas) return;
 
     const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
+      // Cap DPR — at retina/3x phone the painted pixel count is 4-9x
+      // larger with no perceivable improvement for soft glows.
+      const isMobile = window.innerWidth < 768;
+      const cap = isMobile ? 1 : 1.25;
+      const dpr = Math.min(window.devicePixelRatio || 1, cap);
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
       canvas.style.width = `${window.innerWidth}px`;
