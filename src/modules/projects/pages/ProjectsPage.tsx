@@ -218,9 +218,9 @@ const ProjectAwesomeList = () => {
             return (
               <article
                 key={p.slug}
-                className="group flex flex-col rounded-2xl border border-border/70 bg-card overflow-hidden hover:border-primary/40 hover:shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.25)] transition-all duration-300"
+                className="highlight-card group"
               >
-                <div className="relative aspect-[1.618/1] overflow-hidden bg-muted/40 rounded-lg">
+                <div className="relative aspect-phi overflow-hidden bg-muted/40">
                   {img ? (
                     <img
                       src={img}

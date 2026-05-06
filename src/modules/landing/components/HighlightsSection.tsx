@@ -21,10 +21,10 @@ const HighlightsSection = () => {
               key={item.title}
               href={item.href}
               {...(item.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              className="group flex flex-col overflow-hidden transition-all duration-300 animate-fade-in-up opacity-0"
+              className="highlight-card group animate-fade-in-up opacity-0"
               style={{ animationDelay: `${0.11 + index * 0.11}s` }}
             >
-              <div className="relative aspect-[1.618/1] overflow-hidden rounded-lg">
+              <div className="relative aspect-phi overflow-hidden">
                 <img
                   src={getBlogCover(item.imageKey)}
                   alt={item.title}
@@ -32,7 +32,7 @@ const HighlightsSection = () => {
                   loading="lazy"
                 />
               </div>
-              <div className="flex flex-col flex-1 py-golden-md pr-4">
+              <div className="flex flex-col flex-1 p-golden-md">
                 <span className="self-start font-semibold font-body text-foreground/50 uppercase tracking-[0.15em] mb-3 text-fluid-label">
                   {item.tag}
                 </span>
