@@ -233,6 +233,11 @@ const PrimeConstellationBg = () => {
   const lastFrameRef = useRef(0);
   const FRAME_INTERVAL = 1000 / 30; // 30fps cap
 
+  // Pre-baked field-star sprite (all 180 stars rendered once per resize).
+  // Per-frame: drawImage + globalAlpha modulation for collective twinkle.
+  const fieldSpriteRef = useRef<HTMLCanvasElement | null>(null);
+  const fieldSpriteWHRef = useRef({ w: 0, h: 0 });
+
   // Cached offscreen sprites for constellation star glows, keyed by
   // `${hue}|${brightness}`. Each sprite holds the nebula + inner glow at
   // alpha 1; the per-frame draw modulates with globalAlpha.
