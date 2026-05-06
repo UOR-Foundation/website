@@ -21,7 +21,7 @@ export const projects: ProjectData[] = [
     category: "Systems",
     description: "A software layer that turns existing hardware into a high-performance computing engine. No new chips required.",
     maturity: "Sandbox",
-    url: "https://gethologram.ai/",
+    url: "https://github.com/UOR-Foundation/hologram",
     imageKey: "hologram",
   },
   {
@@ -57,7 +57,7 @@ export const projects: ProjectData[] = [
     category: "Core Infrastructure",
     description: "A complete network infrastructure platform where every resource is findable, verifiable, and protected. Trust is built into the address itself.",
     maturity: "Sandbox",
-    url: "https://github.com/UOR-Foundation",
+    url: "https://github.com/UOR-Foundation/uns",
     imageKey: "uns",
   },
   {
@@ -66,7 +66,7 @@ export const projects: ProjectData[] = [
     category: "Core Infrastructure",
     description: "A self-verifying receipt for any digital object. Proves authenticity through mathematics, not authorities. Anyone can verify, anywhere, with no special access required.",
     maturity: "Sandbox",
-    url: "https://github.com/UOR-Foundation",
+    url: "https://github.com/UOR-Foundation/uor-certificate",
     imageKey: "uorCertificate",
   },
 ];
