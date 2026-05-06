@@ -20,71 +20,106 @@ type Preset = { label: string; hint: string; value: string };
 
 const PRESETS: Preset[] = [
   {
-    label: "Creative work",
-    hint: "schema.org / CreativeWork",
-    value: DEMO_DEFAULT,
-  },
-  {
     label: "Person",
-    hint: "schema.org / Person",
+    hint: "schema.org/Person — example",
     value: `{
   "@context": "https://schema.org",
   "@type": "Person",
-  "name": "Ada Lovelace",
-  "birthDate": "1815-12-10",
-  "knowsAbout": ["mathematics", "computing"]
+  "name": "Jane Doe",
+  "jobTitle": "Professor",
+  "telephone": "(425) 123-4567",
+  "url": "http://www.janedoe.com"
 }`,
   },
   {
-    label: "Article",
-    hint: "schema.org / Article",
+    label: "Book",
+    hint: "schema.org/Book — example",
     value: `{
   "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": "On the analytical engine",
-  "datePublished": "1843-08-01",
-  "author": { "@type": "Person", "name": "Ada Lovelace" }
+  "@type": "Book",
+  "name": "The Catcher in the Rye",
+  "author": { "@type": "Person", "name": "J.D. Salinger" },
+  "isbn": "978-0316769174",
+  "datePublished": "1951-07-16"
 }`,
   },
   {
-    label: "Dataset",
-    hint: "schema.org / Dataset",
+    label: "Recipe",
+    hint: "schema.org/Recipe — example",
     value: `{
   "@context": "https://schema.org",
-  "@type": "Dataset",
-  "name": "Global Temperature 1880-2024",
-  "license": "https://creativecommons.org/publicdomain/zero/1.0/",
-  "distribution": {
-    "@type": "DataDownload",
-    "encodingFormat": "text/csv",
-    "contentUrl": "https://example.org/temps.csv"
-  }
+  "@type": "Recipe",
+  "name": "Mom's World Famous Banana Bread",
+  "author": { "@type": "Person", "name": "John Smith" },
+  "datePublished": "2009-05-08",
+  "recipeIngredient": [
+    "3 or 4 ripe bananas, smashed",
+    "1 cup of sugar",
+    "1 egg"
+  ],
+  "recipeInstructions": "Preheat the oven to 350 degrees. Mix in the ingredients in a bowl. Add the flour last. Pour the mixture into a loaf pan and bake for one hour."
 }`,
   },
   {
     label: "Event",
-    hint: "schema.org / Event",
+    hint: "schema.org/Event — example",
     value: `{
   "@context": "https://schema.org",
   "@type": "Event",
-  "name": "UOR Summit",
-  "startDate": "2026-09-21T09:00:00-04:00",
-  "location": { "@type": "Place", "name": "New York, NY" }
+  "name": "Miami Heat at Philadelphia 76ers",
+  "startDate": "2016-04-21T20:00",
+  "location": {
+    "@type": "Place",
+    "name": "Wells Fargo Center",
+    "address": "3601 South Broad Street, Philadelphia, PA"
+  }
 }`,
   },
   {
     label: "Product",
-    hint: "schema.org / Product",
+    hint: "schema.org/Product — example",
     value: `{
   "@context": "https://schema.org",
   "@type": "Product",
-  "name": "Coffee Beans, 1kg",
-  "brand": "Origin Roasters",
+  "name": "Executive Anvil",
+  "image": "http://www.example.com/anvil_executive.jpg",
+  "description": "Sleeker than ACME's Classic Anvil, the Executive Anvil is perfect for the business traveler.",
+  "brand": { "@type": "Brand", "name": "ACME" },
   "offers": {
     "@type": "Offer",
-    "price": "24.00",
+    "price": "119.99",
     "priceCurrency": "USD"
   }
+}`,
+  },
+  {
+    label: "LocalBusiness",
+    hint: "schema.org/LocalBusiness — example",
+    value: `{
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  "name": "GreatFood",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "1901 Lemur Ave",
+    "addressLocality": "Sunnyvale",
+    "addressRegion": "CA",
+    "postalCode": "94086"
+  },
+  "telephone": "(408) 714-1489",
+  "servesCuisine": "Italian"
+}`,
+  },
+  {
+    label: "Movie",
+    hint: "schema.org/Movie — example",
+    value: `{
+  "@context": "https://schema.org",
+  "@type": "Movie",
+  "name": "Pirates of the Carribean: On Stranger Tides",
+  "director": { "@type": "Person", "name": "Rob Marshall" },
+  "datePublished": "2011-05-20",
+  "duration": "PT2H17M"
 }`,
   },
 ];
