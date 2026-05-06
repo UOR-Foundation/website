@@ -232,7 +232,7 @@ const NewsPage = () => {
                   ))}
                 </ul>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-golden-lg gap-y-golden-xl">
                   {listItems.map((item) => (
                     <NewsCard key={item.href} item={item} />
                   ))}

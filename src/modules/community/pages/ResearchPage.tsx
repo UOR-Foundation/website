@@ -67,7 +67,7 @@ const Research = () => {
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
             Start Contributing
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-golden-lg gap-y-golden-xl">
             {[
               {
                 title: "Discuss",
@@ -127,7 +127,7 @@ const Research = () => {
             Peer-reviewed papers from the community. All results are reproducible and openly licensed.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-golden-md mb-10">
             {allPapers.map((item, index) => {
               const isInternal = item.href.startsWith("/");
               const CardWrapper = isInternal ? Link : "a";

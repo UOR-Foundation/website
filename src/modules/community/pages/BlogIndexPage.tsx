@@ -35,7 +35,7 @@ const BlogIndexPage = () => {
       {/* All posts */}
       <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-golden-lg gap-y-golden-xl">
             {blogPosts.map((post, index) => (
               <Link
                 key={post.href}
