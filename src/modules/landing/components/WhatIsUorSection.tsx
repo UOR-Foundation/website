@@ -122,11 +122,11 @@ const WhatIsUorSection = () => {
 
         <div className="py-golden-lg grid grid-cols-1 items-start gap-[clamp(2.5rem,4vw,5.5rem)] animate-fade-in-up opacity-0 lg:grid-cols-[minmax(0,0.618fr)_minmax(0,1fr)]" style={{ animationDelay: "0.11s" }}>
           <div>
-            <p className="font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
-              <span className="text-foreground/90">Every system creates its own labels for data. When data moves between systems, those labels break or disappear.</span>
+            <p className="font-body leading-[1.75] md:leading-[1.85] text-fluid-lead text-foreground/70 font-normal">
+              Every system creates its own labels for data. When data moves between systems, those labels break or disappear.
             </p>
-            <p className="mt-golden-md font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
-              <span className="text-foreground/90">UOR makes data identity universal.</span>
+            <p className="mt-golden-md font-body leading-[1.75] md:leading-[1.85] text-fluid-lead text-foreground/70 font-normal">
+              UOR makes data identity universal.
             </p>
             <p className="mt-golden-md text-foreground/70 font-body leading-[1.75] md:leading-[1.85] text-fluid-lead">
               It gives every piece of content a permanent address derived from the data itself — same content, same address, everywhere and forever.
