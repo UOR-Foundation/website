@@ -20,8 +20,8 @@ export const newsItems: NewsItem[] = [
     title: "uor-foundation v0.3.1 released on crates.io",
     excerpt:
       "The complete UOR Foundation ontology as typed Rust traits — 34 namespaces, 471 OWL classes, 948 properties, plus the uor! proc macro for compile-time DSL. cargo add uor-foundation.",
-    date: "May 6, 2026",
-    isoDate: "2026-05-06",
+    date: "May 5, 2026",
+    isoDate: "2026-05-05",
     category: "Engineering",
     href: "https://crates.io/crates/uor-foundation",
     external: true,
