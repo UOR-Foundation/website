@@ -53,11 +53,11 @@ export const projects: ProjectData[] = [
     imageKey: "uns",
   },
   {
-    name: "UOR Certificate",
-    slug: "uor-certificate",
+    name: "Project Severance AI",
+    slug: "project-severance-ai",
     category: "Core Infrastructure",
-    description: "A self-verifying receipt for any digital object. Proves authenticity through mathematics, not authorities. Anyone can verify, anywhere, with no special access required.",
-    url: "https://github.com/UOR-Foundation/uor-certificate",
-    imageKey: "uorCertificate",
+    description: "A post-quantum homomorphic encryption framework for federated computing. Achieves 85–94% operation reduction through connection optimization while preserving full data privacy across organizations.",
+    url: "https://github.com/dkypuros/Project_Severance_AI",
+    imageKey: "severanceAi",
   },
 ];
