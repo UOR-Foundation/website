@@ -221,11 +221,11 @@ const FeaturedNews = ({ item }: { item: NewsItem }) => {
   return (
     <Wrapper
       {...wrapperProps}
-      className="group block mb-10 md:mb-12 rounded-xl overflow-hidden border border-border/60 bg-card transition-all duration-300 hover:border-primary/40 hover:shadow-lg"
+      className="group block mb-[1.618rem] md:mb-[2.618rem] rounded-xl overflow-hidden border border-border/60 bg-card transition-all duration-300 hover:border-primary/40 hover:shadow-lg"
     >
-      <div className="grid grid-cols-1 md:grid-cols-[1.15fr_1fr]">
+      <div className="grid grid-cols-1 md:grid-cols-[1.618fr_1fr]">
         {item.coverKey && (
-          <div className="overflow-hidden bg-background/40 aspect-[16/10] md:aspect-auto md:min-h-[360px]">
+          <div className="overflow-hidden bg-background/40 aspect-[1.618/1] md:aspect-[1.618/1]">
             <img
               src={getBlogCover(item.coverKey)}
               alt=""
@@ -235,7 +235,7 @@ const FeaturedNews = ({ item }: { item: NewsItem }) => {
             />
           </div>
         )}
-        <div className="flex flex-col justify-center p-6 md:p-10 gap-4">
+        <div className="flex flex-col justify-center p-[1.618rem] md:p-[2.618rem] gap-[1rem]">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-semibold font-body uppercase tracking-[0.18em] text-primary px-2 py-1 rounded bg-primary/10">
               Featured
@@ -250,13 +250,13 @@ const FeaturedNews = ({ item }: { item: NewsItem }) => {
               {formatShortDate(item.isoDate)}
             </time>
           </div>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground leading-[1.1] tracking-tight transition-colors duration-200 group-hover:text-primary">
+          <h2 className="font-display text-fluid-card-title font-bold text-foreground leading-[1.15] tracking-tight transition-colors duration-200 group-hover:text-primary">
             {item.title}
           </h2>
-          <p className="text-[15px] md:text-[16px] text-foreground/70 font-body leading-relaxed line-clamp-3 max-w-2xl">
+          <p className="text-[14px] md:text-[15px] text-foreground/70 font-body leading-[1.618] line-clamp-2 max-w-2xl">
             {item.excerpt}
           </p>
-          <span className="inline-flex items-center gap-1.5 mt-2 text-[13px] font-medium text-primary font-body">
+          <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-primary font-body">
             Read story
             <span className="transition-transform duration-200 group-hover:translate-x-0.5">
               {item.external ? <ArrowUpRight size={14} /> : <ArrowRight size={14} />}
