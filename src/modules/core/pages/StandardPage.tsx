@@ -349,7 +349,7 @@ const LiveDemo = () => {
               type="button"
               onClick={() => setInput(p.value)}
               title={p.hint}
-              className={`px-3.5 py-1.5 rounded-full border text-[13px] font-body transition-colors ${
+              className={`px-3.5 py-1.5 rounded-full border text-[14px] font-body transition-colors ${
                 active
                   ? "border-primary/60 bg-primary/10 text-foreground"
                   : "border-border text-foreground/70 hover:border-primary/40 hover:text-foreground"
@@ -364,27 +364,27 @@ const LiveDemo = () => {
           <button
             type="button"
             onClick={() => setShowTrace((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-body transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] font-body transition-colors ${
               showTrace
                 ? "border-primary/60 bg-primary/10 text-foreground"
                 : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
             }`}
             title="Show step-by-step pipeline trace"
           >
-            <ListOrdered size={12} />
+            <ListOrdered size={14} />
             {showTrace ? "Hide trace" : "View trace"}
           </button>
           <button
             type="button"
             onClick={() => setShowCode((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-body transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[14px] font-body transition-colors ${
               showCode
                 ? "border-primary/60 bg-primary/10 text-foreground"
                 : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
             }`}
             title="View the actual encode/decode source"
           >
-            <Code2 size={12} />
+            <Code2 size={14} />
             {showCode ? "Hide code" : "View code"}
           </button>
         </div>
@@ -393,24 +393,24 @@ const LiveDemo = () => {
       {/* Stage 1 → Stage 2 : Encode */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 items-stretch">
         <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-2">
-          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">1 · Content</div>
+          <div className="text-[14px] tracking-[0.16em] uppercase text-foreground/55 font-body">1 · Content</div>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             spellCheck={false}
             aria-label="Your data"
-            className="w-full min-h-[260px] font-mono text-[14px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/90 focus:outline-none focus:ring-2 focus:ring-primary/40 resize-y"
+            className="w-full min-h-[260px] font-mono text-[14px] leading-[1.65] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/90 focus:outline-none focus:ring-2 focus:ring-primary/40 resize-y"
           />
         </div>
         <div className="hidden lg:flex items-center justify-center text-foreground/40">
           <ArrowRight size={22} />
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
-          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · UOR address</div>
+          <div className="text-[14px] tracking-[0.16em] uppercase text-foreground/55 font-body">2 · UOR address</div>
           {showCode ? (
             <SourceAudit />
           ) : error ? (
-            <div className="font-mono text-[13px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/55 min-h-[88px]">
+            <div className="font-mono text-[14px] leading-[1.65] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/55 min-h-[88px]">
               {error}
             </div>
           ) : receipt ? (
@@ -423,13 +423,13 @@ const LiveDemo = () => {
               <button
                 type="button"
                 onClick={useDerivedAddress}
-                className="self-start text-[13px] font-body text-primary/80 hover:text-primary transition-colors"
+                className="self-start text-[14px] font-body text-primary/80 hover:text-primary transition-colors"
               >
                 Use this address to decode →
               </button>
             </div>
           ) : (
-            <div className="font-mono text-[13px] text-foreground/40 p-4">Computing…</div>
+            <div className="font-mono text-[14px] text-foreground/40 p-4">Computing…</div>
           )}
         </div>
       </div>
@@ -437,21 +437,21 @@ const LiveDemo = () => {
       {/* Stage 3 : Decode */}
       <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">
+          <div className="text-[14px] tracking-[0.16em] uppercase text-foreground/55 font-body">
             3 · Decode — address back to content
             {address.trim() && (
-              <span className="ml-3 normal-case tracking-normal text-foreground/55">
+              <span className="ml-3 normal-case tracking-normal text-foreground/60">
                 detected: <span className="text-foreground/80">{KIND_LABEL[kind]}</span>
               </span>
             )}
           </div>
           {decoded !== undefined && verifyState === "ok" && (
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-body text-primary">
-              <Check size={13} /> Round-trip verified — same content, same address
+            <span className="inline-flex items-center gap-1.5 text-[14px] font-body text-primary">
+              <Check size={14} /> Round-trip verified — same content, same address
             </span>
           )}
           {decoded !== undefined && verifyState === "mismatch" && (
-            <span className="text-[12px] font-body text-destructive">Mismatch</span>
+            <span className="text-[14px] font-body text-destructive">Mismatch</span>
           )}
         </div>
         <input
@@ -459,9 +459,9 @@ const LiveDemo = () => {
           onChange={(e) => setAddress(e.target.value)}
           placeholder="Paste any form: UOR address, Braille glyph, IPv6, or IPFS CID"
           spellCheck={false}
-          className="w-full font-mono text-[13px] bg-background/60 border border-border/70 rounded-lg px-4 py-3 text-foreground/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
+          className="w-full font-mono text-[14px] bg-background/60 border border-border/70 rounded-lg px-4 py-3 text-foreground/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
         />
-        <div className="font-mono text-[13px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/90 min-h-[120px] whitespace-pre-wrap break-all">
+        <div className="font-mono text-[14px] leading-[1.65] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/90 min-h-[120px] whitespace-pre-wrap break-all">
           {!address.trim() ? (
             <span className="text-foreground/40">Decoded content appears here.</span>
           ) : decoded !== undefined ? (
@@ -484,7 +484,7 @@ const AddressRow = ({ label, value }: { label: string; value: string }) => {
   const [copied, setCopied] = useState(false);
   return (
     <div className="flex items-start gap-3 group">
-      <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/45 font-body w-[72px] shrink-0 pt-2.5">{label}</div>
+      <div className="text-[14px] tracking-[0.16em] uppercase text-foreground/55 font-body w-[88px] shrink-0 pt-2.5">{label}</div>
       <button
         type="button"
         onClick={() => {
@@ -492,7 +492,7 @@ const AddressRow = ({ label, value }: { label: string; value: string }) => {
           setCopied(true);
           setTimeout(() => setCopied(false), 1200);
         }}
-        className="flex-1 text-left font-mono text-[13px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg px-3 py-2 text-foreground/90 hover:border-primary/40 transition-colors break-all"
+        className="flex-1 text-left font-mono text-[14px] leading-[1.65] bg-background/60 border border-border/70 rounded-lg px-3 py-2 text-foreground/90 hover:border-primary/40 transition-colors break-all"
         title="Copy"
       >
         {value}
