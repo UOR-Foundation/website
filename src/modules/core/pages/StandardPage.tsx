@@ -480,11 +480,11 @@ const LiveDemo = () => {
   );
 };
 
-const AddressRow = ({ label, value, mono, large }: { label: string; value: string; mono?: boolean; large?: boolean }) => {
+const AddressRow = ({ label, value }: { label: string; value: string }) => {
   const [copied, setCopied] = useState(false);
   return (
     <div className="flex items-start gap-3 group">
-      <div className="text-[10.5px] tracking-[0.18em] uppercase text-foreground/45 font-body w-[72px] shrink-0 pt-2">{label}</div>
+      <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/45 font-body w-[72px] shrink-0 pt-2.5">{label}</div>
       <button
         type="button"
         onClick={() => {
@@ -492,7 +492,7 @@ const AddressRow = ({ label, value, mono, large }: { label: string; value: strin
           setCopied(true);
           setTimeout(() => setCopied(false), 1200);
         }}
-        className={`flex-1 text-left font-mono ${large ? "text-[20px] leading-[1.3]" : "text-[12.5px] leading-[1.55]"} bg-background/60 border border-border/70 rounded-lg px-3 py-2 text-foreground/90 hover:border-primary/40 transition-colors break-all`}
+        className="flex-1 text-left font-mono text-[13px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg px-3 py-2 text-foreground/90 hover:border-primary/40 transition-colors break-all"
         title="Copy"
       >
         {value}
