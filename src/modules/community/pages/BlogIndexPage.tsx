@@ -43,7 +43,7 @@ const BlogIndexPage = () => {
                 className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/20 animate-fade-in-up opacity-0"
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
-                <div className="aspect-video overflow-hidden">
+                <div className="aspect-phi overflow-hidden">
                   <img
                     src={getBlogCover(post.coverKey)}
                     alt={post.title}

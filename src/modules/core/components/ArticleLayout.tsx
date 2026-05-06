@@ -247,7 +247,7 @@ const ArticleLayout = ({
                           className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/40"
                         >
                           {item.image && (
-                            <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
+                            <div className="aspect-phi w-full overflow-hidden bg-muted">
                               <img
                                 src={item.image}
                                 alt={item.title}
