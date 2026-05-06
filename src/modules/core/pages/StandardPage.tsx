@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { Copy, Check, BookOpen, Github, Package } from "lucide-react";
+import { Copy, Check, BookOpen, Github, Package, ArrowRight, ArrowDown } from "lucide-react";
 import {
   GITHUB_FRAMEWORK_URL,
   GITHUB_FRAMEWORK_DOCS_URL,
   CRATE_URL,
   CRATE_DOCS_URL,
 } from "@/data/external-links";
-import { singleProofHash } from "@/lib/uor-canonical";
+import { encode, decode, type EnrichedReceipt } from "@/lib/uor-codec";
 
 const DEMO_DEFAULT = `{
   "@context": "https://schema.org",
@@ -186,8 +186,11 @@ function validateUorInput(value: unknown): string | null {
 
 const LiveDemo = () => {
   const [input, setInput] = useState(DEMO_DEFAULT);
-  const [result, setResult] = useState<{ derivationId: string; glyph: string } | null>(null);
+  const [receipt, setReceipt] = useState<EnrichedReceipt | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [address, setAddress] = useState("");
+  const [decoded, setDecoded] = useState<unknown | undefined>(undefined);
+  const [verifyState, setVerifyState] = useState<"idle" | "ok" | "mismatch">("idle");
 
   useEffect(() => {
     let cancelled = false;
@@ -204,13 +207,10 @@ const LiveDemo = () => {
       setError(schemaError);
       return;
     }
-    singleProofHash(parsed)
+    encode(parsed)
       .then((r) => {
         if (cancelled) return;
-        setResult({
-          derivationId: r.derivationId,
-          glyph: r.uorAddress["u:glyph"],
-        });
+        setReceipt(r);
       })
       .catch((e) => {
         if (cancelled) return;
@@ -220,6 +220,31 @@ const LiveDemo = () => {
       cancelled = true;
     };
   }, [input]);
+
+  // Decode whenever the address changes
+  useEffect(() => {
+    if (!address.trim()) {
+      setDecoded(undefined);
+      setVerifyState("idle");
+      return;
+    }
+    const value = decode(address.trim());
+    setDecoded(value);
+    if (value !== undefined && receipt) {
+      // Re-encode to verify round-trip determinism
+      encode(value)
+        .then((r2) => {
+          setVerifyState(r2.derivationId === receipt.derivationId ? "ok" : "mismatch");
+        })
+        .catch(() => setVerifyState("mismatch"));
+    } else {
+      setVerifyState("idle");
+    }
+  }, [address, receipt]);
+
+  const useDerivedAddress = () => {
+    if (receipt) setAddress(receipt.derivationId);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -243,25 +268,107 @@ const LiveDemo = () => {
           );
         })}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
+
+      {/* Stage 1 → Stage 2 : Encode */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 items-stretch">
+        <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-2">
+          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">1 · Content</div>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            spellCheck={false}
+            aria-label="Your data"
+            className="w-full min-h-[260px] font-mono text-[14px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/90 focus:outline-none focus:ring-2 focus:ring-primary/40 resize-y"
+          />
+        </div>
+        <div className="hidden lg:flex items-center justify-center text-foreground/40">
+          <ArrowRight size={22} />
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
+          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · Address — derived from the data itself</div>
+          {error ? (
+            <div className="font-mono text-[13px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/55 min-h-[88px]">
+              {error}
+            </div>
+          ) : receipt ? (
+            <div className="flex flex-col gap-2.5">
+              <AddressRow label="derivation" value={receipt.derivationId} />
+              <AddressRow label="glyph" value={receipt.glyph} mono large />
+              <AddressRow label="ipv6" value={receipt.ipv6} />
+              <AddressRow label="cid" value={receipt.cid} />
+              <button
+                type="button"
+                onClick={useDerivedAddress}
+                className="self-start mt-1 text-[12px] font-body text-primary/80 hover:text-primary transition-colors"
+              >
+                Use this address to decode →
+              </button>
+            </div>
+          ) : (
+            <div className="font-mono text-[13px] text-foreground/40 p-4">Computing…</div>
+          )}
+        </div>
+      </div>
+
+      {/* Stage 3 : Decode */}
+      <div className="hidden lg:flex items-center justify-center text-foreground/40">
+        <ArrowDown size={22} />
+      </div>
+      <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">3 · Decode — address back to content</div>
+          {decoded !== undefined && verifyState === "ok" && (
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-body text-primary">
+              <Check size={13} /> Round-trip verified — same content, same address
+            </span>
+          )}
+          {decoded !== undefined && verifyState === "mismatch" && (
+            <span className="text-[12px] font-body text-destructive">Mismatch</span>
+          )}
+        </div>
+        <input
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="Paste a derivation ID, CID, or triword address (or click the link above)"
           spellCheck={false}
-          aria-label="Your data"
-          className="w-full min-h-[260px] font-mono text-[14px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/90 focus:outline-none focus:ring-2 focus:ring-primary/40 resize-y"
+          className="w-full font-mono text-[13px] bg-background/60 border border-border/70 rounded-lg px-4 py-3 text-foreground/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
         />
-      </div>
-      <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-4">
-        <div className="font-mono text-[13.5px] leading-[1.6] break-all bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/90 min-h-[88px]">
-          {error ? <span className="text-foreground/50">{error}</span> : result?.derivationId}
+        <div className="font-mono text-[13px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/90 min-h-[120px] whitespace-pre-wrap break-all">
+          {!address.trim() ? (
+            <span className="text-foreground/40">Decoded content appears here.</span>
+          ) : decoded !== undefined ? (
+            JSON.stringify(decoded, null, 2)
+          ) : (
+            <span className="text-foreground/55">
+              Address not in this session's registry. Encode something above first, or paste an address derived in this browser.
+            </span>
+          )}
         </div>
-        <div className="font-mono text-[22px] leading-[1.4] break-all bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/90 min-h-[88px]">
-          {result?.glyph ?? ""}
-        </div>
       </div>
-      </div>
+    </div>
+  );
+};
+
+const AddressRow = ({ label, value, mono, large }: { label: string; value: string; mono?: boolean; large?: boolean }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="flex items-start gap-3 group">
+      <div className="text-[10.5px] tracking-[0.18em] uppercase text-foreground/45 font-body w-[72px] shrink-0 pt-2">{label}</div>
+      <button
+        type="button"
+        onClick={() => {
+          navigator.clipboard.writeText(value);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1200);
+        }}
+        className={`flex-1 text-left font-mono ${large ? "text-[20px] leading-[1.3]" : "text-[12.5px] leading-[1.55]"} bg-background/60 border border-border/70 rounded-lg px-3 py-2 text-foreground/90 hover:border-primary/40 transition-colors break-all`}
+        title="Copy"
+      >
+        {value}
+        <span className="ml-2 inline-flex align-middle opacity-0 group-hover:opacity-100 transition-opacity">
+          {copied ? <Check size={11} className="text-primary" /> : <Copy size={11} />}
+        </span>
+      </button>
     </div>
   );
 };
