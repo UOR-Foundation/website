@@ -113,7 +113,7 @@ const HeroSection = () => {
             delay="0.29s"
           />
           <p
-            className="mt-[clamp(1.25rem,2.2vw,2.75rem)] text-foreground/60 max-w-[min(960px,92%)] leading-[1.65] font-body animate-fade-in-up opacity-0 text-[clamp(1.05rem,1.2vw,1.6rem)]"
+            className="mt-[clamp(1.25rem,2.2vw,2.75rem)] text-foreground/60 max-w-[min(960px,92%)] leading-[1.6] font-body animate-fade-in-up opacity-0 text-[clamp(1.25rem,1.5vw,2rem)]"
             style={{ animationDelay: "0.47s" }}
           >
             Universal Object Reference is an open-source standard for content-addressed decentralized identity of digital objects.
