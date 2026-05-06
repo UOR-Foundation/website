@@ -1,74 +1,48 @@
+## Why the hero feels heavy
 
+Two animations stack in the hero, and both do more work than needed.
 
-## Align all blog posts to the Universal Data Fingerprint format
+### Galaxy orb (`GalaxyAnimation` + `galaxy.css`)
+- **1,400 absolutely-positioned `<div>`s** on desktop (2 galaxies × 20 stars × 35 dots), ~840 on mobile.
+- Every `.circle` ring carries `will-change: transform` → 40 separate compositor layers.
+- Wrapper has a 60px CSS `drop-shadow` filter applied on top of the constantly-animating subtree (one of the most expensive composite ops).
 
-Make every blog post share the same editorial shell and rhythm as `/blog/universal-data-fingerprint`, so the four posts read as one publication.
+### Constellation background (`PrimeConstellationBg`)
+- Full-window canvas at full `devicePixelRatio` (2× / 3× pixel work on retina/phones), running at ~60 fps.
+- Per frame, **180 field stars** each call `ctx.createRadialGradient(...)` (uncached, very slow).
+- Each constellation star draws **3 radial gradients** every frame (nebula + inner glow + core).
 
-### The reference format (Universal Data Fingerprint)
+## Plan — light tune-up only (no visual changes)
 
-The target structure, top to bottom:
+### 1. Galaxy: drop the layer explosion and the heavy filter
+File: `src/modules/landing/components/galaxy.css`
+- Remove `will-change: transform` from `.circle` (collapses 40 compositor layers into 1–2).
+- Remove the `drop-shadow(... 60px ...)` filter on `.galaxy-viewport`. Replace the warm halo with a static CSS `radial-gradient` background on `.galaxy-viewport` — same look, ~zero cost.
+- Add `contain: strict` and `transform: translateZ(0)` on `.galaxy-wrapper` so the whole orb rasterizes once.
 
-1. **Centered kicker** (e.g. `Standards`, `Vision`, `Open Research`) — small uppercase eyebrow.
-2. **Hero image** — golden-ratio (φ:1) cover, no caption underneath.
-3. **Large headline** — single confident H1, no subtitle/deck below it.
-4. **Author + date hairline** — `UOR Foundation · <date>`.
-5. **Inline share row.**
-6. **TL;DR aside** — bordered card with a one-paragraph summary, opening the body.
-7. **Sectioned body** — `<h2>` + `<p>` blocks, same prose typography across the site.
-8. **Source link + Read next strip** at the foot, with cover thumbnails.
+File: `src/modules/landing/components/GalaxyAnimation.tsx`
+- Lower the dot count slightly with no visible difference:
+  - Desktop: stars 20 → 16, dots per ring 35 → 28 (≈900 nodes, was 1,400).
+  - Mobile: stars 12 → 8, dots per ring 35 → 24 (≈380 nodes, was 840).
+- Pause the CSS animation when the orb is off-screen via `IntersectionObserver` toggling a `.is-paused` class that sets `animation-play-state: paused` on `.circle`.
+- Honor `prefers-reduced-motion` (already partially done) and also pause when `document.hidden`.
 
-`ArticleLayout` already enforces 1, 3, 4, 5, 8. The drift is in 2, 6, and the use of `deck` / `heroCaption` on the older posts.
+### 2. Constellation canvas: throttle, cache, cap DPR
+File: `src/modules/landing/components/PrimeConstellationBg.tsx`
+- **Cap DPR**: `Math.min(window.devicePixelRatio, 1.25)` desktop, `1` on mobile.
+- **Throttle to 30 fps** with a fixed-timestep guard inside `draw` (`if (now - last < 33) { rAF; return; }`). Twinkle at 30 fps is indistinguishable from 60.
+- **Pre-bake field stars to an offscreen canvas** at `resize`: 180 radial-gradient blobs become one `drawImage` per frame, modulated with a single `globalAlpha` for twinkle.
+- **Cache constellation glow sprites** (one offscreen per hue + brightness tier) and `drawImage` instead of building 3 gradients per star per frame.
+- Keep the existing scroll-pause; also pause when `document.hidden`.
+- Counts unchanged (180 desktop). Optional small reduction to 140 if profile still shows hot.
 
-### What changes per post
+### 3. Verify
 
-**BlogPost1 — UOR: Building the Internet's Knowledge Graph**
-- Keep existing hero image (`blog-knowledge-graph.png`).
-- Remove `heroCaption` so no "Image credits:" line appears under the cover (matches Fingerprint).
-- Move the YouTube embed from the very top of the body down to a later section (inside a "Watch" section near the end). The body should open with a TL;DR aside, not a video.
-- Add a TL;DR aside at the top of the body with a one-paragraph summary distilled from the existing intro.
-- No `deck` (already none).
+1. `browser--performance_profile` on `/` at 1363×792 and 390×844 before/after.
+2. `browser--start_profiling` → idle 3s → scroll → `browser--stop_profiling`. Expect canvas-draw self-time and "Recalculate Style"/"Composite Layers" to drop sharply.
+3. Visual check: orb still rotates with the same gold→violet ring, halo still present, star field unchanged.
 
-**BlogPost2 — Unveiling a Universal Mathematical Language**
-- Keep existing hero image (`blog-golden-seed-vector.png`).
-- Remove the `deck` prop and the `heroCaption` prop so the masthead matches Fingerprint exactly.
-- Add a TL;DR aside at the top of the body. Pull its one-paragraph text from the current `deck` so nothing is lost.
-
-**BlogPost3 — What If Every Piece of Data Had One Permanent Address?**
-- Keep existing hero image (`blog-uor-framework-launch.png`).
-- Remove the `deck` prop and the `heroCaption` prop.
-- Add a TL;DR aside at the top of the body, sourced from the current `deck` text.
-
-**BlogCanonicalRustCrate (Universal Data Fingerprint)**
-- No structural changes. It is the reference.
-
-### Shared TL;DR aside pattern
-
-Every post uses the exact same component markup (extracted inline, identical classes to the Fingerprint post) so spacing, border, padding, label, and typography are pixel-identical:
-
-```text
-┌───────────────────────────────────────────────┐
-│  TL;DR ─────────────────────────────────────  │
-│                                               │
-│  One paragraph. 2–4 sentences. Same           │
-│  font-size and leading as Fingerprint TL;DR.  │
-└───────────────────────────────────────────────┘
-```
-
-Classes mirror BlogCanonicalRustCrate lines 43–66 exactly: `not-prose mb-12 md:mb-14 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm px-6 md:px-8 py-6 md:py-7`, with the same `TL;DR` eyebrow row and `font-body text-[15px] md:text-[16px] leading-[1.75] text-foreground/85` paragraph.
-
-### Related-strip thumbnails
-
-`BlogPost1`, `BlogPost2`, and `BlogPost3` currently build their `related` array without `image`, so the bottom "Read next" cards render without covers. They will be updated to map `coverKey` through the same `coverMap` used in BlogCanonicalRustCrate, so every post's related strip shows thumbnails — another consistency win.
-
-### Files touched
-
-- `src/modules/community/pages/BlogPost1.tsx`
-- `src/modules/community/pages/BlogPost2.tsx`
-- `src/modules/community/pages/BlogPost3.tsx`
-
-No changes to `ArticleLayout`, `blog-posts.ts`, routing, or assets. No new images required — every post already has a cover.
-
-### Acceptance check
-
-After the edits, opening each of the four blog posts in sequence should show: same masthead rhythm (kicker → hero → title → byline → share), same TL;DR card immediately under the share row, same body prose scale, same related-strip with cover thumbnails.
-
+## Out of scope
+- No copy, layout, hero typography, or stats-row changes.
+- No new dependencies.
+- Same animation runs on mobile (just lighter), per your call.
