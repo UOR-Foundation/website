@@ -180,38 +180,75 @@ const ProjectAwesomeList = () => {
   }, []);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-14">
       {grouped.map(({ category, items }) => (
         <div key={category}>
-          <h3
-            id={`cat-${category.toLowerCase().replace(/\s+/g, "-")}`}
-            className="font-body text-fluid-label font-semibold tracking-[0.2em] uppercase text-primary/70 mb-3 scroll-mt-28"
-          >
-            {category}
-          </h3>
-          <ul className="divide-y divide-border/60 border-y border-border/60">
-            {items.map((p) => (
-              <li key={p.slug}>
-                <a
-                  href={p.url ?? "#"}
-                  target={p.url ? "_blank" : undefined}
-                  rel={p.url ? "noopener noreferrer" : undefined}
-                  className="group flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-3 hover:bg-muted/30 -mx-3 px-3 rounded-md transition-colors"
+          <div className="flex items-baseline justify-between mb-5">
+            <h3
+              id={`cat-${category.toLowerCase().replace(/\s+/g, "-")}`}
+              className="font-body text-fluid-label font-semibold tracking-[0.22em] uppercase text-primary/70 scroll-mt-28"
+            >
+              {category}
+            </h3>
+            <span className="font-mono text-[11px] text-foreground/30 tabular-nums">
+              {String(items.length).padStart(2, "0")}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {items.map((p) => {
+              const img = p.imageKey ? projectImageMap[p.imageKey] : undefined;
+              return (
+                <article
+                  key={p.slug}
+                  className="group flex flex-col rounded-2xl border border-border/70 bg-card overflow-hidden hover:border-primary/40 hover:shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.25)] transition-all duration-300"
                 >
-                  <span className="font-body font-medium text-foreground text-fluid-body group-hover:text-primary transition-colors sm:shrink-0 sm:min-w-[14rem] inline-flex items-center gap-1.5">
-                    {p.name}
-                    {p.url && (
-                      <ExternalLink size={12} className="opacity-40 group-hover:opacity-100 transition-opacity" />
-                    )}
-                  </span>
-                  <span className="text-foreground/60 font-body text-fluid-body leading-relaxed">
-                    <span className="hidden sm:inline text-foreground/30 mr-2">—</span>
-                    {p.description}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
+                  <div className="relative aspect-[16/9] overflow-hidden bg-muted/40">
+                    {img ? (
+                      <img
+                        src={img}
+                        alt={p.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
+                    ) : null}
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-card via-card/40 to-transparent pointer-events-none" />
+                    <span className="absolute top-3 left-3 inline-flex items-center px-2 py-1 rounded-full bg-background/80 backdrop-blur border border-border/60 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/80 font-body">
+                      {p.category}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col flex-1 p-5">
+                    <h4 className="font-display text-fluid-card-title font-semibold text-foreground leading-tight">
+                      {p.name}
+                    </h4>
+                    <p className="mt-2 text-foreground/65 font-body text-fluid-body leading-relaxed flex-1">
+                      {p.description}
+                    </p>
+
+                    <div className="mt-5 pt-4 border-t border-border/50 flex items-center justify-between gap-3">
+                      <a
+                        href={p.url ?? GITHUB_ORG_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-[0.14em] text-foreground/80 hover:text-primary transition-colors font-body"
+                      >
+                        <Github size={14} strokeWidth={2} />
+                        GitHub
+                      </a>
+                      <a
+                        href={`/projects/${p.slug}`}
+                        className="inline-flex items-center gap-1.5 text-fluid-label font-semibold uppercase tracking-[0.14em] text-primary/80 hover:text-primary transition-colors font-body"
+                      >
+                        Details
+                        <ArrowUpRight size={13} />
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
       ))}
     </div>
