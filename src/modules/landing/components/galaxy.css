@@ -15,8 +15,13 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  /* Warm radial glow — galaxy projects light into surroundings */
-  filter: drop-shadow(0 0 60px hsla(38, 50%, 45%, 0.08));
+  /* Warm radial glow — painted as a static gradient instead of an
+     expensive drop-shadow filter on the constantly-animating subtree. */
+  background:
+    radial-gradient(circle at center,
+      hsla(38, 50%, 45%, 0.08) 0%,
+      hsla(38, 50%, 45%, 0.04) 30%,
+      transparent 65%);
 }
 
 .galaxy-wrapper {
@@ -28,6 +33,7 @@
   --auto-scale: min(var(--vw-scale), var(--vh-scale));
   transform: scale(clamp(0.32, var(--auto-scale), 0.85));
   transform-origin: center;
+  contain: strict;
 }
 
 .galaxy:nth-child(1) {
@@ -45,7 +51,11 @@
 
 .circle {
   animation: 18s galaxy cubic-bezier(0.4, 0, 0.2, 1) infinite reverse;
-  will-change: transform;
+}
+
+/* Pause when the orb is off-screen or the tab is hidden. */
+.galaxy-viewport.is-paused .circle {
+  animation-play-state: paused;
 }
 
 .dot {

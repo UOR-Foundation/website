@@ -233,6 +233,81 @@ const PrimeConstellationBg = () => {
   const lastFrameRef = useRef(0);
   const FRAME_INTERVAL = 1000 / 30; // 30fps cap
 
+  // Field-star glow sprites, one per hue (5 total). Built lazily; draw
+  // at unit size and scale via drawImage instead of building a fresh
+  // createRadialGradient for every star every frame (the biggest hot path).
+  const fieldGlowSpritesRef = useRef<HTMLCanvasElement[]>([]);
+
+  const buildFieldGlowSprites = () => {
+    if (fieldGlowSpritesRef.current.length) return fieldGlowSpritesRef.current;
+    const SIZE = 32; // unit sprite, scaled per draw
+    const out: HTMLCanvasElement[] = [];
+    for (const hue of STAR_HUES) {
+      const c = document.createElement("canvas");
+      c.width = SIZE;
+      c.height = SIZE;
+      const cctx = c.getContext("2d");
+      if (cctx) {
+        const cx = SIZE / 2;
+        const grad = cctx.createRadialGradient(cx, cx, 0, cx, cx, cx);
+        grad.addColorStop(0, `hsla(${hue}, 0.6)`);
+        grad.addColorStop(0.3, `hsla(${hue}, 0.15)`);
+        grad.addColorStop(1, `hsla(${hue}, 0)`);
+        cctx.fillStyle = grad;
+        cctx.fillRect(0, 0, SIZE, SIZE);
+      }
+      out.push(c);
+    }
+    fieldGlowSpritesRef.current = out;
+    return out;
+  };
+
+  // Cached offscreen sprites for constellation star glows, keyed by
+  // `${hue}|${brightness}`. Each sprite holds the nebula + inner glow at
+  // alpha 1; the per-frame draw modulates with globalAlpha.
+  const glowSpriteCache = useRef<Map<string, HTMLCanvasElement>>(new Map());
+
+  const getGlowSprite = (hue: string, brightness: number, useAmber: boolean) => {
+    const key = `${hue}|${brightness.toFixed(2)}|${useAmber ? 1 : 0}`;
+    const cache = glowSpriteCache.current;
+    const cached = cache.get(key);
+    if (cached) return cached;
+
+    const starR = 1.2 * brightness;
+    const nebulaR = starR * (useAmber ? 14 : 10);
+    const size = Math.ceil(nebulaR * 2 + 2);
+    const c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    const cx = size / 2;
+    const cy = size / 2;
+    const cctx = c.getContext("2d");
+    if (!cctx) return c;
+
+    // Nebula halo
+    const nebula = cctx.createRadialGradient(cx, cy, 0, cx, cy, nebulaR);
+    nebula.addColorStop(0, `hsla(${hue}, ${useAmber ? 0.15 : 0.1})`);
+    nebula.addColorStop(0.4, `hsla(${hue}, 0.03)`);
+    nebula.addColorStop(1, `hsla(${hue}, 0)`);
+    cctx.fillStyle = nebula;
+    cctx.beginPath();
+    cctx.arc(cx, cy, nebulaR, 0, Math.PI * 2);
+    cctx.fill();
+
+    // Inner glow
+    const innerR = starR * 3.5;
+    const inner = cctx.createRadialGradient(cx, cy, 0, cx, cy, innerR);
+    inner.addColorStop(0, `hsla(${hue}, 0.5)`);
+    inner.addColorStop(1, `hsla(${hue}, 0)`);
+    cctx.fillStyle = inner;
+    cctx.beginPath();
+    cctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+    cctx.fill();
+
+    cache.set(key, c);
+    return c;
+  };
+
   const draw = useCallback((now: number = 0) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -251,7 +326,9 @@ const PrimeConstellationBg = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
+    // Recover the DPR actually used for the backing store from canvas
+    // dimensions so it matches the (capped) value set in resize().
+    const dpr = canvas.width / window.innerWidth || 1;
     const w = canvas.width / dpr;
     const h = canvas.height / dpr;
     const scrollFrac = scrollRef.current;
@@ -273,6 +350,7 @@ const PrimeConstellationBg = () => {
     ctx.scale(dpr, dpr);
 
     const globalAngle = angleRef.current;
+    const fieldSprites = buildFieldGlowSprites();
 
     // ── Phase 1: Field stars with orbital drift ────────────────
     for (const star of fieldStars) {
@@ -300,15 +378,16 @@ const PrimeConstellationBg = () => {
       const r = star.size * localT * 1.1;
       const hue = STAR_HUES[star.hueIdx];
 
+      // Halo: draw the cached unit-glow sprite scaled to glowR, modulated
+      // with globalAlpha. ~10x faster than building a radial gradient.
       const glowR = r * 4;
-      const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowR);
-      glow.addColorStop(0, `hsla(${hue}, ${alpha * 0.6})`);
-      glow.addColorStop(0.3, `hsla(${hue}, ${alpha * 0.15})`);
-      glow.addColorStop(1, `hsla(${hue}, 0)`);
-      ctx.beginPath();
-      ctx.arc(sx, sy, glowR, 0, Math.PI * 2);
-      ctx.fillStyle = glow;
-      ctx.fill();
+      const sprite = fieldSprites[star.hueIdx];
+      if (sprite) {
+        ctx.globalAlpha = Math.min(1, alpha);
+        const d = glowR * 2;
+        ctx.drawImage(sprite, sx - glowR, sy - glowR, d, d);
+        ctx.globalAlpha = 1;
+      }
 
       ctx.beginPath();
       ctx.arc(sx, sy, Math.max(r * 0.35, 0.4), 0, Math.PI * 2);
@@ -368,26 +447,17 @@ const PrimeConstellationBg = () => {
           const useAmber = c.isFocalCluster && star.brightness >= 1.4;
           const hue = useAmber ? AMBER_HUE : baseHue;
 
-          // Subtle nebula halo
-          const nebulaR = starR * (useAmber ? 14 : 10);
-          const nebula = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, nebulaR);
-          nebula.addColorStop(0, `hsla(${hue}, ${starAlpha * (useAmber ? 0.15 : 0.1)})`);
-          nebula.addColorStop(0.4, `hsla(${hue}, ${starAlpha * 0.03})`);
-          nebula.addColorStop(1, `hsla(${hue}, 0)`);
-          ctx.beginPath();
-          ctx.arc(star.x, star.y, nebulaR, 0, Math.PI * 2);
-          ctx.fillStyle = nebula;
-          ctx.fill();
-
-          // Inner glow
-          const innerR = starR * 3.5;
-          const inner = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, innerR);
-          inner.addColorStop(0, `hsla(${hue}, ${starAlpha * 0.5})`);
-          inner.addColorStop(1, `hsla(${hue}, 0)`);
-          ctx.beginPath();
-          ctx.arc(star.x, star.y, innerR, 0, Math.PI * 2);
-          ctx.fillStyle = inner;
-          ctx.fill();
+          // Use a cached sprite (nebula + inner glow baked in) and modulate
+          // via globalAlpha. Brightness/breathe vary per frame, but binning
+          // brightness to 0.1 keeps the cache to ~25 entries total.
+          const brightnessKey = Math.round(star.brightness * 10) / 10;
+          const sprite = getGlowSprite(hue, brightnessKey, useAmber);
+          const breatheScale = breathe;
+          const dw = sprite.width * breatheScale;
+          const dh = sprite.height * breatheScale;
+          ctx.globalAlpha = Math.min(1, starAlpha);
+          ctx.drawImage(sprite, star.x - dw / 2, star.y - dh / 2, dw, dh);
+          ctx.globalAlpha = 1;
 
           // Bright core
           ctx.beginPath();
@@ -410,7 +480,11 @@ const PrimeConstellationBg = () => {
     if (!canvas) return;
 
     const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
+      // Cap DPR — at retina/3x phone the painted pixel count is 4-9x
+      // larger with no perceivable improvement for soft glows.
+      const isMobile = window.innerWidth < 768;
+      const cap = isMobile ? 1 : 1.25;
+      const dpr = Math.min(window.devicePixelRatio || 1, cap);
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
       canvas.style.width = `${window.innerWidth}px`;
