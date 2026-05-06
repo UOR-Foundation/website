@@ -2,7 +2,6 @@ import Layout from "@/modules/core/components/Layout";
 import { ExternalLink, BookOpen, Layers, Rocket, Globe, ShieldCheck, Bot, Microscope, Package } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { applications } from "@/data/applications";
-import { frameworkLayers } from "@/data/framework-layers";
 import { GITHUB_FRAMEWORK_URL, GITHUB_FRAMEWORK_DOCS_URL, CRATE_URL, CRATE_DOCS_URL } from "@/data/external-links";
 
 const appIconMap: Record<string, LucideIcon> = { Globe, ShieldCheck, Bot, Microscope, Layers, Rocket };
@@ -108,61 +107,6 @@ const Standard = () => {
                   <ExternalLink size={13} className="opacity-60" />
                 </span>
               </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Key Concepts. simplified layer index */}
-      <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
-            Key Concepts
-          </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-2">
-            Framework Layers
-          </h2>
-          <p className="text-foreground/70 font-body text-fluid-body leading-relaxed max-w-3xl mb-golden-lg">
-            Six layers, each building on the one below. Together they handle naming, discovery, verification, and transformation.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {frameworkLayers.map((layer) => (
-              <div
-                key={layer.number}
-                className="group rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:border-primary/20 hover:shadow-lg"
-              >
-                <span className="text-xs font-body font-semibold tracking-widest uppercase text-primary/60">
-                  Layer {layer.number}
-                </span>
-                <h3 className="font-display text-fluid-card-title font-bold text-foreground mt-1 mb-2 group-hover:text-primary transition-colors">
-                  {layer.title}
-                </h3>
-                <p className="text-fluid-body font-body text-foreground/70 leading-relaxed">
-                  {layer.summary}
-                </p>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-4">
-                  <a
-                    href={layer.namespaces[0]?.url ?? GITHUB_FRAMEWORK_DOCS_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-fluid-label font-body font-medium text-primary/70 hover:text-primary transition-colors"
-                  >
-                    View docs
-                    <ExternalLink size={13} className="opacity-60" />
-                  </a>
-                  {layer.crateModules.length > 0 && (
-                    <a
-                      href={layer.crateModules[0].url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-fluid-label font-body font-medium text-foreground/40 hover:text-primary transition-colors"
-                    >
-                      <Package size={12} className="opacity-60" />
-                      Rust traits
-                    </a>
-                  )}
-                </div>
-              </div>
             ))}
           </div>
         </div>
