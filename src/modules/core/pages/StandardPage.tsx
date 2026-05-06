@@ -8,28 +8,43 @@ import {
   CRATE_DOCS_URL,
 } from "@/data/external-links";
 import { encode, decode, type EnrichedReceipt } from "@/lib/uor-codec";
+// Load the actual on-disk source of every file in the encode/decode pipeline,
+// verbatim, at build time. This is what the audit panel renders — no paraphrase,
+// no hand-written excerpt. If the file changes, this view changes with it.
+import uorCodecSource from "@/lib/uor-codec.ts?raw";
+import uorCanonicalSource from "@/lib/uor-canonical.ts?raw";
+import receiptRegistrySource from "@/modules/oracle/lib/receipt-registry.ts?raw";
+import { ExternalLink } from "lucide-react";
 
-// Verbatim source of the encode / decode entry points. Shown in the
-// "view code" panel so anyone can audit what UOR actually runs.
-const ENCODER_SOURCE = `// src/lib/uor-codec.ts
-import { computeAndRegister, lookupReceipt } from "@/modules/oracle/lib/receipt-registry";
-
-// Content → Address. Deterministic. Lossless. WASM-anchored.
-//   1. URDNA2015 canonicalization (JSON-LD → N-Quads)
-//   2. SHA-256 (Web Crypto, hardware-accelerated)
-//   3. WASM Rust ring algebra (uor-foundation crate)
-//   4. Four identity forms: address, glyph, IPv6, CID
-export const encode = computeAndRegister;`;
-
-const DECODER_SOURCE = `// src/lib/uor-codec.ts
-// Address → Content. Accepts uor:<hex>, Braille glyph, IPv6, or CID.
-export function decode(address: string): unknown | undefined {
-  return lookupReceipt(address)?.source;
-}
-
-export function isEncoded(address: string): boolean {
-  return lookupReceipt(address) !== undefined;
-}`;
+// Every file in the pipeline, loaded verbatim, in dependency order:
+//   uor-codec.ts          — public encode / decode entry points
+//   uor-canonical.ts      — URDNA2015 canonicalization + SHA-256 + identity forms
+//   receipt-registry.ts   — WASM ring algebra enrichment + lookup
+const PIPELINE_SOURCES: ReadonlyArray<{
+  label: string;
+  path: string;
+  source: string;
+  githubUrl: string;
+}> = [
+  {
+    label: "encode / decode",
+    path: "src/lib/uor-codec.ts",
+    source: uorCodecSource,
+    githubUrl: "https://github.com/UOR-Foundation/UOR-Framework/blob/main/src/lib/uor-codec.ts",
+  },
+  {
+    label: "canonicalization + hash",
+    path: "src/lib/uor-canonical.ts",
+    source: uorCanonicalSource,
+    githubUrl: "https://github.com/UOR-Foundation/UOR-Framework/blob/main/src/lib/uor-canonical.ts",
+  },
+  {
+    label: "WASM ring + registry",
+    path: "src/modules/oracle/lib/receipt-registry.ts",
+    source: receiptRegistrySource,
+    githubUrl: "https://github.com/UOR-Foundation/UOR-Framework/blob/main/src/modules/oracle/lib/receipt-registry.ts",
+  },
+];
 
 const DEMO_DEFAULT = `{
   "@context": "https://schema.org",
