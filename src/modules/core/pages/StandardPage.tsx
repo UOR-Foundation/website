@@ -524,6 +524,64 @@ const CodeBlock = ({ label, source }: { label: string; source: string }) => {
   );
 };
 
+const PipelineTrace = ({ receipt, title }: { receipt: EnrichedReceipt; title: string }) => {
+  // Truncate N-Quads if very long, but show full hash bytes
+  const nquadsPreview = receipt.nquads.length > 600
+    ? receipt.nquads.slice(0, 600) + `\n… (${receipt.nquads.length - 600} more chars)`
+    : receipt.nquads;
+  const factors = receipt.ringFactors.length ? receipt.ringFactors.join(" × ") : "—";
+  const basis = receipt.ringBasis.length ? receipt.ringBasis.map((b) => `2^${b}`).join(" + ") : "0";
+  return (
+    <div className="rounded-lg border border-border/70 bg-background/60 overflow-hidden">
+      <div className="px-3 py-1.5 border-b border-border/60 flex items-center justify-between">
+        <span className="text-[10.5px] tracking-[0.18em] uppercase text-foreground/50 font-body">{title}</span>
+        <span className="text-[10.5px] font-body text-foreground/50">
+          engine: <span className="text-foreground/80">{receipt.engine}</span>
+          {receipt.crateVersion && <span className="text-foreground/50"> · v{receipt.crateVersion}</span>}
+        </span>
+      </div>
+      <div className="flex flex-col divide-y divide-border/50">
+        <TraceStep n={1} label="URDNA2015 canonical N-Quads" body={nquadsPreview} />
+        <TraceStep n={2} label="SHA-256 (hex)" body={receipt.hashHex} />
+        <TraceStep
+          n={3}
+          label="WASM ring algebra (uor-foundation)"
+          body={[
+            `ringByte         = 0x${receipt.ringByte.toString(16).padStart(2, "0")}  (${receipt.ringByte})`,
+            `partition        = ${receipt.ringPartition}`,
+            `factors          = ${factors}`,
+            `basis            = ${basis}`,
+            `popcount         = ${receipt.ringPopcount}`,
+            `criticalIdentity = ${receipt.ringCriticalIdentity ? "✓ x ⊕ ¬x = 0xFF" : "✗"}`,
+          ].join("\n")}
+        />
+        <TraceStep
+          n={4}
+          label="Identity forms"
+          body={[
+            `address = uor:${receipt.hashHex.slice(0, 32)}`,
+            `glyph   = ${receipt.glyph}`,
+            `ipv6    = ${receipt.ipv6}`,
+            `cid     = ${receipt.cid}`,
+          ].join("\n")}
+        />
+      </div>
+    </div>
+  );
+};
+
+const TraceStep = ({ n, label, body }: { n: number; label: string; body: string }) => (
+  <div className="px-3 py-2.5 flex flex-col gap-1">
+    <div className="flex items-center gap-2">
+      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary/15 text-primary text-[10px] font-body">{n}</span>
+      <span className="text-[10.5px] tracking-[0.18em] uppercase text-foreground/55 font-body">{label}</span>
+    </div>
+    <pre className="font-mono text-[11.5px] leading-[1.55] text-foreground/85 whitespace-pre-wrap break-all">
+{body}
+    </pre>
+  </div>
+);
+
 const CopyableCommand = ({ value }: { value: string }) => {
   const [copied, setCopied] = useState(false);
   return (
