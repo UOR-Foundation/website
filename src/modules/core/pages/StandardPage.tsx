@@ -408,13 +408,7 @@ const LiveDemo = () => {
             </div>
           </div>
           {showCode ? (
-            <div className="flex flex-col gap-3">
-              <CodeBlock label="encoder · src/lib/uor-codec.ts" source={ENCODER_SOURCE} />
-              <CodeBlock label="decoder · src/lib/uor-codec.ts" source={DECODER_SOURCE} />
-              <p className="text-[12px] font-body text-foreground/55 leading-[1.6]">
-                Two functions. <code className="font-mono">encode</code> runs URDNA2015 → SHA-256 → WASM ring algebra from the <code className="font-mono">uor-foundation</code> crate. <code className="font-mono">decode</code> is a pure lookup — no server, no registry service.
-              </p>
-            </div>
+            <SourceAudit />
           ) : error ? (
             <div className="font-mono text-[13px] leading-[1.6] bg-background/60 border border-border/70 rounded-lg p-4 text-foreground/55 min-h-[88px]">
               {error}
