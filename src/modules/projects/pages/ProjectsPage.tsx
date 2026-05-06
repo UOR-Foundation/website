@@ -68,7 +68,7 @@ const Projects = () => {
             Projects
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl" style={{ animationDelay: "0.15s" }}>
-            A curated catalog of open-source projects built on the UOR Framework. Each one is independently maintained, licensed under Apache-2.0 or MIT, and verifiable end-to-end. Explore the projects below, or submit your own for review.
+            A curated catalog of open-source projects built on the UOR Framework. Each one is independently maintained and verifiable end-to-end. Explore the projects below, or submit your own for review.
           </p>
           <div
             className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
@@ -99,7 +99,7 @@ const Projects = () => {
             <h2 className="font-display text-fluid-heading font-bold">
               Submit a Project
             </h2>
-            <p className="mt-4 text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto">
+            <p className="mt-4 text-fluid-body text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto">
               All you need is an open-source repository and a clear description. Our technical committee reviews every submission within 3 weeks.
             </p>
           </div>
@@ -113,7 +113,7 @@ const Projects = () => {
                 </div>
               </div>
               <h3 className="font-display text-fluid-page-title font-bold text-section-dark-foreground mb-5">You're In.</h3>
-              <p className="text-xl text-section-dark-foreground/70 font-body mb-4">Your project has been submitted for review.</p>
+              <p className="text-fluid-body text-section-dark-foreground/70 font-body mb-4">Your project has been submitted for review.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
                 <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity font-body">
                   Join Our Discord <ExternalLink size={14} />
