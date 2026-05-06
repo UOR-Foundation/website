@@ -19,31 +19,62 @@
 
 @layer base {
   :root {
-    /* ── Unified Fluid Typography Scale ──────────────────────────────
-     * Single source of truth for all text sizes across the site.
-     * clamp(min, preferred, max) ensures legibility at every viewport.
-     */
-    --text-page-title:       clamp(2.5rem, 4.8vw, 5.75rem);
-    --text-section-heading:  clamp(1.75rem, 3vw, 3.75rem);
-    --text-card-title:       clamp(1.15rem, 1.4vw, 1.8rem);
-    --text-lead:             clamp(17px, 1.4vw, 25px);
-    --text-body:             clamp(16px, 1.25vw, 23px);
-    --text-body-sm:          clamp(15px, 1.1vw, 20px);
-    --text-label:            clamp(14px, 1.05vw, 19px);
-    --text-caption:          clamp(13px, 0.9vw, 17px);
-
-    /* ── Golden Ratio Spacing System ─────────────────────────────────
-     * φ = 1.618. All section and content spacing follows φ-scaled steps.
-     * Provides harmonious, proportional rhythm across the entire site.
+    /* ── Golden Ratio System (φ ≈ 1.618) ─────────────────────────────
+     * φ is the ONLY allowed rhythm for sizing, spacing, type, radii,
+     * aspect ratios, and layout splits across the entire site. Any
+     * deviation must be justified (e.g. 1:1 for icon tiles, 2:3 for
+     * book covers).
+     *
+     * φ ladder (rem):
+     *   0.146  0.236  0.382  0.618  1.000  1.618  2.618  4.236  6.854  11.09  17.94
      */
     --phi: 1.618;
-    --section-py-sm:   clamp(4.75rem, 9.5vw, 9.25rem);
-    --section-py-md:   clamp(6.5rem, 13vw, 12.5rem);
-    --section-py-lg:   clamp(8.25rem, 16vw, 16.5rem);
-    --content-gap-sm:  1.618rem;
-    --content-gap-md:  2.618rem;
-    --content-gap-lg:  4.236rem;
-    --content-gap-xl:  6.854rem;
+
+    /* Spacing ladder — additive φ steps, base = 1rem */
+    --phi-0:  0.236rem;   /*  3.8px */
+    --phi-1:  0.382rem;   /*  6.1px */
+    --phi-2:  0.618rem;   /*  9.9px */
+    --phi-3:  1.000rem;   /* 16px   */
+    --phi-4:  1.618rem;   /* 25.9px */
+    --phi-5:  2.618rem;   /* 41.9px */
+    --phi-6:  4.236rem;   /* 67.8px */
+    --phi-7:  6.854rem;   /* 109.7px */
+    --phi-8: 11.090rem;   /* 177.4px */
+    --phi-9: 17.944rem;   /* 287.1px */
+
+    /* Section paddings — φ-anchored, fluid via clamp() */
+    --section-py-sm:   clamp(2.618rem, 6.18vw, 6.854rem);
+    --section-py-md:   clamp(4.236rem, 9.88vw, 11.09rem);
+    --section-py-lg:   clamp(6.854rem, 15.95vw, 17.944rem);
+
+    /* Content gaps — back-compat alias for the φ ladder */
+    --content-gap-sm:  var(--phi-4);   /* 1.618rem */
+    --content-gap-md:  var(--phi-5);   /* 2.618rem */
+    --content-gap-lg:  var(--phi-6);   /* 4.236rem */
+    --content-gap-xl:  var(--phi-7);   /* 6.854rem */
+
+    /* ── Unified Fluid Typography Scale ──────────────────────────────
+     * Anchored at 1rem body, every step is φ-related.
+     * Steps (rem): 0.764 / 0.882 / 1.000 / 1.118 / 1.235 / 1.618 / 2.618 / 4.236
+     */
+    --text-caption:          clamp(0.764rem, 0.78vw + 0.55rem, 1.000rem);
+    --text-label:            clamp(0.882rem, 0.85vw + 0.62rem, 1.118rem);
+    --text-body-sm:          clamp(0.944rem, 0.95vw + 0.65rem, 1.235rem);
+    --text-body:             clamp(1.000rem, 1.05vw + 0.7rem, 1.382rem);
+    --text-lead:             clamp(1.118rem, 1.25vw + 0.78rem, 1.618rem);
+    --text-card-title:       clamp(1.235rem, 1.4vw + 0.85rem, 1.918rem);
+    --text-section-heading:  clamp(1.618rem, 2.95vw + 0.6rem, 3.708rem);  /* ≈ φ² × 1.382 */
+    --text-page-title:       clamp(2.618rem, 4.8vw + 0.4rem, 5.999rem);   /* ≈ φ³ × 1.382 */
+
+    /* Aspect ratios */
+    --ratio-phi:           1.618 / 1;
+    --ratio-phi-portrait:  1 / 1.618;
+    --ratio-phi-wide:      2.618 / 1;
+
+    /* Reading measures (line lengths) — Fibonacci-adjacent, φ-feeling */
+    --measure-sm: 38ch;
+    --measure-md: 62ch;
+    --measure-lg: 100ch;
 
     /* ── Hologram Adaptive Scale ─────────────────────────────────────
      * The system attends to the human's screen — not the reverse.
@@ -146,7 +177,13 @@
     --input: 225 18% 13%;
     --ring: 38 60% 50%;
 
-    --radius: 0.25rem;
+    /* Radii — φ-derived ladder anchored at 4px */
+    --radius-xs: 0.236rem;  /*  ~3.8px */
+    --radius-sm: 0.382rem;  /*  ~6.1px */
+    --radius-md: 0.618rem;  /*  ~9.9px */
+    --radius-lg: 1.000rem;  /*  16px   */
+    --radius-xl: 1.618rem;  /*  25.9px */
+    --radius:    var(--radius-sm);
 
     /* Structural tokens */
     --section-dark: 230 28% 4%;
