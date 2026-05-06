@@ -362,7 +362,14 @@ const LiveDemo = () => {
       {/* Stage 3 : Decode */}
       <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">3 · Decode — address back to content</div>
+          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">
+            3 · Decode — address back to content
+            {address.trim() && (
+              <span className="ml-3 normal-case tracking-normal text-foreground/55">
+                detected: <span className="text-foreground/80">{KIND_LABEL[kind]}</span>
+              </span>
+            )}
+          </div>
           {decoded !== undefined && verifyState === "ok" && (
             <span className="inline-flex items-center gap-1.5 text-[12px] font-body text-primary">
               <Check size={13} /> Round-trip verified — same content, same address
@@ -375,7 +382,7 @@ const LiveDemo = () => {
         <input
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          placeholder="Paste a uor:<hex> address (or click the link above)"
+          placeholder="Paste any form: UOR address, Braille glyph, IPv6, or IPFS CID"
           spellCheck={false}
           className="w-full font-mono text-[13px] bg-background/60 border border-border/70 rounded-lg px-4 py-3 text-foreground/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
         />
