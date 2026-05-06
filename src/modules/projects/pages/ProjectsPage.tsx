@@ -99,9 +99,6 @@ const Projects = () => {
             <h2 className="font-display text-fluid-heading font-bold">
               Submit a Project
             </h2>
-            <p className="mt-4 text-fluid-body text-section-dark-foreground/60 font-body leading-relaxed max-w-xl mx-auto">
-              All you need is an open-source repository and a clear description. Our technical committee reviews every submission within 3 weeks.
-            </p>
           </div>
 
           {submitted ? (
