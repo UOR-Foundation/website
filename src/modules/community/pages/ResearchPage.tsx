@@ -86,9 +86,9 @@ const Research = () => {
               {
                 title: "Contribute",
                 description: "Browse open issues, submit pull requests, and review code on GitHub.",
-                href: GITHUB_ORG_URL,
+                href: "/build",
                 cta: "Browse Projects",
-                external: true,
+                external: false,
               },
               {
                 title: "Propose Research",
