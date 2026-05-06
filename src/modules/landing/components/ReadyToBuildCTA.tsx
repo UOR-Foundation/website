@@ -10,7 +10,7 @@ const ReadyToBuildCTA = () => {
             Ready to Build?
           </h2>
           <p className="mt-golden-sm text-foreground/60 font-body text-fluid-lead max-w-xl mx-auto leading-relaxed">
-            Submit your project for Sandbox review. Our technical committee reviews every submission within 3 weeks.
+            Submit your project for review. Our technical committee reviews every submission within 3 weeks.
           </p>
           <div className="mt-golden-lg">
             <Link
