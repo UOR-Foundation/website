@@ -88,8 +88,8 @@ const BlogUorFrameworkOrigin = () => {
           {COMPONENTS.map((item) => (
             <div key={item.title} className="rounded-xl border border-border bg-card p-5">
               <item.icon size={20} className="text-primary mb-3" />
-              <h3 className="font-display text-base font-semibold text-foreground mb-2">{item.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+              <h3 className="font-display text-[1.05em] font-semibold text-foreground mb-2">{item.title}</h3>
+              <p className="text-[0.95em] text-muted-foreground leading-[1.7]">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -103,8 +103,8 @@ const BlogUorFrameworkOrigin = () => {
         <div className="mt-6 space-y-5 not-prose">
           {OBJECT_MODES.map((mode) => (
             <div key={mode.name} className="pl-5 border-l-2 border-primary/30">
-              <h3 className="font-display text-lg font-semibold text-foreground mb-1">{mode.name}</h3>
-              <p className="text-base text-muted-foreground leading-[1.65]">{mode.desc}</p>
+              <h3 className="font-display text-[1.15em] font-semibold text-foreground mb-1">{mode.name}</h3>
+              <p className="text-[1em] text-muted-foreground leading-[1.7]">{mode.desc}</p>
             </div>
           ))}
         </div>
