@@ -12,6 +12,14 @@ export const blogPosts = [
     coverKey: "sustainableAiUganda",
   },
   {
+    title: "uor-foundation v0.3.1 is live on crates.io",
+    excerpt: "The complete UOR Foundation vocabulary as typed Rust traits. 34 namespaces, 471 classes, 948 properties, plus the uor! macro. One line to install: cargo add uor-foundation.",
+    date: "May 5, 2026",
+    tag: "Engineering",
+    href: "/blog/uor-foundation-v0-3-1",
+    coverKey: "uorFoundationCrate",
+  },
+  {
     title: "UOR: Building the Internet's Knowledge Graph",
     excerpt: "How a single addressing system could turn the internet into a structured, navigable knowledge graph.",
     date: "December 21, 2023",
