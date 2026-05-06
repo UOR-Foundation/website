@@ -210,9 +210,6 @@ const ProjectAwesomeList = () => {
                       />
                     ) : null}
                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-card via-card/40 to-transparent pointer-events-none" />
-                    <span className="absolute top-3 left-3 inline-flex items-center px-2 py-1 rounded-full bg-background/80 backdrop-blur border border-border/60 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/80 font-body">
-                      {p.category}
-                    </span>
                   </div>
 
                   <div className="flex flex-col flex-1 p-5">
@@ -224,6 +221,9 @@ const ProjectAwesomeList = () => {
                     </p>
 
                     <div className="mt-5 pt-4 border-t border-border/50 flex items-center justify-between gap-3">
+                      <span className="text-fluid-label font-semibold uppercase tracking-[0.14em] text-foreground/55 font-body">
+                        {p.category}
+                      </span>
                       <a
                         href={p.url ?? GITHUB_ORG_URL}
                         target="_blank"
@@ -232,13 +232,6 @@ const ProjectAwesomeList = () => {
                       >
                         <Github size={14} strokeWidth={2} />
                         GitHub
-                      </a>
-                      <a
-                        href={`/projects/${p.slug}`}
-                        className="inline-flex items-center gap-1.5 text-fluid-label font-semibold uppercase tracking-[0.14em] text-primary/80 hover:text-primary transition-colors font-body"
-                      >
-                        Details
-                        <ArrowUpRight size={13} />
                       </a>
                     </div>
                   </div>
