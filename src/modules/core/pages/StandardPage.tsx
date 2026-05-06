@@ -28,7 +28,12 @@ const LiveDemo = () => {
     try {
       parsed = JSON.parse(input);
     } catch {
-      setError("Waiting for valid JSON…");
+      setError(formatJsonError(input));
+      return;
+    }
+    const schemaError = validateUorInput(parsed);
+    if (schemaError) {
+      setError(schemaError);
       return;
     }
     singleProofHash(parsed)
