@@ -1,13 +1,12 @@
 import Layout from "@/modules/core/components/Layout";
 import { Link } from "react-router-dom";
-import { Calendar, ExternalLink, ArrowRight, Plus } from "lucide-react";
+import { ExternalLink, ArrowRight, Plus } from "lucide-react";
 import blogKnowledgeGraph from "@/assets/blog-knowledge-graph.png";
 import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import { blogPosts } from "@/data/blog-posts";
 import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_RESEARCH_URL } from "@/data/external-links";
 import { categoryResearch } from "@/data/research-papers";
-import { events } from "@/data/events";
 import DiscordIcon from "@/modules/core/components/icons/DiscordIcon";
 
 const coverMap: Record<string, string> = {
@@ -262,71 +261,6 @@ const Research = () => {
             >
               View all posts <ArrowRight size={14} />
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Events */}
-      <section id="events" className="py-section-sm bg-background border-b border-border/40 scroll-mt-28">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
-            Events
-          </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
-            Upcoming
-          </h2>
-
-          <div className="space-y-0">
-            {events.map((event, index) => (
-              <div
-                key={event.title}
-                className="animate-fade-in-up opacity-0"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {index === 0 && <div className="h-px w-full bg-border" />}
-                <div className="group py-6 md:py-8 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-8 items-start transition-all duration-300 hover:pl-2">
-                  <div>
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className={`px-3 py-1 rounded-full text-fluid-caption font-medium font-body ${tagStyles[event.type]}`}>
-                        {event.type}
-                      </span>
-                    </div>
-                    <h3 className="font-display text-fluid-card-title font-semibold text-foreground mb-2 transition-colors duration-300 group-hover:text-primary">
-                      {event.title}
-                    </h3>
-                    <p className="text-foreground/70 font-body text-fluid-body leading-relaxed">
-                      {event.location}
-                      {event.link && (
-                        <>
-                          {" · "}
-                          <a href={event.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
-                            Join on Discord
-                          </a>
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2 md:mt-1">
-                    <span className="text-fluid-label font-medium text-foreground/55 font-body flex items-center gap-2">
-                      <Calendar size={14} />
-                      {event.date}
-                    </span>
-                    {event.calendarDate && (
-                      <a
-                        href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.calendarDate}&details=${encodeURIComponent(event.link ? `Join on Discord: ${event.link}` : '')}&location=${encodeURIComponent(event.location)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-fluid-caption font-medium text-primary hover:underline font-body flex items-center gap-1.5"
-                      >
-                        <ExternalLink size={11} />
-                        Add to Calendar
-                      </a>
-                    )}
-                  </div>
-                </div>
-                <div className="h-px w-full bg-border" />
-              </div>
-            ))}
           </div>
         </div>
       </section>
