@@ -505,9 +505,6 @@ const Standard = () => {
             See it work
           </h2>
           <LiveDemo />
-          <p className="mt-5 text-fluid-label font-body text-foreground/55">
-            Encode: content → address. Decode: address → content. The address comes from the data itself — no registry, no middleman.
-          </p>
         </div>
       </section>
 
