@@ -17,6 +17,16 @@ export type NewsItem = {
 
 export const newsItems: NewsItem[] = [
   {
+    title: "The Path to Sustainable AI: Notes from the Uganda Deep Tech Summit",
+    excerpt:
+      "Alex Flom represented the UOR Foundation in Kampala. The pitch: compute once, lookup forever — AI that runs on devices people already own, with data that stays local.",
+    date: "May 6, 2026",
+    isoDate: "2026-05-06",
+    category: "Community",
+    href: "/blog/sustainable-ai-uganda",
+    coverKey: "sustainableAiUganda",
+  },
+  {
     title: "A Universal Data Fingerprint for Your AI Agent",
     excerpt:
       "Two agents, one verifiable identifier. UOR derives a 256-bit fingerprint from canonical structure — same object, same hash, in any language or runtime.",

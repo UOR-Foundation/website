@@ -4,6 +4,14 @@
  */
 export const blogPosts = [
   {
+    title: "The Path to Sustainable AI: Notes from the Uganda Deep Tech Summit",
+    excerpt: "Alex Flom represented the UOR Foundation in Kampala. The pitch: compute once, lookup forever — AI that runs on devices people already own, with data that stays local.",
+    date: "May 6, 2026",
+    tag: "Field Notes",
+    href: "/blog/sustainable-ai-uganda",
+    coverKey: "sustainableAiUganda",
+  },
+  {
     title: "UOR: Building the Internet's Knowledge Graph",
     excerpt: "How a single addressing system could turn the internet into a structured, navigable knowledge graph.",
     date: "December 21, 2023",

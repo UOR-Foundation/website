@@ -23,6 +23,7 @@ const BlogPost2 = lazy(() => import("@/modules/community/pages/BlogPost2"));
 const BlogPost3 = lazy(() => import("@/modules/community/pages/BlogPost3"));
 const BlogCanonicalRustCrate = lazy(() => import("@/modules/community/pages/BlogCanonicalRustCrate"));
 const BlogUorFrameworkOrigin = lazy(() => import("@/modules/community/pages/BlogUorFrameworkOrigin"));
+const BlogSustainableAiUganda = lazy(() => import("@/modules/community/pages/BlogSustainableAiUganda"));
 const BlogIndexPage = lazy(() => import("@/modules/community/pages/BlogIndexPage"));
 const NewsPage = lazy(() => import("@/modules/community/pages/NewsPage"));
 const ResearchPaperAtlasEmbeddings = lazy(() => import("@/modules/community/pages/ResearchPaperAtlasEmbeddings"));
@@ -121,6 +122,7 @@ const App = () => {
               <Route path="/blog/uor-framework-launch" element={<BlogPost3 />} />
               <Route path="/blog/universal-data-fingerprint" element={<BlogCanonicalRustCrate />} />
               <Route path="/blog/uor-framework-origin" element={<BlogUorFrameworkOrigin />} />
+              <Route path="/blog/sustainable-ai-uganda" element={<BlogSustainableAiUganda />} />
               <Route path="/blog/universal-data-passport" element={<Navigate to="/blog/universal-data-fingerprint" replace />} />
               <Route path="/universal-data-passport" element={<Navigate to="/blog/universal-data-fingerprint" replace />} />
               <Route path="/universal-data-fingerprint" element={<Navigate to="/blog/universal-data-fingerprint" replace />} />

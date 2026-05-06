@@ -11,6 +11,7 @@ import blogGoldenSeed from "@/assets/blog-golden-seed-vector.png";
 import blogFrameworkLaunch from "@/assets/blog-uor-framework-launch.png";
 import projectIdentity from "@/assets/project-uor-identity.jpg";
 import blogUorFrameworkOrigin from "@/assets/blog-uor-framework-origin.jpg";
+import blogUgandaCover from "@/assets/blog-uganda-cover.jpg";
 
 /** Add new covers here when introducing a new blog post. */
 export const blogCoverMap: Record<string, string> = {
@@ -19,6 +20,7 @@ export const blogCoverMap: Record<string, string> = {
   frameworkLaunch: blogFrameworkLaunch,
   universalDataFingerprint: projectIdentity,
   uorFrameworkOrigin: blogUorFrameworkOrigin,
+  sustainableAiUganda: blogUgandaCover,
 };
 
 /**
