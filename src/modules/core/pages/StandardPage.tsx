@@ -339,8 +339,9 @@ const LiveDemo = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap gap-2">
-        {PRESETS.map((p) => {
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {PRESETS.map((p) => {
           const active = input.trim() === p.value.trim();
           return (
             <button
@@ -357,7 +358,36 @@ const LiveDemo = () => {
               {p.label}
             </button>
           );
-        })}
+          })}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setShowTrace((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-body transition-colors ${
+              showTrace
+                ? "border-primary/60 bg-primary/10 text-foreground"
+                : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
+            }`}
+            title="Show step-by-step pipeline trace"
+          >
+            <ListOrdered size={12} />
+            {showTrace ? "Hide trace" : "View trace"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCode((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-body transition-colors ${
+              showCode
+                ? "border-primary/60 bg-primary/10 text-foreground"
+                : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
+            }`}
+            title="View the actual encode/decode source"
+          >
+            <Code2 size={12} />
+            {showCode ? "Hide code" : "View code"}
+          </button>
+        </div>
       </div>
 
       {/* Stage 1 → Stage 2 : Encode */}
@@ -376,37 +406,7 @@ const LiveDemo = () => {
           <ArrowRight size={22} />
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · UOR address — derived from the data itself</div>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setShowTrace((v) => !v)}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-body transition-colors ${
-                  showTrace
-                    ? "border-primary/60 bg-primary/10 text-foreground"
-                    : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
-                }`}
-                title="Show step-by-step pipeline trace"
-              >
-                <ListOrdered size={12} />
-                {showTrace ? "Hide trace" : "View trace"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCode((v) => !v)}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-body transition-colors ${
-                  showCode
-                    ? "border-primary/60 bg-primary/10 text-foreground"
-                    : "border-border text-foreground/60 hover:border-primary/40 hover:text-foreground"
-                }`}
-                title="View the actual encode/decode source"
-              >
-                <Code2 size={12} />
-                {showCode ? "Hide code" : "View code"}
-              </button>
-            </div>
-          </div>
+          <div className="text-[11px] tracking-[0.2em] uppercase text-foreground/50 font-body">2 · UOR address — derived from the data itself</div>
           {showCode ? (
             <SourceAudit />
           ) : error ? (
