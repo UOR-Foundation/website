@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import imgHologram from "@/assets/project-hologram.jpg";
 import imgAtlas from "@/assets/project-atlas.png";
 import imgAtomicLang from "@/assets/project-atomic-lang.jpg";
-import imgPrism from "@/assets/project-prism.png";
+import imgAnunix from "@/assets/project-anunix.jpg";
 import imgPrismBtc from "@/assets/project-prism-btc.jpg";
 import imgSeveranceAi from "@/assets/project-severance-ai.jpg";
 
@@ -15,7 +15,7 @@ const projectImageMap: Record<string, string> = {
   hologram: imgHologram,
   atlas: imgAtlas,
   atomicLang: imgAtomicLang,
-  prism: imgPrism,
+  anunix: imgAnunix,
   prismBtc: imgPrismBtc,
   severanceAi: imgSeveranceAi,
 };
