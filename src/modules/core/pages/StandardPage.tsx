@@ -16,6 +16,79 @@ const DEMO_DEFAULT = `{
   "author": "you"
 }`;
 
+type Preset = { label: string; hint: string; value: string };
+
+const PRESETS: Preset[] = [
+  {
+    label: "Creative work",
+    hint: "schema.org / CreativeWork",
+    value: DEMO_DEFAULT,
+  },
+  {
+    label: "Person",
+    hint: "schema.org / Person",
+    value: `{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Ada Lovelace",
+  "birthDate": "1815-12-10",
+  "knowsAbout": ["mathematics", "computing"]
+}`,
+  },
+  {
+    label: "Article",
+    hint: "schema.org / Article",
+    value: `{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "On the analytical engine",
+  "datePublished": "1843-08-01",
+  "author": { "@type": "Person", "name": "Ada Lovelace" }
+}`,
+  },
+  {
+    label: "Dataset",
+    hint: "schema.org / Dataset",
+    value: `{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "Global Temperature 1880-2024",
+  "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "distribution": {
+    "@type": "DataDownload",
+    "encodingFormat": "text/csv",
+    "contentUrl": "https://example.org/temps.csv"
+  }
+}`,
+  },
+  {
+    label: "Event",
+    hint: "schema.org / Event",
+    value: `{
+  "@context": "https://schema.org",
+  "@type": "Event",
+  "name": "UOR Summit",
+  "startDate": "2026-09-21T09:00:00-04:00",
+  "location": { "@type": "Place", "name": "New York, NY" }
+}`,
+  },
+  {
+    label: "Product",
+    hint: "schema.org / Product",
+    value: `{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Coffee Beans, 1kg",
+  "brand": "Origin Roasters",
+  "offers": {
+    "@type": "Offer",
+    "price": "24.00",
+    "priceCurrency": "USD"
+  }
+}`,
+  },
+];
+
 /**
  * Parse a JSON.parse error message and try to point at the offending location
  * with a short snippet of context. Returns a user-readable string.
