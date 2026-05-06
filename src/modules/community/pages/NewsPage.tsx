@@ -48,6 +48,18 @@ const NewsPage = () => {
     );
   }, [filter, sort]);
 
+  // Featured = most recent overall. Only shown when not filtered/sorted into a
+  // different ordering so the highlight always reflects the true latest post.
+  const featured = useMemo(
+    () =>
+      [...newsItems].sort((a, b) => b.isoDate.localeCompare(a.isoDate))[0],
+    [],
+  );
+  const showFeatured = filter === "All" && sort === "newest";
+  const listItems = showFeatured
+    ? items.filter((i) => i.href !== featured?.href)
+    : items;
+
   return (
     <Layout>
       {/* Hero */}
@@ -157,10 +169,13 @@ const NewsPage = () => {
 
             {/* Content */}
             <div className="w-full min-w-0">
+              {showFeatured && featured && (
+                <FeaturedNews item={featured} />
+              )}
               {/* Toolbar */}
               <div className="flex items-end justify-between gap-4 mb-3">
                 <p className="text-[11px] uppercase tracking-[0.14em] text-foreground/45 font-body tabular-nums">
-                  {items.length} {items.length === 1 ? "item" : "items"}
+                  {showFeatured ? "More stories" : `${items.length} ${items.length === 1 ? "item" : "items"}`}
                   {filter !== "All" && (
                     <>
                       {" "}in <span className="text-foreground/70">{filter}</span>
@@ -169,13 +184,13 @@ const NewsPage = () => {
                 </p>
               </div>
 
-              {items.length === 0 ? (
+              {listItems.length === 0 ? (
                 <p className="text-foreground/60 font-body py-12">
-                  No items in this category yet.
+                  {showFeatured ? "No additional stories yet." : "No items in this category yet."}
                 </p>
               ) : view === "list" ? (
                 <ul className="divide-y divide-border/40 border-t border-border/40">
-                  {items.map((item) => (
+                  {listItems.map((item) => (
                     <li key={item.href}>
                       <NewsRow item={item} />
                     </li>
@@ -183,7 +198,7 @@ const NewsPage = () => {
                 </ul>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {items.map((item) => (
+                  {listItems.map((item) => (
                     <NewsCard key={item.href} item={item} />
                   ))}
                 </div>
@@ -193,6 +208,63 @@ const NewsPage = () => {
         </div>
       </section>
     </Layout>
+  );
+};
+
+/* ─── Featured (highlighted hero post) ────────────────────────────── */
+const FeaturedNews = ({ item }: { item: NewsItem }) => {
+  const Wrapper: React.ElementType = item.external ? "a" : Link;
+  const wrapperProps: Record<string, unknown> = item.external
+    ? { href: item.href, target: "_blank", rel: "noopener noreferrer" }
+    : { to: item.href };
+
+  return (
+    <Wrapper
+      {...wrapperProps}
+      className="group block mb-10 md:mb-12 rounded-xl overflow-hidden border border-border/60 bg-card transition-all duration-300 hover:border-primary/40 hover:shadow-lg"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-[1.15fr_1fr]">
+        {item.coverKey && (
+          <div className="overflow-hidden bg-background/40 aspect-[16/10] md:aspect-auto md:min-h-[360px]">
+            <img
+              src={getBlogCover(item.coverKey)}
+              alt=""
+              aria-hidden="true"
+              loading="eager"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+            />
+          </div>
+        )}
+        <div className="flex flex-col justify-center p-6 md:p-10 gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-semibold font-body uppercase tracking-[0.18em] text-primary px-2 py-1 rounded bg-primary/10">
+              Featured
+            </span>
+            <span className="text-[11px] font-semibold font-body uppercase tracking-[0.16em] text-primary/75">
+              {item.category}
+            </span>
+            <time
+              dateTime={item.isoDate}
+              className="text-[11px] uppercase tracking-[0.14em] font-body text-foreground/45 tabular-nums"
+            >
+              {formatShortDate(item.isoDate)}
+            </time>
+          </div>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground leading-[1.1] tracking-tight transition-colors duration-200 group-hover:text-primary">
+            {item.title}
+          </h2>
+          <p className="text-[15px] md:text-[16px] text-foreground/70 font-body leading-relaxed line-clamp-3 max-w-2xl">
+            {item.excerpt}
+          </p>
+          <span className="inline-flex items-center gap-1.5 mt-2 text-[13px] font-medium text-primary font-body">
+            Read story
+            <span className="transition-transform duration-200 group-hover:translate-x-0.5">
+              {item.external ? <ArrowUpRight size={14} /> : <ArrowRight size={14} />}
+            </span>
+          </span>
+        </div>
+      </div>
+    </Wrapper>
   );
 };
 
