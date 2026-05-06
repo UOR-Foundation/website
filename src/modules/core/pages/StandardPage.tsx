@@ -453,7 +453,7 @@ const Standard = () => {
           </h2>
           <LiveDemo />
           <p className="mt-5 text-fluid-label font-body text-foreground/55">
-            Same input → same identity. On any machine. Forever.
+            Encode: content → address. Decode: address → content. The address comes from the data itself — no registry, no middleman.
           </p>
         </div>
       </section>
