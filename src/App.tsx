@@ -32,7 +32,7 @@ const ProjectsPage = lazy(() => import("@/modules/projects/pages/ProjectsPage"))
 const ProjectHologram = lazy(() => import("@/modules/projects/pages/ProjectHologram"));
 const ProjectAtlasEmbeddings = lazy(() => import("@/modules/projects/pages/ProjectAtlasEmbeddings"));
 const ProjectAtomicLang = lazy(() => import("@/modules/projects/pages/ProjectAtomicLang"));
-const ProjectPrism = lazy(() => import("@/modules/projects/pages/ProjectPrism"));
+const ProjectAnunix = lazy(() => import("@/modules/projects/pages/ProjectAnunix"));
 const ProjectUorMcp = lazy(() => import("@/modules/projects/pages/ProjectUorMcp"));
 const ProjectPrismBtc = lazy(() => import("@/modules/projects/pages/ProjectPrismBtc"));
 const ProjectQrCartridge = lazy(() => import("@/modules/projects/pages/ProjectQrCartridge"));
@@ -135,7 +135,8 @@ const App = () => {
               <Route path="/projects/hologram" element={<ProjectHologram />} />
               <Route path="/projects/atlas-embeddings" element={<ProjectAtlasEmbeddings />} />
               <Route path="/projects/atomic-language-model" element={<ProjectAtomicLang />} />
-              <Route path="/projects/prism" element={<ProjectPrism />} />
+              <Route path="/projects/anunix" element={<ProjectAnunix />} />
+              <Route path="/projects/prism" element={<Navigate to="/projects/anunix" replace />} />
               <Route path="/projects/uor-mcp" element={<ProjectUorMcp />} />
               <Route path="/projects/prism-btc" element={<ProjectPrismBtc />} />
               <Route path="/projects/uns" element={<Navigate to="/projects/prism-btc" replace />} />

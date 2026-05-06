@@ -1,5 +1,5 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, Send, CheckCircle2, Github, LayoutGrid, List, Box, Cpu, Triangle, Atom, Bitcoin, ShieldCheck, type LucideIcon } from "lucide-react";
+import { ExternalLink, Send, CheckCircle2, Github, LayoutGrid, List, Box, Cpu, Terminal, Atom, Bitcoin, ShieldCheck, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { projects as projectsData } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import imgHologram from "@/assets/project-hologram.jpg";
 import imgAtlas from "@/assets/project-atlas.png";
 import imgAtomicLang from "@/assets/project-atomic-lang.jpg";
-import imgPrism from "@/assets/project-prism.png";
+import imgAnunix from "@/assets/project-anunix.jpg";
 import imgPrismBtc from "@/assets/project-prism-btc.jpg";
 import imgSeveranceAi from "@/assets/project-severance-ai.jpg";
 
@@ -15,7 +15,7 @@ const projectImageMap: Record<string, string> = {
   hologram: imgHologram,
   atlas: imgAtlas,
   atomicLang: imgAtomicLang,
-  prism: imgPrism,
+  anunix: imgAnunix,
   prismBtc: imgPrismBtc,
   severanceAi: imgSeveranceAi,
 };
@@ -23,7 +23,7 @@ const projectImageMap: Record<string, string> = {
 const projectIconMap: Record<string, LucideIcon> = {
   hologram: Box,
   atomicLang: Cpu,
-  prism: Triangle,
+  anunix: Terminal,
   atlas: Atom,
   prismBtc: Bitcoin,
   severanceAi: ShieldCheck,
@@ -170,7 +170,7 @@ export default Projects;
 const DISPLAY_ORDER = [
   "hologram",
   "atomic-language-model",
-  "prism",
+  "anunix",
   "atlas-embeddings",
   "prism-btc",
   "project-severance-ai",

@@ -37,12 +37,12 @@ export const projects: ProjectData[] = [
     imageKey: "atomicLang",
   },
   {
-    name: "Prism",
-    slug: "prism",
+    name: "Anunix",
+    slug: "anunix",
     category: "Core Infrastructure",
-    description: "The reference implementation of the UOR Framework. Assigns every piece of data a permanent, unique address based on what it is, not where it is stored.",
-    url: "https://github.com/UOR-Foundation/prism",
-    imageKey: "prism",
+    description: "The AI-native operating system. Redefines UNIX primitives — files, processes, pipes, sockets — around state, transformation, memory, routing, and validation. Written in C and assembly.",
+    url: "https://github.com/AdamPippert/Anunix",
+    imageKey: "anunix",
   },
   {
     name: "prism-btc",
