@@ -306,10 +306,15 @@ const LiveDemo = () => {
       encode(resolved)
         .then((r2) => {
           setVerifyState(r2.derivationId === receipt.derivationId ? "ok" : "mismatch");
+          setDecodeReceipt(r2);
         })
-        .catch(() => setVerifyState("mismatch"));
+        .catch(() => {
+          setVerifyState("mismatch");
+          setDecodeReceipt(null);
+        });
     } else {
       setVerifyState("idle");
+      setDecodeReceipt(null);
     }
   }, [address, receipt]);
 
