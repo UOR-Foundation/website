@@ -1,5 +1,5 @@
 import Layout from "@/modules/core/components/Layout";
-import { ExternalLink, Send, CheckCircle2, Github } from "lucide-react";
+import { ExternalLink, Send, CheckCircle2, Github, LayoutGrid, List } from "lucide-react";
 import { useMemo, useState } from "react";
 import { projects as projectsData } from "@/data/projects";
 import { DISCORD_URL, GITHUB_ORG_URL } from "@/data/external-links";
@@ -158,75 +158,132 @@ const Projects = () => {
 
 export default Projects;
 
-const CATEGORY_ORDER = ["Core Infrastructure", "Systems", "Open Science"] as const;
+const DISPLAY_ORDER = [
+  "hologram",
+  "atomic-language-model",
+  "prism",
+  "atlas-embeddings",
+  "uns",
+  "uor-certificate",
+];
 
 const ProjectAwesomeList = () => {
-  const grouped = useMemo(() => {
-    const map = new Map<string, typeof projectsData>();
-    for (const p of projectsData) {
-      const arr = map.get(p.category) ?? [];
-      arr.push(p);
-      map.set(p.category, arr);
-    }
-    const known = CATEGORY_ORDER.filter((c) => map.has(c));
-    const extras = [...map.keys()].filter((c) => !CATEGORY_ORDER.includes(c as typeof CATEGORY_ORDER[number])).sort();
-    return [...known, ...extras].map((c) => ({ category: c, items: map.get(c)! }));
+  const [view, setView] = useState<"grid" | "list">("grid");
+
+  const ordered = useMemo(() => {
+    const bySlug = new Map(projectsData.map((p) => [p.slug, p]));
+    const ranked = DISPLAY_ORDER.map((s) => bySlug.get(s)).filter(Boolean) as typeof projectsData;
+    const extras = projectsData.filter((p) => !DISPLAY_ORDER.includes(p.slug));
+    return [...ranked, ...extras];
   }, []);
 
   return (
-    <div className="space-y-14">
-      {grouped.map(({ category, items }) => (
-        <div key={category}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {items.map((p) => {
-              const img = p.imageKey ? projectImageMap[p.imageKey] : undefined;
-              return (
-                <article
-                  key={p.slug}
-                  className="group flex flex-col rounded-2xl border border-border/70 bg-card overflow-hidden hover:border-primary/40 hover:shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.25)] transition-all duration-300"
-                >
-                  <div className="relative aspect-[16/9] overflow-hidden bg-muted/40">
-                    {img ? (
-                      <img
-                        src={img}
-                        alt={p.name}
-                        loading="lazy"
-                        decoding="async"
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                      />
-                    ) : null}
-                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-card via-card/40 to-transparent pointer-events-none" />
-                  </div>
-
-                  <div className="flex flex-col flex-1 p-5">
-                    <h4 className="font-display text-fluid-card-title font-semibold text-foreground leading-tight">
-                      {p.name}
-                    </h4>
-                    <p className="mt-2 text-foreground/65 font-body text-fluid-body leading-relaxed flex-1">
-                      {p.description}
-                    </p>
-
-                    <div className="mt-5 pt-4 border-t border-border/50 flex items-center justify-between gap-3">
-                      <span className="text-fluid-label font-semibold uppercase tracking-[0.14em] text-primary/70 font-body">
-                        {p.category}
-                      </span>
-                      <a
-                        href={p.url ?? GITHUB_ORG_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-[0.14em] text-foreground/80 hover:text-primary transition-colors font-body"
-                      >
-                        <Github size={14} strokeWidth={2} />
-                        GitHub
-                      </a>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+    <div>
+      <div className="flex justify-end mb-6">
+        <div className="inline-flex items-center rounded-full border border-border/70 bg-card p-1">
+          <button
+            type="button"
+            onClick={() => setView("grid")}
+            aria-pressed={view === "grid"}
+            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-fluid-label font-semibold uppercase tracking-[0.14em] font-body transition-colors ${view === "grid" ? "bg-primary/15 text-primary" : "text-foreground/60 hover:text-foreground"}`}
+          >
+            <LayoutGrid size={14} strokeWidth={2} />
+            Grid
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("list")}
+            aria-pressed={view === "list"}
+            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-fluid-label font-semibold uppercase tracking-[0.14em] font-body transition-colors ${view === "list" ? "bg-primary/15 text-primary" : "text-foreground/60 hover:text-foreground"}`}
+          >
+            <List size={14} strokeWidth={2} />
+            List
+          </button>
         </div>
-      ))}
+      </div>
+
+      {view === "grid" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {ordered.map((p) => {
+            const img = p.imageKey ? projectImageMap[p.imageKey] : undefined;
+            return (
+              <article
+                key={p.slug}
+                className="group flex flex-col rounded-2xl border border-border/70 bg-card overflow-hidden hover:border-primary/40 hover:shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.25)] transition-all duration-300"
+              >
+                <div className="relative aspect-[16/9] overflow-hidden bg-muted/40">
+                  {img ? (
+                    <img
+                      src={img}
+                      alt={p.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                  ) : null}
+                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-card via-card/40 to-transparent pointer-events-none" />
+                </div>
+
+                <div className="flex flex-col flex-1 p-5">
+                  <h4 className="font-display text-fluid-card-title font-semibold text-foreground leading-tight">
+                    {p.name}
+                  </h4>
+                  <p className="mt-2 text-foreground/65 font-body text-fluid-body leading-relaxed flex-1">
+                    {p.description}
+                  </p>
+
+                  <div className="mt-5 pt-4 border-t border-border/50 flex items-center justify-between gap-3">
+                    <span className="text-fluid-label font-semibold uppercase tracking-[0.14em] text-primary/70 font-body">
+                      {p.category}
+                    </span>
+                    <a
+                      href={p.url ?? GITHUB_ORG_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-[0.14em] text-foreground/80 hover:text-primary transition-colors font-body"
+                    >
+                      <Github size={14} strokeWidth={2} />
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <ul className="divide-y divide-border/60 rounded-2xl border border-border/70 bg-card overflow-hidden">
+          {ordered.map((p) => (
+            <li
+              key={p.slug}
+              className="group flex flex-col md:flex-row md:items-center gap-3 md:gap-6 p-5 hover:bg-primary/5 transition-colors"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h4 className="font-display text-fluid-card-title font-semibold text-foreground leading-tight">
+                    {p.name}
+                  </h4>
+                  <span className="text-fluid-label font-semibold uppercase tracking-[0.14em] text-primary/70 font-body">
+                    {p.category}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-foreground/65 font-body text-fluid-body leading-relaxed">
+                  {p.description}
+                </p>
+              </div>
+              <a
+                href={p.url ?? GITHUB_ORG_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-fluid-label font-semibold uppercase tracking-[0.14em] text-foreground/80 hover:text-primary transition-colors font-body shrink-0"
+              >
+                <Github size={14} strokeWidth={2} />
+                GitHub
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
