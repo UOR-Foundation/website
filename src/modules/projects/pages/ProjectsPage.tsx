@@ -68,7 +68,7 @@ const Projects = () => {
             Projects
           </h1>
           <p className="mt-10 text-fluid-body text-foreground/70 font-body leading-relaxed animate-fade-in-up max-w-4xl" style={{ animationDelay: "0.15s" }}>
-            Open-source tools and infrastructure built on the UOR Framework. Browse the catalog, or submit your own.
+            A curated catalog of open-source projects built on the UOR Framework. Each one is independently maintained, licensed under Apache-2.0 or MIT, and verifiable end-to-end. Explore the projects below, or submit your own for review.
           </p>
           <div
             className="mt-12 flex flex-col sm:flex-row flex-wrap gap-3 animate-fade-in-up opacity-0"
