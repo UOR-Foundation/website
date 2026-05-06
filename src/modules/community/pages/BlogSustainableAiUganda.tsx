@@ -120,7 +120,6 @@ const BlogSustainableAiUganda = () => {
       kicker="Field Notes"
       date="May 6, 2026"
       title="The Path to Sustainable AI: Notes from the Uganda Deep Tech Summit"
-      hideHero
       heroOverride={<SlideViewer />}
       backHref="/news"
       backLabel="Back to News"
@@ -186,7 +185,7 @@ const BlogSustainableAiUganda = () => {
         <p>
           We are openly sharing our research and tooling with Uganda's builders and developers. If you are
           creating AI that delivers results for your country, we would love to hear from you —{" "}
-          <a href="mailto:alex@uor.foundation">alex@uor.foundation</a>.
+          <a href="mailto:hi@uor.foundation">hi@uor.foundation</a>.
         </p>
       </section>
     </ArticleLayout>
