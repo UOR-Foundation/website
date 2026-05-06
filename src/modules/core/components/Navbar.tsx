@@ -5,6 +5,7 @@ import uorIcon from "@/assets/uor-icon-new.png";
 import { navItems } from "@/data/nav-items";
 import { DISCORD_URL, GITHUB_ORG_URL, LINKEDIN_URL } from "@/data/external-links";
 import DiscordIcon from "@/modules/core/components/icons/DiscordIcon";
+import { prefetchRoute, prefetchPrimaryRoutesOnIdle } from "@/lib/route-prefetch";
 
 const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
   const location = useLocation();
@@ -34,6 +35,11 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
+
+  // Warm primary route chunks once after first paint so menu clicks feel instant.
+  useEffect(() => {
+    prefetchPrimaryRoutesOnIdle();
+  }, []);
 
   useEffect(() => {
     if (mobileOpen) {
@@ -83,6 +89,9 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
                 <Link
                   key={item.href}
                   to={item.href}
+                  onMouseEnter={() => prefetchRoute(item.href)}
+                  onFocus={() => prefetchRoute(item.href)}
+                  onTouchStart={() => prefetchRoute(item.href)}
                   className={`px-3 lg:px-[clamp(1rem,1.2vw,1.75rem)] py-2 text-[clamp(15px,1.1vw,21px)] font-semibold uppercase tracking-[0.18em] transition-colors duration-150 ease-out ${
                     location.pathname === item.href
                       ? "text-foreground"
@@ -141,6 +150,7 @@ const Navbar = ({ isDark: propIsDark }: { isDark?: boolean }) => {
               <Link
                 key={item.href}
                 to={item.href}
+                onTouchStart={() => prefetchRoute(item.href)}
                 className={`py-3 text-[28px] font-display font-bold uppercase tracking-[0.08em] transition-all duration-[350ms] ease-out ${
                   mobileOpen
                     ? "opacity-100 translate-y-0"
