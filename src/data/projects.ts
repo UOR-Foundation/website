@@ -17,7 +17,7 @@ export const projects: ProjectData[] = [
     slug: "hologram",
     category: "Systems",
     description: "A software layer that turns existing hardware into a high-performance computing engine. No new chips required.",
-    url: "https://github.com/UOR-Foundation/hologram",
+    url: "https://gethologram.ai/",
     imageKey: "hologram",
   },
   {
