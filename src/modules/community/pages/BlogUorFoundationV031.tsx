@@ -4,8 +4,13 @@ import { blogPosts } from "@/data/blog-posts";
 import { getBlogCover } from "@/data/blog-covers";
 import heroImage from "@/assets/blog-uor-foundation-crate.jpg";
 import { Package, Boxes, Wand2, ShieldCheck, Terminal, ExternalLink } from "lucide-react";
+import { usePageMeta } from "@/modules/core/hooks/usePageMeta";
 
 const SLUG = "/blog/uor-foundation-v0-3-1";
+const PAGE_URL = `https://uor.foundation${SLUG}`;
+const OG_IMAGE = "https://uor.foundation/og-uor-foundation-v0-3-1.jpg";
+const PAGE_DESCRIPTION =
+  "uor-foundation v0.3.1 brings the complete UOR Foundation vocabulary to Rust as typed traits — 34 namespaces, 471 classes, 948 properties, plus the uor! macro. cargo add uor-foundation.";
 
 const STATS = [
   { icon: Boxes, label: "Namespaces", value: "34" },
@@ -38,6 +43,16 @@ const HIGHLIGHTS = [
 ];
 
 const BlogUorFoundationV031 = () => {
+  usePageMeta({
+    title: "uor-foundation v0.3.1 is live on crates.io | UOR Foundation",
+    description: PAGE_DESCRIPTION,
+    url: PAGE_URL,
+    image: OG_IMAGE,
+    imageAlt: "Terminal showing cargo add uor-foundation v0.3.1",
+    type: "article",
+    twitterCard: "summary_large_image",
+  });
+
   const related = blogPosts
     .filter((p) => p.href !== SLUG)
     .slice(0, 3)
