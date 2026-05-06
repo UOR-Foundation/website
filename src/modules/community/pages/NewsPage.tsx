@@ -75,7 +75,7 @@ const NewsPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-10 lg:gap-16">
             {/* Sidebar */}
             <aside className="lg:sticky lg:top-28 self-start">
-              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/45 font-body text-[10px] mb-3">
+              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[12px] mb-3">
                 Filter
               </p>
               <ul className="flex lg:flex-col flex-wrap gap-0.5">
@@ -85,7 +85,7 @@ const NewsPage = () => {
                     <li key={cat}>
                       <button
                         onClick={() => setFilter(cat)}
-                        className={`group w-full flex items-center justify-between gap-3 pl-3 pr-2 py-1.5 rounded-md text-[13px] font-body transition-colors border-l-2 ${
+                        className={`group w-full flex items-center justify-between gap-3 pl-3 pr-2 py-2 rounded-md text-[15px] font-body transition-colors border-l-2 ${
                           active
                             ? "border-primary text-primary bg-primary/[0.06]"
                             : "border-transparent text-foreground/65 hover:text-foreground hover:bg-foreground/[0.03]"
@@ -93,7 +93,7 @@ const NewsPage = () => {
                       >
                         <span>{cat}</span>
                         <span
-                          className={`text-[11px] tabular-nums min-w-[20px] text-right ${
+                          className={`text-[13px] tabular-nums min-w-[20px] text-right ${
                             active ? "text-primary/80" : "text-foreground/35"
                           }`}
                         >
@@ -105,7 +105,7 @@ const NewsPage = () => {
                 })}
               </ul>
 
-              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/45 font-body text-[10px] mt-7 mb-2.5">
+              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[12px] mt-7 mb-2.5">
                 Sort by
               </p>
               <div className="inline-flex rounded-md border border-border/70 bg-card p-0.5">
@@ -113,7 +113,7 @@ const NewsPage = () => {
                   <button
                     key={s}
                     onClick={() => setSort(s)}
-                    className={`px-2.5 py-1 rounded text-[11px] font-body transition-colors ${
+                    className={`px-3 py-1.5 rounded text-[13px] font-body transition-colors ${
                       sort === s
                         ? "bg-primary/10 text-primary"
                         : "text-foreground/60 hover:text-foreground"
@@ -124,7 +124,7 @@ const NewsPage = () => {
                 ))}
               </div>
 
-              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/45 font-body text-[10px] mt-7 mb-2.5">
+              <p className="font-semibold tracking-[0.18em] uppercase text-foreground/55 font-body text-[12px] mt-7 mb-2.5">
                 View
               </p>
               <div className="inline-flex rounded-md border border-border/70 bg-card p-0.5">
@@ -132,25 +132,25 @@ const NewsPage = () => {
                   onClick={() => setView("list")}
                   aria-label="List view"
                   aria-pressed={view === "list"}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-body transition-colors ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[13px] font-body transition-colors ${
                     view === "list"
                       ? "bg-primary/10 text-primary"
                       : "text-foreground/60 hover:text-foreground"
                   }`}
                 >
-                  <List size={12} /> List
+                  <List size={14} /> List
                 </button>
                 <button
                   onClick={() => setView("grid")}
                   aria-label="Grid view"
                   aria-pressed={view === "grid"}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-body transition-colors ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[13px] font-body transition-colors ${
                     view === "grid"
                       ? "bg-primary/10 text-primary"
                       : "text-foreground/60 hover:text-foreground"
                   }`}
                 >
-                  <LayoutGrid size={12} /> Grid
+                  <LayoutGrid size={14} /> Grid
                 </button>
               </div>
             </aside>
