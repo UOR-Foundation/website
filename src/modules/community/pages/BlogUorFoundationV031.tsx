@@ -3,12 +3,14 @@ import { CRATE_URL } from "@/data/external-links";
 import { blogPosts } from "@/data/blog-posts";
 import { getBlogCover } from "@/data/blog-covers";
 import heroImage from "@/assets/blog-uor-foundation-crate.jpg";
-import { Package, Boxes, Wand2, ShieldCheck, Terminal, ExternalLink, Sparkles, Wrench, Bug, Scale } from "lucide-react";
+import { Package, Boxes, Wand2, ShieldCheck, Terminal, ExternalLink, Sparkles, Wrench, Bug, Scale, Rss } from "lucide-react";
 import { usePageMeta } from "@/modules/core/hooks/usePageMeta";
 
 const SLUG = "/blog/uor-foundation-v0-3-1";
 const PAGE_URL = `https://uor.foundation${SLUG}`;
 const OG_IMAGE = "https://uor.foundation/og-uor-foundation-v0-3-1.jpg";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const ENGINEERING_RSS = `${SUPABASE_URL ?? ""}/functions/v1/news-rss?category=Engineering`;
 const PAGE_DESCRIPTION =
   "uor-foundation v0.3.1 brings the complete UOR Foundation vocabulary to Rust as typed traits — 34 namespaces, 471 classes, 948 properties, plus the uor! macro. cargo add uor-foundation.";
 
@@ -299,6 +301,15 @@ let address = post.address(); // permanent, content-derived address`}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-border bg-card text-foreground font-display text-[14px] font-medium hover:bg-muted transition-colors"
           >
             Read the docs <ExternalLink size={14} />
+          </a>
+          <a
+            href={ENGINEERING_RSS}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-border bg-card text-foreground font-display text-[14px] font-medium hover:bg-muted transition-colors"
+            aria-label="Subscribe to Engineering announcements via RSS"
+          >
+            <Rss size={16} /> Subscribe (Engineering RSS)
           </a>
         </div>
         <p className="mt-6">
