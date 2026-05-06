@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Layout from "@/modules/core/components/Layout";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, BookOpen, Github, Package } from "lucide-react";
 import {
   GITHUB_FRAMEWORK_URL,
   GITHUB_FRAMEWORK_DOCS_URL,
@@ -92,48 +92,90 @@ const CopyableCommand = ({ value }: { value: string }) => {
 const Standard = () => {
   return (
     <Layout>
-      <section className="hero-gradient pt-48 md:pt-56 pb-16">
+      {/* Hero */}
+      <section className="hero-gradient pt-44 md:pt-56 pb-16 md:pb-24">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <h1 className="font-display text-fluid-page-title font-bold text-foreground animate-fade-in-up max-w-4xl">
-            Every piece of data, one universal identity.
+          <h1 className="font-display text-fluid-page-title font-bold text-foreground animate-fade-in-up">
+            Learn
           </h1>
           <p
-            className="mt-6 text-fluid-body text-foreground/65 font-body leading-relaxed animate-fade-in-up max-w-2xl"
-            style={{ animationDelay: "0.12s" }}
+            className="mt-10 text-foreground/70 font-body text-fluid-body leading-[1.7] max-w-4xl animate-fade-in-up opacity-0"
+            style={{ animationDelay: "0.15s" }}
           >
-            Type something below and watch it get an address that anyone, anywhere, can verify.
+            Every piece of data gets one universal identity. Type something below and watch it
+            become an address that anyone, anywhere, can verify.
           </p>
+          <div
+            className="mt-8 flex flex-wrap gap-3 animate-fade-in-up opacity-0"
+            style={{ animationDelay: "0.25s" }}
+          >
+            <a
+              href={GITHUB_FRAMEWORK_DOCS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-foreground/60 text-foreground font-medium font-body text-fluid-body hover:bg-foreground hover:text-background transition-all duration-200"
+            >
+              <BookOpen size={16} />
+              Read the docs
+            </a>
+            <a
+              href={GITHUB_FRAMEWORK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-foreground/60 text-foreground font-medium font-body text-fluid-body hover:bg-foreground hover:text-background transition-all duration-200"
+            >
+              <Github size={16} />
+              View on GitHub
+            </a>
+            <a
+              href={CRATE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-foreground/60 text-foreground font-medium font-body text-fluid-body hover:bg-foreground hover:text-background transition-all duration-200"
+            >
+              <Package size={16} />
+              crates.io
+            </a>
+          </div>
         </div>
       </section>
 
-      <section className="pb-12 bg-background">
+      {/* Live demo */}
+      <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Try it
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
+            See it work
+          </h2>
           <LiveDemo />
-          <p className="mt-5 text-fluid-label font-body text-foreground/55 text-center">
+          <p className="mt-5 text-fluid-label font-body text-foreground/55">
             Same input → same identity. On any machine. Forever.
           </p>
         </div>
       </section>
 
-      <section className="pb-section-sm bg-background">
+      {/* Install */}
+      <section className="py-section-sm bg-background">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <div className="flex flex-col items-center gap-5 text-center">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            Install
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
+            Add it to your project
+          </h2>
+          <div className="flex flex-col items-start gap-5">
             <CopyableCommand value="cargo add uor-foundation" />
-            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-fluid-label font-body text-foreground/65">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-fluid-label font-body text-foreground/65">
               <a href={CRATE_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">crates.io</a>
               <span aria-hidden className="text-foreground/30">·</span>
               <a href={CRATE_DOCS_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">docs.rs</a>
               <span aria-hidden className="text-foreground/30">·</span>
               <a href={GITHUB_FRAMEWORK_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">source on GitHub</a>
+              <span aria-hidden className="text-foreground/30">·</span>
+              <a href={GITHUB_FRAMEWORK_DOCS_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">full spec</a>
             </div>
-            <a
-              href={GITHUB_FRAMEWORK_DOCS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-fluid-label font-body text-foreground/45 hover:text-primary transition-colors"
-            >
-              Read the full spec →
-            </a>
           </div>
         </div>
       </section>
