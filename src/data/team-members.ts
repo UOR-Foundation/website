@@ -28,11 +28,11 @@ export const teamMembers = [
     link: "https://linkedin.com/in/usrbinkat",
   },
   {
-    name: "Dan Simmerman",
-    role: "Founder @ Mintify",
-    description: "Digital assets and decentralized networks.",
-    image: "/images/profiles/dan-simmerman.jpg",
-    link: "https://x.com/dansimerman?lang=en",
+    name: "John Haines",
+    role: "Solutions Architect @ DoD Business Systems",
+    description: "Enterprise solutions architecture for defense business systems.",
+    image: "/images/profiles/john-haines.jpg",
+    link: "",
   },
   {
     name: "Ilya Paveliev",
