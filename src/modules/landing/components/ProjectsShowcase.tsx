@@ -1,12 +1,6 @@
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
-import { featuredProjects, type MaturityLevel } from "@/data/featured-projects";
-
-const maturityDotColors: Record<MaturityLevel, string> = {
-  Graduated: "bg-primary",
-  Incubating: "bg-accent",
-  Sandbox: "bg-muted-foreground/50",
-};
+import { featuredProjects } from "@/data/featured-projects";
 
 const ProjectsShowcase = () => {
   return (
@@ -48,12 +42,6 @@ const ProjectsShowcase = () => {
                 {String(index + 1).padStart(2, "0")}
               </span>
 
-              <div className="flex items-center gap-2 mb-1">
-                <span className={`w-1.5 h-1.5 rounded-full ${maturityDotColors[project.maturity]}`} />
-                <span className="font-semibold text-foreground/50 font-body uppercase tracking-[0.15em] text-fluid-label">
-                  {project.maturity}
-                </span>
-              </div>
               <h3 className="font-display font-semibold text-foreground text-fluid-card-title">
                 {project.name}
               </h3>
