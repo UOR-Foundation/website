@@ -1,56 +1,108 @@
-Tighten the News page formatting so the list feels precise, dense in the right places, and visually delightful — modeled after editorial newsrooms (Stripe Press, Linear changelog, Vercel news).
+## Goal
 
-## Issues in current layout
+Treat the golden ratio (φ ≈ 1.618) as the **only** allowed rhythm for sizing, spacing, type, and aspect ratios across the entire site. The result should feel calm, confident, and visually unified — without a "redesign" that breaks the current personality.
 
-Looking at the current `/news` view:
-- Huge empty band between hero and list (hero has `pt-44 md:pt-56 pb-12 md:pb-20` plus another `py-section-sm` on the list section).
-- List rows stretch the full container width, pushing the affordance arrow far away from the title — feels disconnected.
-- Date column sits far left, leaving a wide gap before the title.
-- Category eyebrow is the same scale/weight as the date — no clear hierarchy.
-- Sidebar "Filter / Sort by / View" stack feels loose with mixed control shapes.
-- Toolbar above the list ("4 items") is on its own line with a heavy border, adding noise.
+The project already has the seed of this system (`--phi`, `--content-gap-{sm,md,lg,xl}`, `--section-py-{sm,md,lg}`, and `golden-*` Tailwind utilities). The plan extends that seed into a complete scale and applies it everywhere.
 
-## Changes (presentation only — no data or routing changes)
+---
 
-### 1. Hero spacing
-- Reduce hero bottom padding (`pb-12 md:pb-20` → `pb-8 md:pb-10`).
-- Reduce list section top padding to `pt-10 md:pt-14` so the list starts closer to the headline.
-- Drop the redundant top border between hero and list.
+## Phase 1 — Finalize the φ design tokens (foundation)
 
-### 2. Content column width
-- Constrain the news column to a readable measure: wrap the right column in `max-w-[920px]` so titles don't stretch to 1400px+ on wide screens. Affordance arrow now sits close to the title, not at the viewport edge.
+**`src/index.css` → `:root`**
 
-### 3. List row redesign (NewsRow)
-- Grid: `grid-cols-[96px_1fr_24px]` (was `110/140px_1fr_auto`) — tighter date column.
-- Date: smaller, uppercase, monospaced feel — `text-[11px] uppercase tracking-[0.14em] text-foreground/45`.
-- Category eyebrow: keep small/uppercase but reduce opacity on hover-state interaction; render above title with `mb-2`.
-- Title: use `text-fluid-card-title` but tighten leading to `leading-[1.2]` and add subtle underline-on-hover via `bg-[length:0%_1px] hover:bg-[length:100%_1px]` gradient under the text for a refined editorial accent (or simpler: `decoration-primary/40 underline-offset-4 group-hover:underline`).
-- Excerpt: `line-clamp-2`, `text-foreground/60`, `max-w-2xl`.
-- Row padding: `py-5 md:py-6` (was `py-6 md:py-7`) — tighter rhythm.
-- Divider: lighter `divide-border/40`, with a subtle hover background `hover:bg-foreground/[0.015]` and `-mx-4 px-4 rounded-md` so each row gets a soft hover lozenge.
-- Arrow: smaller (`size={16}`), aligned to title baseline (not center), translate on hover.
+Extend the existing scale so every element on the site can pick a φ-correct value without inventing magic numbers.
 
-### 4. Sidebar polish
-- Unify control styling: filter buttons, sort, and view toggles all use the same pill height and font size.
-- Add count chips with consistent width (`min-w-[24px] text-right`) so the column of counts aligns perfectly.
-- Active state: switch from `bg-primary/10` to a thin left accent bar (`border-l-2 border-primary pl-[10px]`) on filter items for a crisper editorial feel; keep the soft fill for sort/view toggles.
-- Section labels (`Filter`, `Sort by`, `View`): tighten spacing between groups (`mt-7` → `mt-6`), reduce label size to `text-[10px]`.
-- Sticky offset: `lg:top-28` for tighter alignment.
+- **Spacing scale** (additive, keeps existing tokens): `--phi-1` … `--phi-9` based on `0.382rem · φⁿ` so the ladder is `0.382 → 0.618 → 1 → 1.618 → 2.618 → 4.236 → 6.854 → 11.09 → 17.94 rem`.
+- **Type scale**: `--type-1` … `--type-7` derived from a 1rem base × φ steps (down for caption, up for display). Replaces the ad-hoc `clamp()` pairs in `--text-*` with a single φ ladder, still wrapped in `clamp()` for fluidity.
+- **Aspect ratios** (named utilities): `--ratio-phi: 1.618 / 1`, `--ratio-phi-portrait: 1 / 1.618`, `--ratio-phi-square: 1 / 1` (kept as the only non-φ exception for icon tiles), `--ratio-phi-wide: 2.618 / 1`.
+- **Radii**: `--radius-sm/md/lg/xl` regenerated as `4px · φⁿ` (≈ 4 / 6 / 10 / 17 / 28).
+- **Line lengths**: `--measure-sm/md/lg` at `38ch / 62ch / 100ch` (Fibonacci-ish, very close to φ progression and well-known reading widths).
+- **Container widths**: `--container-sm/md/lg/xl` on a φ progression anchored at the existing max width, so column splits remain φ.
 
-### 5. Toolbar simplification
-- Remove the `border-b` under the "4 items" line; replace with just a small caption row above the list (`mb-3`, no border). Lets the first list divider be the visual top edge.
+**`tailwind.config.ts`** — expose the new tokens as utilities:
 
-### 6. Grid view card polish
-- Tighten card radius (`rounded-lg`), inner padding (`p-5` → `p-6` for breathing room), and switch hover to a 1px primary border + subtle lift (`hover:-translate-y-0.5 transition-transform`).
-- Cover aspect: `aspect-[16/10]` for a more editorial proportion.
-- "Read more" footer: smaller, single line with arrow at end, no top padding gap (use `mt-4`).
+- `spacing.phi-1 … phi-9`
+- `fontSize.phi-1 … phi-7`
+- `aspectRatio.phi`, `phi-portrait`, `phi-wide`
+- `borderRadius.phi-sm/md/lg/xl`
+- `maxWidth.measure-sm/md/lg`
 
-### 7. Micro-typography
-- Apply `tabular-nums` consistently to all dates and counts.
-- Switch dates to format `Apr 21, 2026` (abbreviated month) for compactness in the narrow date column. Done in-place via `toLocaleDateString` — the underlying `news-items.ts` `date` field stays the source if we want; otherwise format from `isoDate`.
+Existing `golden-*` and `holo-*` tokens stay (back-compat); the plan re-points them to the new ladder values where they diverge.
 
-## Files to edit
+---
 
-- `src/modules/community/pages/NewsPage.tsx` — all layout/typography refinements above.
+## Phase 2 — Layout primitives
 
-No new files, no data changes, no routing changes.
+Introduce three small utilities so callers stop hand-rolling layouts:
+
+- `.phi-stack` → vertical stack with `gap: var(--phi-4)` (override via `style`).
+- `.phi-row` → flex row with `gap: var(--phi-3)` and balanced wrapping.
+- `.phi-grid-2` / `.phi-grid-3` → CSS grid where columns split on φ (`1fr 1.618fr` and `1fr 1.618fr 2.618fr`) for hero/feature blocks; falls back to even columns under `md`.
+
+These slot into `index.css` once and are reusable everywhere without touching component logic.
+
+---
+
+## Phase 3 — Apply across surfaces (waves)
+
+Run in order so visual regressions are caught surface-by-surface. Each wave is one small commit.
+
+1. **Landing page** (`src/modules/landing/**`)
+   - Hero, HighlightsSection (already φ), WhatIsUorSection silo cells, all section paddings → `section-md/lg`, all internal gaps → `golden-*`.
+   - Hero text/eyebrow ratio shifts to use the new `phi-{n}` type tokens.
+
+2. **Connect / Research / Blog** (`src/modules/community/**`)
+   - Card grids: `gap-x-golden-lg gap-y-golden-xl` (already done for highlights — extend to news, blog index, research papers).
+   - Article body: cap `max-width: var(--measure-md)`; H1/H2/H3 sizes from `phi-{n}` tokens.
+   - Cover images: `aspect-phi` everywhere (replace remaining `aspect-[16/10]` and `aspect-video`).
+
+3. **Projects** (`src/modules/projects/**`)
+   - Grid + list views (covers already φ); pad rows by `phi-3`, separate sections by `section-sm`.
+   - Project detail layout: hero image `aspect-phi-wide`, side rail width = `1 / φ` of content column.
+
+4. **Core / About / Standard / Donate** (`src/modules/core/**`, `src/modules/donate/**`)
+   - Replace section paddings and content gaps with the new tokens. Buttons keep their existing radius but switch to `phi-md`.
+
+5. **Oracle / Search / Library** (`src/modules/oracle/**`)
+   - BookCard already `aspect-[2/3]` → keep (book convention) but swap surrounding gaps and paddings to φ.
+   - Result list density uses `phi-2` row gap, `phi-4` group gap.
+
+6. **Desktop / App Store / Messenger** (`src/modules/desktop/**`, `app-store`, `messenger`)
+   - Window chrome paddings, dock spacing, message bubble radii to `phi-md`. Inbox list density to `phi-2`/`phi-3`.
+
+7. **Auth, Donate forms, modals** (`src/modules/auth/**`, dialogs, sheets)
+   - Form rows `gap: phi-3`, modal padding `phi-5`, modal max-width `measure-sm`.
+
+8. **Layout shell** (`src/modules/core/components/Layout.tsx`, navbar, footer)
+   - Navbar height = `phi-6`, footer top padding = `section-sm`, container padding ladder uses `phi-4`/`phi-5`/`phi-6` instead of the current `5%/6%/7%` percentages.
+
+---
+
+## Phase 4 — Enforcement & cleanup
+
+- **Lint sweep**: search for raw `gap-[0-9]`, `p-[0-9]`, `aspect-[…]`, and arbitrary `clamp(...)` font sizes and replace with the new tokens. The 300+ raw `gap-N` hits found will be batched per surface.
+- **Codify the rule** in a short comment block at the top of `src/index.css` and add a one-paragraph "φ is the only rhythm" note to `mem://design/aesthetics/golden-ratio-constraints` so future edits stay aligned.
+- **No new colors, no new fonts** in this initiative — purely geometry.
+
+---
+
+## Out of scope
+
+- Re-skinning components, changing colors, or modifying iconography.
+- Replacing third-party widgets (shadcn primitives, Lexical) — they keep their internals; only their wrappers adopt φ.
+- Mobile-vs-desktop breakpoint structure (kept as-is; tokens already use `clamp()` for fluidity).
+
+---
+
+## Verification
+
+After each wave: visual scan of the affected pages at 1920, 1366, 834, and 390 px viewports, plus a quick build-error check. Final pass: a single page-by-page sweep to confirm every visible gap, padding, font size, and image ratio resolves to a φ token.
+
+---
+
+## Technical details
+
+- **φ ladder reference (rem)**: 0.236, 0.382, 0.618, 1.000, 1.618, 2.618, 4.236, 6.854, 11.09.
+- **Type ladder (rem, before clamp)**: 0.618 (caption), 0.764, 0.944, 1.000, 1.235 (lead), 1.618 (card title), 2.618 (heading), 4.236 (page title).
+- **Aspect ratio policy**: covers/heroes = `phi`, portraits/avatars = `phi-portrait`, banners = `phi-wide`, icon tiles = `1/1` (only allowed exception, justified by symmetry).
+- **Container split policy**: any two-column block uses `1fr 1.618fr`; any three-column uses `1fr 1.618fr 2.618fr` or even thirds when the content is symmetric (galleries, project cards).
