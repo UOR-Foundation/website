@@ -63,7 +63,7 @@ const BlogPost3 = () => {
       <section>
         <h2>One Address. Derived from Content. Permanent.</h2>
         <p>
-          The UOR Framework gives every piece of information a single address based on what it <em>is</em>, not where it happens to be stored. The same content always resolves to the same address — on any platform, in any format, at any point in time. No central registry. No intermediary. No single point of failure.
+          The UOR Framework gives every piece of information a single address based on what it <em>is</em>, not where it happens to be stored. The same content always resolves to the same address, on any platform, in any format, at any point in time. No central registry. No intermediary. No single point of failure.
         </p>
         <p>
           Think of it as GPS for data. GPS does not care which map app you use. The coordinates are the coordinates. UOR works the same way for information. One address per object, everywhere, forever.
@@ -133,7 +133,7 @@ const BlogPost3 = () => {
           <a href={GITHUB_FRAMEWORK_URL} target="_blank" rel="noopener noreferrer">github.com/UOR-Foundation/UOR-Framework</a>.
         </p>
         <p>
-          This is not a finished product. It is a foundation, and it is designed to grow through real-world use, honest critique, and open collaboration. Your perspective — especially where you see gaps — is exactly what makes this better.
+          This is not a finished product. It is a foundation, and it is designed to grow through real-world use, honest critique, and open collaboration. Your perspective, especially where you see gaps, is exactly what makes this better.
         </p>
       </section>
     </ArticleLayout>
