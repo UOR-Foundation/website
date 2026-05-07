@@ -740,19 +740,6 @@ const Standard = () => {
         </div>
       </section>
 
-      {/* Live demo */}
-      <section className="py-section-sm bg-background border-b border-border/40">
-        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
-          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
-            Try it
-          </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
-            See it work
-          </h2>
-          <LiveDemo />
-        </div>
-      </section>
-
       {/* Install */}
       <section className="py-section-sm bg-background">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
