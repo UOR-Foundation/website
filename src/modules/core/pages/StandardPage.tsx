@@ -753,33 +753,33 @@ const Standard = () => {
               <div className="flex items-baseline gap-3 mb-3">
                 <span className="font-mono text-fluid-label text-primary/60 tabular-nums">01</span>
                 <h3 className="font-display text-fluid-subheading font-bold tracking-tight text-foreground uppercase">
-                  Problem
+                  Why
                 </h3>
               </div>
               <p className="text-foreground/75 font-body text-[15px] leading-[1.65]">
-                Identifiers like <code className="font-mono text-foreground/90">URLs</code>, paths, and database keys point to a <em className="not-italic text-foreground">location</em>, not the data. Whoever owns the location decides what you receive. Move a file or flip a byte and the same identifier silently returns something different.
+                Every system invents its own labels for data — <code className="font-mono text-foreground/90">URLs</code>, file paths, database keys, model IDs. Move the data, rename the bucket, or flip a byte and those labels break or quietly point at something else. Identity belongs to the host, not the content.
               </p>
             </div>
             <div className="border-t border-border/60 pt-6">
               <div className="flex items-baseline gap-3 mb-3">
                 <span className="font-mono text-fluid-label text-primary/60 tabular-nums">02</span>
                 <h3 className="font-display text-fluid-subheading font-bold tracking-tight text-foreground uppercase">
-                  Approach
+                  How
                 </h3>
               </div>
               <p className="text-foreground/75 font-body text-[15px] leading-[1.65]">
-                Canonicalize the data, hash the canonical form, use the hash as the address. Same content → same address. Anyone with the bytes recomputes and verifies it locally. No registry, no signing key, no trusted third party.
+                Canonicalize the data, hash the canonical form, use the hash as the address. Same content → same address, on any machine, forever. Anyone with the bytes recomputes and verifies locally. No registry, no middleman, no single point of failure.
               </p>
             </div>
             <div className="border-t border-border/60 pt-6">
               <div className="flex items-baseline gap-3 mb-3">
                 <span className="font-mono text-fluid-label text-primary/60 tabular-nums">03</span>
                 <h3 className="font-display text-fluid-subheading font-bold tracking-tight text-foreground uppercase">
-                  Output
+                  What
                 </h3>
               </div>
               <p className="text-foreground/75 font-body text-[15px] leading-[1.65]">
-                <code className="font-mono text-foreground/90">uor-foundation</code> — a Rust crate with WASM bindings for JS/TS. One call returns canonical bytes, a <code className="font-mono text-foreground/90">SHA-256</code> derivation ID, a routable address (<code className="font-mono text-foreground/90">IPv6</code>, <code className="font-mono text-foreground/90">CID</code>, human-readable), and a one-line verifier.
+                <code className="font-mono text-foreground/90">uor-foundation</code> — a small Rust crate with WASM bindings for JS/TS. One call turns any value into canonical bytes, a <code className="font-mono text-foreground/90">SHA-256</code> derivation ID, and a routable address (<code className="font-mono text-foreground/90">IPv6</code>, <code className="font-mono text-foreground/90">CID</code>, human-readable) — plus a one-line verifier so anyone can prove it.
               </p>
             </div>
           </div>
