@@ -435,9 +435,6 @@ const LiveDemo = () => {
               <Check size={14} /> Round-trip verified — same content, same address
             </span>
           )}
-          {decoded !== undefined && verifyState === "mismatch" && (
-            <span className="text-[14px] font-body text-destructive">Mismatch</span>
-          )}
         </div>
         <input
           value={address}
