@@ -756,23 +756,58 @@ const Standard = () => {
                   Why
                 </h3>
               </div>
-              <svg viewBox="0 0 320 140" className="w-full h-auto mb-5 text-foreground/70" fill="none" stroke="currentColor" strokeWidth="1.25" aria-hidden="true">
-                <rect x="8" y="36" width="120" height="32" rx="2" />
-                <text x="68" y="56" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="11" fill="currentColor" stroke="none">/data/file.json</text>
-                <text x="68" y="84" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="9" fill="currentColor" stroke="none" opacity="0.55">label (location)</text>
-                <path d="M134 52 H188" markerEnd="url(#ov-arrow)" />
-                <text x="161" y="44" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="9" fill="currentColor" stroke="none" opacity="0.6">host decides</text>
-                <rect x="194" y="20" width="118" height="28" rx="2" strokeDasharray="3 3" />
-                <text x="253" y="38" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">{`{ v: 1, ok: true }`}</text>
-                <rect x="194" y="56" width="118" height="28" rx="2" strokeDasharray="3 3" />
-                <text x="253" y="74" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">{`{ v: 2, ok: false }`}</text>
-                <rect x="194" y="92" width="118" height="28" rx="2" strokeDasharray="3 3" />
-                <text x="253" y="110" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">404 / moved</text>
+              <svg viewBox="0 0 360 220" className="w-full h-auto mb-5" fill="none" aria-hidden="true">
                 <defs>
                   <marker id="ov-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                    <path d="M0 0 L10 5 L0 10 z" fill="currentColor" />
+                    <path d="M0 0 L10 5 L0 10 z" fill="hsl(var(--foreground) / 0.7)" />
                   </marker>
                 </defs>
+                {/* Left: same data, many labels */}
+                {[
+                  { x: 8,  y: 14, w: 78, label: "URL" },
+                  { x: 94, y: 14, w: 78, label: "Path" },
+                  { x: 8,  y: 56, w: 78, label: "DB key" },
+                  { x: 94, y: 56, w: 78, label: "Model ID" },
+                  { x: 8,  y: 98, w: 78, label: "CID" },
+                  { x: 94, y: 98, w: 78, label: "Hash" },
+                ].map((p) => (
+                  <g key={p.label}>
+                    <rect x={p.x} y={p.y} width={p.w} height={32} rx={16}
+                      fill="hsl(var(--muted) / 0.4)" stroke="hsl(var(--border))" strokeWidth="1" />
+                    <text x={p.x + p.w / 2} y={p.y + 21} textAnchor="middle"
+                      fontFamily="ui-sans-serif,system-ui" fontSize="11" fontWeight="500"
+                      fill="hsl(var(--foreground) / 0.85)">{p.label}</text>
+                  </g>
+                ))}
+                <text x="90" y="158" textAnchor="middle" fontFamily="ui-sans-serif,system-ui"
+                  fontSize="10" letterSpacing="2" fontWeight="600"
+                  fill="hsl(var(--muted-foreground))">SAME DATA</text>
+                <text x="90" y="174" textAnchor="middle" fontFamily="ui-sans-serif,system-ui"
+                  fontSize="10" letterSpacing="2" fontWeight="600"
+                  fill="hsl(var(--muted-foreground))">MANY LABELS</text>
+                {/* Arrow */}
+                <path d="M198 75 H242" stroke="hsl(var(--foreground) / 0.7)" strokeWidth="1.25" markerEnd="url(#ov-arrow)" />
+                {/* Right: ambiguity */}
+                <g>
+                  <rect x="252" y="14" width="100" height="32" rx="4"
+                    fill="hsl(var(--muted) / 0.25)" stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                  <text x="302" y="34" textAnchor="middle" fontFamily="ui-monospace,monospace"
+                    fontSize="11" fill="hsl(var(--foreground) / 0.7)">v1 · ok</text>
+                  <rect x="252" y="56" width="100" height="32" rx="4"
+                    fill="hsl(var(--muted) / 0.25)" stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                  <text x="302" y="76" textAnchor="middle" fontFamily="ui-monospace,monospace"
+                    fontSize="11" fill="hsl(var(--foreground) / 0.7)">v2 · changed</text>
+                  <rect x="252" y="98" width="100" height="32" rx="4"
+                    fill="hsl(var(--muted) / 0.25)" stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                  <text x="302" y="118" textAnchor="middle" fontFamily="ui-monospace,monospace"
+                    fontSize="11" fill="hsl(var(--foreground) / 0.7)">404 · moved</text>
+                </g>
+                <text x="302" y="158" textAnchor="middle" fontFamily="ui-sans-serif,system-ui"
+                  fontSize="10" letterSpacing="2" fontWeight="600"
+                  fill="hsl(var(--muted-foreground))">HOST DECIDES</text>
+                <text x="302" y="174" textAnchor="middle" fontFamily="ui-sans-serif,system-ui"
+                  fontSize="10" letterSpacing="2" fontWeight="600"
+                  fill="hsl(var(--muted-foreground))">WHAT YOU GET</text>
               </svg>
               <p className="text-foreground/75 font-body text-fluid-body leading-[1.7]">
                 Every system invents its own labels for data — <code className="font-mono text-foreground/90">URLs</code>, file paths, database keys, model IDs. Move the data, rename the bucket, or flip a byte and those labels break or quietly point at something else. Identity belongs to the host, not the content.
@@ -785,25 +820,47 @@ const Standard = () => {
                   How
                 </h3>
               </div>
-              <svg viewBox="0 0 320 140" className="w-full h-auto mb-5 text-foreground/70" fill="none" stroke="currentColor" strokeWidth="1.25" aria-hidden="true">
-                <rect x="6" y="56" width="64" height="28" rx="2" />
-                <text x="38" y="74" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">data</text>
-                <path d="M70 70 H92" markerEnd="url(#ov-arrow2)" />
-                <rect x="92" y="56" width="78" height="28" rx="2" />
-                <text x="131" y="74" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">canonicalize</text>
-                <path d="M170 70 H192" markerEnd="url(#ov-arrow2)" />
-                <rect x="192" y="56" width="68" height="28" rx="2" />
-                <text x="226" y="74" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">SHA-256</text>
-                <path d="M260 70 H282" markerEnd="url(#ov-arrow2)" />
-                <rect x="282" y="56" width="32" height="28" rx="2" strokeWidth="1.5" />
-                <text x="298" y="74" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">addr</text>
-                <text x="160" y="28" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none" opacity="0.7">deterministic · same input → same address</text>
-                <text x="160" y="118" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none" opacity="0.55">verify(bytes) ≡ recompute → equal</text>
+              <svg viewBox="0 0 360 220" className="w-full h-auto mb-5" fill="none" aria-hidden="true">
                 <defs>
                   <marker id="ov-arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                    <path d="M0 0 L10 5 L0 10 z" fill="currentColor" />
+                    <path d="M0 0 L10 5 L0 10 z" fill="hsl(var(--foreground) / 0.7)" />
                   </marker>
                 </defs>
+                <text x="180" y="18" textAnchor="middle" fontFamily="ui-sans-serif,system-ui"
+                  fontSize="10" letterSpacing="2" fontWeight="600"
+                  fill="hsl(var(--muted-foreground))">DETERMINISTIC PIPELINE</text>
+                {/* Pipeline pills */}
+                {[
+                  { x: 10,  label: "data" },
+                  { x: 100, label: "canonicalize" },
+                  { x: 190, label: "SHA-256" },
+                  { x: 280, label: "address" },
+                ].map((p, i) => (
+                  <g key={p.label}>
+                    <rect x={p.x} y={70} width={70} height={36} rx={18}
+                      fill="hsl(var(--muted) / 0.4)" stroke="hsl(var(--border))" strokeWidth="1" />
+                    <text x={p.x + 35} y={93} textAnchor="middle"
+                      fontFamily="ui-sans-serif,system-ui" fontSize="11" fontWeight="500"
+                      fill="hsl(var(--foreground) / 0.9)">{p.label}</text>
+                    {i < 3 && (
+                      <path d={`M${p.x + 72} 88 H${p.x + 96}`}
+                        stroke="hsl(var(--foreground) / 0.7)" strokeWidth="1.25" markerEnd="url(#ov-arrow2)" />
+                    )}
+                  </g>
+                ))}
+                {/* Same input → same address loop */}
+                <text x="80" y="148" textAnchor="middle" fontFamily="ui-monospace,monospace"
+                  fontSize="11" fill="hsl(var(--foreground) / 0.65)">same bytes</text>
+                <text x="180" y="148" textAnchor="middle" fontFamily="ui-monospace,monospace"
+                  fontSize="11" fill="hsl(var(--foreground) / 0.65)">→</text>
+                <text x="280" y="148" textAnchor="middle" fontFamily="ui-monospace,monospace"
+                  fontSize="11" fill="hsl(var(--foreground) / 0.65)">same address</text>
+                <text x="180" y="180" textAnchor="middle" fontFamily="ui-sans-serif,system-ui"
+                  fontSize="10" letterSpacing="2" fontWeight="600"
+                  fill="hsl(var(--muted-foreground))">ANY MACHINE · NO REGISTRY</text>
+                <text x="180" y="196" textAnchor="middle" fontFamily="ui-sans-serif,system-ui"
+                  fontSize="10" letterSpacing="2" fontWeight="600"
+                  fill="hsl(var(--muted-foreground))">ANYONE CAN VERIFY</text>
               </svg>
               <p className="text-foreground/75 font-body text-fluid-body leading-[1.7]">
                 Canonicalize the data, hash the canonical form, use the hash as the address. Same content → same address, on any machine, forever. Anyone with the bytes recomputes and verifies locally. No registry, no middleman, no single point of failure.
@@ -816,26 +873,47 @@ const Standard = () => {
                   What
                 </h3>
               </div>
-              <svg viewBox="0 0 320 140" className="w-full h-auto mb-5 text-foreground/70" fill="none" stroke="currentColor" strokeWidth="1.25" aria-hidden="true">
-                <rect x="8" y="14" width="140" height="28" rx="2" />
-                <text x="78" y="32" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">uor-foundation (Rust)</text>
-                <rect x="8" y="50" width="140" height="28" rx="2" strokeDasharray="3 3" />
-                <text x="78" y="68" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">wasm · js / ts bindings</text>
-                <text x="78" y="96" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none" opacity="0.6">derive(value)</text>
-                <path d="M148 64 H184" markerEnd="url(#ov-arrow3)" />
-                <rect x="186" y="6" width="128" height="22" rx="2" />
-                <text x="250" y="21" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">canonical bytes</text>
-                <rect x="186" y="32" width="128" height="22" rx="2" />
-                <text x="250" y="47" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">SHA-256 derivation id</text>
-                <rect x="186" y="58" width="128" height="22" rx="2" />
-                <text x="250" y="73" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">IPv6 · CID · readable</text>
-                <rect x="186" y="84" width="128" height="22" rx="2" strokeWidth="1.5" />
-                <text x="250" y="99" textAnchor="middle" fontFamily="ui-monospace,monospace" fontSize="10" fill="currentColor" stroke="none">verify(bytes, id)</text>
+              <svg viewBox="0 0 360 220" className="w-full h-auto mb-5" fill="none" aria-hidden="true">
                 <defs>
                   <marker id="ov-arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                    <path d="M0 0 L10 5 L0 10 z" fill="currentColor" />
+                    <path d="M0 0 L10 5 L0 10 z" fill="hsl(var(--foreground) / 0.7)" />
                   </marker>
                 </defs>
+                {/* Source crate pill */}
+                <rect x="8" y="76" width="130" height="44" rx="22"
+                  fill="hsl(var(--muted) / 0.5)" stroke="hsl(var(--border))" strokeWidth="1.25" />
+                <text x="73" y="95" textAnchor="middle" fontFamily="ui-monospace,monospace"
+                  fontSize="12" fontWeight="600" fill="hsl(var(--foreground) / 0.95)">uor-foundation</text>
+                <text x="73" y="110" textAnchor="middle" fontFamily="ui-sans-serif,system-ui"
+                  fontSize="9" letterSpacing="1.5" fill="hsl(var(--muted-foreground))">RUST · WASM · JS / TS</text>
+                <text x="73" y="148" textAnchor="middle" fontFamily="ui-sans-serif,system-ui"
+                  fontSize="10" letterSpacing="2" fontWeight="600"
+                  fill="hsl(var(--muted-foreground))">ONE CALL</text>
+                <text x="73" y="164" textAnchor="middle" fontFamily="ui-monospace,monospace"
+                  fontSize="11" fill="hsl(var(--foreground) / 0.75)">derive(value)</text>
+                {/* Fan-out arrows to outputs */}
+                <path d="M140 86 C 180 86, 180 30, 218 30" stroke="hsl(var(--foreground) / 0.7)" strokeWidth="1.25" markerEnd="url(#ov-arrow3)" />
+                <path d="M140 92 C 180 92, 180 70, 218 70" stroke="hsl(var(--foreground) / 0.7)" strokeWidth="1.25" markerEnd="url(#ov-arrow3)" />
+                <path d="M140 104 C 180 104, 180 110, 218 110" stroke="hsl(var(--foreground) / 0.7)" strokeWidth="1.25" markerEnd="url(#ov-arrow3)" />
+                <path d="M140 110 C 180 110, 180 150, 218 150" stroke="hsl(var(--foreground) / 0.7)" strokeWidth="1.25" markerEnd="url(#ov-arrow3)" />
+                {/* Output pills */}
+                {[
+                  { y: 14,  label: "canonical bytes" },
+                  { y: 54,  label: "SHA-256 id" },
+                  { y: 94,  label: "IPv6 / CID / words" },
+                  { y: 134, label: "verify(bytes, id)" },
+                ].map((o) => (
+                  <g key={o.label}>
+                    <rect x={220} y={o.y} width={132} height={32} rx={16}
+                      fill="hsl(var(--muted) / 0.35)" stroke="hsl(var(--border))" strokeWidth="1" />
+                    <text x={286} y={o.y + 21} textAnchor="middle"
+                      fontFamily="ui-monospace,monospace" fontSize="11"
+                      fill="hsl(var(--foreground) / 0.9)">{o.label}</text>
+                  </g>
+                ))}
+                <text x="286" y="194" textAnchor="middle" fontFamily="ui-sans-serif,system-ui"
+                  fontSize="10" letterSpacing="2" fontWeight="600"
+                  fill="hsl(var(--muted-foreground))">EVERYTHING YOU NEED</text>
               </svg>
               <p className="text-foreground/75 font-body text-fluid-body leading-[1.7]">
                 <code className="font-mono text-foreground/90">uor-foundation</code> — a small Rust crate with WASM bindings for JS/TS. One call turns any value into canonical bytes, a <code className="font-mono text-foreground/90">SHA-256</code> derivation ID, and a routable address (<code className="font-mono text-foreground/90">IPv6</code>, <code className="font-mono text-foreground/90">CID</code>, human-readable) — plus a one-line verifier so anyone can prove it.
