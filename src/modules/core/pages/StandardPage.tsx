@@ -934,7 +934,7 @@ const Standard = () => {
             Add it to your project
           </h2>
           <p className="font-body text-fluid-body text-foreground/75 max-w-[68ch] mb-10 leading-[1.7]">
-            <code className="font-mono text-foreground/90">uor-foundation</code> — the reference Rust crate for deriving and verifying UOR content addresses.
+            <code className="font-mono text-foreground/90">uor-foundation</code> — the reference Rust crate for the UOR framework. Drop it into any existing Cargo project.
           </p>
 
           <a
@@ -951,18 +951,17 @@ const Standard = () => {
             <li className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/30 p-6">
               <div className="flex items-baseline gap-3">
                 <span className="font-mono text-fluid-label text-primary/70 tabular-nums">01</span>
-                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Add the crate</h3>
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Add the dependency</h3>
               </div>
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                Requires Rust 1.74+. From your project root:
+                Requires Rust 1.74+. From your existing project root:
               </p>
               <CopyableCommand value="cargo add uor-foundation" />
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                Or add it to your <code className="font-mono text-foreground/90">Cargo.toml</code> directly:
+                Or edit <code className="font-mono text-foreground/90">Cargo.toml</code> directly:
               </p>
               <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`[dependencies]
 uor-foundation = "0.2"
-serde_json = "1"
 `}</code></pre>
             </li>
 
@@ -970,20 +969,16 @@ serde_json = "1"
             <li className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/30 p-6">
               <div className="flex items-baseline gap-3">
                 <span className="font-mono text-fluid-label text-primary/70 tabular-nums">02</span>
-                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Derive an address</h3>
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Import the crate</h3>
               </div>
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                In <code className="font-mono text-foreground/90">src/main.rs</code>, hand any JSON value to <code className="font-mono text-foreground/90">derive()</code>:
+                Bring the crate into any module. The full API is re-exported at the root:
               </p>
-              <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`use uor_foundation::derive;
+              <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`// src/lib.rs or src/main.rs
+use uor_foundation as uor;
 
-fn main() -> anyhow::Result<()> {
-    let id = derive(
-        &serde_json::json!({ "hello": "world" })
-    )?;
-    println!("{}", id.canonical_id);
-    Ok(())
-}
+// Or import individual items as needed:
+// use uor_foundation::{derive, verify, ...};
 `}</code></pre>
             </li>
 
@@ -991,19 +986,23 @@ fn main() -> anyhow::Result<()> {
             <li className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/30 p-6">
               <div className="flex items-baseline gap-3">
                 <span className="font-mono text-fluid-label text-primary/70 tabular-nums">03</span>
-                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Run it</h3>
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Build &amp; verify</h3>
               </div>
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                Build and execute. Same input → same address, on any machine:
+                Compile your project. Cargo will fetch and link the crate:
               </p>
-              <CopyableCommand value="cargo run" />
+              <CopyableCommand value="cargo build" />
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                Output:
+                Browse the full API surface — types, traits, and modules — at:
               </p>
-              <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`urn:uor:derivation:sha256:
-  9f86d081884c7d659a2feaa0
-  c55ad015a3bf4f1b2b0b822c
-  d15d6c15b0f00a08`}</code></pre>
+              <a
+                href={CRATE_DOCS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-fluid-label text-primary hover:text-primary/80 transition-colors underline underline-offset-4 decoration-primary/40 break-all"
+              >
+                docs.rs/uor-foundation →
+              </a>
             </li>
           </ol>
         </div>
