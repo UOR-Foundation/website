@@ -748,43 +748,38 @@ const Standard = () => {
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             Overview
           </p>
-          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-12">
-            What it is, why it exists, how it works
-          </h2>
-          <div className="grid gap-10 md:grid-cols-3">
-            <div>
-              <h3 className="font-display text-fluid-subheading font-bold text-foreground mb-4">
-                The Problem
-              </h3>
-              <p className="text-foreground/70 font-body text-fluid-body leading-[1.7]">
-                Most identifiers — URLs, database keys, file paths — point to a
-                location, not the data itself. Whoever controls the location
-                controls what you receive. Move the file, edit a byte, swap the
-                server, and the same identifier silently returns something
-                different.
+          <div className="grid gap-x-12 gap-y-10 md:grid-cols-3">
+            <div className="border-t border-border/60 pt-6">
+              <div className="flex items-baseline gap-3 mb-3">
+                <span className="font-mono text-fluid-label text-primary/60 tabular-nums">01</span>
+                <h3 className="font-display text-fluid-subheading font-bold tracking-tight text-foreground uppercase">
+                  Problem
+                </h3>
+              </div>
+              <p className="text-foreground/75 font-body text-[15px] leading-[1.65]">
+                Identifiers like <code className="font-mono text-foreground/90">URLs</code>, paths, and database keys point to a <em className="not-italic text-foreground">location</em>, not the data. Whoever owns the location decides what you receive. Move a file or flip a byte and the same identifier silently returns something different.
               </p>
             </div>
-            <div>
-              <h3 className="font-display text-fluid-subheading font-bold text-foreground mb-4">
-                The Approach
-              </h3>
-              <p className="text-foreground/70 font-body text-fluid-body leading-[1.7]">
-                UOR normalizes any structured data into a single canonical
-                form, hashes it, and uses that hash as the address. Same
-                content always produces the same address. Anyone holding the
-                bytes can recompute it and confirm a match — no registry, no
-                signing key, no trusted third party.
+            <div className="border-t border-border/60 pt-6">
+              <div className="flex items-baseline gap-3 mb-3">
+                <span className="font-mono text-fluid-label text-primary/60 tabular-nums">02</span>
+                <h3 className="font-display text-fluid-subheading font-bold tracking-tight text-foreground uppercase">
+                  Approach
+                </h3>
+              </div>
+              <p className="text-foreground/75 font-body text-[15px] leading-[1.65]">
+                Canonicalize the data, hash the canonical form, use the hash as the address. Same content → same address. Anyone with the bytes recomputes and verifies it locally. No registry, no signing key, no trusted third party.
               </p>
             </div>
-            <div>
-              <h3 className="font-display text-fluid-subheading font-bold text-foreground mb-4">
-                What You Get
-              </h3>
-              <p className="text-foreground/70 font-body text-fluid-body leading-[1.7]">
-                A small Rust crate (with WebAssembly bindings for JS and
-                TypeScript). One call turns any JSON, struct, or byte payload
-                into canonical bytes, a content hash, a routable address
-                (IPv6, CID, human-readable), and a one-line verifier.
+            <div className="border-t border-border/60 pt-6">
+              <div className="flex items-baseline gap-3 mb-3">
+                <span className="font-mono text-fluid-label text-primary/60 tabular-nums">03</span>
+                <h3 className="font-display text-fluid-subheading font-bold tracking-tight text-foreground uppercase">
+                  Output
+                </h3>
+              </div>
+              <p className="text-foreground/75 font-body text-[15px] leading-[1.65]">
+                <code className="font-mono text-foreground/90">uor-foundation</code> — a Rust crate with WASM bindings for JS/TS. One call returns canonical bytes, a <code className="font-mono text-foreground/90">SHA-256</code> derivation ID, a routable address (<code className="font-mono text-foreground/90">IPv6</code>, <code className="font-mono text-foreground/90">CID</code>, human-readable), and a one-line verifier.
               </p>
             </div>
           </div>
