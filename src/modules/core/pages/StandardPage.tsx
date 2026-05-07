@@ -752,11 +752,14 @@ const Standard = () => {
             <div className="border-t border-border/60 pt-6">
               <div className="flex items-baseline gap-3 mb-3">
                 <span className="font-mono text-fluid-label text-primary/60 tabular-nums">01</span>
-                <h3 className="font-display text-fluid-subheading font-bold tracking-tight text-foreground uppercase">
+                <h3 className="font-display text-fluid-card-title font-bold tracking-tight text-foreground uppercase">
                   Why
                 </h3>
               </div>
-              <svg viewBox="0 0 360 220" className="w-full h-auto mb-5" fill="none" aria-hidden="true">
+              <p className="text-foreground/75 font-body text-fluid-body leading-[1.7] mb-5">
+                Every system invents its own labels for data — <code className="font-mono text-foreground/90">URLs</code>, file paths, database keys, model IDs. Move the data, rename the bucket, or flip a byte and those labels break or quietly point at something else. Identity belongs to the host, not the content.
+              </p>
+              <svg viewBox="0 0 360 220" className="w-full h-auto" fill="none" aria-hidden="true">
                 <defs>
                   <marker id="ov-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
                     <path d="M0 0 L10 5 L0 10 z" fill="hsl(var(--foreground) / 0.7)" />
@@ -809,18 +812,18 @@ const Standard = () => {
                   fontSize="10" letterSpacing="2" fontWeight="600"
                   fill="hsl(var(--muted-foreground))">WHAT YOU GET</text>
               </svg>
-              <p className="text-foreground/75 font-body text-fluid-body leading-[1.7]">
-                Every system invents its own labels for data — <code className="font-mono text-foreground/90">URLs</code>, file paths, database keys, model IDs. Move the data, rename the bucket, or flip a byte and those labels break or quietly point at something else. Identity belongs to the host, not the content.
-              </p>
             </div>
             <div className="border-t border-border/60 pt-6">
               <div className="flex items-baseline gap-3 mb-3">
                 <span className="font-mono text-fluid-label text-primary/60 tabular-nums">02</span>
-                <h3 className="font-display text-fluid-subheading font-bold tracking-tight text-foreground uppercase">
+                <h3 className="font-display text-fluid-card-title font-bold tracking-tight text-foreground uppercase">
                   How
                 </h3>
               </div>
-              <svg viewBox="0 0 360 220" className="w-full h-auto mb-5" fill="none" aria-hidden="true">
+              <p className="text-foreground/75 font-body text-fluid-body leading-[1.7] mb-5">
+                Canonicalize the data, hash the canonical form, use the hash as the address. Same content → same address, on any machine, forever. Anyone with the bytes recomputes and verifies locally. No registry, no middleman, no single point of failure.
+              </p>
+              <svg viewBox="0 0 360 220" className="w-full h-auto" fill="none" aria-hidden="true">
                 <defs>
                   <marker id="ov-arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
                     <path d="M0 0 L10 5 L0 10 z" fill="hsl(var(--foreground) / 0.7)" />
@@ -862,25 +865,25 @@ const Standard = () => {
                   fontSize="10" letterSpacing="2" fontWeight="600"
                   fill="hsl(var(--muted-foreground))">ANYONE CAN VERIFY</text>
               </svg>
-              <p className="text-foreground/75 font-body text-fluid-body leading-[1.7]">
-                Canonicalize the data, hash the canonical form, use the hash as the address. Same content → same address, on any machine, forever. Anyone with the bytes recomputes and verifies locally. No registry, no middleman, no single point of failure.
-              </p>
             </div>
             <div className="border-t border-border/60 pt-6">
               <div className="flex items-baseline gap-3 mb-3">
                 <span className="font-mono text-fluid-label text-primary/60 tabular-nums">03</span>
-                <h3 className="font-display text-fluid-subheading font-bold tracking-tight text-foreground uppercase">
+                <h3 className="font-display text-fluid-card-title font-bold tracking-tight text-foreground uppercase">
                   What
                 </h3>
               </div>
-              <svg viewBox="0 0 360 220" className="w-full h-auto mb-5" fill="none" aria-hidden="true">
+              <p className="text-foreground/75 font-body text-fluid-body leading-[1.7] mb-5">
+                <code className="font-mono text-foreground/90">uor-foundation</code> — a small Rust crate with WASM bindings for JS/TS. One call turns any value into canonical bytes, a <code className="font-mono text-foreground/90">SHA-256</code> derivation ID, and a routable address (<code className="font-mono text-foreground/90">IPv6</code>, <code className="font-mono text-foreground/90">CID</code>, human-readable) — plus a one-line verifier so anyone can prove it.
+              </p>
+              <svg viewBox="0 0 360 220" className="w-full h-auto" fill="none" aria-hidden="true">
                 <defs>
                   <marker id="ov-arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
                     <path d="M0 0 L10 5 L0 10 z" fill="hsl(var(--foreground) / 0.7)" />
                   </marker>
                 </defs>
                 {/* Source crate pill */}
-                <rect x="8" y="76" width="130" height="44" rx="22"
+                <rect x="8" y="76" width="130" height="44" rx={22}
                   fill="hsl(var(--muted) / 0.5)" stroke="hsl(var(--border))" strokeWidth="1.25" />
                 <text x="73" y="95" textAnchor="middle" fontFamily="ui-monospace,monospace"
                   fontSize="12" fontWeight="600" fill="hsl(var(--foreground) / 0.95)">uor-foundation</text>
@@ -915,9 +918,6 @@ const Standard = () => {
                   fontSize="10" letterSpacing="2" fontWeight="600"
                   fill="hsl(var(--muted-foreground))">EVERYTHING YOU NEED</text>
               </svg>
-              <p className="text-foreground/75 font-body text-fluid-body leading-[1.7]">
-                <code className="font-mono text-foreground/90">uor-foundation</code> — a small Rust crate with WASM bindings for JS/TS. One call turns any value into canonical bytes, a <code className="font-mono text-foreground/90">SHA-256</code> derivation ID, and a routable address (<code className="font-mono text-foreground/90">IPv6</code>, <code className="font-mono text-foreground/90">CID</code>, human-readable) — plus a one-line verifier so anyone can prove it.
-              </p>
             </div>
           </div>
         </div>
