@@ -955,29 +955,16 @@ const Standard = () => {
             <li className="flex flex-col gap-3">
               <div className="flex items-baseline gap-3">
                 <span className="font-mono text-fluid-label text-primary/70 tabular-nums">02</span>
-                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Derive an address</h3>
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Import and build</h3>
               </div>
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                One call canonicalizes any value and returns its content-addressed identity:
+                Bring the crate into your module and start building with the UOR framework:
               </p>
               <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`use uor_foundation::derive;
 
 let id = derive(&serde_json::json!({ "hello": "world" }))?;
-println!("{}", id.canonical_id); // urn:uor:derivation:sha256:...
-println!("{}", id.ipv6);         // fd00:0075:6f72:....
+println!("{}", id.canonical_id);
 `}</code></pre>
-            </li>
-
-            {/* Step 3 */}
-            <li className="flex flex-col gap-3">
-              <div className="flex items-baseline gap-3">
-                <span className="font-mono text-fluid-label text-primary/70 tabular-nums">03</span>
-                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Verify anywhere</h3>
-              </div>
-              <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                Same bytes, same address. On any machine, with no registry:
-              </p>
-              <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`assert!(uor_foundation::verify(&bytes, &id.canonical_id)?);`}</code></pre>
             </li>
           </ol>
 
