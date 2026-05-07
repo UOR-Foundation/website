@@ -67,7 +67,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .circle {
-    animation: none;
+    /* Don't kill the animation entirely — that makes the hero look broken
+       on iOS Low Power Mode. Slow it down ~4× so it stays gentle. */
+    animation-duration: 72s;
   }
 }
 
