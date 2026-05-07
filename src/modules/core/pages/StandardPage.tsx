@@ -937,9 +937,18 @@ const Standard = () => {
             <code className="font-mono text-foreground/90">uor-foundation</code> — the reference Rust crate for deriving and verifying UOR content addresses.
           </p>
 
-          <ol className="flex flex-col gap-8 max-w-[72ch]">
+          <a
+            href={CRATE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 mb-10 font-mono text-fluid-body text-primary hover:text-primary/80 transition-colors underline underline-offset-4 decoration-primary/40"
+          >
+            crates.io/crates/uor-foundation →
+          </a>
+
+          <ol className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Step 1 */}
-            <li className="flex flex-col gap-3">
+            <li className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/30 p-6">
               <div className="flex items-baseline gap-3">
                 <span className="font-mono text-fluid-label text-primary/70 tabular-nums">01</span>
                 <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Add the crate</h3>
@@ -958,19 +967,43 @@ serde_json = "1"
             </li>
 
             {/* Step 2 */}
-            <li className="flex flex-col gap-3">
+            <li className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/30 p-6">
               <div className="flex items-baseline gap-3">
                 <span className="font-mono text-fluid-label text-primary/70 tabular-nums">02</span>
-                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Import and build</h3>
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Derive an address</h3>
               </div>
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                Bring the crate into your module and start building with the UOR framework:
+                In <code className="font-mono text-foreground/90">src/main.rs</code>, hand any JSON value to <code className="font-mono text-foreground/90">derive()</code>:
               </p>
               <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`use uor_foundation::derive;
 
-let id = derive(&serde_json::json!({ "hello": "world" }))?;
-println!("{}", id.canonical_id);
+fn main() -> anyhow::Result<()> {
+    let id = derive(
+        &serde_json::json!({ "hello": "world" })
+    )?;
+    println!("{}", id.canonical_id);
+    Ok(())
+}
 `}</code></pre>
+            </li>
+
+            {/* Step 3 */}
+            <li className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/30 p-6">
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono text-fluid-label text-primary/70 tabular-nums">03</span>
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Run it</h3>
+              </div>
+              <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
+                Build and execute. Same input → same address, on any machine:
+              </p>
+              <CopyableCommand value="cargo run" />
+              <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
+                Output:
+              </p>
+              <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`urn:uor:derivation:sha256:
+  9f86d081884c7d659a2feaa0
+  c55ad015a3bf4f1b2b0b822c
+  d15d6c15b0f00a08`}</code></pre>
             </li>
           </ol>
         </div>
