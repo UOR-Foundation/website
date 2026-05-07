@@ -742,6 +742,86 @@ const Standard = () => {
         </div>
       </section>
 
+      {/* The Problem */}
+      <section className="py-section-sm bg-background border-t border-border/40">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            The Problem
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-6">
+            Identifiers you can't trust
+          </h2>
+          <p className="text-foreground/70 font-body text-fluid-body leading-[1.7]">
+            Most identifiers — URLs, database keys, file paths — point to a
+            location, not the data itself. Whoever controls the location
+            controls what you receive. Move the file, edit a byte, swap the
+            server, and the same identifier silently returns something
+            different. Systems built on these identifiers can't tell when the
+            data they fetched isn't the data they asked for.
+          </p>
+        </div>
+      </section>
+
+      {/* The Approach */}
+      <section className="py-section-sm bg-background border-t border-border/40">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            The Approach
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-6">
+            Derive the address from the content
+          </h2>
+          <p className="text-foreground/70 font-body text-fluid-body leading-[1.7]">
+            UOR normalizes any structured data into a single canonical form,
+            hashes it, and uses that hash as the address. Same content always
+            produces the same address. Different content always produces a
+            different one. Anyone holding the bytes can recompute the address
+            and confirm a match — no registry, no signing key, no trusted
+            third party. The identifier and the integrity check are the same
+            thing.
+          </p>
+        </div>
+      </section>
+
+      {/* What You Get */}
+      <section className="py-section-sm bg-background border-t border-border/40">
+        <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
+          <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
+            What You Get
+          </p>
+          <h2 className="font-display text-fluid-heading font-bold text-foreground mb-6">
+            A small library, four building blocks
+          </h2>
+          <p className="text-foreground/70 font-body text-fluid-body leading-[1.7] mb-8">
+            <code className="font-mono text-foreground/90">uor-foundation</code>{" "}
+            is a Rust crate (with WebAssembly bindings for JS and TypeScript).
+            One function call turns any JSON, struct, or byte payload into:
+          </p>
+          <ul className="space-y-4 text-foreground/70 font-body text-fluid-body leading-[1.7]">
+            <li>
+              <span className="text-foreground font-semibold">Canonical bytes</span>{" "}
+              — a deterministic serialization of your data, identical across
+              languages and runtimes.
+            </li>
+            <li>
+              <span className="text-foreground font-semibold">A content hash</span>{" "}
+              — a SHA-256 derivation ID that uniquely identifies the data.
+            </li>
+            <li>
+              <span className="text-foreground font-semibold">A routable address</span>{" "}
+              — the same identity expressed as an IPv6 address, a CID, and a
+              short human-readable string, so it works with the tools you
+              already use.
+            </li>
+            <li>
+              <span className="text-foreground font-semibold">A verification primitive</span>{" "}
+              — anyone with the bytes can recompute and check the address in a
+              single call. No keys, no network round-trip.
+            </li>
+          </ul>
+        </div>
+      </section>
+
       {/* Install */}
       <section className="py-section-sm bg-background">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
