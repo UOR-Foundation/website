@@ -949,6 +949,13 @@ const Standard = () => {
                 Requires Rust 1.74+. From your project root:
               </p>
               <CopyableCommand value="cargo add uor-foundation" />
+              <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
+                Or add it to your <code className="font-mono text-foreground/90">Cargo.toml</code> directly:
+              </p>
+              <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`[dependencies]
+uor-foundation = "0.2"
+serde_json = "1"
+`}</code></pre>
             </li>
 
             {/* Step 2 */}
