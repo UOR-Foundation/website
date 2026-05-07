@@ -702,8 +702,10 @@ const Standard = () => {
             className="mt-10 text-foreground/70 font-body text-fluid-body leading-[1.7] max-w-4xl animate-fade-in-up opacity-0"
             style={{ animationDelay: "0.15s" }}
           >
-            Every piece of data gets one universal identity. Type something below and watch it
-            become an address that anyone, anywhere, can verify.
+            Data needs an identity anyone can trust without asking permission.
+            UOR turns any piece of content into a unique address derived from
+            the content itself — verifiable by anyone, anywhere. Read the spec,
+            install the crate, and start building.
           </p>
           <div
             className="mt-8 flex flex-wrap gap-3 animate-fade-in-up opacity-0"
