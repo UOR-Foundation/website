@@ -967,18 +967,6 @@ println!("{}", id.canonical_id);
 `}</code></pre>
             </li>
           </ol>
-
-          <div className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1 text-fluid-label font-body text-foreground/65">
-            <a href={CRATE_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">crates.io/crates/uor-foundation</a>
-            <span aria-hidden className="text-foreground/30">·</span>
-            <a href={CRATE_DOCS_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">docs.rs</a>
-            <span aria-hidden className="text-foreground/30">·</span>
-            <a href={CRATE_SOURCE_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">source</a>
-            <span aria-hidden className="text-foreground/30">·</span>
-            <a href={GITHUB_FRAMEWORK_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">GitHub</a>
-            <span aria-hidden className="text-foreground/30">·</span>
-            <a href={GITHUB_FRAMEWORK_DOCS_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">full spec</a>
-          </div>
         </div>
       </section>
     </Layout>
