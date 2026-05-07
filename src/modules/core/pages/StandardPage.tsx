@@ -932,17 +932,64 @@ const Standard = () => {
           <h2 className="font-display text-fluid-heading font-bold text-foreground mb-8">
             Add it to your project
           </h2>
-          <div className="flex flex-col items-start gap-5">
-            <CopyableCommand value="cargo add uor-foundation" />
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-fluid-label font-body text-foreground/65">
-              <a href={CRATE_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">crates.io</a>
-              <span aria-hidden className="text-foreground/30">·</span>
-              <a href={CRATE_DOCS_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">docs.rs</a>
-              <span aria-hidden className="text-foreground/30">·</span>
-              <a href={GITHUB_FRAMEWORK_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">source on GitHub</a>
-              <span aria-hidden className="text-foreground/30">·</span>
-              <a href={GITHUB_FRAMEWORK_DOCS_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">full spec</a>
-            </div>
+          <p className="font-body text-fluid-body text-foreground/75 max-w-[68ch] mb-10 leading-[1.7]">
+            The canonical implementation lives in one Rust crate: <code className="font-mono text-foreground/90">uor-foundation</code>.
+            Pure Rust, zero unsafe, no network. Compiles to native and WebAssembly from the same source.
+          </p>
+
+          <ol className="flex flex-col gap-8 max-w-[72ch]">
+            {/* Step 1 */}
+            <li className="flex flex-col gap-3">
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono text-fluid-label text-primary/70 tabular-nums">01</span>
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Add the crate</h3>
+              </div>
+              <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
+                Requires Rust 1.74+. From your project root:
+              </p>
+              <CopyableCommand value="cargo add uor-foundation" />
+            </li>
+
+            {/* Step 2 */}
+            <li className="flex flex-col gap-3">
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono text-fluid-label text-primary/70 tabular-nums">02</span>
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Derive an address</h3>
+              </div>
+              <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
+                One call canonicalizes any value and returns its content-addressed identity:
+              </p>
+              <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`use uor_foundation::derive;
+
+let id = derive(&serde_json::json!({ "hello": "world" }))?;
+println!("{}", id.canonical_id); // urn:uor:derivation:sha256:...
+println!("{}", id.ipv6);         // fd00:0075:6f72:....
+`}</code></pre>
+            </li>
+
+            {/* Step 3 */}
+            <li className="flex flex-col gap-3">
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono text-fluid-label text-primary/70 tabular-nums">03</span>
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Verify anywhere</h3>
+              </div>
+              <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
+                Same bytes, same address. On any machine, with no registry:
+              </p>
+              <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`assert!(uor_foundation::verify(&bytes, &id.canonical_id)?);`}</code></pre>
+            </li>
+          </ol>
+
+          <div className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1 text-fluid-label font-body text-foreground/65">
+            <a href={CRATE_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">crates.io/crates/uor-foundation</a>
+            <span aria-hidden className="text-foreground/30">·</span>
+            <a href={CRATE_DOCS_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">docs.rs</a>
+            <span aria-hidden className="text-foreground/30">·</span>
+            <a href={CRATE_SOURCE_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">source</a>
+            <span aria-hidden className="text-foreground/30">·</span>
+            <a href={GITHUB_FRAMEWORK_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">GitHub</a>
+            <span aria-hidden className="text-foreground/30">·</span>
+            <a href={GITHUB_FRAMEWORK_DOCS_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">full spec</a>
           </div>
         </div>
       </section>
