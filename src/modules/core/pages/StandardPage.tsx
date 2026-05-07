@@ -934,8 +934,7 @@ const Standard = () => {
             Add it to your project
           </h2>
           <p className="font-body text-fluid-body text-foreground/75 max-w-[68ch] mb-10 leading-[1.7]">
-            The canonical implementation lives in one Rust crate: <code className="font-mono text-foreground/90">uor-foundation</code>.
-            Pure Rust, zero unsafe, no network. Compiles to native and WebAssembly from the same source.
+            <code className="font-mono text-foreground/90">uor-foundation</code> — the reference Rust crate for deriving and verifying UOR content addresses.
           </p>
 
           <ol className="flex flex-col gap-8 max-w-[72ch]">
