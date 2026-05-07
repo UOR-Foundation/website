@@ -743,7 +743,7 @@ const Standard = () => {
       </section>
 
       {/* The Problem */}
-      <section className="py-section-sm bg-background border-t border-border/40">
+      <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             The Problem
@@ -763,7 +763,7 @@ const Standard = () => {
       </section>
 
       {/* The Approach */}
-      <section className="py-section-sm bg-background border-t border-border/40">
+      <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             The Approach
@@ -784,7 +784,7 @@ const Standard = () => {
       </section>
 
       {/* What You Get */}
-      <section className="py-section-sm bg-background border-t border-border/40">
+      <section className="py-section-sm bg-background border-b border-border/40">
         <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%] max-w-4xl">
           <p className="font-semibold tracking-[0.2em] uppercase text-primary/70 font-body text-fluid-lead mb-golden-md">
             What You Get
