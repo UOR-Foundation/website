@@ -425,7 +425,7 @@ const LiveDemo = () => {
       <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="text-[14px] tracking-[0.16em] uppercase text-foreground/55 font-body">
-            3 · Decode — address back to content
+            3 · Decode: address back to content
             {address.trim() && (
               <span className="ml-3 normal-case tracking-normal text-foreground/60">
                 detected: <span className="text-foreground/80">{KIND_LABEL[kind]}</span>
@@ -434,7 +434,7 @@ const LiveDemo = () => {
           </div>
           {decoded !== undefined && verifyState === "ok" && (
             <span className="inline-flex items-center gap-1.5 text-[14px] font-body text-primary">
-              <Check size={14} /> Round-trip verified — same content, same address
+              <Check size={14} /> Round-trip verified. Same content, same address.
             </span>
           )}
         </div>
@@ -459,7 +459,7 @@ const LiveDemo = () => {
         {showCode && decodeReceipt && decoded !== undefined && (
           <PipelineTrace
             receipt={decodeReceipt}
-            title="Run output — decode (re-encoded to verify round-trip)"
+            title="Run output: decode (re-encoded to verify round-trip)"
           />
         )}
       </div>
@@ -559,7 +559,7 @@ const SourceAudit = ({ encodeReceipt }: { encodeReceipt: EnrichedReceipt | null 
 
       {isRunTab ? (
         encodeReceipt ? (
-          <PipelineTrace receipt={encodeReceipt} title="Run output — encode" />
+          <PipelineTrace receipt={encodeReceipt} title="Run output: encode" />
         ) : (
           <div className="rounded-lg border border-border/70 bg-background/60 p-4 font-body text-[12px] text-foreground/55">
             Computing…
@@ -623,8 +623,8 @@ const SourceAudit = ({ encodeReceipt }: { encodeReceipt: EnrichedReceipt | null 
 
       <p className="text-[12px] font-body text-foreground/55 leading-[1.6]">
         {isRunTab
-          ? "Live values from your last encode — what each step produced before reaching the final address. Switch tabs to read the actual source that ran."
-          : "Verbatim source loaded at build time via Vite's ?raw loader. The SHA-256 above fingerprints exactly what your browser is executing — diff it against GitHub to confirm nothing's hidden between input and address."}
+          ? "Live values from your last encode. What each step produced before reaching the final address. Switch tabs to read the actual source that ran."
+          : "Verbatim source loaded at build time via Vite's ?raw loader. The SHA-256 above fingerprints exactly what your browser is executing. Diff it against GitHub to confirm nothing's hidden between input and address."}
       </p>
     </div>
   );
@@ -727,7 +727,7 @@ const Standard = () => {
           >
             Data needs an identity anyone can trust without asking permission.
             UOR turns any piece of content into a unique address derived from
-            the content itself — verifiable by anyone, anywhere. Read the spec,
+            the content itself, verifiable by anyone, anywhere. Read the spec,
             install the crate, and start building.
           </p>
           <div
@@ -780,7 +780,7 @@ const Standard = () => {
                 </h3>
               </div>
               <p className="text-foreground/75 font-body text-fluid-body leading-[1.7] mb-5">
-                Every system invents its own labels for data — <code className="font-mono text-fluid-body text-foreground/90">URLs</code>, file paths, database keys, model IDs. Move the data, rename the bucket, or flip a byte and those labels break or quietly point at something else. Identity belongs to the host, not the content.
+                Every system invents its own labels for data: <code className="font-mono text-fluid-body text-foreground/90">URLs</code>, file paths, database keys, model IDs. Move the data, rename the bucket, or flip a byte and those labels break or quietly point at something else. Identity belongs to the host, not the content.
               </p>
               <svg viewBox="0 0 360 220" className="w-full h-auto" fill="none" aria-hidden="true">
                 <defs>
@@ -897,7 +897,7 @@ const Standard = () => {
                 </h3>
               </div>
               <p className="text-foreground/75 font-body text-fluid-body leading-[1.7] mb-5">
-                <code className="font-mono text-fluid-body text-foreground/90">uor-foundation</code> — a small Rust crate with WASM bindings for JS/TS. One call turns any value into canonical bytes, a <code className="font-mono text-fluid-body text-foreground/90">SHA-256</code> derivation ID, and a routable address (<code className="font-mono text-fluid-body text-foreground/90">IPv6</code>, <code className="font-mono text-fluid-body text-foreground/90">CID</code>, human-readable) — plus a one-line verifier so anyone can prove it.
+                <code className="font-mono text-fluid-body text-foreground/90">uor-foundation</code>: a small Rust crate with WASM bindings for JS/TS. One call turns any value into canonical bytes, a <code className="font-mono text-fluid-body text-foreground/90">SHA-256</code> derivation ID, and a routable address (<code className="font-mono text-fluid-body text-foreground/90">IPv6</code>, <code className="font-mono text-fluid-body text-foreground/90">CID</code>, human-readable), plus a one-line verifier so anyone can prove it.
               </p>
               <svg viewBox="0 0 360 220" className="w-full h-auto" fill="none" aria-hidden="true">
                 <defs>
@@ -956,7 +956,7 @@ const Standard = () => {
             Add it to your project
           </h2>
           <p className="font-body text-fluid-body text-foreground/75 max-w-[68ch] mb-10 leading-[1.7]">
-            <code className="font-mono text-fluid-body text-foreground/90">uor-foundation</code> — the reference Rust crate for the UOR framework. Drop it into any existing Cargo project.
+            <code className="font-mono text-fluid-body text-foreground/90">uor-foundation</code>: the reference Rust crate for the UOR framework. Drop it into any existing Cargo project.
           </p>
 
           <a
@@ -1014,7 +1014,7 @@ const Standard = () => {
               </p>
               <CopyableCommand value="cargo build" />
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                Browse the full API surface — types, traits, and modules — at:
+                Browse the full API surface (types, traits, and modules) at:
               </p>
               <a
                 href={CRATE_DOCS_URL}
