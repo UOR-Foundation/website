@@ -683,7 +683,7 @@ const CopyableCommand = ({ value }: { value: string }) => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="group inline-flex items-center gap-3 font-mono text-[13px] leading-[1.6] bg-card border border-border rounded-full pl-5 pr-4 py-2.5 text-foreground/90 hover:border-primary/40 transition-colors"
+      className="group inline-flex items-center gap-3 font-mono text-fluid-body leading-[1.6] bg-card border border-border rounded-full pl-5 pr-4 py-2.5 text-foreground/90 hover:border-primary/40 transition-colors"
     >
       <span>{value}</span>
       {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} className="opacity-60 group-hover:opacity-100" />}
@@ -695,7 +695,7 @@ const CopyableBlock = ({ value, label }: { value: string; label?: string }) => {
   const [copied, setCopied] = useState(false);
   return (
     <div className="relative w-full group">
-      <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 pr-12 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{value}</code></pre>
+      <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 pr-12 font-mono text-fluid-body leading-[1.6] text-foreground/90"><code>{value}</code></pre>
       <button
         type="button"
         aria-label={copied ? "Copied" : `Copy ${label ?? "snippet"}`}
