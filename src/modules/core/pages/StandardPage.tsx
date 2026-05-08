@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import Layout from "@/modules/core/components/Layout";
-import cratesIoScreenshot from "@/assets/crates-io-uor-foundation.png";
 import { Copy, Check, BookOpen, Github, Package, ArrowRight, Code2 } from "lucide-react";
 import {
   GITHUB_FRAMEWORK_URL,
@@ -967,21 +966,6 @@ const Standard = () => {
             className="inline-flex items-center gap-2 mb-10 font-mono text-fluid-body text-primary hover:text-primary/80 transition-colors underline underline-offset-4 decoration-primary/40"
           >
             crates.io/crates/uor-foundation →
-          </a>
-
-          <a
-            href={CRATE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block mb-10 rounded-lg overflow-hidden border border-border/60 bg-card/30 hover:border-primary/40 transition-colors group"
-            aria-label="View uor-foundation on crates.io"
-          >
-            <img
-              src={cratesIoScreenshot}
-              alt="uor-foundation crate listing on crates.io showing version 0.3.2, install command, and metadata"
-              loading="lazy"
-              className="w-full h-auto block group-hover:opacity-95 transition-opacity"
-            />
           </a>
 
           <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
