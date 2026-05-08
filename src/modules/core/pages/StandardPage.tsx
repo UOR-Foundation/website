@@ -6,6 +6,7 @@ import {
   GITHUB_FRAMEWORK_DOCS_URL,
   CRATE_URL,
   CRATE_DOCS_URL,
+  CRATE_VERSION,
   CRATE_SOURCE_URL,
 } from "@/data/external-links";
 import { encode, decode, type EnrichedReceipt } from "@/lib/uor-codec";
