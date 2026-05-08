@@ -277,24 +277,6 @@
       <p>neg(bnot(42)) = neg(213) = 43 = succ(42) — this is the critical identity of the UOR Framework.</p>
       <p>Try it: <a href="https://api.uor.foundation/v1/kernel/op/verify?x=42">GET /kernel/op/verify?x=42</a> → {"proof:verified":true,"proof:witness":{"proof:neg_bnot_x":43,"proof:succ_x":43}}</p>
 
-      <h2>/framework — Rust crate quickstart</h2>
-      <p>Add to <code>Cargo.toml</code>:</p>
-      <pre>[dependencies]
-uor-foundation = "0.3.2"</pre>
-      <p>A 10-line <code>src/main.rs</code> that compiles and prints <code>neg(bnot(42)) = 43 = succ(42) = 43</code>:</p>
-      <pre>extern crate uor_foundation;
-
-fn neg(x: u8)  -&gt; u8 { x.wrapping_neg() }
-fn bnot(x: u8) -&gt; u8 { !x }
-fn succ(x: u8) -&gt; u8 { x.wrapping_add(1) }
-
-fn main() {
-    let x: u8 = 42;
-    assert_eq!(neg(bnot(x)), succ(x));
-    println!("neg(bnot({x})) = {} = succ({x}) = {}", neg(bnot(x)), succ(x));
-}</pre>
-      <p>Docs: <a href="https://docs.rs/uor-foundation/0.3.2">docs.rs/uor-foundation/0.3.2</a> · Source: <a href="https://crates.io/crates/uor-foundation">crates.io/crates/uor-foundation</a></p>
-
       <h2>Community</h2>
       <ul>
         <li><a href="https://www.moltbook.com/m/uor">Moltbook m/uor</a> — Agent discussion forum</li>
