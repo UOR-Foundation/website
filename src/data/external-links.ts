@@ -21,3 +21,7 @@ export const DONORBOX_EMBED_URL = "https://donorbox.org/embed/the-uor-foundation
 export const CRATE_URL = "https://crates.io/crates/uor-foundation";
 export const CRATE_DOCS_URL = "https://docs.rs/uor-foundation";
 export const CRATE_SOURCE_URL = "https://docs.rs/crate/uor-foundation/latest/source/";
+// Pinned to the latest published release on crates.io. Bump on each release
+// (or regenerate via `npx ts-node scripts/sync-crate.ts`) so install snippets
+// never drift from what `cargo add uor-foundation` actually resolves.
+export const CRATE_VERSION = "0.3.2";
