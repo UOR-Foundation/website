@@ -683,7 +683,7 @@ const CopyableCommand = ({ value }: { value: string }) => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="group inline-flex items-center gap-3 font-mono text-[14px] bg-card border border-border rounded-full pl-5 pr-4 py-2.5 text-foreground/90 hover:border-primary/40 transition-colors"
+      className="group inline-flex items-center gap-3 font-mono text-[13px] leading-[1.6] bg-card border border-border rounded-full pl-5 pr-4 py-2.5 text-foreground/90 hover:border-primary/40 transition-colors"
     >
       <span>{value}</span>
       {copied ? <Check size={14} className="text-primary" /> : <Copy size={14} className="opacity-60 group-hover:opacity-100" />}
@@ -968,7 +968,7 @@ const Standard = () => {
             crates.io/crates/uor-foundation →
           </a>
 
-          <ol className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Step 1 */}
             <li className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/30 p-6">
               <div className="flex items-baseline gap-3">
@@ -1026,23 +1026,6 @@ const Standard = () => {
               </a>
             </li>
 
-            {/* Step 4 — proof it works */}
-            <li className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/30 p-6">
-              <div className="flex items-baseline gap-3">
-                <span className="font-mono text-fluid-label text-primary/70 tabular-nums">04</span>
-                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">See it work</h3>
-              </div>
-              <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                Drop this into <code className="font-mono text-foreground/90">src/main.rs</code> and run <code className="font-mono text-foreground/90">cargo run</code>. It exercises the core kernel invariant <code className="font-mono text-foreground/90">neg(bnot(n)) = succ(n)</code>:
-              </p>
-              <CopyableBlock
-                label="main.rs demo"
-                value={`use uor_foundation::kernel::{neg, bnot, succ};\n\nfn main() {\n    let n: i64 = 42;\n    let lhs = neg(bnot(n)); // -(~n)\n    let rhs = succ(n);       //  n + 1\n    assert_eq!(lhs, rhs);\n    println!("neg(bnot({n})) = {lhs} = succ({n}) = {rhs}");\n}\n`}
-              />
-              <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                Expected output: <code className="font-mono text-foreground/90">neg(bnot(42)) = 43 = succ(42) = 43</code>.
-              </p>
-            </li>
           </ol>
         </div>
       </section>
