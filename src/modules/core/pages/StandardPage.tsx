@@ -947,7 +947,7 @@ const Standard = () => {
             crates.io/crates/uor-foundation →
           </a>
 
-          <ol className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <ol className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {/* Step 1 */}
             <li className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/30 p-6">
               <div className="flex items-baseline gap-3">
@@ -962,7 +962,7 @@ const Standard = () => {
                 Or edit <code className="font-mono text-foreground/90">Cargo.toml</code> directly:
               </p>
               <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`[dependencies]
-uor-foundation = "0.2"
+uor-foundation = "${CRATE_VERSION}"
 `}</code></pre>
             </li>
 
@@ -973,13 +973,10 @@ uor-foundation = "0.2"
                 <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Import the crate</h3>
               </div>
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                Bring the crate into any module. The full API is re-exported at the root:
+                Bring the modules you need into scope. Top-level modules: <code className="font-mono text-foreground/90">kernel</code>, <code className="font-mono text-foreground/90">pipeline</code>, <code className="font-mono text-foreground/90">bridge</code>, <code className="font-mono text-foreground/90">enforcement</code>, <code className="font-mono text-foreground/90">enums</code>, <code className="font-mono text-foreground/90">primitives</code>, <code className="font-mono text-foreground/90">user</code>.
               </p>
               <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`// src/lib.rs or src/main.rs
-use uor_foundation as uor;
-
-// Or import individual items as needed:
-// use uor_foundation::{derive, verify, ...};
+use uor_foundation::{kernel, pipeline};
 `}</code></pre>
             </li>
 
@@ -987,7 +984,7 @@ use uor_foundation as uor;
             <li className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/30 p-6">
               <div className="flex items-baseline gap-3">
                 <span className="font-mono text-fluid-label text-primary/70 tabular-nums">03</span>
-                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Build &amp; verify</h3>
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Build</h3>
               </div>
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
                 Compile your project. Cargo will fetch and link the crate:
@@ -1004,6 +1001,30 @@ use uor_foundation as uor;
               >
                 docs.rs/uor-foundation →
               </a>
+            </li>
+
+            {/* Step 4 — proof it works */}
+            <li className="flex flex-col gap-3 rounded-lg border border-border/60 bg-card/30 p-6">
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono text-fluid-label text-primary/70 tabular-nums">04</span>
+                <h3 className="font-display text-fluid-card-title font-semibold text-foreground">See it work</h3>
+              </div>
+              <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
+                Drop this into <code className="font-mono text-foreground/90">src/main.rs</code> and run <code className="font-mono text-foreground/90">cargo run</code>. It exercises the core kernel invariant <code className="font-mono text-foreground/90">neg(bnot(n)) = succ(n)</code>:
+              </p>
+              <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`use uor_foundation::kernel::{neg, bnot, succ};
+
+fn main() {
+    let n: i64 = 42;
+    let lhs = neg(bnot(n)); // -(~n)
+    let rhs = succ(n);       //  n + 1
+    assert_eq!(lhs, rhs);
+    println!("neg(bnot({n})) = {lhs} = succ({n}) = {rhs}");
+}
+`}</code></pre>
+              <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
+                Expected output: <code className="font-mono text-foreground/90">neg(bnot(42)) = 43 = succ(42) = 43</code>.
+              </p>
             </li>
           </ol>
         </div>
