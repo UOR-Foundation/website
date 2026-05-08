@@ -691,6 +691,27 @@ const CopyableCommand = ({ value }: { value: string }) => {
   );
 };
 
+const CopyableBlock = ({ value, label }: { value: string; label?: string }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="relative w-full group">
+      <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 pr-12 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{value}</code></pre>
+      <button
+        type="button"
+        aria-label={copied ? "Copied" : `Copy ${label ?? "snippet"}`}
+        onClick={() => {
+          navigator.clipboard.writeText(value);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        }}
+        className="absolute top-2 right-2 inline-flex items-center justify-center h-7 w-7 rounded-md border border-border/60 bg-background/80 backdrop-blur text-foreground/70 hover:text-foreground hover:border-primary/40 transition-colors"
+      >
+        {copied ? <Check size={13} className="text-primary" /> : <Copy size={13} />}
+      </button>
+    </div>
+  );
+};
+
 const Standard = () => {
   return (
     <Layout>
