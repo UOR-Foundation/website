@@ -780,7 +780,7 @@ const Standard = () => {
                 </h3>
               </div>
               <p className="text-foreground/75 font-body text-fluid-body leading-[1.7] mb-5">
-                Every system invents its own labels for data — <code className="font-mono text-foreground/90">URLs</code>, file paths, database keys, model IDs. Move the data, rename the bucket, or flip a byte and those labels break or quietly point at something else. Identity belongs to the host, not the content.
+                Every system invents its own labels for data — <code className="font-mono text-fluid-body text-foreground/90">URLs</code>, file paths, database keys, model IDs. Move the data, rename the bucket, or flip a byte and those labels break or quietly point at something else. Identity belongs to the host, not the content.
               </p>
               <svg viewBox="0 0 360 220" className="w-full h-auto" fill="none" aria-hidden="true">
                 <defs>
@@ -897,7 +897,7 @@ const Standard = () => {
                 </h3>
               </div>
               <p className="text-foreground/75 font-body text-fluid-body leading-[1.7] mb-5">
-                <code className="font-mono text-foreground/90">uor-foundation</code> — a small Rust crate with WASM bindings for JS/TS. One call turns any value into canonical bytes, a <code className="font-mono text-foreground/90">SHA-256</code> derivation ID, and a routable address (<code className="font-mono text-foreground/90">IPv6</code>, <code className="font-mono text-foreground/90">CID</code>, human-readable) — plus a one-line verifier so anyone can prove it.
+                <code className="font-mono text-fluid-body text-foreground/90">uor-foundation</code> — a small Rust crate with WASM bindings for JS/TS. One call turns any value into canonical bytes, a <code className="font-mono text-fluid-body text-foreground/90">SHA-256</code> derivation ID, and a routable address (<code className="font-mono text-fluid-body text-foreground/90">IPv6</code>, <code className="font-mono text-fluid-body text-foreground/90">CID</code>, human-readable) — plus a one-line verifier so anyone can prove it.
               </p>
               <svg viewBox="0 0 360 220" className="w-full h-auto" fill="none" aria-hidden="true">
                 <defs>
@@ -956,7 +956,7 @@ const Standard = () => {
             Add it to your project
           </h2>
           <p className="font-body text-fluid-body text-foreground/75 max-w-[68ch] mb-10 leading-[1.7]">
-            <code className="font-mono text-foreground/90">uor-foundation</code> — the reference Rust crate for the UOR framework. Drop it into any existing Cargo project.
+            <code className="font-mono text-fluid-body text-foreground/90">uor-foundation</code> — the reference Rust crate for the UOR framework. Drop it into any existing Cargo project.
           </p>
 
           <a
@@ -980,7 +980,7 @@ const Standard = () => {
               </p>
               <CopyableCommand value="cargo add uor-foundation" />
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                Or edit <code className="font-mono text-foreground/90">Cargo.toml</code> directly:
+                Or edit <code className="font-mono text-fluid-body text-foreground/90">Cargo.toml</code> directly:
               </p>
               <CopyableBlock
                 label="Cargo.toml dependency"
@@ -995,7 +995,7 @@ const Standard = () => {
                 <h3 className="font-display text-fluid-card-title font-semibold text-foreground">Import the crate</h3>
               </div>
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
-                Bring the modules you need into scope. Top-level modules: <code className="font-mono text-foreground/90">kernel</code>, <code className="font-mono text-foreground/90">pipeline</code>, <code className="font-mono text-foreground/90">bridge</code>, <code className="font-mono text-foreground/90">enforcement</code>, <code className="font-mono text-foreground/90">enums</code>, <code className="font-mono text-foreground/90">primitives</code>, <code className="font-mono text-foreground/90">user</code>.
+                Bring the modules you need into scope. Top-level modules: <code className="font-mono text-fluid-body text-foreground/90">kernel</code>, <code className="font-mono text-fluid-body text-foreground/90">pipeline</code>, <code className="font-mono text-fluid-body text-foreground/90">bridge</code>, <code className="font-mono text-fluid-body text-foreground/90">enforcement</code>, <code className="font-mono text-fluid-body text-foreground/90">enums</code>, <code className="font-mono text-fluid-body text-foreground/90">primitives</code>, <code className="font-mono text-fluid-body text-foreground/90">user</code>.
               </p>
               <CopyableBlock
                 label="use statement"
