@@ -691,6 +691,27 @@ const CopyableCommand = ({ value }: { value: string }) => {
   );
 };
 
+const CopyableBlock = ({ value, label }: { value: string; label?: string }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="relative w-full group">
+      <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 pr-12 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{value}</code></pre>
+      <button
+        type="button"
+        aria-label={copied ? "Copied" : `Copy ${label ?? "snippet"}`}
+        onClick={() => {
+          navigator.clipboard.writeText(value);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        }}
+        className="absolute top-2 right-2 inline-flex items-center justify-center h-7 w-7 rounded-md border border-border/60 bg-background/80 backdrop-blur text-foreground/70 hover:text-foreground hover:border-primary/40 transition-colors"
+      >
+        {copied ? <Check size={13} className="text-primary" /> : <Copy size={13} />}
+      </button>
+    </div>
+  );
+};
+
 const Standard = () => {
   return (
     <Layout>
@@ -961,9 +982,10 @@ const Standard = () => {
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
                 Or edit <code className="font-mono text-foreground/90">Cargo.toml</code> directly:
               </p>
-              <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`[dependencies]
-uor-foundation = "${CRATE_VERSION}"
-`}</code></pre>
+              <CopyableBlock
+                label="Cargo.toml dependency"
+                value={`[dependencies]\nuor-foundation = "${CRATE_VERSION}"\n`}
+              />
             </li>
 
             {/* Step 2 */}
@@ -975,9 +997,10 @@ uor-foundation = "${CRATE_VERSION}"
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
                 Bring the modules you need into scope. Top-level modules: <code className="font-mono text-foreground/90">kernel</code>, <code className="font-mono text-foreground/90">pipeline</code>, <code className="font-mono text-foreground/90">bridge</code>, <code className="font-mono text-foreground/90">enforcement</code>, <code className="font-mono text-foreground/90">enums</code>, <code className="font-mono text-foreground/90">primitives</code>, <code className="font-mono text-foreground/90">user</code>.
               </p>
-              <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`// src/lib.rs or src/main.rs
-use uor_foundation::{kernel, pipeline};
-`}</code></pre>
+              <CopyableBlock
+                label="use statement"
+                value={`// src/lib.rs or src/main.rs\nuse uor_foundation::{kernel, pipeline};\n`}
+              />
             </li>
 
             {/* Step 3 */}
@@ -1012,16 +1035,10 @@ use uor_foundation::{kernel, pipeline};
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
                 Drop this into <code className="font-mono text-foreground/90">src/main.rs</code> and run <code className="font-mono text-foreground/90">cargo run</code>. It exercises the core kernel invariant <code className="font-mono text-foreground/90">neg(bnot(n)) = succ(n)</code>:
               </p>
-              <pre className="w-full overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-4 font-mono text-[13px] leading-[1.6] text-foreground/90"><code>{`use uor_foundation::kernel::{neg, bnot, succ};
-
-fn main() {
-    let n: i64 = 42;
-    let lhs = neg(bnot(n)); // -(~n)
-    let rhs = succ(n);       //  n + 1
-    assert_eq!(lhs, rhs);
-    println!("neg(bnot({n})) = {lhs} = succ({n}) = {rhs}");
-}
-`}</code></pre>
+              <CopyableBlock
+                label="main.rs demo"
+                value={`use uor_foundation::kernel::{neg, bnot, succ};\n\nfn main() {\n    let n: i64 = 42;\n    let lhs = neg(bnot(n)); // -(~n)\n    let rhs = succ(n);       //  n + 1\n    assert_eq!(lhs, rhs);\n    println!("neg(bnot({n})) = {lhs} = succ({n}) = {rhs}");\n}\n`}
+              />
               <p className="font-body text-fluid-body text-foreground/70 leading-[1.7]">
                 Expected output: <code className="font-mono text-foreground/90">neg(bnot(42)) = 43 = succ(42) = 43</code>.
               </p>
