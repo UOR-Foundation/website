@@ -18,6 +18,9 @@ export const DONATE_URL = "https://www.uor.foundation/donate";
 export const DONORBOX_EMBED_URL = "https://donorbox.org/embed/the-uor-foundation?default_interval=o&hide_donation_meter=true";
 
 // Canonical source of truth — Rust crate
+// CRATE_VERSION is the single version string used everywhere on the site
+// (Cargo.toml snippet, docs.rs deep link, blog references). Bump here only.
+export const CRATE_VERSION = "0.3.2";
 export const CRATE_URL = "https://crates.io/crates/uor-foundation";
-export const CRATE_DOCS_URL = "https://docs.rs/uor-foundation";
-export const CRATE_SOURCE_URL = "https://docs.rs/crate/uor-foundation/latest/source/";
+export const CRATE_DOCS_URL = `https://docs.rs/uor-foundation/${CRATE_VERSION}`;
+export const CRATE_SOURCE_URL = `https://docs.rs/crate/uor-foundation/${CRATE_VERSION}/source/`;
