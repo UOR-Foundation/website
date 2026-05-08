@@ -999,7 +999,7 @@ const Standard = () => {
               </p>
               <CopyableBlock
                 label="use statement"
-                value={`// src/lib.rs or src/main.rs\nuse uor_foundation::{kernel, pipeline};\n`}
+                value={`// src/lib.rs or src/main.rs\n#[allow(unused_imports)]\nuse uor_foundation::{kernel, pipeline};\n`}
               />
             </li>
 
