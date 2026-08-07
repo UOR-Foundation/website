@@ -8,7 +8,7 @@ export const teamMembers = [
   },
   {
     name: "Ari Lerner",
-    role: "Engineer",
+    role: "CTO technologist @ Hologram",
     description: "AI, robotics, and embedded systems.",
     image: "/images/profiles/ari-lerner.jpg",
     link: "https://www.linkedin.com/in/arilerner/",
