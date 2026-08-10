@@ -13,6 +13,7 @@ import projectIdentity from "@/assets/project-uor-identity.jpg";
 import blogUorFrameworkOrigin from "@/assets/blog-uor-framework-origin.jpg";
 import blogUgandaCover from "@/assets/blog-uganda-cover.jpg";
 import blogUorFoundationCrate from "@/assets/blog-uor-foundation-crate.jpg";
+import blogObjectInternetNanda from "@/assets/blog-nanda-cover.jpg";
 
 /** Add new covers here when introducing a new blog post. */
 export const blogCoverMap: Record<string, string> = {
@@ -23,6 +24,7 @@ export const blogCoverMap: Record<string, string> = {
   uorFrameworkOrigin: blogUorFrameworkOrigin,
   sustainableAiUganda: blogUgandaCover,
   uorFoundationCrate: blogUorFoundationCrate,
+  objectInternetNanda: blogObjectInternetNanda,
 };
 
 /**
