@@ -7,17 +7,17 @@ export type TagType = "Research" | "Announcement" | "Release" | "Field Notes" | 
 export const highlights = [
   {
     tag: "Field Notes" as TagType,
+    title: "Agents don't need more pages. They need objects they can trust.",
+    date: "August 10, 2026",
+    imageKey: "objectInternetNanda",
+    href: "/blog/object-internet-nanda",
+  },
+  {
+    tag: "Field Notes" as TagType,
     title: "The Path to Sustainable AI: Notes from the Uganda Deep Tech Summit",
     date: "May 6, 2026",
     imageKey: "sustainableAiUganda",
     href: "/blog/sustainable-ai-uganda",
-  },
-  {
-    tag: "Engineering" as TagType,
-    title: "uor-foundation v0.3.1 is live on crates.io",
-    date: "May 5, 2026",
-    imageKey: "uorFoundationCrate",
-    href: "/blog/uor-foundation-v0-3-1",
   },
   {
     tag: "Open Research" as TagType,
