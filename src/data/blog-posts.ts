@@ -4,6 +4,14 @@
  */
 export const blogPosts = [
   {
+    title: "Agents don't need more pages. They need objects they can trust.",
+    excerpt: "Notes from the Project NANDA workshop at Stanford. Today's agentic web is file oriented. Structural addressing gives agents objects they can identify, verify, route, and act on.",
+    date: "August 10, 2026",
+    tag: "Field Notes",
+    href: "/blog/object-internet-nanda",
+    coverKey: "objectInternetNanda",
+  },
+  {
     title: "The Path to Sustainable AI: Notes from the Uganda Deep Tech Summit",
     excerpt: "Alex Flom represented the UOR Foundation in Kampala. The pitch: compute once, lookup forever. AI that runs on devices people already own, with data that stays local.",
     date: "May 6, 2026",
