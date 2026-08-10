@@ -17,6 +17,16 @@ export type NewsItem = {
 
 export const newsItems: NewsItem[] = [
   {
+    title: "Agents don't need more pages. They need objects they can trust.",
+    excerpt:
+      "Notes from the Project NANDA workshop at Stanford. Structural addressing gives agents objects they can identify, verify, route, and act on instead of fragile pages.",
+    date: "August 10, 2026",
+    isoDate: "2026-08-10",
+    category: "Community",
+    href: "/blog/object-internet-nanda",
+    coverKey: "objectInternetNanda",
+  },
+  {
     title: "uor-foundation v0.3.1 released on crates.io",
     excerpt:
       "The complete UOR Foundation ontology as typed Rust traits. 34 namespaces, 471 OWL classes, 948 properties, plus the uor! proc macro for compile-time DSL. cargo add uor-foundation.",
