@@ -28,6 +28,7 @@ const Index = () => {
   const whatIsUor = useCallback(() => import("@/modules/landing/components/WhatIsUorSection"), []);
   const closingCTA = useCallback(() => import("@/modules/landing/components/ClosingCTASection"), []);
   const highlights = useCallback(() => import("@/modules/landing/components/HighlightsSection"), []);
+  const resources = useCallback(() => import("@/modules/landing/components/ResourcesSection"), []);
   const readyToBuild = useCallback(() => import("@/modules/landing/components/ReadyToBuildCTA"), []);
 
   return (
@@ -36,6 +37,7 @@ const Index = () => {
       <HeroSection />
       <LazySection factory={community} />
       <LazySection factory={whatIsUor} />
+      <LazySection factory={resources} />
       <LazySection factory={closingCTA} />
       <LazySection factory={highlights} />
       <LazySection factory={readyToBuild} />
