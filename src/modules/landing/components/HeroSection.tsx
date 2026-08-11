@@ -41,10 +41,10 @@ const HeroSection = () => {
           style={{ animationDelay: "0.47s" }}
         >
           <a
-            href="/projects"
+            href="#start-here"
             className="pointer-events-auto inline-flex items-center gap-3 px-8 py-3.5 text-[12px] font-semibold uppercase tracking-[0.2em] border border-foreground/30 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out"
           >
-            Explore Projects
+            Explore Framework
             <ArrowRight size={14} />
           </a>
         </div>
@@ -123,10 +123,10 @@ const HeroSection = () => {
             style={{ animationDelay: "0.59s" }}
           >
             <a
-              href="/projects"
+              href="#start-here"
               className="pointer-events-auto inline-flex items-center gap-3 px-[clamp(1.5rem,1.7vw,2.25rem)] py-[clamp(0.7rem,0.9vw,1.1rem)] text-[clamp(13px,0.95vw,17px)] font-semibold uppercase tracking-[0.2em] border border-foreground/60 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-200 ease-out"
             >
-              Explore Projects
+              Explore Framework
               <ArrowRight size={15} />
             </a>
           </div>
