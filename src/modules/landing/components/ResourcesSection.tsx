@@ -47,7 +47,7 @@ const resources: Resource[] = [
 
 const ResourcesSection = () => {
   return (
-    <section className="py-section-md bg-background">
+    <section id="start-here" className="py-section-md bg-background scroll-mt-16">
       <div className="container px-6 md:px-[5%] lg:px-[6%] xl:px-[7%]">
         <p className="font-body font-semibold tracking-[0.2em] uppercase text-primary/70 text-fluid-lead mb-golden-md">
           Start Here
