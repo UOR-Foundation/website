@@ -7,13 +7,6 @@ export const teamMembers = [
     link: "https://www.linkedin.com/in/alexander-flom/",
   },
   {
-    name: "Ari Lerner",
-    role: "CTO technologist @ Hologram",
-    description: "AI, robotics, and embedded systems.",
-    image: "/images/profiles/ari-lerner.jpg",
-    link: "https://www.linkedin.com/in/arilerner/",
-  },
-  {
     name: "Tirath Virdee",
     role: "Chief Scientist @ Xenesis",
     description: "Data science and applied AI.",
@@ -70,11 +63,18 @@ export const teamMembers = [
     link: "https://www.linkedin.com/in/guy-maximillian-phelps/",
   },
   {
-    name: "Lucio",
-    role: "Founder @ AiresAI",
-    description: "Open-source modular AI architecture.",
-    image: "/images/profiles/lucio.jpg",
-    link: "https://x.com/luussta",
+    name: "Ari Lerner",
+    role: "Founder @ MVM",
+    description: "AI, robotics, and embedded systems.",
+    image: "/images/profiles/ari-lerner.jpg",
+    link: "https://www.linkedin.com/in/arilerner/",
+  },
+  {
+    name: "Mark",
+    role: "AI Researcher",
+    description: "AI research.",
+    image: "/images/profiles/mark-rond.jpg",
+    link: "https://www.linkedin.com/in/mark-rond-7270a6368/",
   },
   {
     name: "Jimmy Danella",
