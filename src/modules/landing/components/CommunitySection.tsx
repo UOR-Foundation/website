@@ -59,6 +59,9 @@ const CommunitySection = () => {
             alt={member.name}
             className="w-full h-full object-cover object-top"
             loading="lazy"
+            onError={(e) => {
+              e.currentTarget.style.visibility = "hidden";
+            }}
           />
         </div>
         <p className="font-display font-bold text-black md:text-foreground leading-tight text-[15px] md:text-xl lg:text-2xl mt-4 tracking-[0.01em]">
