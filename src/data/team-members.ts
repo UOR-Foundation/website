@@ -73,7 +73,7 @@ export const teamMembers = [
     name: "Mark",
     role: "AI Researcher",
     description: "AI research.",
-    image: "/__l5e/assets-v1/1a6dfe99-5119-448a-adbf-0827cb90bb6f/mark-rond.png",
+    image: "/images/profiles/mark-rond.jpg",
     link: "https://www.linkedin.com/in/mark-rond-7270a6368/",
   },
   {
