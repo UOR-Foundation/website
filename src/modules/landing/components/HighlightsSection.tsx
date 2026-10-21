@@ -16,7 +16,7 @@ const HighlightsSection = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-golden-lg gap-y-golden-xl">
-          {highlights.map((item, index) => (
+          {highlights.slice(0, 3).map((item, index) => (
             <a
               key={item.title}
               href={item.href}
