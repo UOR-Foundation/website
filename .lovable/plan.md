@@ -1,31 +1,23 @@
-## Goal
+# Rewrite the "Same Data, Different Bytes" post from the original paper
 
-Tighten the Overview "What it is, why it exists, how it works" section so it reads as a precise, developer-grade reference card — not a marketing block.
+Rewrite the existing update post (`/blog/serialization-invariant-integrity`) using the full paper text (Gao & Clark, arXiv:2610.24916, NANDA Workshop at IEEE TPS-ISA 2026). Keep the joint MIT Project NANDA + UOR Foundation framing, cover image, and listing entries.
 
-## Visual changes
+## Structure (Why / How / What, applied implicitly, no labels)
 
-1. **Drop the long sentence headline.** Replace `What it is, why it exists, how it works` with a single short title (`Overview`) — the eyebrow + column labels already carry that meaning. Removes the awkward 2-line wrapped headline dominating the section.
+1. **Lead** - one paragraph: agents exchanging data need to know whether a copy matches what the owner published. Paper credit, venue, authors.
+2. **The problem: a mismatch tells you nothing** - checksums hash bytes, not meaning. `34` vs `34.0` breaks the checksum just like changing `34` to `43` does. Small side-by-side example (reference / re-encoded copy A / altered copy B) showing checksum vs identifier result, from the paper's Fig. 1.
+3. **The method in four steps** - numbered list: parse exactly (numbers kept as exact decimals) -> normalize text to Unicode NFC -> serialize with JCS (RFC 8785) and re-check no number lost precision -> SHA-256. Short table of what counts as "same" (whitespace, key order, `64`/`64.0`, `0.1`/`1e-1`, Unicode composition, escapes) vs "changed" (values, `7` vs `"7"`, array order, structure). Note: unsupported input is reported as such, never as a mismatch.
+4. **Fitting into DataFacts** - identifier published next to the existing checksum with its processing profile; receiver recomputes and compares against the owner's record, not the forwarded copy's claim; missing record means "cannot verify".
+5. **What the study found** - 36 datasets, 3 scenarios, 6 models across two providers, 3 repeats. Headline: +80.4 pts vs plain tools and +70.2 pts vs checksum on equivalent copies; +3.5 pts better evidence-backed rejection of altered data. Compact results table.
+6. **Use cases** - 4 short cards: agent-to-agent data handoff, data pipelines that reformat JSON, dataset caching and mirrors, audit logs and reproducible AI inputs.
+7. **Try it** - link to github.com/UOR-Foundation/uor-addr with copyable install commands for Rust (`cargo add uor-addr`), JS/TS (`npm install @uor-foundation/uor-addr`), Python (`pip install uor-addr`), plus a 3-line "hash two equivalent JSON values, get the same address" description pointing to the repo quickstart.
+8. **Sources** - arXiv abstract, HTML version, DataFacts paper, RFC 8785 (JCS), Unicode NFC (UAX #15), Project NANDA, uor-addr repo.
 
-2. **Number the columns (01 / 02 / 03).** Small mono numerals in `text-primary/60` above each title. Signals sequence (problem → approach → outcome) and gives the grid a technical, spec-sheet feel.
+## Style
 
-3. **Promote column titles, demote eyebrow.** Column titles become `font-display` uppercase at `text-fluid-subheading`, not the tiny tracked-eyebrow style. Each column reads as its own mini-section.
+- Existing post conventions: `text-fluid-body` text, `text-fluid-card-title` headings, no em dashes, plain human-first language, code in mono at body size, reuse `CopyableBlock` for install commands.
 
-4. **Add a thin top rule per column** (`border-t border-border/60 pt-6`) instead of relying only on whitespace. Crisp, grid-like, reminiscent of developer docs (Stripe, Linear, Rust docs).
+## Technical details
 
-5. **Tighten body copy** — shorter sentences, parallel structure across the three columns, mono inline tokens for technical nouns (`URLs`, `SHA-256`, `IPv6`, `CID`, `uor-foundation`).
-
-6. **Body type:** drop to `text-[15px] leading-[1.65]` with `text-foreground/75` — denser, more reference-like than `text-fluid-body` at 1.7.
-
-7. **Grid:** `md:grid-cols-3 gap-x-12 gap-y-10` with column titles aligned to a baseline; remove the existing `mb-12` heading gap.
-
-## Final copy (parallel, crisp)
-
-- **01 — Problem.** Identifiers like URLs, paths, and database keys point to a *location*, not the data. Whoever owns the location decides what you receive. Move a file or flip a byte and the same identifier silently returns something different.
-- **02 — Approach.** Canonicalize the data, hash the canonical form, use the hash as the address. Same content → same address. Anyone with the bytes recomputes and verifies it locally. No registry, no signing key, no trusted third party.
-- **03 — Output.** `uor-foundation` (Rust crate, WASM bindings for JS/TS). One call returns canonical bytes, a SHA-256 derivation ID, an IPv6 / CID / human-readable address, and a one-line verifier.
-
-## Out of scope
-
-- No changes to hero, Install section, or other pages.
-- No new dependencies, icons, or animations.
-- File touched: `src/modules/core/pages/StandardPage.tsx` only.
+- Edit only `src/modules/community/pages/BlogSerializationInvariant.tsx`; update the excerpt in `src/data/blog-posts.ts` / `news-items.ts` if wording changes.
+- Verify the page renders in the preview after the change.
