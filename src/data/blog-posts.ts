@@ -4,6 +4,14 @@
  */
 export const blogPosts = [
   {
+    title: "Same Data, Different Bytes: Integrity Checks That Survive Re-Serialization",
+    excerpt: "Joint research with MIT Project NANDA, accepted at IEEE TPS-ISA 2026. A serialization-invariant identifier lifts agent verification of equivalent re-encodings from 28.5% to 98.8%.",
+    date: "October 21, 2026",
+    tag: "Open Research",
+    href: "/blog/serialization-invariant-integrity",
+    coverKey: "serializationInvariant",
+  },
+  {
     title: "Agents don't need more pages. They need objects they can trust.",
     excerpt: "Notes from the Project NANDA workshop at Stanford. Today's agentic web is file oriented. Structural addressing gives agents objects they can identify, verify, route, and act on.",
     date: "August 10, 2026",

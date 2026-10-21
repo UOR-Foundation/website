@@ -127,6 +127,7 @@ const App = () => {
               <Route path="/blog/sustainable-ai-uganda" element={<BlogSustainableAiUganda />} />
               <Route path="/blog/uor-foundation-v0-3-1" element={<BlogUorFoundationV031 />} />
               <Route path="/blog/object-internet-nanda" element={<BlogObjectInternetNanda />} />
+              <Route path="/blog/serialization-invariant-integrity" element={<BlogSerializationInvariant />} />
               <Route path="/blog/universal-data-passport" element={<Navigate to="/blog/universal-data-fingerprint" replace />} />
               <Route path="/universal-data-passport" element={<Navigate to="/blog/universal-data-fingerprint" replace />} />
               <Route path="/universal-data-fingerprint" element={<Navigate to="/blog/universal-data-fingerprint" replace />} />
