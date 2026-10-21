@@ -26,6 +26,7 @@ const BlogUorFrameworkOrigin = lazy(() => import("@/modules/community/pages/Blog
 const BlogSustainableAiUganda = lazy(() => import("@/modules/community/pages/BlogSustainableAiUganda"));
 const BlogUorFoundationV031 = lazy(() => import("@/modules/community/pages/BlogUorFoundationV031"));
 const BlogObjectInternetNanda = lazy(() => import("@/modules/community/pages/BlogObjectInternetNanda"));
+const BlogSerializationInvariant = lazy(() => import("@/modules/community/pages/BlogSerializationInvariant"));
 const BlogIndexPage = lazy(() => import("@/modules/community/pages/BlogIndexPage"));
 const NewsPage = lazy(() => import("@/modules/community/pages/NewsPage"));
 const ResearchPaperAtlasEmbeddings = lazy(() => import("@/modules/community/pages/ResearchPaperAtlasEmbeddings"));
