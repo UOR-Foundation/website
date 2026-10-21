@@ -71,7 +71,7 @@ const BlogSerializationInvariant = () => {
         <p>
           In agent networks, a receiving agent must confirm that the data it got matches what the owner
           published. Mechanisms like{" "}
-          <a href="https://arxiv.org/abs/2507.00227" target="_blank" rel="noopener noreferrer">
+          <a href="https://arxiv.org/abs/2606.26211" target="_blank" rel="noopener noreferrer">
             DataFacts
           </a>{" "}
           handle discovery and access, and ship a checksum computed from a serialized JSON representation.
