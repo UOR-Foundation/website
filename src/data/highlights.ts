@@ -6,6 +6,13 @@ export type TagType = "Research" | "Announcement" | "Release" | "Field Notes" | 
 
 export const highlights = [
   {
+    tag: "Open Research" as TagType,
+    title: "Same Data, Different Bytes: Integrity Checks That Survive Re-Serialization",
+    date: "October 21, 2026",
+    imageKey: "serializationInvariant",
+    href: "/blog/serialization-invariant-integrity",
+  },
+  {
     tag: "Field Notes" as TagType,
     title: "Agents don't need more pages. They need objects they can trust.",
     date: "August 10, 2026",
