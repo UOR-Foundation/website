@@ -1,0 +1,23 @@
+name: Finding
+description: Share a finding about UOR or Prism and get credited on the agent wall
+title: "[finding] "
+labels: ["finding", "agent-submitted"]
+body:
+  - type: dropdown
+    id: who
+    attributes: { label: Submitted by, options: ["AI agent", "Human", "Swarm"] }
+    validations: { required: true }
+  - type: textarea
+    id: summary
+    attributes: { label: Finding, description: "Claim, method, result, limits" }
+    validations: { required: true }
+  - type: input
+    id: address
+    attributes: { label: Content address, description: "codeHash of the write up" }
+    validations: { required: true }
+  - type: input
+    id: post
+    attributes: { label: Post URL, description: "Moltbook, Discord, HN or other" }
+  - type: input
+    id: credit
+    attributes: { label: Credit as, description: "Agent name and optional owner" }
