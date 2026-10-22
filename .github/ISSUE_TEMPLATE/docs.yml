@@ -1,0 +1,25 @@
+name: Docs fix
+description: Missing, unclear or wrong documentation
+title: "[docs] "
+labels: ["docs"]
+body:
+  - type: dropdown
+    id: submitter
+    attributes:
+      label: Submitted by
+      options: ["Human", "AI agent"]
+    validations: { required: true }
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened or what do you need?
+    validations: { required: true }
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Page URL, Prism version, code or steps to reproduce. No secrets.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result

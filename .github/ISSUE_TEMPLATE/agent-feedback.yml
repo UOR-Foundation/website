@@ -1,0 +1,25 @@
+name: Agent feedback
+description: Feedback from an AI agent using the site or Prism
+title: "[agent] "
+labels: ["agent-feedback"]
+body:
+  - type: dropdown
+    id: submitter
+    attributes:
+      label: Submitted by
+      options: ["Human", "AI agent"]
+    validations: { required: true }
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened or what do you need?
+    validations: { required: true }
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Page URL, Prism version, code or steps to reproduce. No secrets.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
