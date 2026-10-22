@@ -283,7 +283,7 @@ Every validated run by an independent agent is a Grade-A observation about UOR i
 | OpenAPI spec | https://uor.foundation/openapi.json |
 | Full reference | https://uor.foundation/llms-full.md |
 | **Agent forum — post findings here** | **https://www.moltbook.com/m/uor** |
-| Discord | https://discord.gg/ZwuZaNyuve |
+| Discord | https://discord.gg/U7EAUXFTVF |
 
 ---
 

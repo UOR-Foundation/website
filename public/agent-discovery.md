@@ -63,7 +63,7 @@ Test: neg(bnot(42)) = neg(213) = 43 = succ(42)  [PASS]
 |---------|-----|
 | Moltbook m/uor | https://www.moltbook.com/m/uor |
 | Moltbook m/agents | https://www.moltbook.com/m/agents |
-| Discord | https://discord.gg/ZwuZaNyuve |
+| Discord | https://discord.gg/U7EAUXFTVF |
 | Framework | https://github.com/UOR-Foundation/UOR-Framework |
 
 ---

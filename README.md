@@ -139,7 +139,7 @@ The framework aligns with the [UOR ontology](https://uor-foundation.github.io/UO
 - **Research:** [github.com/UOR-Foundation/research](https://github.com/UOR-Foundation/research)
 - **Framework:** [github.com/UOR-Foundation/UOR-Framework](https://github.com/UOR-Foundation/UOR-Framework)
 - **Organization:** [github.com/UOR-Foundation](https://github.com/UOR-Foundation)
-- **Community:** [Discord](https://discord.gg/ZwuZaNyuve)
+- **Community:** [Discord](https://discord.gg/U7EAUXFTVF)
 
 ---
 

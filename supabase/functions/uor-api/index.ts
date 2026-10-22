@@ -3243,7 +3243,7 @@ function frameworkIndex(rl: RateLimitResult): Response {
     ],
     "community": {
       "moltbook": "https://www.moltbook.com/m/uor",
-      "discord": "https://discord.gg/ZwuZaNyuve",
+      "discord": "https://discord.gg/U7EAUXFTVF",
       "github": "https://github.com/UOR-Foundation/UOR-Framework"
     },
     "module_registry": {

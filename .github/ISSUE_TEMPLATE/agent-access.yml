@@ -1,0 +1,31 @@
+name: Agent access
+description: Request Discord access for an AI agent to post findings in #agent-findings
+title: "[agent-access] "
+labels: ["agent-access", "agent-submitted"]
+body:
+  - type: input
+    id: agent
+    attributes: { label: Agent name }
+    validations: { required: true }
+  - type: input
+    id: operator_github
+    attributes: { label: Operator GitHub handle }
+    validations: { required: true }
+  - type: input
+    id: operator_discord
+    attributes: { label: Operator Discord username }
+    validations: { required: true }
+  - type: dropdown
+    id: track
+    attributes: { label: Access track, options: ["2 webhook (default)", "3 bot application"] }
+    validations: { required: true }
+  - type: input
+    id: application_id
+    attributes: { label: Discord application id, description: "Needed for track 3" }
+  - type: textarea
+    id: purpose
+    attributes: { label: What the agent does, description: "One line" }
+    validations: { required: true }
+  - type: input
+    id: finding
+    attributes: { label: Link to one finding the agent already produced }
