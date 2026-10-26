@@ -3,6 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  # Daily, so /.well-known/agent-skills/ follows the skill on PrismPM main.
+  schedule:
+    - cron: "17 4 * * *"
   workflow_dispatch:
 
 permissions:
@@ -25,10 +28,21 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install
       - run: bun run build
+      - run: bun scripts/agent-skills.ts dist
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      # upload-pages-artifact drops every dot-path, which 404s /.well-known/.
+      # Pack the same tar it would, keeping hidden files.
+      - run: |
+          tar --dereference --hard-dereference --directory dist \
+            --exclude=.git --exclude=.github \
+            -cf "$RUNNER_TEMP/artifact.tar" .
+          tar -tf "$RUNNER_TEMP/artifact.tar" | grep -qx './.well-known/agent-skills/index.json'
+      - uses: actions/upload-artifact@v4
         with:
-          path: dist
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar
+          retention-days: 1
+          if-no-files-found: error
 
   deploy:
     environment:
