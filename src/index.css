@@ -1762,8 +1762,8 @@
   font-size: clamp(1.6rem, 2vw, 2.2rem);
   line-height: 1.2;
   color: hsl(var(--foreground));
-  margin-top: 0;
-  margin-bottom: 1em;
+  margin-top: clamp(2.5rem, 7vw, 4rem);
+  margin-bottom: 0.6em;
   padding-top: 0;
   border-top: 0;
   position: relative;
