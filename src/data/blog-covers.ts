@@ -14,10 +14,12 @@ import blogUorFrameworkOrigin from "@/assets/blog-uor-framework-origin.jpg";
 import blogUgandaCover from "@/assets/blog-uganda-cover.jpg";
 import blogUorFoundationCrate from "@/assets/blog-uor-foundation-crate.jpg";
 import blogObjectInternetNanda from "@/assets/blog-nanda-cover.jpg";
+import blogLexLeanV04 from "@/assets/blog-lexlean-v0-4.jpg";
 import blogSerializationInvariant from "@/assets/blog-serialization-invariant.jpg";
 
 /** Add new covers here when introducing a new blog post. */
 export const blogCoverMap: Record<string, string> = {
+  lexleanV04: blogLexLeanV04,
   serializationInvariant: blogSerializationInvariant,
   knowledgeGraph: blogKnowledgeGraph,
   goldenSeed: blogGoldenSeed,
