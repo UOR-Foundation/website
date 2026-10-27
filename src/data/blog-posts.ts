@@ -4,6 +4,14 @@
  */
 export const blogPosts = [
   {
+    title: "Write It Once. Read It, Prove It, Run It.",
+    excerpt: "LexLean v0.4: write an idea once in plain, precise English and get a readable paper, a machine checked proof and a working program that provably say the same thing.",
+    date: "October 27, 2026",
+    tag: "Engineering",
+    href: "/blog/lexlean-v0-4",
+    coverKey: "lexleanV04",
+  },
+  {
     title: "Same Data, Different Bytes: Integrity Checks That Survive Re-Serialization",
     excerpt: "Joint research with MIT Project NANDA, accepted at IEEE TPS-ISA 2026. A serialization-invariant identifier lifts agent verification of equivalent re-encodings from 28.5% to 98.8%.",
     date: "October 21, 2026",

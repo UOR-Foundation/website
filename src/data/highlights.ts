@@ -6,6 +6,13 @@ export type TagType = "Research" | "Announcement" | "Release" | "Field Notes" | 
 
 export const highlights = [
   {
+    tag: "Engineering" as TagType,
+    title: "Write It Once. Read It, Prove It, Run It.",
+    date: "October 27, 2026",
+    imageKey: "lexleanV04",
+    href: "/blog/lexlean-v0-4",
+  },
+  {
     tag: "Open Research" as TagType,
     title: "Same Data, Different Bytes: Integrity Checks That Survive Re-Serialization",
     date: "October 21, 2026",
