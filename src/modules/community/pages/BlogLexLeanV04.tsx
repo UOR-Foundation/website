@@ -76,11 +76,11 @@ const BlogLexLeanV04 = () => {
       <p>The clearest example of v0.4 is a small handwriting reader. It recognizes digits drawn by hand, a classic test known as MNIST, using a compact model of about 6,000 numbers.</p>
       <p>The entire model is written in LexLean's controlled language; nothing else implements it. Draw a digit below and it is read live, entirely in your browser.</p>
       <div className="not-prose my-6 overflow-hidden rounded-xl border border-border">
-        <div className="flex items-center justify-between border-b border-border px-4 py-2 text-fluid-body text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2 text-fluid-body text-muted-foreground">
           <span>Draw a digit from 0 to 9</span>
           <a href={DEMO} {...ext} className="text-primary hover:underline">Open full screen</a>
         </div>
-        <iframe src={DEMO} title="LexLean MNIST digit reader" className="block h-[520px] w-full" loading="lazy" />
+        <iframe src={DEMO} title="LexLean MNIST digit reader" className="block h-[560px] sm:h-[520px] w-full" loading="lazy" />
       </div>
       <p>Before it runs, the page recomputes the program's fingerprint, a short code that changes completely if even one byte changes. If the fingerprint does not match the certified program, the page refuses to run.</p>
       <p>From that one source, LexLean derived:</p>
