@@ -117,13 +117,18 @@ function localAssetPointers(): Plugin {
   return {
     name: "local-asset-pointers",
     enforce: "pre",
+    async resolveId(source, importer, options) {
+      if (!source.split("?")[0].endsWith(".asset.json")) return null;
+      const r = await this.resolve(source, importer, { ...options, skipSelf: true });
+      const file = r?.id.split("?")[0];
+      if (!file || !fs.existsSync(file.slice(0, -".asset.json".length))) return null;
+      return "\0local-asset:" + file;
+    },
     load(id) {
-      const file = id.split("?")[0];
-      if (!file.endsWith(".asset.json")) return null;
-      const local = file.slice(0, -".asset.json".length);
-      if (!fs.existsSync(local)) return null;
+      if (!id.startsWith("\0local-asset:")) return null;
+      const file = id.slice("\0local-asset:".length);
       const meta = JSON.parse(fs.readFileSync(file, "utf8"));
-      return `import url from ${JSON.stringify(local)};\nexport default { ...${JSON.stringify(meta)}, url };`;
+      return `import url from ${JSON.stringify(file.slice(0, -".asset.json".length))};\nexport default { ...${JSON.stringify(meta)}, url };`;
     },
   };
 }
