@@ -1,169 +1,50 @@
-import { lazy, Suspense, useEffect } from "react";
-import { Toaster } from "@/modules/core/ui/toaster";
-import { Toaster as Sonner } from "@/modules/core/ui/sonner";
-import { TooltipProvider } from "@/modules/core/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/hooks/use-auth";
-import { AuthPromptProvider } from "@/modules/auth/useAuthPrompt";
-import { PrivyWalletProvider } from "@/modules/auth/PrivyWalletProvider";
+import { lazy, Suspense } from "react";
+import FoundationHome from "@/site/FoundationHome";
+import { DISCORD_URL } from "@/site/links";
 
-// ── Sovereign Bus: lazy-load module registrations ─────────────────────
-import { sovereignBoot } from "@/modules/boot";
+const Docs = lazy(() => import("@/docs/Docs"));
+const Blog = lazy(() => import("@/blog/Blog"));
+const Playground = lazy(() => import("@/playground/Playground"));
+const About = lazy(() => import("@/about/About"));
+const Agents = lazy(() => import("@/agent/Agents"));
+const Framework = lazy(() => import("@/framework/Framework"));
+const Discord = lazy(() => import("@/agent/DiscordPosting"));
 
-// Eager. homepage renders instantly
-import { IndexPage } from "@/modules/landing";
-import Layout from "@/modules/core/components/Layout";
-
-// Lazy. each page code-splits into its own chunk
-const AboutPage = lazy(() => import("@/modules/core/pages/AboutPage"));
-const ResearchPage = lazy(() => import("@/modules/community/pages/ResearchPage"));
-const BlogPost1 = lazy(() => import("@/modules/community/pages/BlogPost1"));
-const BlogPost2 = lazy(() => import("@/modules/community/pages/BlogPost2"));
-const BlogPost3 = lazy(() => import("@/modules/community/pages/BlogPost3"));
-const BlogCanonicalRustCrate = lazy(() => import("@/modules/community/pages/BlogCanonicalRustCrate"));
-const BlogUorFrameworkOrigin = lazy(() => import("@/modules/community/pages/BlogUorFrameworkOrigin"));
-const BlogSustainableAiUganda = lazy(() => import("@/modules/community/pages/BlogSustainableAiUganda"));
-const BlogUorFoundationV031 = lazy(() => import("@/modules/community/pages/BlogUorFoundationV031"));
-const BlogObjectInternetNanda = lazy(() => import("@/modules/community/pages/BlogObjectInternetNanda"));
-const BlogLexLeanV04 = lazy(() => import("@/modules/community/pages/BlogLexLeanV04"));
-const BlogSerializationInvariant = lazy(() => import("@/modules/community/pages/BlogSerializationInvariant"));
-const BlogIndexPage = lazy(() => import("@/modules/community/pages/BlogIndexPage"));
-const NewsPage = lazy(() => import("@/modules/community/pages/NewsPage"));
-const ResearchPaperAtlasEmbeddings = lazy(() => import("@/modules/community/pages/ResearchPaperAtlasEmbeddings"));
-const ProjectsPage = lazy(() => import("@/modules/projects/pages/ProjectsPage"));
-const ProjectHologram = lazy(() => import("@/modules/projects/pages/ProjectHologram"));
-const ProjectAtlasEmbeddings = lazy(() => import("@/modules/projects/pages/ProjectAtlasEmbeddings"));
-const ProjectAtomicLang = lazy(() => import("@/modules/projects/pages/ProjectAtomicLang"));
-const ProjectAnunix = lazy(() => import("@/modules/projects/pages/ProjectAnunix"));
-const ProjectUorMcp = lazy(() => import("@/modules/projects/pages/ProjectUorMcp"));
-const ProjectPrismBtc = lazy(() => import("@/modules/projects/pages/ProjectPrismBtc"));
-const ProjectQrCartridge = lazy(() => import("@/modules/projects/pages/ProjectQrCartridge"));
-const ProjectHologramSdk = lazy(() => import("@/modules/projects/pages/ProjectHologramSdk"));
-const ProjectUorIdentity = lazy(() => import("@/modules/identity/pages/ProjectUorIdentity"));
-const OraclePage = lazy(() => import("@/modules/oracle/pages/OraclePage"));
-const SearchPage = lazy(() => import("@/modules/oracle/pages/ResolvePage"));
-const DesktopSearch = lazy(() => import("@/modules/desktop/DesktopShell"));
-const ProjectUorPrivacy = lazy(() => import("@/modules/core/pages/ProjectUorTerms"));
-const ProjectSeveranceAi = lazy(() => import("@/modules/projects/pages/ProjectSeveranceAi"));
-const StandardPage = lazy(() => import("@/modules/core/pages/StandardPage"));
-const SemanticWebPage = lazy(() => import("@/modules/core/pages/SemanticWebPage"));
-const UnsExplainer = lazy(() => import("@/pages/UnsExplainer"));
-const DonatePage = lazy(() => import("@/modules/donate/pages/DonatePage"));
-const DownloadPage = lazy(() => import("@/modules/landing/pages/DownloadPage"));
-const MessengerPage = lazy(() => import("@/modules/messenger/pages/MessengerPage"));
-const LibraryPage = lazy(() => import("@/modules/oracle/pages/LibraryPage"));
-const AppStorePage = lazy(() => import("@/modules/app-store/pages/AppStorePage"));
-const ComplianceDashboardPage = lazy(() => import("@/modules/canonical-compliance/pages/ComplianceDashboardPage"));
-
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,
-      gcTime: 10 * 60 * 1000,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-const App = () => {
-  // Sovereign boot: initializes engine, bus, seal, and monitor
-  // Bus modules are lazy-loaded after first render to reduce initial bundle
-  useEffect(() => {
-    sovereignBoot().catch(() => {});
-    // Lazy-load bus module registrations on idle
-    if ("requestIdleCallback" in window) {
-      (window as any).requestIdleCallback(() => {
-        import("@/modules/bus/modules");
-      });
-    } else {
-      setTimeout(() => {
-        import("@/modules/bus/modules");
-      }, 100);
-    }
-  }, []);
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <PrivyWalletProvider>
-        <AuthPromptProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-        <BrowserRouter>
-          <Suspense fallback={null}>
-            <Routes>
-              {/* Core pages */}
-              <Route path="/" element={<IndexPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/framework" element={<StandardPage />} />
-              <Route path="/docs" element={<Navigate to="/framework" replace />} />
-              <Route path="/standard" element={<Navigate to="/framework" replace />} />
-              <Route path="/semantic-web" element={<SemanticWebPage />} />
-              <Route path="/community" element={<ResearchPage />} />
-              <Route path="/research" element={<Navigate to="/community" replace />} />
-              <Route path="/projects" element={<ProjectsPage />} />
-              <Route path="/donate" element={<DonatePage />} />
-              <Route path="/download" element={<DownloadPage />} />
-              <Route path="/oracle" element={<OraclePage />} />
-              <Route path="/os" element={<DesktopSearch />} />
-              <Route path="/resolve" element={<SearchPage />} />
-              <Route path="/uns" element={<UnsExplainer />} />
-              <Route path="/messenger" element={<MessengerPage />} />
-              <Route path="/library" element={<Layout><LibraryPage /></Layout>} />
-              <Route path="/app-store" element={<AppStorePage />} />
-              <Route path="/compliance" element={<ComplianceDashboardPage />} />
-              <Route path="/desktop" element={<Navigate to="/os" replace />} />
-              <Route path="/search" element={<Navigate to="/os" replace />} />
-
-              {/* Blog & Research */}
-              <Route path="/blog" element={<BlogIndexPage />} />
-              <Route path="/news" element={<NewsPage />} />
-              <Route path="/blog/building-the-internets-knowledge-graph" element={<BlogPost1 />} />
-              <Route path="/blog/universal-mathematical-language" element={<BlogPost2 />} />
-              <Route path="/blog/uor-framework-launch" element={<BlogPost3 />} />
-              <Route path="/blog/universal-data-fingerprint" element={<BlogCanonicalRustCrate />} />
-              <Route path="/blog/uor-framework-origin" element={<BlogUorFrameworkOrigin />} />
-              <Route path="/blog/sustainable-ai-uganda" element={<BlogSustainableAiUganda />} />
-              <Route path="/blog/uor-foundation-v0-3-1" element={<BlogUorFoundationV031 />} />
-              <Route path="/blog/object-internet-nanda" element={<BlogObjectInternetNanda />} />
-              <Route path="/blog/lexlean-v0-4" element={<BlogLexLeanV04 />} />
-              <Route path="/blog/serialization-invariant-integrity" element={<BlogSerializationInvariant />} />
-              <Route path="/blog/universal-data-passport" element={<Navigate to="/blog/universal-data-fingerprint" replace />} />
-              <Route path="/universal-data-passport" element={<Navigate to="/blog/universal-data-fingerprint" replace />} />
-              <Route path="/universal-data-fingerprint" element={<Navigate to="/blog/universal-data-fingerprint" replace />} />
-              <Route path="/blog/canonical-rust-crate" element={<Navigate to="/blog/universal-data-fingerprint" replace />} />
-              <Route path="/research/atlas-embeddings" element={<ResearchPaperAtlasEmbeddings />} />
-
-              {/* Project detail pages */}
-              <Route path="/projects/hologram" element={<ProjectHologram />} />
-              <Route path="/projects/atlas-embeddings" element={<ProjectAtlasEmbeddings />} />
-              <Route path="/projects/atomic-language-model" element={<ProjectAtomicLang />} />
-              <Route path="/projects/anunix" element={<ProjectAnunix />} />
-              <Route path="/projects/prism" element={<Navigate to="/projects/anunix" replace />} />
-              <Route path="/projects/uor-mcp" element={<ProjectUorMcp />} />
-              <Route path="/projects/prism-btc" element={<ProjectPrismBtc />} />
-              <Route path="/projects/uns" element={<Navigate to="/projects/prism-btc" replace />} />
-              <Route path="/projects/qr-cartridge" element={<ProjectQrCartridge />} />
-              <Route path="/projects/hologram-sdk" element={<ProjectHologramSdk />} />
-              <Route path="/projects/uor-identity" element={<ProjectUorIdentity />} />
-              <Route path="/projects/uor-privacy" element={<ProjectUorPrivacy />} />
-              <Route path="/projects/project-severance-ai" element={<ProjectSeveranceAi />} />
-              <Route path="/projects/uor-certificate" element={<Navigate to="/projects/project-severance-ai" replace />} />
-
-              {/* Catch-all */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthPromptProvider>
-    </PrivyWalletProvider>
-   </AuthProvider>
-    </QueryClientProvider>
-  );
-};
-
-export default App;
+export default function App() {
+  if (window.location.pathname === "/discord" || window.location.pathname === "/discord/") {
+    window.location.replace(DISCORD_URL);
+    return null;
+  }
+  if (window.location.pathname === "/agents/discord" || window.location.pathname === "/agents/discord/") return <Suspense fallback={<div className="foundation min-h-screen" />}><Discord /></Suspense>;
+  if (window.location.pathname === "/playground") {
+    window.location.replace(`/playground/${window.location.search}${window.location.hash}`);
+    return null;
+  }
+  if (window.location.pathname.startsWith("/playground/")) return <Suspense fallback={<div className="foundation pg-loading-page">Loading Playground…</div>}><Playground /></Suspense>;
+  if (window.location.pathname === "/docs") {
+    window.location.replace(`/docs/${window.location.search}${window.location.hash}`);
+    return null;
+  }
+  if (window.location.pathname.startsWith("/docs/")) return <Suspense fallback={<div className="foundation dc-root" />}><Docs /></Suspense>;
+  if (window.location.pathname === "/blog" || /^\/blog\/[a-z0-9-]+$/.test(window.location.pathname)) {
+    window.location.replace(`${window.location.pathname}/${window.location.search}${window.location.hash}`);
+    return null;
+  }
+  if (window.location.pathname.startsWith("/blog/")) return <Suspense fallback={<div className="foundation min-h-screen" />}><Blog /></Suspense>;
+  if (window.location.pathname === "/about") {
+    window.location.replace(`/about/${window.location.search}${window.location.hash}`);
+    return null;
+  }
+  if (window.location.pathname === "/about/") return <Suspense fallback={<div className="foundation min-h-screen" />}><About /></Suspense>;
+  if (window.location.pathname === "/framework") {
+    window.location.replace(`/framework/${window.location.search}${window.location.hash}`);
+    return null;
+  }
+  if (window.location.pathname === "/framework/") return <Suspense fallback={<div className="foundation min-h-screen" />}><Framework /></Suspense>;
+  if (window.location.pathname === "/agents") {
+    window.location.replace(`/agents/${window.location.search}${window.location.hash}`);
+    return null;
+  }
+  if (window.location.pathname === "/agents/") return <Suspense fallback={<div className="foundation min-h-screen" />}><Agents /></Suspense>;
+  return <FoundationHome />;
+}

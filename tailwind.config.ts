@@ -101,6 +101,17 @@ export default {
         "fluid-body-sm": "var(--text-body-sm)",
         "fluid-label": "var(--text-label)",
         "fluid-caption": "var(--text-caption)",
+        /* Shared type scale: sizes come from the --fd-* tokens in index.css */
+        "fd-hero": ["var(--fd-hero)", "1.05"],
+        "fd-section": ["var(--fd-section)", "1.05"],
+        "fd-article": ["var(--fd-article)", "1.08"],
+        "fd-card-lg": ["var(--fd-card-lg)", "1.2"],
+        "fd-card": ["var(--fd-card)", "1.28"],
+        "fd-column": ["var(--fd-column)", "1.45"],
+        "fd-lead": ["var(--fd-lead)", "1.6"],
+        "fd-body": ["var(--fd-body)", "1.65"],
+        "fd-eyebrow": ["var(--fd-eyebrow)", "1.5"],
+        "fd-label": ["var(--fd-label)", "1.5"],
       },
       /* Hologram proportional spacing */
       spacing: {

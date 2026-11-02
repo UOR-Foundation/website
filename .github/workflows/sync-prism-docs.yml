@@ -1,0 +1,44 @@
+name: Sync Prism docs
+
+# Pulls the Prism SDK docs from the docs-site branch of UOR-Foundation/PrismPM.
+# Runs every 6 hours and on demand.
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: sync-prism-docs
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Pull docs-site branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/sync-prism-docs.mjs
+      - name: Pull feature requests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/sync-prism-requests.mjs
+      - name: Commit and redeploy when the docs changed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --quiet -- src/docs/prism.generated.ts src/docs/requests.generated.ts; then echo "No changes."; exit 0; fi
+          git config user.name "prism-docs-sync[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/docs/prism.generated.ts src/docs/requests.generated.ts
+          git commit -m "Sync Prism docs and feature requests from PrismPM"
+          git push
+          gh workflow run deploy.yml --ref main

@@ -1,0 +1,13 @@
+- [x] Build the Prism Playground with Monaco, WebContainers and xterm.
+- [x] Replace the homepage GitHub controls with Playground.
+- [x] Verify execution, editing, sharing and mobile layout.
+- [ ] Confirm nonprofit production licensing with StackBlitz before public release. Blocked on StackBlitz eligibility confirmation.
+- [ ] Switch on Kapa.ai assistant (docs Ask AI + home page button). Blocked on the Kapa website ID from the user.
+- [x] Replace all old Discord invites and verify /discord redirects to the new invite.
+- [x] Add the exact agent Discord posting page and Markdown twin, discovery links and tests.
+- [x] Point the Docs "Request features" link and agent guidance at the PrismPM feature request form.
+- [x] Switch SDK request links to the structured feature_request.yml form and check the request feed addresses.
+- [ ] Activate and exercise the PrismPM intake and shipped workflows. Blocked on merging PrismPM PR #375 and testing in that repository.
+- [x] Prepare the site for deployment to uor.foundation from the GitHub repo (GitHub Pages build, route HTML, canonical origin).
+- [ ] Move this rebuilt site into the original GitHub-connected Lovable project, preserving UOR-Foundation/website main sync and GitHub Pages deployment. Blocked on opening that project and initiating the transfer there; this session cannot write to another project or transfer its Git connection.
+- [x] Replace the Ask Prism avatar with the selected blue prism and light effect.
