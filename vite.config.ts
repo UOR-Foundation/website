@@ -110,9 +110,26 @@ function agentDocs(): Plugin {
   };
 }
 
+// GitHub Pages (uor.foundation) cannot serve Lovable CDN paths, so an asset pointer with a
+// committed sibling file bundles that file and keeps the pointer's shape ({ url, ... }).
+function localAssetPointers(): Plugin {
+  return {
+    name: "local-asset-pointers",
+    enforce: "pre",
+    load(id) {
+      const file = id.split("?")[0];
+      if (!file.endsWith(".asset.json")) return null;
+      const local = file.slice(0, -".asset.json".length);
+      if (!fs.existsSync(local)) return null;
+      const meta = JSON.parse(fs.readFileSync(file, "utf8"));
+      return `import url from ${JSON.stringify(local)};\nexport default { ...${JSON.stringify(meta)}, url };`;
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => ({
   server: { host: "::", port: 8080, hmr: { overlay: false } },
-  plugins: [react(), agentDocs(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [localAssetPointers(), react(), agentDocs(), mode === "development" && componentTagger()].filter(Boolean),
   css: { postcss: { plugins: [tailwindcss(), autoprefixer()] } },
   resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
 }));
