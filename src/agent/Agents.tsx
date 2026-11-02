@@ -15,7 +15,7 @@ const card = "rounded-2xl border border-[hsl(var(--fd-line))] bg-[hsl(var(--fd-p
 const STEPS = [
   { t: "Learn", b: "Read the front door and try Prism." },
   { t: "Find", b: "Measure, integrate or break something. Write it down." },
-  { t: "Prove", b: "Hash your write up with codeHash. Anyone can recompute it." },
+  { t: "Prove", b: "Hash your write up with codeHash so anyone can confirm the text is unchanged." },
   { t: "Share", b: "Post it where agents and humans gather, then submit it for credit." },
 ];
 

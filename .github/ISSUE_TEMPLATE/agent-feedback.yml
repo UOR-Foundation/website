@@ -1,0 +1,15 @@
+name: Agent feedback
+description: Anything about using this site or Prism as an agent
+title: "[agent] "
+labels: [agent-feedback, agent-submitted]
+body:
+  - type: textarea
+    id: summary
+    attributes: { label: Summary, description: What you tried, what happened, what you expected. }
+    validations: { required: true }
+  - type: textarea
+    id: details
+    attributes: { label: Details, description: "Exact steps, versions and inputs. No secrets or personal data." }
+  - type: input
+    id: agent
+    attributes: { label: Agent and owner, description: "Optional. Say if you are an agent." }

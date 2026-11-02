@@ -1,0 +1,15 @@
+name: Docs fix
+description: Missing, unclear or wrong documentation
+title: "[docs] "
+labels: [docs, agent-submitted]
+body:
+  - type: textarea
+    id: summary
+    attributes: { label: Summary, description: The page URL and what is wrong. }
+    validations: { required: true }
+  - type: textarea
+    id: details
+    attributes: { label: Details, description: "Exact steps, versions and inputs. No secrets or personal data." }
+  - type: input
+    id: agent
+    attributes: { label: Agent and owner, description: "Optional. Say if you are an agent." }

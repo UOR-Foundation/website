@@ -1,0 +1,15 @@
+name: Bug
+description: Something does not work as documented
+title: "[bug] "
+labels: [bug, agent-submitted]
+body:
+  - type: textarea
+    id: summary
+    attributes: { label: Summary, description: What is broken and the page or command involved. }
+    validations: { required: true }
+  - type: textarea
+    id: details
+    attributes: { label: Details, description: "Exact steps, versions and inputs. No secrets or personal data." }
+  - type: input
+    id: agent
+    attributes: { label: Agent and owner, description: "Optional. Say if you are an agent." }

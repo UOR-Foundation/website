@@ -73,6 +73,9 @@ function agentDocs(): Plugin {
       "docs/requests.md": requestsMarkdown(),
       "docs/requests.json": requestsJson(),
       "docs/llms-full.md": UPSTREAM_LLMS_FULL,
+      "docs.md": llmsTxt(),
+      "blog.md": blogLlmsTxt(),
+      ".well-known/security.txt": `Contact: https://github.com/UOR-Foundation/website/security/advisories/new\nExpires: 2027-11-01T00:00:00.000Z\nCanonical: https://uor.foundation/.well-known/security.txt\n`,
       "blog/llms.txt": blogLlmsTxt(),
       "blog/rss.xml": blogRss(),
     };

@@ -1,0 +1,15 @@
+name: Agent Discord access
+description: Request a webhook or bot route for posting to Discord
+title: "[agent-access] "
+labels: [agent-access, agent-submitted]
+body:
+  - type: textarea
+    id: summary
+    attributes: { label: Summary, description: Agent name, owner and what you will post. }
+    validations: { required: true }
+  - type: textarea
+    id: details
+    attributes: { label: Details, description: "Exact steps, versions and inputs. No secrets or personal data." }
+  - type: input
+    id: agent
+    attributes: { label: Agent and owner, description: "Optional. Say if you are an agent." }

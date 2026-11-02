@@ -1,0 +1,15 @@
+name: Feature request
+description: A capability you need
+title: "[feature] "
+labels: [feature, agent-submitted]
+body:
+  - type: textarea
+    id: summary
+    attributes: { label: Summary, description: The problem and the capability that would solve it. }
+    validations: { required: true }
+  - type: textarea
+    id: details
+    attributes: { label: Details, description: "Exact steps, versions and inputs. No secrets or personal data." }
+  - type: input
+    id: agent
+    attributes: { label: Agent and owner, description: "Optional. Say if you are an agent." }

@@ -26,19 +26,21 @@ export const feedbackUrl = (kind: (typeof FEEDBACK_KINDS)[number]["id"], title =
   return `${ISSUES}/new?${q.toString()}`;
 };
 
-const FIRST_EXAMPLE = `import { codeHash } from "prism-code";
+const FIRST_EXAMPLE = `import { codeHash } from "prism-code/canonical";
 
-const a = await codeHash("export const x = 1;");
-const b = await codeHash("export const x = 1; // same meaning");
-console.log(a === b); // same content, same identity`;
+// codeHash is SHA-256 of the text after line endings, BOM and trailing whitespace are normalized.
+const a = codeHash("export const x = 1;\\n");
+const b = codeHash("export const x = 1;   \\r\\n"); // same text, different formatting
+const c = codeHash("export const x = 2;\\n");       // different text
+console.log(a === b, a === c); // true false`;
 
 /** Pages humans visit and their plain text twins. */
 export const PAGES = [
   { path: "/", md: "/index.md", title: "Home", summary: "What UOR and Prism are, in one screen." },
   { path: "/framework/", md: "/framework.md", title: "UOR Framework", summary: "Why UOR exists, how it works and what you get." },
-  { path: "/docs/", md: "/llms-full.txt", title: "Prism docs", summary: "Guides, API reference and SDKs." },
+  { path: "/docs/", md: "/docs.md", title: "Prism docs", summary: "Guides, API reference and SDKs." },
   { path: "/playground/", md: "/playground.md", title: "Prism Playground", summary: "Run Prism examples in the browser." },
-  { path: "/blog/", md: "/blog/llms.txt", title: "Blog", summary: "Research, releases and community posts." },
+  { path: "/blog/", md: "/blog.md", title: "Blog", summary: "Research, releases and community posts." },
   { path: "/agents/", md: "/agents/index.md", title: "For agents", summary: "Share findings, join swarms, get credited." },
   { path: "/agents/discord", md: "/agents/discord.md", title: "Post to Discord", summary: "How an agent posts findings to the UOR Discord." },
   { path: "/about/", md: "/about.md", title: "About", summary: "The nonprofit foundation, board and governance." },
@@ -136,12 +138,14 @@ export function agentsMarkdown() {
     "Know container tooling? Read [/docs/coming-from-containers.md](/docs/coming-from-containers.md) first.", "",
     "## How to work with this site", "",
     "1. Read [/llms.txt](/llms.txt) for the map, or [/llms-full.txt](/llms-full.txt) for everything in one file.",
-    "2. Any page has a plain text twin: add `.md` to its path (for example `/docs/quickstart.md`, `/blog/<slug>.md`).",
+    "2. Any page has a plain text twin: add `.md` to its path (for example `/docs/get-started/quickstart.md`, `/blog/<slug>.md`).",
     "3. Machine index: [/.well-known/agents.json](/.well-known/agents.json) and [/sitemap.xml](/sitemap.xml).", "",
     "## What you can do", "",
-    `- Install Prism: \`${HERO.install.humans}\` (or as a skill: \`${HERO.install.agents}\`).`,
+    `- Install Prism: \`${HERO.install.humans}\` (Node 22 or later; the published package is 0.2.0).`,
+    "- What ships today: [/docs/reference/release-status.md](/docs/reference/release-status.md). Trust it over any other page.",
+    "- There is no remote API or MCP server yet. Tools run locally through the `prism-code` package.",
     "- Run this first example:", "", "```ts", FIRST_EXAMPLE, "```", "",
-    `- Read the code: https://github.com/UOR-Foundation/prism`,
+    `- Read the code: https://github.com/${SDK_REPO}`,
     `- Ask humans: ${DISCORD_URL} (UOR Foundation Discord).`,
     "To post here as an agent, read [/agents/discord.md](/agents/discord.md).", "",
     "## Rules of engagement", "",

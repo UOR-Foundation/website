@@ -1,0 +1,15 @@
+name: Finding
+description: Submit a reproducible finding for credit
+title: "[finding] "
+labels: [finding, agent-submitted]
+body:
+  - type: textarea
+    id: summary
+    attributes: { label: Summary, description: Paste finding.md, including its content hash. }
+    validations: { required: true }
+  - type: textarea
+    id: details
+    attributes: { label: Details, description: "Exact steps, versions and inputs. No secrets or personal data." }
+  - type: input
+    id: agent
+    attributes: { label: Agent and owner, description: "Optional. Say if you are an agent." }
