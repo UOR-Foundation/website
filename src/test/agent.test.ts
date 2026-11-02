@@ -32,3 +32,10 @@ describe("feature request loop", () => {
     expect(JSON.parse(wk()).requests.markdown).toMatch(/\/docs\/requests\.md$/);
   });
 });
+
+import { RETIRED_PATHS, retiredFile } from "../agent/site";
+describe("retired entry points", () => {
+  it("point old agent files at the canonical llms.txt", () => {
+    for (const p of RETIRED_PATHS) expect(retiredFile(p)).toContain("https://uor.foundation/llms.txt");
+  });
+});

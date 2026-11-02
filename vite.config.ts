@@ -8,7 +8,7 @@ import autoprefixer from "autoprefixer";
 import { ALL_PAGES, UPSTREAM_CHANGELOG, UPSTREAM_LLMS, UPSTREAM_LLMS_FULL, llmsTxt, llmsFullTxt, pageMarkdown } from "./src/docs/content";
 import { dockerMarkdown, roadmapJson } from "./src/docs/vocabulary";
 import { frameworkMarkdown } from "./src/framework/content";
-import { aboutMarkdown, agentsMarkdown, frontDoor, homeMarkdown, playgroundMarkdown, requestsJson, requestsMarkdown, sitemapXml, wellKnownJson } from "./src/agent/site";
+import { aboutMarkdown, agentsMarkdown, frontDoor, homeMarkdown, playgroundMarkdown, requestsJson, requestsMarkdown, RETIRED_PATHS, retiredFile, sitemapXml, wellKnownJson } from "./src/agent/site";
 import { shareMarkdown, swarmMarkdown, wallMarkdown } from "./src/agent/share";
 import { discordMarkdown } from "./src/agent/discord";
 import { BLOG_POSTS, blogFullTxt, blogLlmsTxt, blogRss, postMarkdown } from "./src/blog/agent";
@@ -76,6 +76,7 @@ function agentDocs(): Plugin {
       "blog/llms.txt": blogLlmsTxt(),
       "blog/rss.xml": blogRss(),
     };
+    for (const r of RETIRED_PATHS) out[r] = retiredFile(r);
     for (const p of BLOG_POSTS) out[`blog/${p.slug}.md`] = postMarkdown(p);
     for (const p of ALL_PAGES) out[`docs/${p.slug}.md`] = pageMarkdown(p);
     if (UPSTREAM_CHANGELOG) out["docs/changelog.md"] = pageMarkdown(UPSTREAM_CHANGELOG);

@@ -231,3 +231,11 @@ export function requestsMarkdown() {
   ].join("\n");
 }
 export const requestsJson = () => JSON.stringify({ source: SDK_REPO, file: SDK_FEATURES, ...PRISM_REQUESTS }, null, 2) + "\n";
+
+/** Old site entry points (retired API, old agent cards). Each answers with a pointer to the canonical files so stale agents land in the right place. */
+export const RETIRED_PATHS = ["llms.md", "llms-full.md", "agent-discovery.md", "openapi.json", ".well-known/uor.json", ".well-known/ai-plugin.json"];
+export function retiredFile(path: string) {
+  const canonical = { entry: `${ORIGIN}/llms.txt`, manual: `${ORIGIN}/agents.md`, full_text: `${ORIGIN}/llms-full.txt`, discovery: `${ORIGIN}/.well-known/agents.json` };
+  if (path.endsWith(".json")) return JSON.stringify({ status: "retired", note: "This file belonged to the old UOR website. The old api.uor.foundation API is retired and has no replacement endpoints.", canonical }, null, 2) + "\n";
+  return ["# Moved", "", "> This file belonged to the old UOR website and is retired, along with the api.uor.foundation API.", "", `- Start here: ${canonical.entry}`, `- Agent manual: ${canonical.manual}`, `- Everything in one file: ${canonical.full_text}`, `- Machine index: ${canonical.discovery}`, ""].join("\n");
+}
