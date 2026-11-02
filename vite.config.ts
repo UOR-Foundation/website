@@ -122,11 +122,11 @@ function localAssetPointers(): Plugin {
       const r = await this.resolve(source, importer, { ...options, skipSelf: true });
       const file = r?.id.split("?")[0];
       if (!file || !fs.existsSync(file.slice(0, -".asset.json".length))) return null;
-      return "\0local-asset:" + file;
+      return "\0local-asset:" + file + ".js";
     },
     load(id) {
       if (!id.startsWith("\0local-asset:")) return null;
-      const file = id.slice("\0local-asset:".length);
+      const file = id.slice("\0local-asset:".length, -".js".length);
       const meta = JSON.parse(fs.readFileSync(file, "utf8"));
       return `import url from ${JSON.stringify(file.slice(0, -".asset.json".length))};\nexport default { ...${JSON.stringify(meta)}, url };`;
     },
