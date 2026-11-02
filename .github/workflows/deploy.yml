@@ -26,9 +26,20 @@ jobs:
       - run: bun install
       - run: bun run build
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      # upload-pages-artifact drops every dot-path, which 404s /.well-known/.
+      # Pack the same tar it would, keeping hidden files.
+      - run: |
+          tar --dereference --hard-dereference --directory dist \
+            --exclude=.git --exclude=.github \
+            -cf "$RUNNER_TEMP/artifact.tar" .
+          tar -tf "$RUNNER_TEMP/artifact.tar" | grep -q '^\./\.well-known/'
+          tar -tf "$RUNNER_TEMP/artifact.tar" | grep -qx './CNAME'
+      - uses: actions/upload-artifact@v4
         with:
-          path: dist
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar
+          retention-days: 1
+          if-no-files-found: error
 
   deploy:
     environment:
