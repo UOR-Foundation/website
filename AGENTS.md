@@ -5,6 +5,9 @@
 
 # Architecture
 
+* Lovable asset pointers keep a committed sibling file; a Vite plugin bundles that file instead of the CDN path, because GitHub Pages at uor.foundation cannot serve Lovable CDN URLs.
+* The Pages deploy packs its own artifact tar so CNAME and /.well-known/ survive; upload-pages-artifact drops dot-paths.
+
 * App.tsx selects the static homepage or lazy loaded /playground/ without a router or backend, keeping editor dependencies off the homepage.
 * Playground uses upstream Monaco, WebContainers and xterm in one shared runtime; examples use the published prism-code API, never invented Rust bindings.
 * A service worker scoped only to /playground/ supplies credentialless cross origin isolation on static hosting; embedded previews offer a top level tab because parent isolation cannot be changed by the app.
