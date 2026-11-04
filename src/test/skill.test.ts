@@ -196,7 +196,7 @@ describe("lexlean-mcp skill", () => {
     expect(JSON.parse(CLIENT_CONFIG).mcpServers.lexlean.url).toBe(MCP.url);
     expect(md).toContain("```latex\n" + MINIMAL_MODULE + "\n```");
     for (const tool of ["lexlean_profiles", "lexlean_lexicon_search", "lexlean_draft_write", "lexlean_check", "lexlean_explain", "lexlean_verify", "lexlean_verify_control", "lexlean_present", "lexlean_attestation", "lexlean_export"]) {
-      expect(md).toContain(`\`${tool}`);
+      expect(md).toMatch(new RegExp(`\\b${tool}\\b`));
     }
   });
 
