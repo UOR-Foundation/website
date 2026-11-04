@@ -44,11 +44,11 @@ const CONTRIBUTORS = [
   { name: "Maura", role: "Ecosystem @ UOR", image: maura },
   { name: "Bill", role: "Chairman @ Enterprise Neurosystems", image: bill },
   { name: "Adam", role: "Founder @ ØDX", image: adam },
-  { name: "Matt", role: "Founder @ DecentraNet", image: matt },
   { name: "Max", role: "Engineer @ Maitai (YC S24)", image: max },
   { name: "Ari", role: "Founder @ MVM", image: ari },
   { name: "Mark", role: "AI Researcher", image: mark },
   { name: "Ilya", role: "Founding Partner @ Arete Capital", image: ilya },
+  { name: "Matt", role: "Founder @ DecentraNet", image: matt },
 ];
 
 function Label({ children }: { children: string }) {
