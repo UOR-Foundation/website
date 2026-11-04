@@ -12,6 +12,8 @@ export const SDK_REPO = "UOR-Foundation/PrismPM";
 export const SDK_FEATURES = `https://github.com/${SDK_REPO}/issues/new?template=feature_request.yml`;
 /** Agent skill discovery index, built by src/agent/skill.ts. */
 export const SKILL_INDEX = "/.well-known/agent-skills/index.json";
+/** The public LexLean MCP server (UOR-Foundation/lexlean-mcp) and the skill that teaches it. */
+export const MCP = { name: "LexLean MCP", url: "https://mcp.uor.foundation/", transport: "streamable-http", skill: "lexlean-mcp" } as const;
 
 export const FEEDBACK_KINDS = [
   { id: "agent-feedback", label: "Agent feedback", title: "[agent] ", use: "Anything about using this site or Prism as an agent" },
@@ -144,9 +146,10 @@ export function agentsMarkdown() {
     "3. Machine index: [/.well-known/agents.json](/.well-known/agents.json) and [/sitemap.xml](/sitemap.xml).", "",
     "## What you can do", "",
     `- Install Prism: \`${HERO.install.humans}\` (Node 22 or later; the published package is 0.2.0).`,
-    `- Install the Prism skill into your agent: \`${HERO.install.agents}\` (index: [${SKILL_INDEX}](${SKILL_INDEX})).`,
+    `- Install the Prism and LexLean skills into your agent: \`${HERO.install.agents}\` (index: [${SKILL_INDEX}](${SKILL_INDEX})).`,
     "- What ships today: [/docs/reference/release-status.md](/docs/reference/release-status.md). Trust it over any other page.",
-    "- There is no remote API or MCP server yet. Tools run locally through the `prism-code` package.",
+    `- Write and verify LexLean specifications over MCP: the ${MCP.name} server is public at ${MCP.url} (Streamable HTTP, no token, any MCP client); the \`${MCP.skill}\` skill has the steps.`,
+    "- Prism's own tools run locally through the `prism-code` package; there is no remote Prism API.",
     "- Run this first example:", "", "```ts", FIRST_EXAMPLE, "```", "",
     `- Read the code: https://github.com/${SDK_REPO}`,
     `- Ask humans: ${DISCORD_URL} (UOR Foundation Discord).`,
@@ -183,6 +186,8 @@ export function frontDoor(docsIndex: string, blogIndex: string) {
     "## What",
     "",
     `- Install: \`${HERO.install.humans}\``,
+    `- Install the agent skills: \`${HERO.install.agents}\``,
+    `- Write and verify LexLean specs from any MCP client: ${MCP.url} (no token; the \`${MCP.skill}\` skill has the steps)`,
     ...PAGES.map((p) => `- [${p.title}](${p.md}): ${p.summary}`),
     "",
     docsIndex.replace(/^# .*\n+(> .*\n+)?/, "").replace(/## Optional[\s\S]*$/, "").trimEnd(),
@@ -218,6 +223,7 @@ export function wellKnownJson() {
     wall: `${ORIGIN}/agents/index.md`,
     pages: PAGES.map((p) => ({ title: p.title, url: ORIGIN + p.path, markdown: ORIGIN + p.md })),
     install: { npm: HERO.install.humans, skill: HERO.install.agents, skill_index: `${ORIGIN}${SKILL_INDEX}` },
+    mcp: { name: MCP.name, url: MCP.url, transport: MCP.transport, auth: "none", skill: MCP.skill },
     requests: { markdown: `${ORIGIN}/docs/requests.md`, json: `${ORIGIN}/docs/requests.json` },
     feedback: { repo: FEEDBACK_REPO, label: "agent-submitted", kinds: FEEDBACK_KINDS.map((k) => ({ id: k.id, url: feedbackUrl(k.id) })), sdk_features: SDK_FEATURES },
   }, null, 2) + "\n";

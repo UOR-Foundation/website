@@ -29,8 +29,9 @@ jobs:
       # Includes src/test/skill-examples.test.ts, which runs every prism-sdk SKILL.md block against npm.
       - run: bun run test
       - run: bun run build
+      # Every skill's digest, in index order (prism-sdk, lexlean-mcp), for verify-skill below.
       - id: skill
-        run: echo "digest=$(node -p "require('./dist/.well-known/agent-skills/index.json').skills[0].digest")" >> "$GITHUB_OUTPUT"
+        run: echo "digest=$(node -p "require('./dist/.well-known/agent-skills/index.json').skills.map((s) => s.digest).join(',')")" >> "$GITHUB_OUTPUT"
       - uses: actions/configure-pages@v5
       # upload-pages-artifact drops every dot-path, which 404s /.well-known/.
       # Pack the same tar it would, keeping hidden files.

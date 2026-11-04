@@ -5,6 +5,7 @@
 // Build and test only: uses node:crypto, so browser code must not import this file.
 import { createHash } from "node:crypto";
 import { ALL_PAGES, DOCUMENTED_API, RELEASE_STATUS, SOURCE } from "../docs/content";
+import { LEXLEAN_SKILL_DESCRIPTION, LEXLEAN_SKILL_NAME, lexleanSkillMarkdown } from "./lexlean-mcp-skill";
 import { FIRST_EXAMPLE, ORIGIN, SDK_FEATURES, feedbackUrl } from "./site";
 
 export const SKILL_NAME = "prism-sdk";
@@ -227,26 +228,39 @@ export function skillMarkdown() {
 
 export const sha256 = (text: string) => `sha256:${createHash("sha256").update(text, "utf8").digest("hex")}`;
 
+/**
+ * Every skill the site publishes, in index order. prism-sdk stays first: the deploy reads the
+ * digests in this order, and older notes name `skills[0]` as the Prism skill.
+ */
+export function skills() {
+  return [
+    { name: SKILL_NAME, description: SKILL_DESCRIPTION, markdown: skillMarkdown() },
+    { name: LEXLEAN_SKILL_NAME, description: LEXLEAN_SKILL_DESCRIPTION, markdown: lexleanSkillMarkdown() },
+  ];
+}
+
 /** v2 discovery index for /.well-known/agent-skills/index.json. */
 export function skillIndexV2() {
   return JSON.stringify({
     $schema: DISCOVERY_SCHEMA_V2,
-    skills: [{ name: SKILL_NAME, description: SKILL_DESCRIPTION, type: "skill-md", url: `${SKILL_NAME}/SKILL.md`, digest: sha256(skillMarkdown()) }],
+    skills: skills().map((s) => ({ name: s.name, description: s.description, type: "skill-md", url: `${s.name}/SKILL.md`, digest: sha256(s.markdown) })),
   }, null, 2) + "\n";
 }
 
 /** v1 discovery index for /.well-known/skills/index.json, read by older CLIs. */
 export function skillIndexV1() {
-  return JSON.stringify({ skills: [{ name: SKILL_NAME, description: SKILL_DESCRIPTION, files: ["SKILL.md"] }] }, null, 2) + "\n";
+  return JSON.stringify({ skills: skills().map((s) => ({ name: s.name, description: s.description, files: ["SKILL.md"] })) }, null, 2) + "\n";
 }
 
-/** Every file the skill needs, keyed by published path. */
+/** Every file the skills need, keyed by published path. */
 export function skillFiles(): Record<string, string> {
-  const md = skillMarkdown();
-  return {
+  const out: Record<string, string> = {
     ".well-known/agent-skills/index.json": skillIndexV2(),
-    [`.well-known/agent-skills/${SKILL_NAME}/SKILL.md`]: md,
     ".well-known/skills/index.json": skillIndexV1(),
-    [`.well-known/skills/${SKILL_NAME}/SKILL.md`]: md,
   };
+  for (const s of skills()) {
+    out[`.well-known/agent-skills/${s.name}/SKILL.md`] = s.markdown;
+    out[`.well-known/skills/${s.name}/SKILL.md`] = s.markdown;
+  }
+  return out;
 }
