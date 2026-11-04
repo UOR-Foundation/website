@@ -443,6 +443,36 @@ export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } =
       "created": "2026-11-01T18:14:21Z",
       "closed": null,
       "milestone": null
+    },
+    {
+      "number": 503,
+      "title": "Sovereign Proxy & Linker Architecture",
+      "url": "https://github.com/UOR-Foundation/PrismPM/issues/503",
+      "state": "open",
+      "votes": 0,
+      "labels": [
+        "kind/feature",
+        "area/engine"
+      ],
+      "agent": false,
+      "created": "2026-11-03T19:46:07Z",
+      "closed": null,
+      "milestone": null
+    },
+    {
+      "number": 506,
+      "title": "Unifying LexLean and PrismPM into a Standardized Rust Compiler Toolchain",
+      "url": "https://github.com/UOR-Foundation/PrismPM/issues/506",
+      "state": "open",
+      "votes": 0,
+      "labels": [
+        "kind/feature",
+        "area/spec"
+      ],
+      "agent": false,
+      "created": "2026-11-03T21:44:31Z",
+      "closed": null,
+      "milestone": null
     }
   ],
   "shipped": [
