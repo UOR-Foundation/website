@@ -7,7 +7,8 @@
 
 * Lovable asset pointers keep a committed sibling file; a Vite plugin bundles that file instead of the CDN path, because GitHub Pages at uor.foundation cannot serve Lovable CDN URLs.
 * The Pages deploy packs its own artifact tar so CNAME and /.well-known/ survive; upload-pages-artifact drops dot-paths.
-* Every code block in the prism-sdk skill comes from EXAMPLES in src/agent/skill.ts and is run as written by src/test/skill-examples.test.ts against the pinned prism-code; deploy runs the tests first and checks the live digest afterwards, so the skill cannot ship an example that fails or a digest that does not match.
+* Every code block in the prism-sdk skill comes from EXAMPLES in src/agent/skill.ts and is run as written by src/test/skill-examples.test.ts against the pinned prism-code; deploy runs the tests first and checks the live digests afterwards, so the skill cannot ship an example that fails or a digest that does not match.
+* The lexlean-mcp skill (src/agent/lexlean-mcp-skill.ts) teaches the public LexLean MCP server named by MCP in src/agent/site.ts; skills() in src/agent/skill.ts publishes it second in both skill indexes, so prism-sdk stays skills[0]. Its steps are MCP calls checked by hand against the live endpoint on VERIFIED_ON, not by a test, because the server runs Lean and this repository does not pin it.
 
 * App.tsx selects the static homepage or lazy loaded /playground/ without a router or backend, keeping editor dependencies off the homepage.
 * Playground uses upstream Monaco, WebContainers and xterm in one shared runtime; examples use the published prism-code API, never invented Rust bindings.

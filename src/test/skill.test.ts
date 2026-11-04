@@ -4,7 +4,8 @@ import {
   CALCULATOR, DISCOVERY_SCHEMA_V2, EXAMPLES, SKILL_DESCRIPTION, SKILL_NAME, VERIFIED_WITH,
   compareRelease, skillFiles, skillIndexV1, skillIndexV2, skillMarkdown,
 } from "@/agent/skill";
-import { SKILL_INDEX, wellKnownJson } from "@/agent/site";
+import { CLIENT_CONFIG, LEXLEAN_SKILL_DESCRIPTION, LEXLEAN_SKILL_NAME, MINIMAL_MODULE, lexleanSkillMarkdown } from "@/agent/lexlean-mcp-skill";
+import { MCP, SKILL_INDEX, agentsMarkdown, frontDoor, wellKnownJson } from "@/agent/site";
 import { SOURCE } from "@/docs/content";
 
 // The same rules the skills CLI (vercel-labs/skills, WellKnownProvider) applies before it installs.
@@ -20,14 +21,18 @@ describe("agent skill discovery", () => {
   it("v2 index passes the CLI's entry checks", () => {
     const idx = JSON.parse(skillIndexV2());
     expect(idx.$schema).toBe(DISCOVERY_SCHEMA_V2);
-    expect(idx.skills).toHaveLength(1);
-    const e = idx.skills[0];
-    expect(validName(e.name)).toBe(true);
-    expect(e.description.length).toBeGreaterThan(0);
-    expect(e.description.length).toBeLessThanOrEqual(1024);
-    expect(e.type).toBe("skill-md");
-    expect(new URL(e.url, "https://uor.foundation/.well-known/agent-skills/index.json").pathname).toBe(`/.well-known/agent-skills/${SKILL_NAME}/SKILL.md`);
-    expect(e.digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(idx.skills).toHaveLength(2);
+    for (const e of idx.skills) {
+      expect(validName(e.name)).toBe(true);
+      expect(e.description.length).toBeGreaterThan(0);
+      expect(e.description.length).toBeLessThanOrEqual(1024);
+      expect(e.type).toBe("skill-md");
+      expect(new URL(e.url, "https://uor.foundation/.well-known/agent-skills/index.json").pathname).toBe(`/.well-known/agent-skills/${e.name}/SKILL.md`);
+      expect(e.digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+    }
+    // The deploy reads the Prism skill's digest first; see skills() in src/agent/skill.ts.
+    expect(idx.skills[0].name).toBe(SKILL_NAME);
+    expect(idx.skills[1].name).toBe(LEXLEAN_SKILL_NAME);
   });
 
   it("v2 digest is the SHA-256 of the exact SKILL.md bytes", () => {
@@ -160,5 +165,58 @@ describe("agent skill discovery", () => {
     expect(wk.install.skill).toBe("npx skills add https://uor.foundation");
     expect(wk.install.skill_index).toBe(`https://uor.foundation${SKILL_INDEX}`);
     expect(Object.keys(skillFiles())).toContain(SKILL_INDEX.slice(1));
+  });
+});
+
+describe("lexlean-mcp skill", () => {
+  const md = lexleanSkillMarkdown();
+
+  it("is listed second in both indexes with its own digest and identical bytes on both paths", () => {
+    const v2 = JSON.parse(skillIndexV2()).skills[1];
+    expect(v2.name).toBe(LEXLEAN_SKILL_NAME);
+    expect(v2.digest).toBe("sha256:" + createHash("sha256").update(Buffer.from(md, "utf8")).digest("hex"));
+    expect(JSON.parse(skillIndexV1()).skills[1]).toEqual({ name: LEXLEAN_SKILL_NAME, description: LEXLEAN_SKILL_DESCRIPTION, files: ["SKILL.md"] });
+    const f = skillFiles();
+    expect(f[`.well-known/agent-skills/${LEXLEAN_SKILL_NAME}/SKILL.md`]).toBe(md);
+    expect(f[`.well-known/skills/${LEXLEAN_SKILL_NAME}/SKILL.md`]).toBe(md);
+  });
+
+  it("frontmatter matches the index entry and names the endpoint", () => {
+    const fm = frontmatter(md);
+    expect(fm!.name).toBe(LEXLEAN_SKILL_NAME);
+    expect(fm!.description).toBe(LEXLEAN_SKILL_DESCRIPTION);
+    expect(fm!.description).toContain(MCP.url);
+    expect(validName(fm!.name)).toBe(true);
+  });
+
+  it("teaches the whole loop in order, with a client config and a module that checks", () => {
+    const headings = [...md.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
+    expect(headings).toEqual(["Connect", "1. Pick a profile", "2. Find the words before you write", "3. Write a draft", "4. Check, read, fix", "5. Verify", "6. Present and share", "Failures", "Not here", "When something fails"]);
+    expect(md).toContain("```json\n" + CLIENT_CONFIG + "\n```");
+    expect(JSON.parse(CLIENT_CONFIG).mcpServers.lexlean.url).toBe(MCP.url);
+    expect(md).toContain("```latex\n" + MINIMAL_MODULE + "\n```");
+    for (const tool of ["lexlean_profiles", "lexlean_lexicon_search", "lexlean_draft_write", "lexlean_check", "lexlean_explain", "lexlean_verify", "lexlean_verify_control", "lexlean_present", "lexlean_attestation", "lexlean_export"]) {
+      expect(md).toMatch(new RegExp(`\\b${tool}\\b`));
+    }
+  });
+
+  it("promises no token and no Prism build, and sends failures to the server's repository", () => {
+    expect(md).toContain("No token, no account.");
+    expect(md).not.toMatch(/Authorization|Bearer/);
+    expect(md).toContain("It does not build a Prism app");
+    expect(md).toContain("https://github.com/UOR-Foundation/lexlean-mcp/issues");
+  });
+
+  it("never ends a bare URL with sentence punctuation", () => {
+    const prose = md.replace(/```[\s\S]*?```/g, "").replace(/`[^`]*`/g, "");
+    expect(prose).not.toMatch(/https?:\/\/[^\s)]+[.,;:](\s|$)/m);
+  });
+
+  it("the agent manual, front door and agents.json point at the live server", () => {
+    expect(agentsMarkdown()).toContain(MCP.url);
+    expect(agentsMarkdown()).not.toContain("There is no remote API or MCP server yet");
+    expect(frontDoor("# D\n", "")).toContain(MCP.url);
+    const wk = JSON.parse(wellKnownJson());
+    expect(wk.mcp).toEqual({ name: MCP.name, url: MCP.url, transport: MCP.transport, auth: "none", skill: LEXLEAN_SKILL_NAME });
   });
 });
