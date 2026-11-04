@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createHash } from "node:crypto";
 import {
-  DISCOVERY_SCHEMA_V2, SKILL_DESCRIPTION, SKILL_NAME, VERIFIED_WITH,
+  CALCULATOR, DISCOVERY_SCHEMA_V2, EXAMPLES, SKILL_DESCRIPTION, SKILL_NAME, VERIFIED_WITH,
   compareRelease, skillFiles, skillIndexV1, skillIndexV2, skillMarkdown,
 } from "@/agent/skill";
 import { SKILL_INDEX, wellKnownJson } from "@/agent/site";
@@ -77,8 +77,14 @@ describe("agent skill discovery", () => {
   it("shows how to stop a served app and check the port", () => {
     const md = skillMarkdown();
     expect(md).toMatch(/^node node_modules\/prism-code\/bin\/prism-code\.mjs run .+ &$/m);
-    expect(md).toMatch(/^kill \$SERVER; sleep 1$/m);
-    expect(md).toMatch(/^until curl .+; do sleep 0\.2; done/m);
+    // The PID lives in a file, so the stop block works from a shell that did not start the server.
+    expect(md).toMatch(/^echo \$! > prism-server\.pid$/m);
+    expect(md).toMatch(/^kill "\$\(cat prism-server\.pid\)"$/m);
+    // Every wait is bounded and watches the server process, so a failed start cannot hang an agent.
+    expect(md).toMatch(/^for i in \$\(seq \d+\); do .*kill -0 .*; done$/m);
+    expect(md).not.toMatch(/^until /m);
+    // No fixed port: the server picks a free one and the agent reads the URL it prints.
+    expect(md).not.toMatch(/--port \d/);
   });
 
   it("says what codeHash returns and how it differs from app identities", () => {
@@ -86,6 +92,43 @@ describe("agent skill discovery", () => {
     expect(md).toContain("`sha256:` plus 64 hex characters");
     expect(md).toContain("app.identities");
     expect(md).toContain("blake3:");
+    expect(md).not.toMatch(/each `blake3:`/);
+    expect(md).toContain("Pin an app by `applicationKappa`");
+  });
+
+  it("states the sample app's request contract and how to read any app's", () => {
+    const md = skillMarkdown();
+    for (const op of CALCULATOR.operations) expect(md).toContain(`\`${op}\``);
+    for (const reason of CALCULATOR.errors) expect(md).toContain(`\`${reason}\``);
+    expect(md).toContain("no trailing newline");
+    expect(md).toContain("app.vectors");
+  });
+
+  it("names a substitute for everything that cannot be done today", () => {
+    const md = skillMarkdown();
+    expect(md).toMatch(/^\| Check an app's proof \| Not possible in this release/m);
+    expect(md).toMatch(/^\| Build or author a new app \| Needs a `prismpm.lock`/m);
+    expect(md).toMatch(/^\| Call an app from Python, Rust or another language \| Serve it/m);
+    expect(md).toMatch(/^\| Call an app from an MCP client \| No Prism MCP server ships/m);
+  });
+
+  it("lists unshipped packages from the release status table", () => {
+    const md = skillMarkdown();
+    expect(md).toMatch(/^- Python package: not published\. .*1\.1\.$/m);
+    expect(md).toMatch(/^- Rust crates: not published\. .*1\.0-beta\.1\.$/m);
+  });
+
+  it("pins the install and has no placeholders in shell blocks", () => {
+    const md = skillMarkdown();
+    expect(md).toContain(`npm install --save-exact prism-code@${VERIFIED_WITH}`);
+    const sh = [...md.matchAll(/```sh\n([\s\S]*?)```/g)].map((m) => m[1]).join("\n");
+    expect(sh).not.toMatch(/<[\w.-]+>/);
+  });
+
+  it("every runnable block is one the examples test executes", () => {
+    const blocks = [...skillMarkdown().matchAll(/^```(\w+)\n([\s\S]*?)\n```$/gm)]
+      .filter((m) => m[1] !== "text").map((m) => m[2]);
+    expect(blocks.sort()).toEqual(Object.values(EXAMPLES).map((e) => e.code).sort());
   });
 
   it("never ends a bare URL with sentence punctuation", () => {

@@ -17,6 +17,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      skill_digest: ${{ steps.skill.outputs.digest }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -24,7 +26,11 @@ jobs:
           node-version: 22
       - uses: oven-sh/setup-bun@v2
       - run: bun install
+      # Includes src/test/skill-examples.test.ts, which runs every prism-sdk SKILL.md block against npm.
+      - run: bun run test
       - run: bun run build
+      - id: skill
+        run: echo "digest=$(node -p "require('./dist/.well-known/agent-skills/index.json').skills[0].digest")" >> "$GITHUB_OUTPUT"
       - uses: actions/configure-pages@v5
       # upload-pages-artifact drops every dot-path, which 404s /.well-known/.
       # Pack the same tar it would, keeping hidden files.
@@ -52,3 +58,15 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # The skills CLI silently installs the undigested v1 copy when the v2 digest does not match,
+  # so check what clients actually get once the cache (up to 10 minutes) has turned over.
+  verify-skill:
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: node scripts/check-live-skill.mjs https://uor.foundation "${{ needs.build.outputs.skill_digest }}"
