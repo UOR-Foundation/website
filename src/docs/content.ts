@@ -6,7 +6,7 @@ import { findMilestone, HINT_TERMS, dockerGloss, dockerMarkdown, implicitTerms, 
 
 export type DocPage = { slug: string; title: string; summary: string; updated: string; body: string; availableIn?: string };
 export type DocGroup = { label: string; pages: DocPage[]; planned?: { label: string; milestone: Milestone | null }[] };
-export type DocTab = { id: "get-started" | "guides" | "manuals" | "reference"; label: string; groups: DocGroup[] };
+export type DocTab = { id: "get-started" | "guides" | "reference"; label: string; groups: DocGroup[] };
 
 export const SOURCE = PRISM_SOURCE;
 export const UPSTREAM_LLMS = PRISM_LLMS;
