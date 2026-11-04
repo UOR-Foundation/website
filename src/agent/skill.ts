@@ -6,6 +6,7 @@
 import { createHash } from "node:crypto";
 import { ALL_PAGES, DOCUMENTED_API, RELEASE_STATUS, SOURCE } from "../docs/content";
 import { FIRST_EXAMPLE, ORIGIN, SDK_FEATURES, feedbackUrl } from "./site";
+import { NEW_APP_PATH, NEW_APP_SKILL_DESCRIPTION, NEW_APP_SKILL_NAME, newAppSkillMarkdown } from "./newApp";
 
 export const SKILL_NAME = "prism-sdk";
 /** The prism-code release the examples below were run against. Re-run them before bumping. */
@@ -145,7 +146,7 @@ export function skillMarkdown() {
     "| Check that an app file is intact | `npx prism-code inspect`: its `verified` and `consistent` fields |",
     "| Check an app's proof | Not possible in this release. Say so, and report `inspect` and `vectors` results instead |",
     "| Judge the risk of running an app | Its WebAssembly code may import nothing, and `load` refuses code that does, so it cannot reach files, network or the host. `prism-code run` also serves the app's own web page, which is not sandboxed |",
-    "| Build or author a new app | Needs a `prismpm.lock` and Docker, see below. Without them, say so and stop. Do not hand craft a `.holo` |",
+    `| Build or author a new app | Read the prism-new-app skill at \`${ORIGIN}${NEW_APP_PATH}\`. It creates the repository from the template, writes and proves the model through the UOR MCP server, and publishes the app. Do not hand craft a \`.holo\` |`,
     "| Call an app from Python, Rust or another language | Serve it and post to its HTTP endpoint, see below. No Python or Rust package exists yet |",
     "| Call an app from an MCP client | No Prism MCP server ships. Wrap `load` and `dispatch` in your own MCP tool |",
     "",
@@ -227,26 +228,36 @@ export function skillMarkdown() {
 
 export const sha256 = (text: string) => `sha256:${createHash("sha256").update(text, "utf8").digest("hex")}`;
 
+/** The skills this site publishes, in index order: prism-sdk first, then prism-new-app. */
+const SKILLS = () => [
+  { name: SKILL_NAME, description: SKILL_DESCRIPTION, markdown: skillMarkdown() },
+  { name: NEW_APP_SKILL_NAME, description: NEW_APP_SKILL_DESCRIPTION, markdown: newAppSkillMarkdown() },
+];
+
 /** v2 discovery index for /.well-known/agent-skills/index.json. */
 export function skillIndexV2() {
   return JSON.stringify({
     $schema: DISCOVERY_SCHEMA_V2,
-    skills: [{ name: SKILL_NAME, description: SKILL_DESCRIPTION, type: "skill-md", url: `${SKILL_NAME}/SKILL.md`, digest: sha256(skillMarkdown()) }],
+    skills: SKILLS().map((s) => ({ name: s.name, description: s.description, type: "skill-md", url: `${s.name}/SKILL.md`, digest: sha256(s.markdown) })),
   }, null, 2) + "\n";
 }
 
 /** v1 discovery index for /.well-known/skills/index.json, read by older CLIs. */
 export function skillIndexV1() {
-  return JSON.stringify({ skills: [{ name: SKILL_NAME, description: SKILL_DESCRIPTION, files: ["SKILL.md"] }] }, null, 2) + "\n";
+  return JSON.stringify({ skills: SKILLS().map((s) => ({ name: s.name, description: s.description, files: ["SKILL.md"] })) }, null, 2) + "\n";
 }
 
-/** Every file the skill needs, keyed by published path. */
+/** Every file the skills need, keyed by published path. */
 export function skillFiles(): Record<string, string> {
-  const md = skillMarkdown();
-  return {
+  const out: Record<string, string> = {
     ".well-known/agent-skills/index.json": skillIndexV2(),
-    [`.well-known/agent-skills/${SKILL_NAME}/SKILL.md`]: md,
     ".well-known/skills/index.json": skillIndexV1(),
-    [`.well-known/skills/${SKILL_NAME}/SKILL.md`]: md,
   };
+  for (const s of SKILLS()) {
+    out[`.well-known/agent-skills/${s.name}/SKILL.md`] = s.markdown;
+    out[`.well-known/skills/${s.name}/SKILL.md`] = s.markdown;
+  }
+  // One hop from the site root: the new-app skill is also the page /new.md.
+  out[NEW_APP_PATH.slice(1)] = newAppSkillMarkdown();
+  return out;
 }

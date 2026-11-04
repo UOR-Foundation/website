@@ -4,6 +4,7 @@ import {
   CALCULATOR, DISCOVERY_SCHEMA_V2, EXAMPLES, SKILL_DESCRIPTION, SKILL_NAME, VERIFIED_WITH,
   compareRelease, skillFiles, skillIndexV1, skillIndexV2, skillMarkdown,
 } from "@/agent/skill";
+import { NEW_APP_SKILL_DESCRIPTION, NEW_APP_SKILL_NAME, newAppSkillMarkdown } from "@/agent/newApp";
 import { SKILL_INDEX, wellKnownJson } from "@/agent/site";
 import { SOURCE } from "@/docs/content";
 
@@ -20,19 +21,33 @@ describe("agent skill discovery", () => {
   it("v2 index passes the CLI's entry checks", () => {
     const idx = JSON.parse(skillIndexV2());
     expect(idx.$schema).toBe(DISCOVERY_SCHEMA_V2);
-    expect(idx.skills).toHaveLength(1);
-    const e = idx.skills[0];
-    expect(validName(e.name)).toBe(true);
-    expect(e.description.length).toBeGreaterThan(0);
-    expect(e.description.length).toBeLessThanOrEqual(1024);
-    expect(e.type).toBe("skill-md");
-    expect(new URL(e.url, "https://uor.foundation/.well-known/agent-skills/index.json").pathname).toBe(`/.well-known/agent-skills/${SKILL_NAME}/SKILL.md`);
-    expect(e.digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(idx.skills.map((e: { name: string }) => e.name)).toEqual([SKILL_NAME, NEW_APP_SKILL_NAME]);
+    for (const e of idx.skills) {
+      expect(validName(e.name)).toBe(true);
+      expect(e.description.length).toBeGreaterThan(0);
+      expect(e.description.length).toBeLessThanOrEqual(1024);
+      expect(e.type).toBe("skill-md");
+      expect(new URL(e.url, "https://uor.foundation/.well-known/agent-skills/index.json").pathname).toBe(`/.well-known/agent-skills/${e.name}/SKILL.md`);
+      expect(e.digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+    }
   });
 
-  it("v2 digest is the SHA-256 of the exact SKILL.md bytes", () => {
-    const expected = "sha256:" + createHash("sha256").update(Buffer.from(skillMarkdown(), "utf8")).digest("hex");
-    expect(JSON.parse(skillIndexV2()).skills[0].digest).toBe(expected);
+  it("v2 digests are the SHA-256 of the exact SKILL.md bytes", () => {
+    const digest = (md: string) => "sha256:" + createHash("sha256").update(Buffer.from(md, "utf8")).digest("hex");
+    const [sdk, newApp] = JSON.parse(skillIndexV2()).skills;
+    expect(sdk.digest).toBe(digest(skillMarkdown()));
+    expect(newApp.digest).toBe(digest(newAppSkillMarkdown()));
+  });
+
+  it("the new-app skill is one hop from the root and matches its frontmatter", () => {
+    const f = skillFiles();
+    expect(f["new.md"]).toBe(newAppSkillMarkdown());
+    expect(f[`.well-known/agent-skills/${NEW_APP_SKILL_NAME}/SKILL.md`]).toBe(newAppSkillMarkdown());
+    const fm = frontmatter(newAppSkillMarkdown());
+    expect(fm!.name).toBe(NEW_APP_SKILL_NAME);
+    expect(fm!.description).toBe(NEW_APP_SKILL_DESCRIPTION);
+    expect(newAppSkillMarkdown()).toContain("https://mcp.uor.foundation");
+    expect(newAppSkillMarkdown()).toContain("UOR-Foundation/template");
   });
 
   it("v1 index passes the legacy checks", () => {
@@ -107,7 +122,7 @@ describe("agent skill discovery", () => {
   it("names a substitute for everything that cannot be done today", () => {
     const md = skillMarkdown();
     expect(md).toMatch(/^\| Check an app's proof \| Not possible in this release/m);
-    expect(md).toMatch(/^\| Build or author a new app \| Needs a `prismpm.lock`/m);
+    expect(md).toMatch(/^\| Build or author a new app \| Read the prism-new-app skill at `https:\/\/uor\.foundation\/new\.md`/m);
     expect(md).toMatch(/^\| Call an app from Python, Rust or another language \| Serve it/m);
     expect(md).toMatch(/^\| Call an app from an MCP client \| No Prism MCP server ships/m);
   });
