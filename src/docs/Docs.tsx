@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, BookOpen, Check, ChevronRight, Clock, Code2, Copy, FileText, Home, Menu, Rocket, Compass, Layers, Search, Sparkles, SquareTerminal, X } from "lucide-react";
+import { ArrowRight, BookOpen, Check, ChevronRight, Clock, Code2, Copy, FileText, Home, Menu, Rocket, Compass, Search, Sparkles, SquareTerminal, X } from "lucide-react";
 import { DocsGPTWidget } from "docsgpt";
 import { DOCSGPT_API_HOST, DOCSGPT_API_KEY, docsgptEnabled, type DocsGPTController } from "@/docsgpt";
 import { HINT_TERMS, MILESTONES, TERMS, VERBS, dockerGloss, findMilestone, siteTerms, verbMilestone, type Milestone } from "./vocabulary";
@@ -275,7 +275,7 @@ function PageView({ p, tab }: { p: DocPage & { group: string }; tab: (typeof TAB
   return (
     <>
       <article className="dc-article">
-        <nav aria-label="Breadcrumb" className="dc-crumbs"><span>{tab.label}</span>{p.group !== tab.label && <><ChevronRight size={13} /><span>{p.group}</span></>}<ChevronRight size={13} /><span className="text-[hsl(var(--fd-fg))]">{p.title}</span></nav>
+        <nav aria-label="Breadcrumb" className="dc-crumbs"><span>{tab.label}</span>{p.group !== tab.label && p.group !== p.title && <><ChevronRight size={13} /><span>{p.group}</span></>}<ChevronRight size={13} /><span className="text-[hsl(var(--fd-fg))]">{p.title}</span></nav>
         <h1>{p.title}</h1>
         <p className="dc-summary">{p.summary}</p>
         <div className="dc-meta">
@@ -301,7 +301,7 @@ function PageView({ p, tab }: { p: DocPage & { group: string }; tab: (typeof TAB
   );
 }
 
-const TAB_ICONS = { home: Home, "get-started": Rocket, guides: Compass, manuals: Layers, reference: BookOpen, changelog: Clock };
+const TAB_ICONS = { home: Home, "get-started": Rocket, guides: Compass, reference: BookOpen, changelog: Clock };
 
 export default function Docs() {
   const [path, setPath] = useState(current());
@@ -354,7 +354,7 @@ export default function Docs() {
       )}
 
       {tabId === "changelog" && UPSTREAM_CHANGELOG && (
-        <div className="dc-layout"><PageView key="changelog" p={{ ...UPSTREAM_CHANGELOG, group: "Changelog" }} tab={{ id: "reference", label: "What's new", groups: [{ label: "Changelog", pages: [UPSTREAM_CHANGELOG] }] }} /></div>
+        <div className="dc-layout dc-layout-noside"><PageView key="changelog" p={{ ...UPSTREAM_CHANGELOG, group: "Changelog" }} tab={{ id: "reference", label: "What's new", groups: [{ label: "Changelog", pages: [UPSTREAM_CHANGELOG] }] }} /></div>
       )}
 
       {tabId === "changelog" && !UPSTREAM_CHANGELOG && (

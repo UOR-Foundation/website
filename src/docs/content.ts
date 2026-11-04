@@ -6,7 +6,7 @@ import { findMilestone, HINT_TERMS, dockerGloss, dockerMarkdown, implicitTerms, 
 
 export type DocPage = { slug: string; title: string; summary: string; updated: string; body: string; availableIn?: string };
 export type DocGroup = { label: string; pages: DocPage[]; planned?: { label: string; milestone: Milestone | null }[] };
-export type DocTab = { id: "get-started" | "guides" | "manuals" | "reference"; label: string; groups: DocGroup[] };
+export type DocTab = { id: "get-started" | "guides" | "reference"; label: string; groups: DocGroup[] };
 
 export const SOURCE = PRISM_SOURCE;
 export const UPSTREAM_LLMS = PRISM_LLMS;
@@ -36,12 +36,11 @@ function upstreamOrder() {
   return out;
 }
 
-// Docker's four sections. Upstream folders map onto them; a section shows once it has pages.
-const FOLDER_TAB: Record<string, DocTab["id"]> = { "get-started": "get-started", guides: "guides", examples: "guides", migration: "guides", concepts: "manuals", manuals: "manuals", api: "reference", reference: "reference", sdks: "reference" };
+// Three sections. Upstream folders map onto them; a section shows once it has pages.
+const FOLDER_TAB: Record<string, DocTab["id"]> = { "get-started": "get-started", guides: "guides", examples: "guides", migration: "guides", concepts: "guides", api: "reference", reference: "reference", sdks: "reference" };
 const TAB_DEFS: { id: DocTab["id"]; label: string }[] = [
   { id: "get-started", label: "Get started" },
   { id: "guides", label: "Guides" },
-  { id: "manuals", label: "Manuals" },
   { id: "reference", label: "Reference" },
 ];
 // Reference is a plain lookup: grouped by kind (API, CLI, Formats, Errors), never by task, because Get started already teaches the path.
@@ -82,9 +81,9 @@ export const REF_PLANNED = ([
 ] as [string, string, string][]).map(([group, label, code]) => ({ group, label, verb: "", milestone: findMilestone(code) }))
   .filter((f) => f.milestone && f.milestone.state !== "closed");
 const REF_ORDER = ["API", "Packages", "CLI", "Formats", "Errors", "Glossary", "SDKs", "Status"];
-/** Within Guides and Manuals, upstream folders become named groups so examples, migration notes and concepts stay findable. */
+/** Within Guides, upstream folders become named groups so examples, migration notes and concepts stay findable. */
 const FOLDER_GROUP: Record<string, string> = { guides: "Guides", examples: "Examples", migration: "Migration", concepts: "Concepts" };
-const TAB_FOLDERS: Partial<Record<DocTab["id"], string[]>> = { guides: ["guides", "examples", "migration"], manuals: ["concepts"] };
+const TAB_FOLDERS: Partial<Record<DocTab["id"], string[]>> = { guides: ["guides", "examples", "migration", "concepts"] };
 
 /** Docker features on the roadmap with no page yet: shown dimmed with their milestone. Features off the roadmap are never listed. */
 export const PLANNED: { group: string; label: string; verb: string; milestone: Milestone | null }[] = ([
@@ -216,7 +215,6 @@ export const DOCS_HOME = {
   cards: [
     { title: "Get started", text: "New to Prism? Five steps, start here.", slug: "get-started/why-prism", pattern: "dots" },
     { title: "Guides", text: "Build, check and share an app.", slug: "guides", pattern: "grid" },
-    { title: "Manuals", text: "Runtime, CLI, registry and deploy.", slug: "manuals", pattern: "lines" },
     { title: "Reference", text: "CLI, API, formats and errors.", slug: "reference/cli", pattern: "grid" },
   ],
 };

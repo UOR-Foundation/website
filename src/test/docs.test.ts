@@ -9,7 +9,8 @@ describe("Prism docs", () => {
     const slugs = ALL_PAGES.map((p) => p.slug);
     for (const old of ["api/code-hash", "api/describe", "api/canonicalize", "api/differs"]) expect(slugs).not.toContain(old);
     expect(slugs).toEqual(expect.arrayContaining(["api", "api/load", "api/dispatch", "reference/cli", "reference/policy", "reference/release-status"]));
-    for (const t of TABS) expect(["get-started", "guides", "manuals", "reference"]).toContain(t.id);
+    for (const t of TABS) expect(["get-started", "guides", "reference"]).toContain(t.id);
+    expect(TABS.map((t) => t.id)).not.toContain("manuals");
   });
 
   it("states the documented v1.0 API against the published prism-code version", () => {
