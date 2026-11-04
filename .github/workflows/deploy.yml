@@ -33,6 +33,8 @@ jobs:
             --exclude=.git --exclude=.github \
             -cf "$RUNNER_TEMP/artifact.tar" .
           tar -tf "$RUNNER_TEMP/artifact.tar" | grep -q '^\./\.well-known/'
+          tar -tf "$RUNNER_TEMP/artifact.tar" | grep -qx './.well-known/agent-skills/index.json'
+          tar -tf "$RUNNER_TEMP/artifact.tar" | grep -qx './.well-known/skills/index.json'
           tar -tf "$RUNNER_TEMP/artifact.tar" | grep -qx './CNAME'
       - uses: actions/upload-artifact@v4
         with:

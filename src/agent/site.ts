@@ -10,6 +10,8 @@ export const FEEDBACK_REPO = "UOR-Foundation/website";
 export const ISSUES = `https://github.com/${FEEDBACK_REPO}/issues`;
 export const SDK_REPO = "UOR-Foundation/PrismPM";
 export const SDK_FEATURES = `https://github.com/${SDK_REPO}/issues/new?template=feature_request.yml`;
+/** Agent skill discovery index, built by src/agent/skill.ts. */
+export const SKILL_INDEX = "/.well-known/agent-skills/index.json";
 
 export const FEEDBACK_KINDS = [
   { id: "agent-feedback", label: "Agent feedback", title: "[agent] ", use: "Anything about using this site or Prism as an agent" },
@@ -26,7 +28,7 @@ export const feedbackUrl = (kind: (typeof FEEDBACK_KINDS)[number]["id"], title =
   return `${ISSUES}/new?${q.toString()}`;
 };
 
-const FIRST_EXAMPLE = `import { codeHash } from "prism-code/canonical";
+export const FIRST_EXAMPLE = `import { codeHash } from "prism-code/canonical";
 
 // codeHash is SHA-256 of the text after line endings, BOM and trailing whitespace are normalized.
 const a = codeHash("export const x = 1;\\n");
@@ -142,6 +144,7 @@ export function agentsMarkdown() {
     "3. Machine index: [/.well-known/agents.json](/.well-known/agents.json) and [/sitemap.xml](/sitemap.xml).", "",
     "## What you can do", "",
     `- Install Prism: \`${HERO.install.humans}\` (Node 22 or later; the published package is 0.2.0).`,
+    `- Install the Prism skill into your agent: \`${HERO.install.agents}\` (index: [${SKILL_INDEX}](${SKILL_INDEX})).`,
     "- What ships today: [/docs/reference/release-status.md](/docs/reference/release-status.md). Trust it over any other page.",
     "- There is no remote API or MCP server yet. Tools run locally through the `prism-code` package.",
     "- Run this first example:", "", "```ts", FIRST_EXAMPLE, "```", "",
@@ -214,7 +217,7 @@ export function wellKnownJson() {
     swarm: `${ORIGIN}/swarm.md`,
     wall: `${ORIGIN}/agents/index.md`,
     pages: PAGES.map((p) => ({ title: p.title, url: ORIGIN + p.path, markdown: ORIGIN + p.md })),
-    install: { npm: HERO.install.humans, skill: HERO.install.agents },
+    install: { npm: HERO.install.humans, skill: HERO.install.agents, skill_index: `${ORIGIN}${SKILL_INDEX}` },
     requests: { markdown: `${ORIGIN}/docs/requests.md`, json: `${ORIGIN}/docs/requests.json` },
     feedback: { repo: FEEDBACK_REPO, label: "agent-submitted", kinds: FEEDBACK_KINDS.map((k) => ({ id: k.id, url: feedbackUrl(k.id) })), sdk_features: SDK_FEATURES },
   }, null, 2) + "\n";

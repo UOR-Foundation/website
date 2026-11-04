@@ -11,6 +11,7 @@ import { frameworkMarkdown } from "./src/framework/content";
 import { aboutMarkdown, agentsMarkdown, frontDoor, homeMarkdown, playgroundMarkdown, requestsJson, requestsMarkdown, RETIRED_PATHS, retiredFile, sitemapXml, wellKnownJson } from "./src/agent/site";
 import { shareMarkdown, swarmMarkdown, wallMarkdown } from "./src/agent/share";
 import { discordMarkdown } from "./src/agent/discord";
+import { skillFiles } from "./src/agent/skill";
 import { BLOG_POSTS, blogFullTxt, blogLlmsTxt, blogRss, postMarkdown } from "./src/blog/agent";
 
 // Zero cost full text search: a Pagefind index built from the same docs source. Dev serves it from memory; the build emits it as static assets next to the site.
@@ -55,6 +56,7 @@ function agentDocs(): Plugin {
       "llms.txt": frontDoor(llmsTxt(), blogIndex),
       ".well-known/llms.txt": frontDoor(llmsTxt(), blogIndex),
       ".well-known/agents.json": wellKnownJson(),
+      ...skillFiles(),
       "agents.md": agentsMarkdown(),
       "share.md": shareMarkdown(),
       "swarm.md": swarmMarkdown(),
