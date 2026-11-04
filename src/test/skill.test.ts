@@ -67,6 +67,33 @@ describe("agent skill discovery", () => {
     expect(md).not.toMatch(/cargo add prism|pip install prism/);
   });
 
+  it("states the prerequisites of the image backed commands", () => {
+    const md = skillMarkdown();
+    expect(md).toContain("prismpm.lock");
+    expect(md).toMatch(/exit with code 64/);
+    expect(md).toMatch(/do not run these commands/);
+  });
+
+  it("shows how to stop a served app and check the port", () => {
+    const md = skillMarkdown();
+    expect(md).toMatch(/^node node_modules\/prism-code\/bin\/prism-code\.mjs run .+ &$/m);
+    expect(md).toMatch(/^kill \$SERVER; sleep 1$/m);
+    expect(md).toMatch(/^until curl .+; do sleep 0\.2; done/m);
+  });
+
+  it("says what codeHash returns and how it differs from app identities", () => {
+    const md = skillMarkdown();
+    expect(md).toContain("`sha256:` plus 64 hex characters");
+    expect(md).toContain("app.identities");
+    expect(md).toContain("blake3:");
+  });
+
+  it("never ends a bare URL with sentence punctuation", () => {
+    // A bare URL runs to the next space or ")"; punctuation glued to its end gets copied into the link.
+    const prose = skillMarkdown().replace(/```[\s\S]*?```/g, "").replace(/`[^`]*`/g, "");
+    expect(prose).not.toMatch(/https?:\/\/[^\s)]+[.,;:](\s|$)/m);
+  });
+
   it("links only docs pages that ship in the npm release", () => {
     const links = [...skillMarkdown().matchAll(/\/docs\/([^)\s]+)\.md\)/g)].map((m) => m[1]);
     expect(links).toContain("reference/release-status");
