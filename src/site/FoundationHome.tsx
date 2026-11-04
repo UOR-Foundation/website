@@ -44,10 +44,10 @@ const CONTRIBUTORS = [
   { name: "Maura", role: "Ecosystem @ UOR", image: maura },
   { name: "Bill", role: "Chairman @ Enterprise Neurosystems", image: bill },
   { name: "Adam", role: "Founder @ ØDX", image: adam },
-  { name: "Max", role: "Engineer @ Maitai (YC S24)", image: max },
+  { name: "Ilya", role: "Founding Partner @ Arete Capital", image: ilya },
   { name: "Ari", role: "Founder @ MVM", image: ari },
   { name: "Mark", role: "AI Researcher", image: mark },
-  { name: "Ilya", role: "Founding Partner @ Arete Capital", image: ilya },
+  { name: "Max", role: "Engineer @ Maitai (YC S24)", image: max },
   { name: "Matt", role: "Founder @ DecentraNet", image: matt },
 ];
 
