@@ -6,6 +6,17 @@ export const HERO = {
   rest: "Agentic Foundation",
   sub: "Build, ship and run self-verifying AI applications that just work. From edge to cloud, and beyond.",
   install: { humans: "npm install prism-code", agents: "npx skills add https://uor.foundation" },
+  build: {
+    lead: "Describe the app. Your agent builds it, proves it and ships it.",
+    label: "What the app does",
+    prefix: "A Prism app that",
+    placeholder: "tells whether a year is a leap year",
+    agentLabel: "Using",
+    cta: "Build",
+    runThis: "Run this in",
+    thenPaste: "then paste:",
+    anyAgent: "Any agent works: give it the sentence and it finds the rest on this site.",
+  },
   steward: "Stewarded by an independent 501(c)(3).",
 };
 

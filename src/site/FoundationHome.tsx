@@ -26,6 +26,7 @@ import { DISCORD_URL, GITHUB_ORG_URL, GITHUB_PRISM_URL } from "./links";
 import { DiscordMark, GithubMark } from "./BrandIcons";
 import MobileMenu from "./MobileMenu";
 import BrailleWord from "./BrailleWord";
+import BuildBox from "./BuildBox";
 
 const NAV = [
   { label: "UOR Framework", target: "about" },
@@ -60,7 +61,6 @@ export default function FoundationHome() {
   const [ribbon, setRibbon] = useState(true);
   const [copied, setCopied] = useState(false);
   const [mode, setMode] = useState<"humans" | "agents">("humans");
-  const [heroCopied, setHeroCopied] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => { const f = () => setScrolled(window.scrollY > 8); f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
 
@@ -132,24 +132,7 @@ export default function FoundationHome() {
               )
             )}
           </p>
-          <div className="mt-[clamp(28px,6vh,56px)] flex items-center justify-center gap-3 text-base">
-            {(["humans", "agents"] as const).map((m, i) => (
-              <span key={m} className="flex items-center gap-3">
-                {i > 0 && <span aria-hidden className="h-3.5 w-px bg-[hsl(var(--fd-line-strong))]" />}
-                <button onClick={() => { setMode(m); setHeroCopied(false); }} className={`transition-colors ${mode === m ? "text-[hsl(var(--fd-fg))]" : "text-[hsl(var(--fd-dim))] hover:text-[hsl(var(--fd-fg))]"}`}>For {m}</button>
-              </span>
-            ))}
-          </div>
-          <span className="fd-spectrum mt-4">
-            <button
-              onClick={() => { navigator.clipboard?.writeText(HERO.install[mode]); setHeroCopied(true); setTimeout(() => setHeroCopied(false), 1500); }}
-              className="fd-mono relative z-10 inline-flex items-center gap-3 rounded-full border border-[hsl(var(--fd-line))] bg-[hsl(var(--fd-panel))] max-w-full px-5 py-4 text-sm sm:px-7 sm:text-base transition-colors hover:border-[hsl(var(--fd-dim))]"
-            >
-              <span className="text-[hsl(var(--fd-dim))]">$</span>
-              <span className="truncate">{HERO.install[mode]}</span>
-              {heroCopied ? <Check className="h-4 w-4 text-[hsl(var(--fd-accent))]" /> : <Copy className="h-4 w-4 text-[hsl(var(--fd-dim))]" />}
-            </button>
-          </span>
+          <BuildBox />
           <p className="fd-hero-steward">{HERO.steward}</p>
         </div></section>
         </div>
