@@ -6,6 +6,7 @@ export const HERO = {
   rest: "Agentic Foundation",
   sub: "Build, ship and run self-verifying AI applications that just work. From edge to cloud, and beyond.",
   install: { humans: "npm install prism-code", agents: "npx skills add https://uor.foundation" },
+  agentSkill: { label: "Add agent skill", command: "npx prism-code setup" },
   steward: "Stewarded by an independent 501(c)(3).",
 };
 
