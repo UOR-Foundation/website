@@ -59,7 +59,6 @@ export default function FoundationHome() {
 
   const [ribbon, setRibbon] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [mode, setMode] = useState<"humans" | "agents">("humans");
   const [heroCopied, setHeroCopied] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => { const f = () => setScrolled(window.scrollY > 8); f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
@@ -132,21 +131,15 @@ export default function FoundationHome() {
               )
             )}
           </p>
-          <div className="mt-[clamp(28px,6vh,56px)] flex items-center justify-center gap-3 text-base">
-            {(["humans", "agents"] as const).map((m, i) => (
-              <span key={m} className="flex items-center gap-3">
-                {i > 0 && <span aria-hidden className="h-3.5 w-px bg-[hsl(var(--fd-line-strong))]" />}
-                <button onClick={() => { setMode(m); setHeroCopied(false); }} className={`transition-colors ${mode === m ? "text-[hsl(var(--fd-fg))]" : "text-[hsl(var(--fd-dim))] hover:text-[hsl(var(--fd-fg))]"}`}>For {m}</button>
-              </span>
-            ))}
-          </div>
+          <p className="mt-[clamp(28px,6vh,56px)] text-base">{HERO.agentSkill.label}</p>
           <span className="fd-spectrum mt-4">
             <button
-              onClick={() => { navigator.clipboard?.writeText(HERO.install[mode]); setHeroCopied(true); setTimeout(() => setHeroCopied(false), 1500); }}
+              onClick={async () => { await navigator.clipboard?.writeText(HERO.agentSkill.command); setHeroCopied(true); setTimeout(() => setHeroCopied(false), 1500); }}
+              aria-label="Copy agent skill command"
               className="fd-mono relative z-10 inline-flex items-center gap-3 rounded-full border border-[hsl(var(--fd-line))] bg-[hsl(var(--fd-panel))] max-w-full px-5 py-4 text-sm sm:px-7 sm:text-base transition-colors hover:border-[hsl(var(--fd-dim))]"
             >
               <span className="text-[hsl(var(--fd-dim))]">$</span>
-              <span className="truncate">{HERO.install[mode]}</span>
+              <span className="truncate">{HERO.agentSkill.command}</span>
               {heroCopied ? <Check className="h-4 w-4 text-[hsl(var(--fd-accent))]" /> : <Copy className="h-4 w-4 text-[hsl(var(--fd-dim))]" />}
             </button>
           </span>
@@ -218,23 +211,16 @@ export default function FoundationHome() {
             <div className="mt-8 flex w-full flex-col sm:w-fit">
               <div className="flex items-stretch rounded-[28px] border border-[hsl(var(--fd-line))] bg-[hsl(var(--fd-bg)/0.8)] p-1.5 backdrop-blur sm:items-center sm:rounded-full sm:pl-6 sm:pr-2">
                 <button
-                  onClick={() => { navigator.clipboard?.writeText(FRAMEWORK.install[mode]); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-                  aria-label="Copy install command"
+                  onClick={async () => { await navigator.clipboard?.writeText(HERO.agentSkill.command); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+                  aria-label="Copy agent skill command"
                   className="fd-mono inline-flex min-w-0 flex-1 items-center justify-center gap-2.5 py-3 text-xs sm:flex-none sm:justify-start sm:py-0 transition-opacity hover:opacity-80 sm:text-base"
                 >
                   <span className="text-[hsl(var(--fd-dim))]">$</span>
-                  <span className="truncate">{FRAMEWORK.install[mode]}</span>
+                  <span className="truncate">{HERO.agentSkill.command}</span>
                   {copied ? <Check className="h-4 w-4 shrink-0 text-[hsl(var(--fd-accent))]" /> : <Copy className="h-4 w-4 shrink-0 text-[hsl(var(--fd-dim))]" />}
                 </button>
               </div>
-              <div className="mt-5 flex items-center justify-center gap-3 text-base">
-                {(["humans", "agents"] as const).map((m, i) => (
-                  <span key={m} className="flex items-center gap-3">
-                    {i > 0 && <span aria-hidden className="h-3.5 w-px bg-[hsl(var(--fd-line-strong))]" />}
-                    <button onClick={() => { setMode(m); setCopied(false); }} className={`transition-colors ${mode === m ? "text-[hsl(var(--fd-fg))]" : "text-[hsl(var(--fd-dim))] hover:text-[hsl(var(--fd-fg))]"}`}>For {m}</button>
-                  </span>
-                ))}
-              </div>
+              <p className="mt-5 text-center text-base">{HERO.agentSkill.label}</p>
             </div>
           </div>
         </section>
