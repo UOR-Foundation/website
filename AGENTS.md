@@ -28,3 +28,4 @@
 
 * PrismPM feature requests sync every 6 hours via scripts/sync-prism-requests.mjs into src/docs/requests.generated.ts and publish as /docs/requests.md and .json, so agents dedupe, vote and see shipped requests without a backend.
 * The site deploys to https://uor.foundation from GitHub Pages built by .github/workflows/deploy.yml in UOR-Foundation/website (push to main); it is not hosted on Lovable in production. The canonical origin is ORIGIN in src/agent/site.ts; every build emits route index.html files and a 404.html fallback via scripts/emit-pages.mjs, so a new route must have a Markdown twin or an entry there or its deep links fall through to the SPA fallback.
+* The only start action anywhere is START.command in src/site/copy.ts; startCommand() in src/docs/vocabulary.ts rewrites upstream npm install lines on display, so synced docs never reintroduce a second install path.
