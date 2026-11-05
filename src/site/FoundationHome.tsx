@@ -5,7 +5,7 @@ import { FD_BODY, FD_CARD, FD_CATEGORY, FD_COLUMN, FD_EYEBROW, FD_HERO, FD_LABEL
 import "@fontsource/space-grotesk/500.css";
 import "@fontsource/space-grotesk/700.css";
 import "@fontsource/jetbrains-mono/400.css";
-import prismCard from "@/assets/foundation-hero.jpg";
+import prismCard from "@/assets/foundation-prism-sharp.jpg";
 import uorIcon from "@/assets/uor-icon.svg";
 import aaifLogo from "@/assets/aaif-logo.png.asset.json";
 import nandaLogo from "@/assets/nanda-logo.png.asset.json";
@@ -197,8 +197,8 @@ export default function FoundationHome() {
         </section>
 
         <section id="framework" className="fd-reveal fd-sec relative scroll-mt-16 overflow-hidden">
-          <img src={prismCard} alt="" aria-hidden width={1920} height={1072} loading="lazy" className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[70%_center] opacity-50 md:object-right md:opacity-90 lg:left-auto lg:right-[max(1.5rem,calc((100vw_-_80rem)/2))] lg:w-[min(84%,1400px)] lg:[mask-image:linear-gradient(to_right,black_calc(100%_-_160px),transparent)]" />
-          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--fd-bg))_35%,hsl(var(--fd-bg)/0.6)_60%,transparent_85%)]" />
+          <img src={prismCard} alt="" aria-hidden width={1920} height={1072} loading="lazy" className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[70%_center] opacity-50 md:object-right md:opacity-100 lg:left-auto lg:right-[max(1.5rem,calc((100vw_-_80rem)/2))] lg:w-[min(84%,1400px)] lg:[mask-image:linear-gradient(to_right,black_calc(100%_-_160px),transparent)]" />
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--fd-bg))_30%,hsl(var(--fd-bg)/0.45)_55%,transparent_78%)]" />
           <div aria-hidden className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--fd-bg))_0%,transparent_18%,transparent_82%,hsl(var(--fd-bg))_100%)]" />
           <div className="relative mx-auto max-w-7xl px-6 py-24 md:py-40">
             <Label>{FRAMEWORK.label}</Label>
