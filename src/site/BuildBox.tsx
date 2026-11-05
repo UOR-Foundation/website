@@ -8,7 +8,7 @@ import { AGENTS, DEFAULT_AGENT, SETUP_COMMAND, SETUP_PUBLISHED, agentById, prism
 import { HERO } from "./copy";
 
 const KEY = "uor.build.agent";
-/** How long the page waits after a prism:// click before concluding no handler took it. */
+/** How long the page waits after a holo:// click before concluding no handler took it. */
 const HANDLER_WAIT_MS = 1500;
 
 function CopyButton({ text, label }: { text: string; label: string }) {
@@ -32,7 +32,7 @@ export default function BuildBox() {
   const [built, setBuilt] = useState<string | null>(null);
   const [noHandler, setNoHandler] = useState(false);
 
-  // A prism:// link that no handler takes does nothing visible. The page cannot ask the OS,
+  // A holo:// link that no handler takes does nothing visible. The page cannot ask the OS,
   // so it watches for the one thing a handler does: take focus away. If the page is still
   // focused and visible after the wait, say so and point at the setup and the copy.
   const openWithHandler = (href: string) => {

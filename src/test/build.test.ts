@@ -62,12 +62,12 @@ describe("the hand-offs", () => {
     }
   });
 
-  it("the prism:// link is the shape prism-code open accepts, with the sentence as its only payload", () => {
+  it("the holo:// link is the shape prism-code open accepts, with the sentence as its only payload", () => {
     // Mirrors sdk/npm/prism-code/src/open.mjs in UOR-Foundation/PrismPM#538: host build, no path,
     // parameters agent and q only, the agent one of six ids, the sentence one plain line.
     const href = prismLink("claude-code", SENTENCE);
     const u = new URL(href);
-    expect(u.protocol).toBe("prism:");
+    expect(u.protocol).toBe("holo:");
     expect(u.hostname).toBe("build");
     expect(["", "/"]).toContain(u.pathname);
     expect([...u.searchParams.keys()].sort()).toEqual(["agent", "q"]);
@@ -78,7 +78,7 @@ describe("the hand-offs", () => {
 
   it("the box's agent ids are exactly the ids prism-code open accepts", () => {
     expect(AGENTS.map((a) => a.id).sort()).toEqual([...OPEN_AGENTS].sort());
-    expect(SETUP_COMMAND).toBe("npx prism-code setup");
+    expect(SETUP_COMMAND).toBe("npx prism-code@latest setup");
   });
 
   it("every agent has a unique id and a name, and an unknown id falls back to the first", () => {
