@@ -1,12 +1,29 @@
 // Text only copy, safe to import from build config (no asset imports).
 export const RIBBON = { text: "Prism SDK v0.4", tag: "Beta", cta: "Start building" };
 
+/** The single canonical entry point for humans and agents. Every page and agent file reads it from here. */
+export const START = {
+  command: "npx prism-code@latest setup",
+  line: "One command sets up Prism in your project and installs the Prism skill into your agent.",
+  capabilities: [
+    "Build, run and check self verifying Prism applications locally",
+    "Give any file or object an identity computed from its content",
+    "Replay an app's examples to confirm it behaves exactly as shipped",
+    "Teach your coding agent the Prism SDK through the bundled skill",
+  ],
+  tools: [
+    { name: "prism-code", what: "Local runtime and setup command. No account, no remote API." },
+    { name: "Prism skill", what: "Instructions and verified examples for coding agents, added by setup." },
+    { name: "Docs", what: "Plain text at /docs.md; every page has a .md twin." },
+    { name: "Playground", what: "Run Prism examples in the browser at /playground/." },
+  ],
+};
+
 export const HERO = {
   lead: "Your Verifiable",
   rest: "Agentic Foundation",
   sub: "Build, ship and run self-verifying AI applications that just work. From edge to cloud, and beyond.",
-  install: { humans: "npm install prism-code", agents: "npx skills add https://uor.foundation" },
-  agentSkill: { label: "Add agent skill", command: "npx prism-code@latest setup" },
+  agentSkill: { label: "Add agent skill", command: START.command },
   steward: "Stewarded by an independent 501(c)(3).",
 };
 
@@ -37,6 +54,4 @@ export const FRAMEWORK = {
   label: "Build with Prism SDK",
   title: "Agentic development\nthat just works.\nAnywhere.",
   line: "Prism is an open SDK that seamlessly enables you to build, ship and run self-verifying AI applications. From edge to cloud, and beyond.",
-  install: { humans: "npm install prism-code", agents: "npx skills add https://uor.foundation" },
 };
-
