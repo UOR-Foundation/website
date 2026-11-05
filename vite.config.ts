@@ -3,8 +3,6 @@ import fs from "fs";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import tailwindcss from "tailwindcss";
-import autoprefixer from "autoprefixer";
 import { ALL_PAGES, UPSTREAM_CHANGELOG, UPSTREAM_LLMS, UPSTREAM_LLMS_FULL, llmsTxt, llmsFullTxt, pageMarkdown } from "./src/docs/content";
 import { dockerMarkdown, roadmapJson } from "./src/docs/vocabulary";
 import { frameworkMarkdown } from "./src/framework/content";
@@ -142,6 +140,5 @@ function localAssetPointers(): Plugin {
 export default defineConfig(({ mode }) => ({
   server: { host: "::", port: 8080, hmr: { overlay: false } },
   plugins: [localAssetPointers(), react(), agentDocs(), mode === "development" && componentTagger()].filter(Boolean),
-  css: { postcss: { plugins: [tailwindcss(), autoprefixer()] } },
   resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
 }));
