@@ -23,7 +23,7 @@ export const HERO = {
   lead: "Your Verifiable",
   rest: "Agentic Foundation",
   sub: "Build, ship and run self-verifying AI applications that just work. From edge to cloud, and beyond.",
-  agentSkill: { label: "Add agent skill", command: START.command },
+  agentSkill: { label: "Try agent skill", command: START.command },
   steward: "Stewarded by an independent 501(c)(3).",
 };
 
