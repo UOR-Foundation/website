@@ -99,6 +99,7 @@ export function homeMarkdown() {
     "",
     `> ${HERO.sub}`,
     "",
+    startBanner(),
     "## Why",
     "",
     ABOUT.body,

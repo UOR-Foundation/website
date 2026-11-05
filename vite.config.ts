@@ -3,6 +3,7 @@ import fs from "fs";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { startCommand } from "./src/docs/vocabulary";
 import { ALL_PAGES, UPSTREAM_CHANGELOG, UPSTREAM_LLMS, UPSTREAM_LLMS_FULL, llmsTxt, llmsFullTxt, pageMarkdown } from "./src/docs/content";
 import { dockerMarkdown, roadmapJson } from "./src/docs/vocabulary";
 import { frameworkMarkdown } from "./src/framework/content";
@@ -65,14 +66,14 @@ function agentDocs(): Plugin {
       "playground.md": playgroundMarkdown(),
       "sitemap.xml": sitemapXml([...BLOG_POSTS.map((p) => `/blog/${p.slug}/`), ...ALL_PAGES.map((p) => `/docs/${p.slug}/`)]),
       "framework.md": frameworkMarkdown(),
-       "llms-full.txt": `${agentsMarkdown()}\n\n---\n\n${discordMarkdown()}\n\n---\n\n${shareMarkdown()}\n\n---\n\n${swarmMarkdown()}\n\n---\n\n${homeMarkdown()}\n\n---\n\n${frameworkMarkdown()}\n\n---\n\n${llmsFullTxt()}\n\n---\n\n${blogFullTxt()}`,
+       "llms-full.txt": startCommand(`${agentsMarkdown()}\n\n---\n\n${discordMarkdown()}\n\n---\n\n${shareMarkdown()}\n\n---\n\n${swarmMarkdown()}\n\n---\n\n${homeMarkdown()}\n\n---\n\n${frameworkMarkdown()}\n\n---\n\n${llmsFullTxt()}\n\n---\n\n${blogFullTxt()}`),
       "docs/llms.txt": llmsTxt(),
-      "docs/upstream/llms.txt": UPSTREAM_LLMS,
+      "docs/upstream/llms.txt": startCommand(UPSTREAM_LLMS),
       "docs/coming-from-containers.md": dockerMarkdown(),
       "docs/roadmap.json": roadmapJson(),
       "docs/requests.md": requestsMarkdown(),
       "docs/requests.json": requestsJson(),
-      "docs/llms-full.md": UPSTREAM_LLMS_FULL,
+      "docs/llms-full.md": startCommand(UPSTREAM_LLMS_FULL),
       "docs.md": llmsTxt(),
       "blog.md": blogLlmsTxt(),
       ".well-known/security.txt": `Contact: https://github.com/UOR-Foundation/website/security/advisories/new\nExpires: 2027-11-01T00:00:00.000Z\nCanonical: https://uor.foundation/.well-known/security.txt\n`,

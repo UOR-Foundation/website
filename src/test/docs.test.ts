@@ -115,7 +115,7 @@ describe("Golden path", () => {
 import { STEPS, ALL_PAGES as STEP_PAGES, llmsTxt as stepLlms } from "@/docs/content";
 describe("get started steps", () => {
   it("follows the container order", () => {
-    expect(STEPS.map((s) => s.title)).toEqual(["Install", "Build", "Run", "Verify", "Share"]);
+    expect(STEPS.map((s) => s.title)).toEqual(["Set up", "Build", "Run", "Verify", "Share"]);
   });
   it("marks Build and Share as coming, with no command", () => {
     for (const t of ["Build", "Share"]) { const s = STEPS.find((x) => x.title === t)!; expect(s.verb).toBeTruthy(); expect(s.code).toBeUndefined(); }
