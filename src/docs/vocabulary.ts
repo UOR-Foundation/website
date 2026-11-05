@@ -83,8 +83,12 @@ export function siteTerms(md: string) {
     .replace(/(?<![\w./-])[Hh]olos(?![\w/-])(?!\.[\w])/g, (m) => (m[0] === "H" ? "Apps" : "apps"))
     .replace(/(?<![\w./-])[Hh]olo(?![\w/-])(?!\.[\w])/g, (m) => (m[0] === "H" ? "App" : "app"))
     .replace(/\b([Aa])\s+app\b/g, (_m, a: string) => `${a === "A" ? "An" : "an"} app`);
-  return md.split(/(```[\s\S]*?```|`[^`\n]*`)/g).map((part, i) => (i % 2 ? part : prose(part))).join("");
+  return startCommand(md.split(/(```[\s\S]*?```|`[^`\n]*`)/g).map((part, i) => (i % 2 ? part : prose(part))).join(""));
 }
+
+/** The one canonical start: any upstream `npm install prism-code` line shows as the setup command. */
+export const START_COMMAND = "npx prism-code@latest setup";
+export const startCommand = (md: string) => md.replace(/npm (?:install|i)(?: --save-exact| -E| -D| --save-dev)* prism-code(?:@[\w.-]+)?/g, START_COMMAND);
 
 /** Reword upstream pages so the container equivalence stays implicit: no visible Docker wording. Prose rules never touch code spans. */
 export function implicitTerms(md: string) {
