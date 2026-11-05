@@ -4,10 +4,12 @@
 // link), and always shows the sentence itself, which works with any agent.
 import { useEffect, useState } from "react";
 import { ArrowRight, Check, Copy } from "lucide-react";
-import { AGENTS, DEFAULT_AGENT, agentById, sentence } from "./build";
+import { AGENTS, DEFAULT_AGENT, SETUP_COMMAND, SETUP_PUBLISHED, agentById, prismLink, sentence } from "./build";
 import { HERO } from "./copy";
 
 const KEY = "uor.build.agent";
+/** How long the page waits after a prism:// click before concluding no handler took it. */
+const HANDLER_WAIT_MS = 1500;
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [done, setDone] = useState(false);
@@ -28,6 +30,24 @@ export default function BuildBox() {
   const [description, setDescription] = useState("");
   const [agentId, setAgentId] = useState(DEFAULT_AGENT);
   const [built, setBuilt] = useState<string | null>(null);
+  const [noHandler, setNoHandler] = useState(false);
+
+  // A prism:// link that no handler takes does nothing visible. The page cannot ask the OS,
+  // so it watches for the one thing a handler does: take focus away. If the page is still
+  // focused and visible after the wait, say so and point at the setup and the copy.
+  const openWithHandler = (href: string) => {
+    setNoHandler(false);
+    let taken = false;
+    const took = () => { taken = true; };
+    window.addEventListener("blur", took, { once: true });
+    document.addEventListener("visibilitychange", took, { once: true });
+    window.location.href = href;
+    setTimeout(() => {
+      window.removeEventListener("blur", took);
+      document.removeEventListener("visibilitychange", took);
+      if (!taken && document.visibilityState === "visible") setNoHandler(true);
+    }, HANDLER_WAIT_MS);
+  };
 
   useEffect(() => {
     try { const saved = localStorage.getItem(KEY); if (saved && AGENTS.some((a) => a.id === saved)) setAgentId(saved); } catch { /* private mode */ }
@@ -80,7 +100,31 @@ export default function BuildBox() {
 
       {handoff && built && (
         <div className="fd-build-result mt-4 rounded-2xl border border-[hsl(var(--fd-line))] p-4 text-sm sm:text-base" aria-live="polite">
-          {handoff.kind === "command" && (
+          {handoff.kind === "command" && SETUP_PUBLISHED && (
+            <>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => openWithHandler(prismLink(agent.id, built))}
+                  className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--fd-fg))] px-5 py-2 font-medium text-[hsl(var(--fd-bg))] transition-colors hover:bg-[hsl(var(--fd-accent))]"
+                >
+                  {HERO.build.openIn} {agent.name} <ArrowRight className="h-4 w-4" />
+                </button>
+                <span className="text-[hsl(var(--fd-dim))]">{HERO.build.orRun}</span>
+              </div>
+              {noHandler && (
+                <p className="mt-3 text-[hsl(var(--fd-accent))]" role="status">{HERO.build.nothingOpened}</p>
+              )}
+              <div className="mt-3 flex items-start gap-3">
+                <code className="fd-mono min-w-0 flex-1 break-words">{handoff.command}</code>
+                <CopyButton text={handoff.command} label={`Copy the ${agent.name} command`} />
+              </div>
+              <p className="mt-3 text-sm text-[hsl(var(--fd-dim))]">
+                {HERO.build.setupOnce} <code className="fd-mono">{SETUP_COMMAND}</code>
+              </p>
+            </>
+          )}
+          {handoff.kind === "command" && !SETUP_PUBLISHED && (
             <>
               <p className="mb-2 text-[hsl(var(--fd-dim))]">{HERO.build.runThis} {agent.name}:</p>
               <div className="flex items-start gap-3">

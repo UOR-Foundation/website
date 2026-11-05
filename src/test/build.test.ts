@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { AGENTS, MCP_NAME, MCP_URL, agentById, sentence, shellQuote } from "@/site/build";
+import { AGENTS, MCP_NAME, MCP_URL, OPEN_AGENTS, SETUP_COMMAND, agentById, prismLink, sentence, shellQuote } from "@/site/build";
 import { HERO } from "@/site/copy";
 
 const SENTENCE = "Go to uor.foundation and build me a Prism app that validates a card number with the Luhn check.";
@@ -60,6 +60,25 @@ describe("the hand-offs", () => {
       expect(h.then).toBe(SENTENCE);
       expect(agentById(id).setup).toContain(MCP_URL);
     }
+  });
+
+  it("the prism:// link is the shape prism-code open accepts, with the sentence as its only payload", () => {
+    // Mirrors sdk/npm/prism-code/src/open.mjs in UOR-Foundation/PrismPM#538: host build, no path,
+    // parameters agent and q only, the agent one of six ids, the sentence one plain line.
+    const href = prismLink("claude-code", SENTENCE);
+    const u = new URL(href);
+    expect(u.protocol).toBe("prism:");
+    expect(u.hostname).toBe("build");
+    expect(["", "/"]).toContain(u.pathname);
+    expect([...u.searchParams.keys()].sort()).toEqual(["agent", "q"]);
+    expect(u.searchParams.get("agent")).toBe("claude-code");
+    expect(u.searchParams.get("q")).toBe(SENTENCE);
+    expect(u.username + u.password + u.port + u.hash).toBe("");
+  });
+
+  it("the box's agent ids are exactly the ids prism-code open accepts", () => {
+    expect(AGENTS.map((a) => a.id).sort()).toEqual([...OPEN_AGENTS].sort());
+    expect(SETUP_COMMAND).toBe("npx prism-code setup");
   });
 
   it("every agent has a unique id and a name, and an unknown id falls back to the first", () => {

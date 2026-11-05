@@ -83,6 +83,25 @@ export const AGENTS: Agent[] = [
 
 export const DEFAULT_AGENT = AGENTS[0].id;
 
+/**
+ * `npx prism-code setup` (prism-code 0.3.0, UOR-Foundation/PrismPM#538) registers a prism://
+ * handler that opens the agent with the sentence in one click. Until that version is on npm
+ * the box shows no open button for terminal agents, because the command it would tell people
+ * to run does not exist yet. Flip this on the release.
+ */
+export const SETUP_PUBLISHED = false;
+export const SETUP_COMMAND = "npx prism-code setup";
+/** The agent ids prism-code open accepts: the same six, by the same ids. */
+export const OPEN_AGENTS = ["claude-code", "codex", "cursor", "vscode", "claude", "chatgpt"] as const;
+
+/** The link the registered handler opens. The sentence is the only payload; prism-code open refuses anything else. */
+export function prismLink(agentId: string, s: string) {
+  const u = new URL("prism://build");
+  u.searchParams.set("agent", agentId);
+  u.searchParams.set("q", s);
+  return u.toString();
+}
+
 export function agentById(id: string) {
   return AGENTS.find((a) => a.id === id) ?? AGENTS[0];
 }
