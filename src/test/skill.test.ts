@@ -157,7 +157,7 @@ describe("agent skill discovery", () => {
 
   it("agents.json still advertises the install command and links the index", () => {
     const wk = JSON.parse(wellKnownJson());
-    expect(wk.install.skill).toBe("npx skills add https://uor.foundation");
+    expect(wk.install.command).toBe("npx prism-code@latest setup");
     expect(wk.install.skill_index).toBe(`https://uor.foundation${SKILL_INDEX}`);
     expect(Object.keys(skillFiles())).toContain(SKILL_INDEX.slice(1));
   });

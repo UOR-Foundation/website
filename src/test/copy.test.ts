@@ -24,7 +24,7 @@ describe("Home page copy", () => {
   });
 
   it("never references the old website", () => {
-    expect(JSON.stringify([f, a]).split("npx skills add https://uor.foundation").join("")).not.toMatch(/uor\.foundation/);
+    expect(JSON.stringify([f, a])).not.toMatch(/uor\.foundation/);
   });
 
   it("Framework page text contains no dashes or old site links", () => {

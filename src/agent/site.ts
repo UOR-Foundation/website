@@ -1,6 +1,6 @@
 // One source for every site wide agent file: llms.txt front door, agents.md manual,
 // page twins, sitemap and .well-known pointers. Rendered by the Vite agentDocs plugin.
-import { ABOUT, FRAMEWORK, HERO } from "../site/copy";
+import { ABOUT, FRAMEWORK, HERO, START } from "../site/copy";
 import { DISCORD_URL } from "../site/links";
 import { INTRO, FOCUS, BOARD, DOCS as GOV } from "../about/content";
 import { PRISM_REQUESTS } from "../docs/requests.generated";
@@ -47,6 +47,17 @@ export const PAGES = [
   { path: "/agents/discord", md: "/agents/discord.md", title: "Post to Discord", summary: "How an agent posts findings to the UOR Discord." },
   { path: "/about/", md: "/about.md", title: "About", summary: "The nonprofit foundation, board and governance." },
 ];
+
+/** Opening lines every agent file shares: the one command, then where the manual lives. */
+export const startBanner = () => [`> Start: \`${START.command}\`. Agent manual: [/agents.md](/agents.md).`, ""].join("\n");
+const startSection = () => [
+  "## Start", "", START.line, "", "```sh", START.command, "```", "",
+  "Requires Node 22 or later. Runs locally; there is no account, remote API or hosted MCP server.", "",
+].join("\n");
+const capabilitiesSection = () => [
+  "## What you get", "", ...START.capabilities.map((c) => `- ${c}.`), "",
+  "## Tools", "", ...START.tools.map((t) => `- **${t.name}**: ${t.what}`), "",
+].join("\n");
 
 const feedbackSection = () => [
   "## Give feedback",
@@ -99,8 +110,7 @@ export function homeMarkdown() {
     "",
     "## What",
     "",
-    `- Install for humans: \`${HERO.install.humans}\``,
-    `- Install for agents: \`${HERO.install.agents}\``,
+    `- Start: \`${START.command}\``,
     ...PAGES.slice(1).map((p) => `- [${p.title}](${p.md}): ${p.summary}`),
     "",
     "Agent manual: [/agents.md](/agents.md)",
@@ -110,7 +120,7 @@ export function homeMarkdown() {
 
 export function aboutMarkdown() {
   return [
-    `# ${INTRO.title}`, "", `> ${INTRO.line}`, "", `Governance: ${INTRO.cta.href}`, "",
+    `# ${INTRO.title}`, "", `> ${INTRO.line}`, "", startBanner(), `Governance: ${INTRO.cta.href}`, "",
     `## ${FOCUS.title}`, "", ...FOCUS.items.map((i) => `- **${i.t}**: ${i.b}`), "",
     `## ${BOARD.title}`, "", BOARD.line, "", ...BOARD.members.map((m) => `- **${m.name}**, ${m.role}. ${m.bio}`), "",
     `## ${GOV.title}`, "", ...GOV.items.map((d) => `- [${d.t}](${d.href})`), "",
@@ -120,13 +130,13 @@ export function aboutMarkdown() {
 export function playgroundMarkdown() {
   return [
     "# Prism Playground", "",
-    "> Write and run Prism code in the browser, nothing to install.", "",
+    "> Write and run Prism code in the browser, nothing to install.", "", startBanner(),
     "## How to use", "",
     "1. Open /playground/ in a top level browser tab.",
     "2. Pick an example: content identity, canonical form or change detection.",
     "3. Edit the code; it runs on save and output shows in the terminal.",
     "4. Click Share to copy a link that contains the whole project.", "",
-    "Agents without a browser: run the same code locally after `npm install prism-code`.", "",
+    `Agents without a browser: run \`${START.command}\` in a project folder, then run the same code locally.`, "",
     "## First example", "", "```ts", FIRST_EXAMPLE, "```", "",
   ].join("\n");
 }
@@ -135,6 +145,8 @@ export function agentsMarkdown() {
   return [
     "# Agent manual for the UOR Foundation site", "",
     "> Start here if you are an AI agent. Everything on this site is available as plain text.", "",
+    startSection(),
+    capabilitiesSection(),
     "## Why you are here", "",
     "UOR gives every digital object an identity computed from its content, so any agent can verify what data is without trusting where it came from. Prism is the SDK that brings this into your code.", "",
     "Know container tooling? Read [/docs/coming-from-containers.md](/docs/coming-from-containers.md) first.", "",
@@ -143,10 +155,8 @@ export function agentsMarkdown() {
     "2. Any page has a plain text twin: add `.md` to its path (for example `/docs/get-started/quickstart.md`, `/blog/<slug>.md`).",
     "3. Machine index: [/.well-known/agents.json](/.well-known/agents.json) and [/sitemap.xml](/sitemap.xml).", "",
     "## What you can do", "",
-    `- Install Prism: \`${HERO.install.humans}\` (Node 22 or later; the published package is 0.2.0).`,
-    `- Install the Prism skill into your agent: \`${HERO.install.agents}\` (index: [${SKILL_INDEX}](${SKILL_INDEX})).`,
+    `- Set up Prism and its agent skill: \`${START.command}\` (skill index: [${SKILL_INDEX}](${SKILL_INDEX})).`,
     "- What ships today: [/docs/reference/release-status.md](/docs/reference/release-status.md). Trust it over any other page.",
-    "- There is no remote API or MCP server yet. Tools run locally through the `prism-code` package.",
     "- Run this first example:", "", "```ts", FIRST_EXAMPLE, "```", "",
     `- Read the code: https://github.com/${SDK_REPO}`,
     `- Ask humans: ${DISCORD_URL} (UOR Foundation Discord).`,
@@ -168,7 +178,11 @@ export function frontDoor(docsIndex: string, blogIndex: string) {
     "",
     `> ${HERO.sub}`,
     "",
-    "Agents: start with [/agents.md](/agents.md) for exact steps and how to give feedback.",
+    "UOR gives every digital object an identity computed from its content. Prism is the open SDK for building formally verified, self verifying applications on it.",
+    "",
+    startSection(),
+    capabilitiesSection(),
+    "Full agent manual: [/agents.md](/agents.md). Machine index: [/.well-known/agents.json](/.well-known/agents.json).",
     "",
     "## Why",
     "",
@@ -182,7 +196,6 @@ export function frontDoor(docsIndex: string, blogIndex: string) {
     "",
     "## What",
     "",
-    `- Install: \`${HERO.install.humans}\``,
     ...PAGES.map((p) => `- [${p.title}](${p.md}): ${p.summary}`),
     "",
     docsIndex.replace(/^# .*\n+(> .*\n+)?/, "").replace(/## Optional[\s\S]*$/, "").trimEnd(),
@@ -209,6 +222,9 @@ export function wellKnownJson() {
   return JSON.stringify({
     name: "UOR Foundation",
     description: HERO.sub,
+    start: START.command,
+    capabilities: START.capabilities,
+    tools: START.tools,
     entry: `${ORIGIN}/llms.txt`,
     manual: `${ORIGIN}/agents.md`,
     full_text: `${ORIGIN}/llms-full.txt`,
@@ -217,7 +233,7 @@ export function wellKnownJson() {
     swarm: `${ORIGIN}/swarm.md`,
     wall: `${ORIGIN}/agents/index.md`,
     pages: PAGES.map((p) => ({ title: p.title, url: ORIGIN + p.path, markdown: ORIGIN + p.md })),
-    install: { npm: HERO.install.humans, skill: HERO.install.agents, skill_index: `${ORIGIN}${SKILL_INDEX}` },
+    install: { command: START.command, skill_index: `${ORIGIN}${SKILL_INDEX}` },
     requests: { markdown: `${ORIGIN}/docs/requests.md`, json: `${ORIGIN}/docs/requests.json` },
     feedback: { repo: FEEDBACK_REPO, label: "agent-submitted", kinds: FEEDBACK_KINDS.map((k) => ({ id: k.id, url: feedbackUrl(k.id) })), sdk_features: SDK_FEATURES },
   }, null, 2) + "\n";

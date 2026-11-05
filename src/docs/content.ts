@@ -16,7 +16,7 @@ export const UPSTREAM_LLMS_FULL = PRISM_LLMS_FULL;
 export const DOCUMENTED_API = "v1.0";
 export const RELEASE_STATUS = [
   { item: "Documented API", status: DOCUMENTED_API, note: "What these pages describe" },
-  { item: "prism-code on npm", status: PRISM_SOURCE.npm, note: "What npm install prism-code gives you today" },
+  { item: "prism-code on npm", status: PRISM_SOURCE.npm, note: "The runtime npx prism-code@latest setup adds today" },
   { item: "prism CLI", status: "Not shipped", note: "Usage shown for reference" },
   { item: "Rust crates", status: "Not published", note: "Not yet on crates.io" },
 ];
@@ -94,7 +94,7 @@ export const PLANNED: { group: string; label: string; verb: string; milestone: M
 
 /** The five step path from install to share, in Docker's get started order. */
 export const GOLDEN_PATH: { step: string; text: string; cmd: string; slug?: string; verb?: string }[] = [
-  { step: "Install", text: "Add the Prism runtime to any JavaScript project in one command.", cmd: "npm install prism-code", slug: "api" },
+  { step: "Set up", text: "Set up Prism and its agent skill in any project with one command.", cmd: "npx prism-code@latest setup", slug: "api" },
   { step: "Build", text: "Turn your app into one portable package, ready to run anywhere.", cmd: "prism build", verb: "build" },
   { step: "Run", text: "Load an app, start it and send it a request, the same way everywhere.", cmd: "load + instantiate + dispatch", slug: "api/load" },
   { step: "Verify", text: "Confirm every result is exactly what the code produced, with proof anyone can check.", cmd: "verify", slug: "api/verify" },
@@ -105,10 +105,10 @@ export const GOLDEN_PATH: { step: string; text: string; cmd: string; slug?: stri
 export type Step = { slug: string; title: string; summary: string; opening: string; task?: string; taskLine?: string; code?: string; output?: string; handoff: string; verb?: string; ref: string };
 const CALC = "import { load } from 'prism-code';\n\nconst app = await load('./Calculator.holo');";
 export const STEPS: Step[] = [
-  { slug: "get-started/install", title: "Install", summary: "Add the Prism runtime to any JavaScript project in one command.",
-    opening: "Prism runs apps: small, sealed packages of code that give the same answer on a laptop, a server or in a browser. The runtime that loads and runs them is one npm package, so any JavaScript project can use it.",
-    task: "Add the runtime", taskLine: "Run this in your project folder.", code: "```bash\nnpm install prism-code\n```",
-    handoff: "You now have the runtime. Next, see how an app gets made.", ref: "api" },
+  { slug: "get-started/install", title: "Set up", summary: "Set up Prism and its agent skill in any project with one command.",
+    opening: "Prism runs apps: small, sealed packages of code that give the same answer on a laptop, a server or in a browser. One command sets up the runtime that loads and runs them, and teaches your coding agent the Prism SDK.",
+    task: "Set up Prism", taskLine: "Run this in your project folder.", code: "```bash\nnpx prism-code@latest setup\n```",
+    handoff: "Prism is set up. Next, see how an app gets made.", ref: "api" },
   { slug: "get-started/build", title: "Build", summary: "Turn your code into one portable app, ready to run anywhere.", verb: "build",
     opening: "Building packages your code, its settings and its examples into one app file with a fixed fingerprint. It is the step you know as building an image: write it once, then run it anywhere.",
     handoff: "Until building ships, every other step works with a ready made app. Next, run one.", ref: "reference/holo-format" },
