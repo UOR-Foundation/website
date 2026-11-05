@@ -204,11 +204,8 @@ export default function FoundationHome() {
             <Label>{FRAMEWORK.label}</Label>
             <h2 className={`${h2Main} whitespace-pre-line`}>{FRAMEWORK.title}</h2>
             <p className={`${FD_BODY} mt-7 max-w-md`}>An open SDK to build, ship and run self-verifying AI applications. From edge to cloud.</p>
-            <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-3">
-              <a href="/docs/" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--fd-dim))] transition-colors hover:text-[hsl(var(--fd-fg,0_0%_100%))]"><BookOpen className="h-4 w-4" /> Read the docs</a>
-              <a href="/playground/" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--fd-dim))] transition-colors hover:text-[hsl(var(--fd-fg,0_0%_100%))]"><SquareTerminal className="h-4 w-4" /> Try playground</a>
-            </div>
-            <div className="mt-8 flex w-full flex-col sm:w-fit">
+            <div className="mt-10 flex w-full flex-col sm:w-fit">
+              <p className="mb-4 text-center text-base sm:text-left">{HERO.agentSkill.label}</p>
               <div className="flex items-stretch rounded-[28px] border border-[hsl(var(--fd-line))] bg-[hsl(var(--fd-bg)/0.8)] p-1.5 backdrop-blur sm:items-center sm:rounded-full sm:pl-6 sm:pr-2">
                 <button
                   onClick={async () => { await navigator.clipboard?.writeText(HERO.agentSkill.command); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
@@ -220,7 +217,10 @@ export default function FoundationHome() {
                   {copied ? <Check className="h-4 w-4 shrink-0 text-[hsl(var(--fd-accent))]" /> : <Copy className="h-4 w-4 shrink-0 text-[hsl(var(--fd-dim))]" />}
                 </button>
               </div>
-              <p className="mt-5 text-center text-base">{HERO.agentSkill.label}</p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 sm:justify-start">
+                <a href="/docs/" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--fd-dim))] transition-colors hover:text-[hsl(var(--fd-fg,0_0%_100%))]"><BookOpen className="h-4 w-4" /> Read the docs</a>
+                <a href="/playground/" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--fd-dim))] transition-colors hover:text-[hsl(var(--fd-fg,0_0%_100%))]"><SquareTerminal className="h-4 w-4" /> Try playground</a>
+              </div>
             </div>
           </div>
         </section>
