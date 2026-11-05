@@ -131,7 +131,7 @@ export default function FoundationHome() {
               )
             )}
           </p>
-          <p className="mt-[clamp(28px,6vh,56px)] text-base">{HERO.agentSkill.label}</p>
+          <p className={`${FD_LABEL} mt-[clamp(28px,6vh,56px)]`}>{HERO.agentSkill.label}</p>
           <span className="fd-spectrum mt-4">
             <button
               onClick={async () => { await navigator.clipboard?.writeText(HERO.agentSkill.command); setHeroCopied(true); setTimeout(() => setHeroCopied(false), 1500); }}
@@ -205,7 +205,7 @@ export default function FoundationHome() {
             <h2 className={`${h2Main} whitespace-pre-line`}>{FRAMEWORK.title}</h2>
             <p className={`${FD_BODY} mt-7 max-w-md`}>An open SDK to build, ship and run self-verifying AI applications. From edge to cloud.</p>
             <div className="mt-10 flex w-full flex-col sm:w-fit">
-              <p className="mb-4 text-center text-base sm:text-left">{HERO.agentSkill.label}</p>
+              <p className={`${FD_LABEL} mb-4 text-center sm:text-left`}>{HERO.agentSkill.label}</p>
               <div className="flex items-stretch rounded-[28px] border border-[hsl(var(--fd-line))] bg-[hsl(var(--fd-bg)/0.8)] p-1.5 backdrop-blur sm:items-center sm:rounded-full sm:pl-6 sm:pr-2">
                 <button
                   onClick={async () => { await navigator.clipboard?.writeText(HERO.agentSkill.command); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
