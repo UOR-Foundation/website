@@ -388,8 +388,8 @@ export const PRISM_MILESTONES: { number: number; title: string; description: str
     "description": "Everything prism-code v0.1 needs, on LexLean v0.4. Tracking: #211",
     "due": "2026-10-28T00:00:00Z",
     "state": "open",
-    "open": 5,
-    "closed": 26,
+    "open": 3,
+    "closed": 28,
     "url": "https://github.com/UOR-Foundation/PrismPM/milestone/1"
   },
   {
