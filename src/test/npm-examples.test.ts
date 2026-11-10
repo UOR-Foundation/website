@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { FIRST_EXAMPLE } from "@/agent/site";
 import { SOURCE } from "@/docs/content";
 import { createProject, EXAMPLES as PLAYGROUND } from "@/playground/project";
+import { HOW, WHAT } from "@/framework/content";
 
 // Runs the code the site shows against the prism-code release the site states (npm `latest` at the last sync),
 // in a fresh project, the way a reader would. Needs network for npm install.
@@ -33,6 +34,23 @@ describe(`site examples run on prism-code ${SOURCE.npm}`, { timeout: MINUTE }, (
     const r = runNode("first.mjs", FIRST_EXAMPLE);
     expect(r.stderr).toBe("");
     expect(r.stdout).toBe("true false\n");
+  });
+
+  it("codeHash does what the framework page says and no more", () => {
+    expect(HOW.steps[0].tech).toContain("normalizes only line endings, a leading BOM and trailing whitespace");
+    expect(WHAT.outputs.find((o) => o.t === "Routable address")?.b).toMatch(/^Planned/);
+    const r = runNode("claims.mjs", `import * as c from "prism-code/canonical";
+console.log(JSON.stringify({
+  keyOrder: c.codeHash('{"a":1,"b":2}') === c.codeHash('{"b":2,"a":1}'),
+  whitespace: c.codeHash("x\\r\\n") === c.codeHash("x  \\n"),
+  exports: Object.keys(c).sort(),
+}));`);
+    expect(r.stderr).toBe("");
+    const out = JSON.parse(r.stdout);
+    expect(out.keyOrder).toBe(false);
+    expect(out.whitespace).toBe(true);
+    // An address, CID or IPv6 export here means the framework page can say it ships.
+    expect(out.exports.filter((k: string) => /addr|cid|ipv6|word/i.test(k))).toEqual([]);
   });
 
   it("the playground pins this release and every example runs on it without warnings", () => {

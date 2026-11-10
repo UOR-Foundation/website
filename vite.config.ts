@@ -5,7 +5,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { startCommand } from "./src/docs/vocabulary";
 import { ALL_PAGES, UPSTREAM_CHANGELOG, UPSTREAM_LLMS, UPSTREAM_LLMS_FULL, llmsTxt, llmsFullTxt, pageMarkdown } from "./src/docs/content";
-import { dockerMarkdown, roadmapJson } from "./src/docs/vocabulary";
+import { roadmapJson } from "./src/docs/vocabulary";
 import { frameworkMarkdown } from "./src/framework/content";
 import { aboutMarkdown, agentsMarkdown, frontDoor, homeMarkdown, playgroundMarkdown, requestsJson, requestsMarkdown, RETIRED_PATHS, retiredFile, sitemapXml, wellKnownJson } from "./src/agent/site";
 import { shareMarkdown, swarmMarkdown, wallMarkdown } from "./src/agent/share";
@@ -69,7 +69,6 @@ function agentDocs(): Plugin {
        "llms-full.txt": startCommand(`${agentsMarkdown()}\n\n---\n\n${discordMarkdown()}\n\n---\n\n${shareMarkdown()}\n\n---\n\n${swarmMarkdown()}\n\n---\n\n${homeMarkdown()}\n\n---\n\n${frameworkMarkdown()}\n\n---\n\n${llmsFullTxt()}\n\n---\n\n${blogFullTxt()}`),
       "docs/llms.txt": llmsTxt(),
       "docs/upstream/llms.txt": startCommand(UPSTREAM_LLMS),
-      "docs/coming-from-containers.md": dockerMarkdown(),
       "docs/roadmap.json": roadmapJson(),
       "docs/requests.md": requestsMarkdown(),
       "docs/requests.json": requestsJson(),
@@ -83,6 +82,8 @@ function agentDocs(): Plugin {
     for (const r of RETIRED_PATHS) out[r] = retiredFile(r);
     for (const p of BLOG_POSTS) out[`blog/${p.slug}.md`] = postMarkdown(p);
     for (const p of ALL_PAGES) out[`docs/${p.slug}.md`] = pageMarkdown(p);
+    // Old path of the containers page, kept for links already out there: the same bytes as the page, never a second text.
+    out["docs/coming-from-containers.md"] = out["docs/get-started/coming-from-containers.md"];
     if (UPSTREAM_CHANGELOG) out["docs/changelog.md"] = pageMarkdown(UPSTREAM_CHANGELOG);
     return out;
   };

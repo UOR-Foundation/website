@@ -4,7 +4,8 @@ export const PRISM_SOURCE = {
   "branch": "docs-site",
   "commit": "45f25097758259279380540d68c22b8339fcd91c",
   "committedAt": "2026-11-09T14:20:02Z",
-  "npm": "0.7.2"
+  "npm": "0.7.2",
+  "license": "MIT OR Apache-2.0"
 } as const;
 export type PrismPage = { file: string; title: string; description: string; availableIn: string; body: string };
 export const PRISM_PAGES: PrismPage[] = [

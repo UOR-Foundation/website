@@ -13,13 +13,17 @@ export const SOURCE = PRISM_SOURCE;
 export const UPSTREAM_LLMS = PRISM_LLMS;
 export const UPSTREAM_LLMS_FULL = PRISM_LLMS_FULL;
 
+/** "MIT OR Apache-2.0" as words: "MIT or Apache 2.0". */
+export const spdxWords = (id: string) => id.replace(/ OR /g, " or ").replace(/ AND /g, " and ").replace(/-(\d)/g, " $1");
+
 /** Shown on every docs page: the docs describe the v1.0 API, npm ships an earlier release. */
 export const DOCUMENTED_API = "v1.0";
 export const RELEASE_STATUS = [
   { item: "Documented API", status: DOCUMENTED_API, note: "What these pages describe" },
   { item: "prism-code on npm", status: PRISM_SOURCE.npm, note: "The runtime npx prism-code@latest setup adds today" },
   { item: "prism CLI", status: "Not shipped", note: "Usage shown for reference" },
-  { item: "Rust crates", status: "Not published", note: "Not yet on crates.io" },
+  { item: "Prism Rust crate", status: "Not published", note: "The UOR Framework crates uor-foundation and uor-addr are on crates.io; they are not the Prism SDK" },
+  { item: "Licence", status: spdxWords(PRISM_CODE.license) || "See package", note: `prism-code on npm${PRISM_SOURCE.license ? `. The PrismPM source repository: ${spdxWords(PRISM_SOURCE.license)}` : ""}` },
 ];
 
 const updated = new Date(PRISM_SOURCE.committedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });

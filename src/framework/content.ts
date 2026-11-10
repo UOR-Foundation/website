@@ -31,9 +31,9 @@ export const HOW = {
   title: "Addresses derived from content.",
   pipeline: ["data", "canonical form", "SHA 256", "address"],
   steps: [
-    { t: "Canonicalize", plain: "Like tidying a sentence so the same meaning is always written the same way.", tech: "Data is reduced to one exact byte form, independent of formatting, key order or encoding." },
+    { t: "Canonicalize", plain: "Like tidying a sentence so the same meaning is always written the same way.", tech: "Data is reduced to one exact byte form. For JSON, the uor-addr library sorts keys (RFC 8785), writes each number one way and normalizes text to Unicode NFC. For text, codeHash in prism-code normalizes only line endings, a leading BOM and trailing whitespace." },
     { t: "Fingerprint", plain: "Like a fingerprint, not a name tag: it comes from what the thing is.", tech: "The canonical bytes are hashed with SHA 256 into a fixed, collision resistant identifier." },
-    { t: "Address", plain: "Like a street address that never changes, because the house never moves.", tech: "The identifier becomes a routable address, so the same bytes resolve to the same address everywhere." },
+    { t: "Address", plain: "Like a street address that never changes, because the house never moves.", tech: "The identifier is the address, so the same bytes give the same address everywhere. Routable forms (IPv6, CID, words) are planned; no published package produces them yet." },
   ],
   promise: "Same content, same address. On any machine, forever.",
   pillars: ["No registry.", "No middleman.", "No single point of failure."],
@@ -41,13 +41,13 @@ export const HOW = {
 
 export const WHAT = {
   label: "What you get",
-  title: "One call. Everything you need.",
-  line: "One function turns any value into a verifiable identity. Anyone holding the bytes can recompute it and check it locally.",
+  title: "What ships today.",
+  line: "Each format has one canonical form and one hash. Anyone holding the bytes can recompute the identity and check it locally.",
   outputs: [
-    { t: "Canonical bytes", b: "One exact form of your data, the same on every machine." },
-    { t: "SHA 256 ID", b: "A permanent identifier derived from those bytes." },
-    { t: "Routable address", b: "The same identity as IPv6, CID or human readable words." },
-    { t: "Verifier", b: "A single check that proves bytes match an identity." },
+    { t: "Canonical bytes", b: "JSON: uor-addr for Rust, JavaScript and Python. Text: codeHash in prism-code, which takes text, not any value." },
+    { t: "SHA 256 ID", b: "A permanent identifier derived from those bytes, written sha256: plus hex. A Prism app also carries BLAKE3 identities." },
+    { t: "Routable address", b: "Planned: the same identity as IPv6, CID or human readable words. Not in any published package yet." },
+    { t: "Verifier", b: "Recompute the identity from the bytes and compare. Loading a Prism app recomputes its digests and reports whether they match." },
   ],
 };
 

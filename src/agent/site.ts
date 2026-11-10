@@ -171,7 +171,7 @@ export function agentsMarkdown() {
     capabilitiesSection(),
     "## Why you are here", "",
     "UOR gives every digital object an identity computed from its content, so any agent can verify what data is without trusting where it came from. Prism is the SDK that brings this into your code.", "",
-    "Know container tooling? Read [/docs/coming-from-containers.md](/docs/coming-from-containers.md) first.", "",
+    "Know container tooling? Read [/docs/get-started/coming-from-containers.md](/docs/get-started/coming-from-containers.md) first.", "",
     "## How to work with this site", "",
     "1. Read [/llms.txt](/llms.txt) for the map, or [/llms-full.txt](/llms-full.txt) for everything in one file.",
     "2. Any page has a plain text twin: add `.md` to its path (for example `/docs/get-started/quickstart.md`, `/blog/<slug>.md`).",
