@@ -4,6 +4,7 @@ import { ABOUT, FRAMEWORK, HERO, START } from "../site/copy";
 import { DISCORD_URL } from "../site/links";
 import { INTRO, FOCUS, BOARD, DOCS as GOV } from "../about/content";
 import { PRISM_REQUESTS } from "../docs/requests.generated";
+import { PRISM_CODE } from "../docs/npm.generated";
 
 export const ORIGIN = "https://uor.foundation";
 export const FEEDBACK_REPO = "UOR-Foundation/website";
@@ -157,7 +158,7 @@ export function agentsMarkdown() {
     "3. Machine index: [/.well-known/agents.json](/.well-known/agents.json) and [/sitemap.xml](/sitemap.xml).", "",
     "## What you can do", "",
     `- Set up Prism and its agent skill: \`${START.command}\` (skill index: [${SKILL_INDEX}](${SKILL_INDEX})).`,
-    "- What ships today: [/docs/reference/release-status.md](/docs/reference/release-status.md). Trust it over any other page.",
+    `- What ships today: prism-code ${PRISM_CODE.version}, the npm \`latest\` release. \`npx prism-code@latest --help\` lists its commands and the [prism skill](/.well-known/agent-skills/prism/SKILL.md), copied from that release, says what each does. [/docs/reference/release-status.md](/docs/reference/release-status.md) maps the documented API to releases.`,
     "- Run this first example:", "", "```ts", FIRST_EXAMPLE, "```", "",
     `- Read the code: https://github.com/${SDK_REPO}`,
     `- Ask humans: ${DISCORD_URL} (UOR Foundation Discord).`,

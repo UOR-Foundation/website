@@ -1,9 +1,12 @@
 import { strFromU8, strToU8, compressSync, gunzipSync } from "fflate";
+import { PRISM_CODE } from "../docs/npm.generated";
 
 export type ProjectFiles = Record<string, string>;
 export const STORAGE_KEY = "uor-playground-project-v1";
+/** The prism-code release new projects install: npm `latest` at the last docs sync, never a hand-typed pin. */
+export const PRISM_CODE_VERSION = PRISM_CODE.version;
 export const EXAMPLES = [
-  { id: "identity", name: "Content identity", source: `import { codeHash, describe } from 'prism-code';
+  { id: "identity", name: "Content identity", source: `import { codeHash, describe } from 'prism-code/canonical';
 
 const source = 'const answer = 42;\\n';
 const hash = codeHash(source);
@@ -13,7 +16,7 @@ console.log(hash);
 console.log('Source facts');
 console.log(JSON.stringify(describe(source), null, 2));
 ` },
-  { id: "canonical", name: "Canonical form", source: `import { canonicalize, codeHash } from 'prism-code';
+  { id: "canonical", name: "Canonical form", source: `import { canonicalize, codeHash } from 'prism-code/canonical';
 
 const original = 'const answer = 42;  \\r\\n\\r\\n';
 const canonical = canonicalize(original);
@@ -22,7 +25,7 @@ console.log('Original:', JSON.stringify(original));
 console.log('Canonical:', JSON.stringify(canonical));
 console.log('Same identity:', codeHash(original) === codeHash(canonical));
 ` },
-  { id: "changes", name: "Detect changes", source: `import { differs, codeHash } from 'prism-code';
+  { id: "changes", name: "Detect changes", source: `import { differs, codeHash } from 'prism-code/canonical';
 
 const original = 'const answer = 42;\\n';
 const reformatted = 'const answer = 42;   \\r\\n';
@@ -39,7 +42,7 @@ export function createProject(exampleId = "identity"): ProjectFiles {
   const example = EXAMPLES.find((item) => item.id === exampleId) ?? EXAMPLES[0];
   return {
     "index.ts": example.source,
-    "package.json": JSON.stringify({ name: "prism-playground", private: true, type: "module", scripts: { start: "tsx index.ts" }, dependencies: { "prism-code": "0.1.0", tsx: "4.20.6", typescript: "5.9.3" } }, null, 2) + "\n",
+    "package.json": JSON.stringify({ name: "prism-playground", private: true, type: "module", scripts: { start: "tsx index.ts" }, dependencies: { "prism-code": PRISM_CODE_VERSION, tsx: "4.20.6", typescript: "5.9.3" } }, null, 2) + "\n",
     "tsconfig.json": JSON.stringify({ compilerOptions: { target: "ES2022", module: "ESNext", moduleResolution: "Bundler", strict: true, skipLibCheck: true, noEmit: true } }, null, 2) + "\n",
   };
 }

@@ -9,7 +9,7 @@ import SiteHeader from "@/site/SiteHeader";
 import { Button } from "./Button";
 import CodeEditor from "./CodeEditor";
 import Terminal, { type TerminalHandle } from "./Terminal";
-import { createProject, EXAMPLES, loadProject, encodeProject, STORAGE_KEY, validFilename, type ProjectFiles } from "./project";
+import { createProject, EXAMPLES, loadProject, encodeProject, PRISM_CODE_VERSION, STORAGE_KEY, validFilename, type ProjectFiles } from "./project";
 import { ensureIsolation, getRuntime, pipeOutput, syncFiles } from "./runtime";
 
 type Status = "starting" | "ready" | "installing" | "running" | "error" | "unavailable";
@@ -158,7 +158,7 @@ export default function Playground() {
           <section className={`pg-editor-panel ${mobileView !== "editor" ? "pg-mobile-hidden" : ""}`} aria-label="Code editor">
             <div className="pg-filebar"><div className="pg-file-tabs">{Object.keys(files).map((name) => <Button key={name} className={active === name ? "pg-file-active" : ""} onClick={() => setActive(name)} title={name}>{name.endsWith(".json") ? <FileJson size={14} /> : <FileCode2 size={14} />}{name}</Button>)}</div><Button icon aria-label="Add file" title="Add file" onClick={() => setAddFile(true)}><Plus size={16} /></Button>{active !== "index.ts" && active !== "package.json" && active !== "tsconfig.json" && <Button icon aria-label="Delete file" title="Delete file" onClick={() => { setFiles((previous) => Object.fromEntries(Object.entries(previous).filter(([name]) => name !== active))); setActive("index.ts"); }}><X size={15} /></Button>}</div>
             <div className="pg-editor"><CodeEditor filename={active} value={files[active] ?? ""} onChange={(value) => setFiles((previous) => ({ ...previous, [active]: value }))} onRun={() => runRef.current()} /></div>
-            <div className="pg-editor-footer"><span>TypeScript</span><span>UTF 8<span className="pg-footer-divider" />prism-code 0.1.0</span></div>
+            <div className="pg-editor-footer"><span>TypeScript</span><span>UTF 8<span className="pg-footer-divider" />prism-code {PRISM_CODE_VERSION}</span></div>
           </section>
           <section className={`pg-output-panel ${mobileView !== "output" ? "pg-mobile-hidden" : ""}`} aria-label="Output">
             <div className="pg-output-tabs"><Button className={outputView === "console" ? "pg-tab-active" : ""} onClick={() => setOutputView("console")}>Console</Button><Button className={outputView === "terminal" ? "pg-tab-active" : ""} onClick={() => setOutputView("terminal")}><TerminalSquare size={14} />Terminal</Button><Button className={outputView === "preview" ? "pg-tab-active" : ""} onClick={() => setOutputView("preview")}>Preview</Button><span className="pg-toolbar-spacer" /><Button icon title="Clear output" aria-label="Clear output" onClick={() => { setOutput([]); setExitCode(null); terminal.current?.clear(); }}><Trash2 size={14} /></Button></div>

@@ -128,3 +128,21 @@ describe("get started steps", () => {
     for (const s of STEPS) expect(`${s.summary} ${s.opening} ${s.handoff} ${s.taskLine ?? ""}`).not.toMatch(/ - |Docker|holo\b/i);
   });
 });
+
+import { upstreamNpm, withNpmRelease } from "@/docs/content";
+describe("release status follows npm", () => {
+  const upstream = "Today `prism-code` 0.2.0 is on npm.\n\n## What is published\n\n| What | Today | Note |\n| --- | --- | --- |\n| `prism-code` on npm      | 0.2.0         | x |\n";
+  it("rewrites a lagging npm row and sentence and says the tables lag", () => {
+    const out = withNpmRelease(upstream, "0.7.2");
+    expect(upstreamNpm(out)).toBe("0.7.2");
+    expect(out).toContain("Today `prism-code` 0.7.2 is on npm.");
+    expect(out).toMatch(/last updated for 0\.2\.0/);
+  });
+  it("leaves an up to date page alone", () => {
+    expect(withNpmRelease(upstream, "0.2.0")).toBe(upstream);
+  });
+  it("the published page names the synced npm release", () => {
+    const page = ALL_PAGES.find((p) => p.slug === "reference/release-status")!;
+    expect(upstreamNpm(page.body)).toBe(SOURCE.npm);
+  });
+});
