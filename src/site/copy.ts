@@ -4,15 +4,17 @@ export const RIBBON = { text: "Prism SDK v0.4", tag: "Beta", cta: "Start buildin
 /** The single canonical entry point for humans and agents. Every page and agent file reads it from here. */
 export const START = {
   command: "npx prism-code@latest setup",
-  line: "One command sets up Prism in your project and installs the Prism skill into your agent.",
+  line: "One command sets up Prism in your project, installs the Prism skill into your agent and registers two MCP servers: prism, which runs on your machine, and lexlean, the hosted verifier at https://mcp.uor.foundation/ that checks and proves LexLean models.",
   capabilities: [
-    "Build, run and check self verifying Prism applications locally",
+    "Build, run and check self verifying Prism applications",
     "Give any file or object an identity computed from its content",
     "Replay an app's examples to confirm it behaves exactly as shipped",
     "Teach your coding agent the Prism SDK through the bundled skill",
   ],
   tools: [
-    { name: "prism-code", what: "Local runtime and setup command. No account, no remote API." },
+    { name: "prism-code", what: "Runtime, command line and setup command. No account. Checks and proofs run on the hosted verifier unless the SDK image is on this machine." },
+    { name: "prism MCP server", what: "prism-code mcp on stdio, on this machine. Setup registers it with every agent it finds." },
+    { name: "lexlean MCP server", what: "The UOR Foundation hosted verifier at https://mcp.uor.foundation/. Setup registers it with every agent it finds. It receives source, see Hosted verifier." },
     { name: "Prism skill", what: "Instructions and verified examples for coding agents, added by setup." },
     { name: "Docs", what: "Plain text at /docs.md; every page has a .md twin." },
     { name: "Playground", what: "Run Prism examples in the browser at /playground/." },
