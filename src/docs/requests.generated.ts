@@ -19,22 +19,6 @@ export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } =
       "milestone": "M3 v0.6 Replay, capabilities, conformance"
     },
     {
-      "number": 287,
-      "title": "`@prism-code/conformance` and `COMPLIANCE.md`",
-      "url": "https://github.com/UOR-Foundation/PrismPM/issues/287",
-      "state": "open",
-      "votes": 0,
-      "labels": [
-        "kind/feature",
-        "priority/critical-urgent",
-        "area/spec"
-      ],
-      "agent": false,
-      "created": "2026-10-23T12:39:12Z",
-      "closed": null,
-      "milestone": "M3 v0.6 Replay, capabilities, conformance"
-    },
-    {
       "number": 289,
       "title": "`prism generate`: bindings from the world",
       "url": "https://github.com/UOR-Foundation/PrismPM/issues/289",
@@ -425,6 +409,22 @@ export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } =
     }
   ],
   "shipped": [
+    {
+      "number": 287,
+      "title": "`@prism-code/conformance` and `COMPLIANCE.md`",
+      "url": "https://github.com/UOR-Foundation/PrismPM/issues/287",
+      "state": "closed",
+      "votes": 0,
+      "labels": [
+        "kind/feature",
+        "priority/critical-urgent",
+        "area/spec"
+      ],
+      "agent": false,
+      "created": "2026-10-23T12:39:12Z",
+      "closed": "2026-11-11T08:04:41Z",
+      "milestone": "M3 v0.6 Replay, capabilities, conformance"
+    },
     {
       "number": 286,
       "title": "`@prism-code/testing`",
