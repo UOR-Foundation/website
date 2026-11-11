@@ -3,24 +3,6 @@ export type PrismRequest = { number: number; title: string; url: string; state: 
 export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } = {
   "open": [
     {
-      "number": 268,
-      "title": "Provenance on by default at `prism build`",
-      "url": "https://github.com/UOR-Foundation/PrismPM/issues/268",
-      "state": "open",
-      "votes": 0,
-      "labels": [
-        "kind/feature",
-        "priority/critical-urgent",
-        "area/verify",
-        "stability/experimental",
-        "module/images"
-      ],
-      "agent": false,
-      "created": "2026-10-23T12:37:42Z",
-      "closed": null,
-      "milestone": "M2 v0.5 Lock, check, proof"
-    },
-    {
       "number": 281,
       "title": "`prism init` / `npm create prism-code`",
       "url": "https://github.com/UOR-Foundation/PrismPM/issues/281",
@@ -33,39 +15,6 @@ export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } =
       ],
       "agent": false,
       "created": "2026-10-23T12:38:44Z",
-      "closed": null,
-      "milestone": "M3 v0.6 Replay, capabilities, conformance"
-    },
-    {
-      "number": 285,
-      "title": "Policy file for `prism check`",
-      "url": "https://github.com/UOR-Foundation/PrismPM/issues/285",
-      "state": "open",
-      "votes": 0,
-      "labels": [
-        "kind/feature",
-        "priority/important-soon",
-        "area/verify",
-        "stability/experimental"
-      ],
-      "agent": false,
-      "created": "2026-10-23T12:39:03Z",
-      "closed": null,
-      "milestone": "M3 v0.6 Replay, capabilities, conformance"
-    },
-    {
-      "number": 286,
-      "title": "`@prism-code/testing`",
-      "url": "https://github.com/UOR-Foundation/PrismPM/issues/286",
-      "state": "open",
-      "votes": 0,
-      "labels": [
-        "kind/feature",
-        "priority/important-soon",
-        "area/runtime-js"
-      ],
-      "agent": false,
-      "created": "2026-10-23T12:39:07Z",
       "closed": null,
       "milestone": "M3 v0.6 Replay, capabilities, conformance"
     },
@@ -476,6 +425,57 @@ export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } =
     }
   ],
   "shipped": [
+    {
+      "number": 286,
+      "title": "`@prism-code/testing`",
+      "url": "https://github.com/UOR-Foundation/PrismPM/issues/286",
+      "state": "closed",
+      "votes": 0,
+      "labels": [
+        "kind/feature",
+        "priority/important-soon",
+        "area/runtime-js"
+      ],
+      "agent": false,
+      "created": "2026-10-23T12:39:07Z",
+      "closed": "2026-11-11T00:07:20Z",
+      "milestone": "M3 v0.6 Replay, capabilities, conformance"
+    },
+    {
+      "number": 285,
+      "title": "Policy file for `prism check`",
+      "url": "https://github.com/UOR-Foundation/PrismPM/issues/285",
+      "state": "closed",
+      "votes": 0,
+      "labels": [
+        "kind/feature",
+        "priority/important-soon",
+        "area/verify",
+        "stability/experimental"
+      ],
+      "agent": false,
+      "created": "2026-10-23T12:39:03Z",
+      "closed": "2026-11-11T00:07:15Z",
+      "milestone": "M3 v0.6 Replay, capabilities, conformance"
+    },
+    {
+      "number": 268,
+      "title": "Provenance on by default at `prism build`",
+      "url": "https://github.com/UOR-Foundation/PrismPM/issues/268",
+      "state": "closed",
+      "votes": 0,
+      "labels": [
+        "kind/feature",
+        "priority/critical-urgent",
+        "area/verify",
+        "stability/experimental",
+        "module/images"
+      ],
+      "agent": false,
+      "created": "2026-10-23T12:37:42Z",
+      "closed": "2026-11-10T23:47:14Z",
+      "milestone": "M2 v0.5 Lock, check, proof"
+    },
     {
       "number": 358,
       "title": "Try Prism in seconds: browser try page, then Codespaces",

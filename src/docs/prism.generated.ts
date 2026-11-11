@@ -398,8 +398,8 @@ export const PRISM_MILESTONES: { number: number; title: string; description: str
     "description": "Full input lock, prism check, proof predicate, attestations inside the .holo, provenance on by default. Verification API Experimental.",
     "due": "2026-10-31T00:00:00Z",
     "state": "open",
-    "open": 12,
-    "closed": 29,
+    "open": 11,
+    "closed": 30,
     "url": "https://github.com/UOR-Foundation/PrismPM/milestone/2"
   },
   {
@@ -408,8 +408,8 @@ export const PRISM_MILESTONES: { number: number; title: string; description: str
     "description": "WIT world as contract, deny-by-default capability sets, prism run gated on check, prism replay, conformance suite. Verification API Feature freeze.",
     "due": "2026-11-03T00:00:00Z",
     "state": "open",
-    "open": 11,
-    "closed": 8,
+    "open": 8,
+    "closed": 11,
     "url": "https://github.com/UOR-Foundation/PrismPM/milestone/3"
   },
   {
