@@ -11,7 +11,7 @@ describe("Home page copy", () => {
       // user's own wording / package name
       .replace(/"slug":"[^"]*"/g, "").replace(/self-verifying/g, "")
       .replace(/Byte-precise/g, "")
-      .replace(/prism-code/g, "")
+      .replace(/prism-code|uor-foundation|uor-addr/g, "")
       .replace(/open-source/g, "")
       .replace(/content–addressed/g, "");
     expect(visible).not.toMatch(/[-–—]/);
@@ -29,7 +29,8 @@ describe("Home page copy", () => {
 
   it("Framework page text contains no dashes or old site links", () => {
     const visible = JSON.stringify(fw);
-    expect(visible).not.toMatch(/[-–—]/);
+    // package names keep their hyphens
+    expect(visible.replace(/prism-code|uor-addr/g, "")).not.toMatch(/[-–—]/);
     expect(visible).not.toMatch(/uor\.foundation/);
   });
 

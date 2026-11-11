@@ -1,6 +1,7 @@
 // Single source for every docs page, the llms.txt index and the per page Markdown files.
 // Page text comes from src/docs/prism.generated.ts, pulled from the PrismPM docs-site branch
 // by scripts/sync-prism-docs.mjs. Navigation order follows the upstream llms.txt.
+import { PRISM_CODE } from "./npm.generated";
 import { PRISM_CHANGELOG, PRISM_LLMS, PRISM_LLMS_FULL, PRISM_PAGES, PRISM_SOURCE, PRISM_VOCABULARY } from "./prism.generated";
 import { findMilestone, HINT_TERMS, dockerGloss, dockerMarkdown, implicitTerms, siteTerms, verbMilestone, type Milestone } from "./vocabulary";
 
@@ -12,18 +13,42 @@ export const SOURCE = PRISM_SOURCE;
 export const UPSTREAM_LLMS = PRISM_LLMS;
 export const UPSTREAM_LLMS_FULL = PRISM_LLMS_FULL;
 
+/** "MIT OR Apache-2.0" as words: "MIT or Apache 2.0". */
+export const spdxWords = (id: string) => id.replace(/ OR /g, " or ").replace(/ AND /g, " and ").replace(/-(\d)/g, " $1");
+
 /** Shown on every docs page: the docs describe the v1.0 API, npm ships an earlier release. */
 export const DOCUMENTED_API = "v1.0";
 export const RELEASE_STATUS = [
   { item: "Documented API", status: DOCUMENTED_API, note: "What these pages describe" },
   { item: "prism-code on npm", status: PRISM_SOURCE.npm, note: "The runtime npx prism-code@latest setup adds today" },
   { item: "prism CLI", status: "Not shipped", note: "Usage shown for reference" },
-  { item: "Rust crates", status: "Not published", note: "Not yet on crates.io" },
+  { item: "Prism Rust crate", status: "Not published", note: "The UOR Framework crates uor-foundation and uor-addr are on crates.io; they are not the Prism SDK" },
+  { item: "Licence", status: spdxWords(PRISM_CODE.license) || "See package", note: `prism-code on npm${PRISM_SOURCE.license ? `. The PrismPM source repository: ${spdxWords(PRISM_SOURCE.license)}` : ""}` },
 ];
 
 const updated = new Date(PRISM_SOURCE.committedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 const slugOf = (file: string) => file.replace(/\.md$/, "").replace(/\/index$/, "");
-const bySlug = new Map(PRISM_PAGES.map((p) => [slugOf(p.file), { slug: slugOf(p.file), title: implicitTerms(p.title), summary: implicitTerms(p.description), updated, body: implicitTerms(p.body), availableIn: p.availableIn }]));
+/** The npm release the upstream release-status page was last written for, read from its distribution table. */
+export const upstreamNpm = (body: string) => body.match(/^\|\s*`prism-code` on npm\s*\|\s*([^|\s]+)\s*\|/m)?.[1] ?? null;
+/**
+ * The upstream release-status page states the npm release by hand and can lag npm `latest`.
+ * When it does, the npm row and sentence take the synced npm version and a note says the tables lag,
+ * so the page can never name an older release as the one on npm today.
+ */
+export function withNpmRelease(body: string, npm: string = PRISM_SOURCE.npm) {
+  const stated = upstreamNpm(body);
+  if (!stated || stated === npm) return body;
+  const published = npm === PRISM_CODE.version && PRISM_CODE.published ? `, published ${PRISM_CODE.published.slice(0, 10)},` : "";
+  const note = `> prism-code ${npm}${published} is the npm \`latest\` release. The tables below were last updated for ${stated}, so ${npm} already ships features they list under later releases. \`npx prism-code@${npm} --help\` lists its commands, and the [prism skill](/.well-known/agent-skills/prism/SKILL.md), copied from that release, says what each one does.`;
+  return body
+    .replace(/^(\|\s*`prism-code` on npm\s*\|\s*)[^|\s]+(\s*\|)/m, `$1${npm}$2`)
+    .replace(new RegExp(`Today \`prism-code\` ${stated.replace(/\./g, "\\.")} is on npm\\.`), `Today \`prism-code\` ${npm} is on npm.`)
+    .replace(/\n## What is published\n/, `\n${note}\n\n## What is published\n`);
+}
+const bySlug = new Map(PRISM_PAGES.map((p) => {
+  const body = slugOf(p.file) === "reference/release-status" ? withNpmRelease(p.body) : p.body;
+  return [slugOf(p.file), { slug: slugOf(p.file), title: implicitTerms(p.title), summary: implicitTerms(p.description), updated, body: implicitTerms(body), availableIn: p.availableIn }];
+}));
 
 // Upstream llms.txt order: "## Section" headings with "- [Title](.../docs/<slug>)" links.
 function upstreamOrder() {

@@ -59,3 +59,17 @@ describe("one canonical start", () => {
     expect(siteTerms("Run `npm install prism-code`.")).toContain(CMD);
   });
 });
+
+import { HOSTED } from "@/agent/site";
+describe("hosted verifier disclosure", () => {
+  it("llms.txt, agents.md and agents.json say what setup sends and who can read it", () => {
+    const files = [frontDoor("# D\n", "- x"), agentsMarkdown(), wellKnownJson()];
+    for (const t of files) {
+      expect(t).toContain(HOSTED.url);
+      expect(t).toMatch(/files under src\//);
+      expect(t).toMatch(/readable|Anyone with the draft ID/);
+      expect(t).not.toMatch(/no account, remote API or hosted MCP server|no remote API/i);
+    }
+    expect(JSON.parse(wellKnownJson()).hosted_verifier.url).toBe(HOSTED.url);
+  });
+});

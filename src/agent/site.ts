@@ -4,6 +4,7 @@ import { ABOUT, FRAMEWORK, HERO, START } from "../site/copy";
 import { DISCORD_URL } from "../site/links";
 import { INTRO, FOCUS, BOARD, DOCS as GOV } from "../about/content";
 import { PRISM_REQUESTS } from "../docs/requests.generated";
+import { PRISM_CODE } from "../docs/npm.generated";
 
 export const ORIGIN = "https://uor.foundation";
 export const FEEDBACK_REPO = "UOR-Foundation/website";
@@ -48,11 +49,31 @@ export const PAGES = [
   { path: "/about/", md: "/about.md", title: "About", summary: "The nonprofit foundation, board and governance." },
 ];
 
+/** What leaves the machine. Stated in llms.txt, agents.md and agents.json, so an agent can decide before it sends a user's source anywhere. */
+export const HOSTED = {
+  url: "https://mcp.uor.foundation/",
+  registered_by: "npx prism-code@latest setup, which adds it as the MCP server lexlean to every agent it finds (setup --dry-run prints every change first)",
+  uploads: "The files under src/ (prism/src/ in the guided build) whenever a check or proof runs without the SDK image on this machine: prism_prove and prism_build from the prism MCP server, prism-code build --check and prism-code verify --lean. Agents calling the lexlean tools directly send the drafts they write.",
+  readable_by: "Anyone with the draft ID. Drafts are stored unlisted: not searchable, but not private. Put no secrets in source sent there.",
+  stay_local: "--local runs checks and proofs in the SDK image on this machine instead (Docker, about 5.5 GB).",
+  github: "Builds can also run on the user's own GitHub Actions with their GitHub sign in; a new app's public repository is created only after the user approves its name.",
+};
+const hostedSection = () => [
+  "## Hosted verifier", "",
+  `Setup registers a hosted verifier run by the UOR Foundation. Registered by: ${HOSTED.registered_by}.`, "",
+  `- URL: ${HOSTED.url}`,
+  `- What is uploaded: ${HOSTED.uploads}`,
+  `- Who can read it: ${HOSTED.readable_by}`,
+  `- To keep source on this machine: ${HOSTED.stay_local}`,
+  `- GitHub: ${HOSTED.github}`, "",
+].join("\n");
+
 /** Opening lines every agent file shares: the one command, then where the manual lives. */
 export const startBanner = () => [`> Start: \`${START.command}\`. Agent manual: [/agents.md](/agents.md).`, ""].join("\n");
 const startSection = () => [
   "## Start", "", START.line, "", "```sh", START.command, "```", "",
-  "Requires Node 22 or later. Runs locally; there is no account, remote API or hosted MCP server.", "",
+  "Requires Node 22 or later. No account is needed. Setup also registers the hosted verifier described under Hosted verifier, which receives source when it checks or proves.", "",
+  hostedSection(),
 ].join("\n");
 const capabilitiesSection = () => [
   "## What you get", "", ...START.capabilities.map((c) => `- ${c}.`), "",
@@ -150,14 +171,14 @@ export function agentsMarkdown() {
     capabilitiesSection(),
     "## Why you are here", "",
     "UOR gives every digital object an identity computed from its content, so any agent can verify what data is without trusting where it came from. Prism is the SDK that brings this into your code.", "",
-    "Know container tooling? Read [/docs/coming-from-containers.md](/docs/coming-from-containers.md) first.", "",
+    "Know container tooling? Read [/docs/get-started/coming-from-containers.md](/docs/get-started/coming-from-containers.md) first.", "",
     "## How to work with this site", "",
     "1. Read [/llms.txt](/llms.txt) for the map, or [/llms-full.txt](/llms-full.txt) for everything in one file.",
     "2. Any page has a plain text twin: add `.md` to its path (for example `/docs/get-started/quickstart.md`, `/blog/<slug>.md`).",
     "3. Machine index: [/.well-known/agents.json](/.well-known/agents.json) and [/sitemap.xml](/sitemap.xml).", "",
     "## What you can do", "",
     `- Set up Prism and its agent skill: \`${START.command}\` (skill index: [${SKILL_INDEX}](${SKILL_INDEX})).`,
-    "- What ships today: [/docs/reference/release-status.md](/docs/reference/release-status.md). Trust it over any other page.",
+    `- What ships today: prism-code ${PRISM_CODE.version}, the npm \`latest\` release. \`npx prism-code@latest --help\` lists its commands and the [prism skill](/.well-known/agent-skills/prism/SKILL.md), copied from that release, says what each does. [/docs/reference/release-status.md](/docs/reference/release-status.md) maps the documented API to releases.`,
     "- Run this first example:", "", "```ts", FIRST_EXAMPLE, "```", "",
     `- Read the code: https://github.com/${SDK_REPO}`,
     `- Ask humans: ${DISCORD_URL} (UOR Foundation Discord).`,
@@ -235,6 +256,7 @@ export function wellKnownJson() {
     wall: `${ORIGIN}/agents/index.md`,
     pages: PAGES.map((p) => ({ title: p.title, url: ORIGIN + p.path, markdown: ORIGIN + p.md })),
     install: { command: START.command, skill_index: `${ORIGIN}${SKILL_INDEX}` },
+    hosted_verifier: HOSTED,
     requests: { markdown: `${ORIGIN}/docs/requests.md`, json: `${ORIGIN}/docs/requests.json` },
     feedback: { repo: FEEDBACK_REPO, label: "agent-submitted", kinds: FEEDBACK_KINDS.map((k) => ({ id: k.id, url: feedbackUrl(k.id) })), sdk_features: SDK_FEATURES },
   }, null, 2) + "\n";

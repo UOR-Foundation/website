@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { createProject, decodeProject, encodeProject, validFilename, validateProject } from "./project";
+import { createProject, decodeProject, encodeProject, PRISM_CODE_VERSION, validFilename, validateProject } from "./project";
+import { PRISM_SOURCE } from "../docs/prism.generated";
+import { PRISM_CODE } from "../docs/npm.generated";
 
 describe("Playground projects", () => {
   it("preserves edited projects in share links", () => {
@@ -19,7 +21,9 @@ describe("Playground projects", () => {
   });
   it("uses the published package API", () => {
     const project = createProject("canonical");
-    expect(JSON.parse(project["package.json"]).dependencies["prism-code"]).toBe("0.1.0");
+    expect(JSON.parse(project["package.json"]).dependencies["prism-code"]).toBe(PRISM_CODE_VERSION);
+    expect(PRISM_CODE_VERSION).toBe(PRISM_SOURCE.npm);
+    expect(PRISM_CODE.version).toBe(PRISM_SOURCE.npm);
     expect(project["index.ts"]).toContain("canonicalize");
   });
 });

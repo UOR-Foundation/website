@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { createHash } from "node:crypto";
 import {
-  CALCULATOR, DISCOVERY_SCHEMA_V2, EXAMPLES, SKILL_DESCRIPTION, SKILL_NAME, VERIFIED_WITH,
-  compareRelease, skillFiles, skillIndexV1, skillIndexV2, skillMarkdown,
+  DISCOVERY_SCHEMA_V2, RETIRED_SKILL, SKILL_DESCRIPTION, SKILL_NAME, SKILL_RELEASE,
+  skillFiles, skillIndexV1, skillIndexV2, skillMarkdown,
 } from "@/agent/skill";
 import { SKILL_INDEX, wellKnownJson } from "@/agent/site";
 import { SOURCE } from "@/docs/content";
+import { PRISM_SKILL } from "@/docs/prism.generated";
 
 // The same rules the skills CLI (vercel-labs/skills, WellKnownProvider) applies before it installs.
 const validName = (n: unknown) => typeof n === "string" && /^[a-z0-9-]{1,64}$/.test(n) && !n.startsWith("-") && !n.endsWith("-") && !n.includes("--");
@@ -17,7 +18,7 @@ const frontmatter = (md: string) => {
 };
 
 describe("agent skill discovery", () => {
-  it("v2 index passes the CLI's entry checks", () => {
+  it("v2 index lists exactly one skill and passes the CLI's entry checks", () => {
     const idx = JSON.parse(skillIndexV2());
     expect(idx.$schema).toBe(DISCOVERY_SCHEMA_V2);
     expect(idx.skills).toHaveLength(1);
@@ -60,99 +61,19 @@ describe("agent skill discovery", () => {
     expect(f[`.well-known/agent-skills/${SKILL_NAME}/SKILL.md`]).toBe(f[`.well-known/skills/${SKILL_NAME}/SKILL.md`]);
   });
 
-  it("gives no runnable command for unshipped features", () => {
-    const md = skillMarkdown();
-    expect(md).not.toMatch(/npx @prism-code\//);
-    expect(md).not.toMatch(/^\s*prism\s/m);
-    expect(md).not.toMatch(/cargo add prism|pip install prism/);
+  it("serves the skill bundled in the npm release the site states, byte for byte", () => {
+    expect(SKILL_RELEASE).toBe(SOURCE.npm);
+    expect(skillMarkdown()).toBe(PRISM_SKILL);
+    expect(SKILL_NAME).toBe("prism");
   });
 
-  it("states the prerequisites of the image backed commands", () => {
-    const md = skillMarkdown();
-    expect(md).toContain("prismpm.lock");
-    expect(md).toMatch(/exit with code 64/);
-    expect(md).toMatch(/do not run these commands/);
-  });
-
-  it("shows how to stop a served app and check the port", () => {
-    const md = skillMarkdown();
-    expect(md).toMatch(/^node node_modules\/prism-code\/bin\/prism-code\.mjs run .+ &$/m);
-    // The PID lives in a file, so the stop block works from a shell that did not start the server.
-    expect(md).toMatch(/^echo \$! > prism-server\.pid$/m);
-    expect(md).toMatch(/^kill "\$\(cat prism-server\.pid\)"$/m);
-    // Every wait is bounded and watches the server process, so a failed start cannot hang an agent.
-    expect(md).toMatch(/^for i in \$\(seq \d+\); do .*kill -0 .*; done$/m);
-    expect(md).not.toMatch(/^until /m);
-    // No fixed port: the server picks a free one and the agent reads the URL it prints.
-    expect(md).not.toMatch(/--port \d/);
-  });
-
-  it("says what codeHash returns and how it differs from app identities", () => {
-    const md = skillMarkdown();
-    expect(md).toContain("`sha256:` plus 64 hex characters");
-    expect(md).toContain("app.identities");
-    expect(md).toContain("blake3:");
-    expect(md).not.toMatch(/each `blake3:`/);
-    expect(md).toContain("Pin an app by `applicationKappa`");
-  });
-
-  it("states the sample app's request contract and how to read any app's", () => {
-    const md = skillMarkdown();
-    for (const op of CALCULATOR.operations) expect(md).toContain(`\`${op}\``);
-    for (const reason of CALCULATOR.errors) expect(md).toContain(`\`${reason}\``);
-    expect(md).toContain("no trailing newline");
-    expect(md).toContain("app.vectors");
-  });
-
-  it("names a substitute for everything that cannot be done today", () => {
-    const md = skillMarkdown();
-    expect(md).toMatch(/^\| Check an app's proof \| Not possible in this release/m);
-    expect(md).toMatch(/^\| Build or author a new app \| Needs a `prismpm.lock`/m);
-    expect(md).toMatch(/^\| Call an app from Python, Rust or another language \| Serve it/m);
-    expect(md).toMatch(/^\| Call an app from an MCP client \| No Prism MCP server ships/m);
-  });
-
-  it("lists unshipped packages from the release status table", () => {
-    const md = skillMarkdown();
-    expect(md).toMatch(/^- Python package: not published\. .*1\.1\.$/m);
-    expect(md).toMatch(/^- Rust crates: not published\. .*1\.0-beta\.1\.$/m);
-  });
-
-  it("pins the install and has no placeholders in shell blocks", () => {
-    const md = skillMarkdown();
-    expect(md).toContain(`npm install --save-exact prism-code@${VERIFIED_WITH}`);
-    const sh = [...md.matchAll(/```sh\n([\s\S]*?)```/g)].map((m) => m[1]).join("\n");
-    expect(sh).not.toMatch(/<[\w.-]+>/);
-  });
-
-  it("every runnable block is one the examples test executes", () => {
-    const blocks = [...skillMarkdown().matchAll(/^```(\w+)\n([\s\S]*?)\n```$/gm)]
-      .filter((m) => m[1] !== "text").map((m) => m[2]);
-    expect(blocks.sort()).toEqual(Object.values(EXAMPLES).map((e) => e.code).sort());
-  });
-
-  it("never ends a bare URL with sentence punctuation", () => {
-    // A bare URL runs to the next space or ")"; punctuation glued to its end gets copied into the link.
-    const prose = skillMarkdown().replace(/```[\s\S]*?```/g, "").replace(/`[^`]*`/g, "");
-    expect(prose).not.toMatch(/https?:\/\/[^\s)]+[.,;:](\s|$)/m);
-  });
-
-  it("links only docs pages that ship in the npm release", () => {
-    const links = [...skillMarkdown().matchAll(/\/docs\/([^)\s]+)\.md\)/g)].map((m) => m[1]);
-    expect(links).toContain("reference/release-status");
-    expect(links.length).toBeGreaterThan(1);
-  });
-
-  it("examples were verified against the release npm ships today", () => {
-    // Fails when the docs sync moves to a new prism-code. Re-run the SKILL.md examples, then bump VERIFIED_WITH.
-    expect(SOURCE.npm).toBe(VERIFIED_WITH);
-  });
-
-  it("orders releases the way the docs label them", () => {
-    expect(compareRelease("0.2.0", "0.2.0")).toBe(0);
-    expect(compareRelease("0.2.0", "0.5")).toBe(-1);
-    expect(compareRelease("1.0-beta", "1.0")).toBe(-1);
-    expect(compareRelease("1.0", "0.6")).toBe(1);
+  it("keeps the retired prism-sdk skill out of both indexes", () => {
+    expect(SKILL_NAME).not.toBe(RETIRED_SKILL);
+    expect(skillIndexV2()).not.toContain(RETIRED_SKILL);
+    expect(skillIndexV1()).not.toContain(RETIRED_SKILL);
+    const stub = skillFiles()[`.well-known/agent-skills/${RETIRED_SKILL}/SKILL.md`];
+    expect(stub).toContain("retired");
+    expect(stub).toContain(`/.well-known/agent-skills/${SKILL_NAME}/SKILL.md`);
   });
 
   it("agents.json still advertises the install command and links the index", () => {
