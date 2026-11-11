@@ -406,6 +406,38 @@ export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } =
       "created": "2026-11-03T21:44:31Z",
       "closed": null,
       "milestone": null
+    },
+    {
+      "number": 603,
+      "title": "LexLean: content address per declaration, not only per project",
+      "url": "https://github.com/UOR-Foundation/PrismPM/issues/603",
+      "state": "open",
+      "votes": 0,
+      "labels": [
+        "kind/feature",
+        "triage/needs-information",
+        "area/spec"
+      ],
+      "agent": false,
+      "created": "2026-11-11T13:36:18Z",
+      "closed": null,
+      "milestone": null
+    },
+    {
+      "number": 604,
+      "title": "Prove the delta box cover and rule diff in the checker kernel instead of trusting JavaScript",
+      "url": "https://github.com/UOR-Foundation/PrismPM/issues/604",
+      "state": "open",
+      "votes": 0,
+      "labels": [
+        "kind/feature",
+        "triage/needs-information",
+        "area/verify"
+      ],
+      "agent": false,
+      "created": "2026-11-11T13:36:19Z",
+      "closed": null,
+      "milestone": null
     }
   ],
   "shipped": [
