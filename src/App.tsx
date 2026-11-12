@@ -4,7 +4,6 @@ import { DISCORD_URL } from "@/site/links";
 
 const Docs = lazy(() => import("@/docs/Docs"));
 const Blog = lazy(() => import("@/blog/Blog"));
-const Playground = lazy(() => import("@/playground/Playground"));
 const About = lazy(() => import("@/about/About"));
 const Agents = lazy(() => import("@/agent/Agents"));
 const Framework = lazy(() => import("@/framework/Framework"));
@@ -16,11 +15,6 @@ export default function App() {
     return null;
   }
   if (window.location.pathname === "/agents/discord" || window.location.pathname === "/agents/discord/") return <Suspense fallback={<div className="foundation min-h-screen" />}><Discord /></Suspense>;
-  if (window.location.pathname === "/playground") {
-    window.location.replace(`/playground/${window.location.search}${window.location.hash}`);
-    return null;
-  }
-  if (window.location.pathname.startsWith("/playground/")) return <Suspense fallback={<div className="foundation pg-loading-page">Loading Playground…</div>}><Playground /></Suspense>;
   if (window.location.pathname === "/docs") {
     window.location.replace(`/docs/${window.location.search}${window.location.hash}`);
     return null;

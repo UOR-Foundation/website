@@ -30,7 +30,7 @@ const skip = new Set([
   "docs/coming-from-containers.md",
 ]);
 
-const routes = new Set(["docs", "blog", "playground"]);
+const routes = new Set(["docs", "blog"]);
 for (const file of mdFiles) {
   if (skip.has(file)) continue;
   if (file.startsWith("docs/")) routes.add(`docs/${file.slice(5, -3)}`);

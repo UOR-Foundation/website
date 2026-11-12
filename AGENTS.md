@@ -9,7 +9,7 @@
 * The Pages deploy packs its own artifact tar so CNAME and /.well-known/ survive; upload-pages-artifact drops dot-paths.
 * The site publishes one agent skill, `prism`: skill/SKILL.md from the prism-code npm `latest` tarball, copied byte for byte into src/docs/prism.generated.ts by scripts/sync-prism-docs.mjs (integrity checked), so the site, the package and what setup installs never disagree; the retired prism-sdk path serves only a pointer. Deploy runs the tests first (src/test/npm-examples.test.ts runs the site's code against that release) and checks the live digest afterwards.
 
-* App.tsx selects the static homepage or lazy loaded /playground/ without a router or backend, keeping editor dependencies off the homepage.
+* App.tsx selects routes by pathname without a router or backend; the playground code stays in src/playground but is neither routed nor linked, and its /playground/ service worker file is not published, so the editor is not exposed.
 * Playground uses upstream Monaco, WebContainers and xterm in one shared runtime; examples use the published prism-code API, never invented Rust bindings.
 * A service worker scoped only to /playground/ supplies credentialless cross origin isolation on static hosting; embedded previews offer a top level tab because parent isolation cannot be changed by the app.
 * Playground projects persist locally and share through validated compressed URL fragments, avoiding server storage and excluding generated dependencies from exports.
