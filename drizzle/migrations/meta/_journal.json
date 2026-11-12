@@ -8,6 +8,13 @@
       "when": 1794486651413,
       "tag": "0000_restrict_agent_tables_read",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794486767672,
+      "tag": "0001_remove_open_access_rules",
+      "breakpoints": true
     }
   ]
 }
