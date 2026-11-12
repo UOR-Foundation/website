@@ -259,23 +259,6 @@ export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } =
       "milestone": "M7 v1.1 Runtimes and plugins"
     },
     {
-      "number": 349,
-      "title": "Local image store: prism images, tag and rmi",
-      "url": "https://github.com/UOR-Foundation/PrismPM/issues/349",
-      "state": "open",
-      "votes": 0,
-      "labels": [
-        "kind/feature",
-        "priority/important-soon",
-        "area/cli",
-        "stability/experimental"
-      ],
-      "agent": false,
-      "created": "2026-10-24T13:50:51Z",
-      "closed": null,
-      "milestone": "M4 v1.0-beta.1 Freeze, ship, docs"
-    },
-    {
       "number": 350,
       "title": "Long-running holos as containers: run -d, ps, stop, rm, logs and exec",
       "url": "https://github.com/UOR-Foundation/PrismPM/issues/350",
@@ -425,6 +408,23 @@ export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } =
     }
   ],
   "shipped": [
+    {
+      "number": 349,
+      "title": "Local image store: prism images, tag and rmi",
+      "url": "https://github.com/UOR-Foundation/PrismPM/issues/349",
+      "state": "closed",
+      "votes": 0,
+      "labels": [
+        "kind/feature",
+        "priority/important-soon",
+        "area/cli",
+        "stability/experimental"
+      ],
+      "agent": false,
+      "created": "2026-10-24T13:50:51Z",
+      "closed": "2026-11-12T11:32:06Z",
+      "milestone": "M4 v1.0-beta.1 Freeze, ship, docs"
+    },
     {
       "number": 289,
       "title": "`prism generate`: bindings from the world",
@@ -832,21 +832,6 @@ export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } =
       "created": "2026-10-23T12:38:06Z",
       "closed": "2026-10-24T11:05:34Z",
       "milestone": "M2 v0.5 Lock, check, proof"
-    },
-    {
-      "number": 250,
-      "title": "npm release prism-code@0.2.0: package, CLI delegating to the locked SDK image, publish with provenance",
-      "url": "https://github.com/UOR-Foundation/PrismPM/issues/250",
-      "state": "closed",
-      "votes": 0,
-      "labels": [
-        "enhancement",
-        "prism-code"
-      ],
-      "agent": false,
-      "created": "2026-10-23T10:53:28Z",
-      "closed": "2026-10-23T15:51:55Z",
-      "milestone": null
     }
   ]
 };
