@@ -1,6 +1,6 @@
 import { FEEDBACK_URL } from "@/agent/site";
-import { useEffect, useState } from "react";
-import { ArrowRight, BookOpen, Check, Copy, Plus, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, BookOpen, ChevronLeft, ChevronRight, Check, Copy, Plus, X } from "lucide-react";
 import { FD_BODY, FD_CARD, FD_CATEGORY, FD_COLUMN, FD_EYEBROW, FD_HERO, FD_LABEL, FD_LEAD, FD_SECTION } from "./type";
 import "@fontsource/space-grotesk/500.css";
 import "@fontsource/space-grotesk/700.css";
@@ -56,6 +56,8 @@ function Label({ children }: { children: string }) {
 }
 
 export default function FoundationHome() {
+  const rail = useRef<HTMLDivElement>(null);
+  const slide = (d: number) => { const r = rail.current; if (r) r.scrollBy({ left: d * r.clientWidth * 0.9, behavior: "smooth" }); };
 
   const [ribbon, setRibbon] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -228,11 +230,15 @@ export default function FoundationHome() {
         <section id="posts" className="fd-reveal fd-sec scroll-mt-16"><div className="mx-auto max-w-7xl px-6 py-20 md:py-32">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div><Label>{POSTS.label}</Label><h2 className={h2Main}>{POSTS.title}</h2></div>
-            <a href="/blog/" className={`${ghost} shrink-0`}>{POSTS.all}</a>
+            <div className="flex shrink-0 items-center gap-3">
+              <button type="button" aria-label="Previous posts" onClick={() => slide(-1)} className="grid h-12 w-12 place-items-center rounded-full border border-[hsl(var(--fd-line))] text-[hsl(var(--fd-fg))] transition-colors hover:border-[hsl(var(--fd-accent)/0.6)]"><ChevronLeft className="h-5 w-5" /></button>
+              <button type="button" aria-label="Next posts" onClick={() => slide(1)} className="grid h-12 w-12 place-items-center rounded-full border border-[hsl(var(--fd-line))] text-[hsl(var(--fd-fg))] transition-colors hover:border-[hsl(var(--fd-accent)/0.6)]"><ChevronRight className="h-5 w-5" /></button>
+              <a href="/blog/" className={`${ghost} shrink-0`}>{POSTS.all}</a>
+            </div>
           </div>
-          <div className="fd-snap -mx-6 mt-14 flex gap-4 overflow-x-auto px-6 md:mx-0 md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0">
+          <div ref={rail} className="fd-snap fd-rail -mx-6 mt-14 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-6 md:mx-0 md:gap-5 md:px-0">
             {POSTS.items.map((p) => (
-              <a key={p.title} href={p.href} className="fd-press group flex w-[82%] shrink-0 snap-start flex-col overflow-hidden rounded-2xl md:w-auto border border-[hsl(var(--fd-line))] bg-[hsl(var(--fd-panel))] transition-all duration-300 hover:-translate-y-1 hover:border-[hsl(var(--fd-accent)/0.5)]">
+              <a key={p.title} href={p.href} className="fd-press group flex w-[82%] shrink-0 snap-start flex-col overflow-hidden rounded-2xl md:w-[calc((100%-2.5rem)/3)] border border-[hsl(var(--fd-line))] bg-[hsl(var(--fd-panel))] transition-all duration-300 hover:-translate-y-1 hover:border-[hsl(var(--fd-accent)/0.5)]">
                 {p.cover && (
                   <div className="relative h-52 shrink-0 overflow-hidden">
                     <img src={p.cover} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />

@@ -839,3 +839,4 @@ a.dc-path-card:hover { border-color: hsl(var(--fd-fg) / .5); transform: translat
 .bl-arrow { font-family: ui-monospace, monospace; font-size: 14px; color: hsl(var(--fd-dim)); text-align: center; }
 .bl-arrow.bl-ok { color: hsl(var(--fd-accent)); }
 @media (max-width: 640px) { .bl-fig-row { flex-direction: column; align-items: stretch; } .bl-fig-row .bl-arrow { transform: rotate(90deg); } .bl-fig-grid3, .bl-fig-grid3:has(> .bl-node:nth-child(3):not(.bl-src)) { grid-template-columns: 1fr; } }
+.fd-rail { scrollbar-width: none; } .fd-rail::-webkit-scrollbar { display: none; }
