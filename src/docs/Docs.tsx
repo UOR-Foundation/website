@@ -3,7 +3,7 @@ import { ArrowRight, BookOpen, Check, ChevronRight, Clock, Code2, Copy, FileText
 import { DocsGPTWidget } from "docsgpt";
 import { DOCSGPT_API_HOST, DOCSGPT_API_KEY, docsgptEnabled, type DocsGPTController } from "@/docsgpt";
 import { HINT_TERMS, MILESTONES, TERMS, VERBS, dockerGloss, findMilestone, siteTerms, verbMilestone, type Milestone } from "./vocabulary";
-import { ALL_PAGES, CHANGELOG, DOCS_ASK, GOLDEN_PATH, navLabel, RELEASE_STATUS, SOURCE, TABS, UPSTREAM_CHANGELOG, pageMarkdown, type DocPage } from "./content";
+import { ALL_PAGES, CHANGELOG, DOCS_ASK, GOLDEN_PATH, navLabel, RELEASE_STATUS, TABS, UPSTREAM_CHANGELOG, pageMarkdown, type DocPage } from "./content";
 import { SDK_FEATURES } from "@/agent/site";
 import askPrismIcon from "@/assets/uor-icon.svg";
 
@@ -24,7 +24,7 @@ function Link({ to, className, children, onClick }: { to: string; className?: st
 
 /* Minimal Markdown renderer: headings, paragraphs, lists, tables, fenced code, inline code, links, bold. */
 const TERM_RE = new RegExp(`\\b(${[...HINT_TERMS].sort((a, b) => b.prism.length - a.prism.length).map((t) => t.prism.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})s?\\b`, "i");
-const COMING = "/docs/get-started/coming-from-containers";
+const COMING = "/docs/reference/concepts";
 function hinted(text: string, seen: Set<string> | null, key: number): ReactNode {
   if (!seen) return text;
   const m = text.match(TERM_RE);
@@ -102,7 +102,7 @@ function ReleaseStatus() {
       <div className="dc-table"><table><tbody>
         {RELEASE_STATUS.map((r) => <tr key={r.item}><th scope="row">{r.item}</th><td className="fd-mono">{r.status}</td><td>{r.note}</td></tr>)}
       </tbody></table></div>
-      <p className="dc-status-src">Synced from <a href={`https://github.com/${SOURCE.repo}/tree/${SOURCE.commit}`} target="_blank" rel="noreferrer" className="fd-mono">{SOURCE.repo}@{SOURCE.branch}</a></p>
+      <p className="dc-status-src">Every output in these docs was recorded with prism-code {RELEASE_STATUS[1].status}.</p>
     </section>
   );
 }
@@ -110,7 +110,7 @@ function ReleaseStatus() {
 function ReleaseLine() {
   return (
     <details className="dc-status dc-release-line">
-      <summary className="fd-mono">Documents {RELEASE_STATUS[0].status} · npm {RELEASE_STATUS[1].status} · CLI not shipped</summary>
+      <summary className="fd-mono">Prism SDK {RELEASE_STATUS[0].status} · prism-code {RELEASE_STATUS[1].status}</summary>
       <ReleaseStatus />
     </details>
   );
@@ -141,7 +141,7 @@ function Roadmap() {
   const fmt = (d: string | null) => (d ? new Date(d).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }) : "Now");
   return (
     <section className="dc-roadmap" aria-labelledby="dc-roadmap-title">
-      <div className="dc-row-head"><h2 id="dc-roadmap-title">Roadmap to v1.0</h2><span className="dc-row-links"><a href="https://github.com/orgs/UOR-Foundation/projects/12" target="_blank" rel="noreferrer">Full roadmap</a><a href={SDK_FEATURES} target="_blank" rel="noreferrer">Request features</a></span></div>
+      <div className="dc-row-head"><h2 id="dc-roadmap-title">Roadmap</h2><span className="dc-row-links"><a href="https://github.com/orgs/UOR-Foundation/projects/12" target="_blank" rel="noreferrer">Full roadmap</a><a href={SDK_FEATURES} target="_blank" rel="noreferrer">Request features</a></span></div>
       <ol>
         {MILESTONES.map((m) => {
           const total = m.open + m.closed; const pct = total ? Math.round((m.closed / total) * 100) : 0;
