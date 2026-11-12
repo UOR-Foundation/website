@@ -206,19 +206,19 @@ export default function FoundationHome() {
             <p className={`${FD_BODY} mt-7 max-w-md`}>An open SDK to build, ship and run self-verifying AI applications. From edge to cloud.</p>
             <div className="mt-10 flex w-full flex-col sm:w-fit">
               <p className={`${FD_LABEL} mb-4 text-center sm:text-left`}>{HERO.agentSkill.label}</p>
-              <div className="flex items-stretch rounded-[28px] border border-[hsl(var(--fd-line))] bg-[hsl(var(--fd-bg)/0.8)] p-1.5 backdrop-blur sm:items-center sm:rounded-full sm:pl-6 sm:pr-2">
-                <button
-                  onClick={async () => { await navigator.clipboard?.writeText(HERO.agentSkill.command); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-                  aria-label="Copy agent skill command"
-                  className="fd-mono inline-flex min-w-0 flex-1 items-center justify-center gap-2.5 py-3 text-xs sm:flex-none sm:justify-start sm:py-0 transition-opacity hover:opacity-80 sm:text-base"
-                >
-                  <span className="text-[hsl(var(--fd-dim))]">$</span>
-                  <span className="truncate">{HERO.agentSkill.command}</span>
-                  {copied ? <Check className="h-4 w-4 shrink-0 text-[hsl(var(--fd-accent))]" /> : <Copy className="h-4 w-4 shrink-0 text-[hsl(var(--fd-dim))]" />}
-                </button>
-              </div>
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 sm:justify-start">
-                <a href="/docs/" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--fd-dim))] transition-colors hover:text-[hsl(var(--fd-fg,0_0%_100%))]"><BookOpen className="h-4 w-4" /> Read the docs</a>
+              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 sm:justify-start">
+                <div className="flex w-full min-w-0 items-stretch rounded-[28px] border border-[hsl(var(--fd-line))] bg-[hsl(var(--fd-bg)/0.8)] p-1.5 backdrop-blur sm:w-auto sm:items-center sm:rounded-full sm:pl-6 sm:pr-2">
+                  <button
+                    onClick={async () => { await navigator.clipboard?.writeText(HERO.agentSkill.command); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+                    aria-label="Copy agent skill command"
+                    className="fd-mono inline-flex min-w-0 flex-1 items-center justify-center gap-2.5 py-3 text-xs sm:flex-none sm:justify-start sm:py-0 transition-opacity hover:opacity-80 sm:text-base"
+                  >
+                    <span className="text-[hsl(var(--fd-dim))]">$</span>
+                    <span className="truncate">{HERO.agentSkill.command}</span>
+                    {copied ? <Check className="h-4 w-4 shrink-0 text-[hsl(var(--fd-accent))]" /> : <Copy className="h-4 w-4 shrink-0 text-[hsl(var(--fd-dim))]" />}
+                  </button>
+                </div>
+                <a href="/docs/" className="inline-flex shrink-0 items-center gap-2 text-sm text-[hsl(var(--fd-dim))] transition-colors hover:text-[hsl(var(--fd-fg,0_0%_100%))]"><BookOpen className="h-4 w-4" /> Read the docs</a>
               </div>
             </div>
           </div>
