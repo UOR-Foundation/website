@@ -27,7 +27,8 @@
     <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","name":"The UOR Foundation","url":"https://uor.foundation/","logo":"https://uor.foundation/favicon.png","sameAs":["https://github.com/UOR-Foundation"]},{"@type":"SoftwareSourceCode","name":"Prism SDK","codeRepository":"https://github.com/UOR-Foundation/PrismPM","programmingLanguage":"TypeScript","description":"Open SDK to build, ship and run self-verifying AI applications."}]}</script>
     <link rel="icon" href="/favicon.png" type="image/png" />
     <style>html,body{background:#0a0a0a;color:#f5f5f5;margin:0}</style>
-  </head>
+  <script>if("serviceWorker"in navigator){navigator.serviceWorker.getRegistrations().then(function(r){var n=0;r.forEach(function(x){if(x.scope.indexOf("/playground/")<0){n++;x.unregister()}});if(n&&window.caches)caches.keys().then(function(k){return Promise.all(k.map(function(c){return caches.delete(c)}))}).then(function(){if(!sessionStorage.getItem("sw-reset")){sessionStorage.setItem("sw-reset","1");location.reload()}})}).catch(function(){})}</script>
+</head>
   <body>
     <div id="root"><noscript><h1>UOR Foundation</h1><p>Build, ship and run self-verifying AI applications that just work. AI agents: start at <a href="/llms.txt">/llms.txt</a> and <a href="/agents.md">/agents.md</a>. Plain text: <a href="/index.md">home</a>, <a href="/framework.md">framework</a>, <a href="/llms-full.txt">all docs</a>.</p></noscript></div>
     <script type="module" src="/src/main.tsx"></script>
