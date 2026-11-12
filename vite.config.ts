@@ -48,7 +48,7 @@ async function pagefindAssets(): Promise<Record<string, Uint8Array>> {
 }
 
 // Serves and emits agent readable docs (llms.txt, llms-full.txt, /docs/<slug>.md) from the docs source.
-function agentDocs(): Plugin {
+export function agentDocs(): Plugin {
   const files = (): Record<string, string> => {
     const blogIndex = blogLlmsTxt().split("## Posts")[1];
     const out: Record<string, string> = {
@@ -81,8 +81,9 @@ function agentDocs(): Plugin {
     for (const r of RETIRED_PATHS) out[r] = retiredFile(r);
     for (const p of BLOG_POSTS) out[`blog/${p.slug}.md`] = postMarkdown(p);
     for (const p of ALL_PAGES) out[`docs/${p.slug}.md`] = pageMarkdown(p);
-    // Old path of the containers page, kept for links already out there: the same bytes as the page, never a second text.
-    out["docs/coming-from-containers.md"] = out["docs/get-started/coming-from-containers.md"];
+    // Emit the old alias only while its source page exists.
+    const containersPage = out["docs/get-started/coming-from-containers.md"];
+    if (containersPage !== undefined) out["docs/coming-from-containers.md"] = containersPage;
     if (UPSTREAM_CHANGELOG) out["docs/changelog.md"] = pageMarkdown(UPSTREAM_CHANGELOG);
     return out;
   };
