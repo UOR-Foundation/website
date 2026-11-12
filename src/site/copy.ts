@@ -38,15 +38,15 @@ export const ABOUT = {
   points: [
     {
       t: "Open by default",
-      b: ["Standards and papers are published openly", "Code ships under a permissive license", "Anyone can read, run and reuse it"],
+      b: ["Papers, specs and code are public", "MIT or Apache 2.0, free to use", "Read it, run it, build on it"],
     },
     {
       t: "Identity from content",
-      b: ["An address is computed from the bytes", "The same data always resolves the same way", "Any change creates a new address"],
+      b: ["The address comes from the bytes", "Same data, same address, always", "One byte changed, a new address"],
     },
     {
       t: "No central authority",
-      b: ["No permission needed to participate", "No registry anyone owns or controls", "Nobody can switch the system off"],
+      b: ["No sign up, no permission needed", "No registry anyone can own", "No one can switch it off"],
     },
   ],
 };
