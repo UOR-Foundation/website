@@ -33,7 +33,7 @@ export const ABOUT = {
   label: "EXPLORE UOR Framework",
   orgLabel: "In production at",
   cta: { label: "Learn more", href: "/framework/" },
-  title: "Unified virtual\naddressing space\nfor all digital objects.",
+  title: "Unified virtual\naddressing standard\nfor all digital objects.",
   body: "Universal Object Reference (UOR) is an open standard for content–addressed decentralized identity of digital objects. Based on formal verification.",
   points: [
     {
