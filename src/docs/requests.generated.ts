@@ -19,22 +19,6 @@ export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } =
       "milestone": "M3 v0.6 Replay, capabilities, conformance"
     },
     {
-      "number": 289,
-      "title": "`prism generate`: bindings from the world",
-      "url": "https://github.com/UOR-Foundation/PrismPM/issues/289",
-      "state": "open",
-      "votes": 0,
-      "labels": [
-        "kind/feature",
-        "priority/important-soon",
-        "area/cli"
-      ],
-      "agent": false,
-      "created": "2026-10-23T12:39:21Z",
-      "closed": null,
-      "milestone": "M3 v0.6 Replay, capabilities, conformance"
-    },
-    {
       "number": 296,
       "title": "Prism SDK MCP server: Docker-verb tools on the UOR MCP core",
       "url": "https://github.com/UOR-Foundation/PrismPM/issues/296",
@@ -442,6 +426,22 @@ export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } =
   ],
   "shipped": [
     {
+      "number": 289,
+      "title": "`prism generate`: bindings from the world",
+      "url": "https://github.com/UOR-Foundation/PrismPM/issues/289",
+      "state": "closed",
+      "votes": 0,
+      "labels": [
+        "kind/feature",
+        "priority/important-soon",
+        "area/cli"
+      ],
+      "agent": false,
+      "created": "2026-10-23T12:39:21Z",
+      "closed": "2026-11-11T19:30:22Z",
+      "milestone": "M3 v0.6 Replay, capabilities, conformance"
+    },
+    {
       "number": 287,
       "title": "`@prism-code/conformance` and `COMPLIANCE.md`",
       "url": "https://github.com/UOR-Foundation/PrismPM/issues/287",
@@ -846,21 +846,6 @@ export const PRISM_REQUESTS: { open: PrismRequest[]; shipped: PrismRequest[] } =
       "agent": false,
       "created": "2026-10-23T10:53:28Z",
       "closed": "2026-10-23T15:51:55Z",
-      "milestone": null
-    },
-    {
-      "number": 249,
-      "title": "JavaScript runtime for PrismPM artifacts: sdk/npm/prism-code loads .holo archives and browser closures, dispatches through Core-Wasm, replays acceptance vectors",
-      "url": "https://github.com/UOR-Foundation/PrismPM/issues/249",
-      "state": "closed",
-      "votes": 0,
-      "labels": [
-        "enhancement",
-        "prism-code"
-      ],
-      "agent": false,
-      "created": "2026-10-23T10:53:26Z",
-      "closed": "2026-10-23T12:55:16Z",
       "milestone": null
     }
   ]
