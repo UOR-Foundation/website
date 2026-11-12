@@ -1,4 +1,4 @@
-import coverPrism from "@/assets/blog/prism-sdk-v0-4.jpg.asset.json";
+import coverPrism from "@/assets/foundation-prism-sharp.jpg";
 import coverSerialization from "@/assets/blog/serialization-invariant-integrity.jpg.asset.json";
 import coverObjectInternet from "@/assets/blog/object-internet-nanda.jpg.asset.json";
 import coverUganda from "@/assets/blog/sustainable-ai-uganda.jpg.asset.json";
@@ -15,7 +15,7 @@ export const POSTS = {
       title: "Describe It Once. Run It Anywhere.",
       href: "/blog/prism-sdk-v0-4/?from=highlights",
       date: "November 12, 2026",
-      cover: coverPrism.url,
+      cover: coverPrism,
     },
     {
       category: "Research",

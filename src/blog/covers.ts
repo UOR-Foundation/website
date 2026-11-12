@@ -7,11 +7,11 @@ import f from "@/assets/blog/uor-framework-launch.png.asset.json";
 import g from "@/assets/blog/universal-mathematical-language.png.asset.json";
 import h from "@/assets/blog/building-the-internets-knowledge-graph.png.asset.json";
 import i from "@/assets/blog/uor-framework-origin.jpg.asset.json";
-import k from "@/assets/blog/prism-sdk-v0-4.jpg.asset.json";
+import k from "@/assets/foundation-prism-sharp.jpg";
 import j from "@/assets/blog/lexlean-v0-4.jpg.asset.json";
 
 export const COVERS: Record<string, string> = {
-  "prism-sdk-v0-4": k.url,
+  "prism-sdk-v0-4": k,
   "lexlean-v0-4": j.url,
   "serialization-invariant-integrity": a.url,
   "object-internet-nanda": b.url,
