@@ -17,7 +17,6 @@ export const START = {
     { name: "lexlean MCP server", what: "The UOR Foundation hosted verifier at https://mcp.uor.foundation/. Setup registers it with every agent it finds. It receives source, see Hosted verifier." },
     { name: "Prism skill", what: "Instructions and verified examples for coding agents, added by setup." },
     { name: "Docs", what: "Plain text at /docs.md; every page has a .md twin." },
-    { name: "Playground", what: "Run Prism examples in the browser at /playground/." },
   ],
 };
 

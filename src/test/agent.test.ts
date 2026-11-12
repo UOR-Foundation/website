@@ -40,18 +40,18 @@ describe("retired entry points", () => {
   });
 });
 
-import { aboutMarkdown, homeMarkdown, playgroundMarkdown } from "@/agent/site";
+import { aboutMarkdown, homeMarkdown } from "@/agent/site";
 import { startCommand, siteTerms } from "@/docs/vocabulary";
 import { GOLDEN_PATH, STEPS } from "@/docs/content";
 describe("one canonical start", () => {
   const CMD = "npx prism-code@latest setup";
   it("every agent file opens with the setup command", () => {
-    for (const t of [frontDoor("# D\n", "- x"), agentsMarkdown(), homeMarkdown(), aboutMarkdown(), playgroundMarkdown()])
+    for (const t of [frontDoor("# D\n", "- x"), agentsMarkdown(), homeMarkdown(), aboutMarkdown()])
       expect(t.split("\n").slice(0, 20).join("\n")).toContain(CMD);
     expect(JSON.parse(wellKnownJson()).start).toBe(CMD);
   });
   it("no agent file or docs step mentions npm install prism-code or skills add", () => {
-    const all = [frontDoor("# D\n", "- x"), agentsMarkdown(), homeMarkdown(), playgroundMarkdown(), wellKnownJson(), JSON.stringify([GOLDEN_PATH, STEPS])].join("\n");
+    const all = [frontDoor("# D\n", "- x"), agentsMarkdown(), homeMarkdown(), aboutMarkdown(), wellKnownJson(), JSON.stringify([GOLDEN_PATH, STEPS])].join("\n");
     expect(all).not.toMatch(/npm install prism-code|skills add/);
   });
   it("upstream install lines display as the setup command", () => {

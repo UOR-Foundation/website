@@ -54,7 +54,7 @@ export function shareMarkdown() {
     "- A clear comparison with another identity or hashing approach.",
     "- An explanation that made UOR click for you or your human.", "",
     "## How", "",
-    "1. Learn: read [/llms.txt](/llms.txt) and try Prism (`npx prism-code@latest setup`) or the [playground](/playground/).",
+    "1. Learn: read [/llms.txt](/llms.txt) and try Prism (`npx prism-code@latest setup`).",
     "2. Write the finding in `finding.md` using the template below.",
     "3. Hash it:", "", "```ts", HASH, "```", "",
     "4. With your owner's approval, post it where it fits (list below). Include the hash and a link.",

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, BookOpen, Check, ChevronRight, Clock, Code2, Copy, FileText, Home, Menu, Rocket, Compass, Search, Sparkles, SquareTerminal, X } from "lucide-react";
+import { ArrowRight, BookOpen, Check, ChevronRight, Clock, Code2, Copy, FileText, Home, Menu, Rocket, Compass, Search, Sparkles, X } from "lucide-react";
 import { DocsGPTWidget } from "docsgpt";
 import { DOCSGPT_API_HOST, DOCSGPT_API_KEY, docsgptEnabled, type DocsGPTController } from "@/docsgpt";
 import { HINT_TERMS, MILESTONES, TERMS, VERBS, dockerGloss, findMilestone, siteTerms, verbMilestone, type Milestone } from "./vocabulary";
@@ -336,7 +336,6 @@ export default function Docs() {
             <button className="dc-search" onClick={() => setSearch(true)}><Search size={16} /><span>Search</span><kbd>⌘K</kbd></button>
             <button className="dc-pill hidden md:inline-flex" onClick={() => (docsgptEnabled() ? dgpt.current?.open() : setSearch(true))}>Ask AI<Sparkles size={14} /></button>
           </>}
-          <a href="/playground/" className="dc-cta ml-auto"><SquareTerminal size={15} />Playground</a>
         </div>
         <nav className="dc-tabs" aria-label="Sections">
           {tab && <button className="dc-menu md:hidden" aria-label="Open navigation" onClick={() => setMenu((m) => !m)}>{menu ? <X size={18} /> : <Menu size={18} />}</button>}

@@ -72,7 +72,7 @@ export const GLOSSARY = {
   ],
 };
 
-export const CLOSE = { title: "Start building.", docs: "Read the docs", play: "Try playground", discord: "Join Discord" };
+export const CLOSE = { title: "Start building.", docs: "Read the docs", discord: "Join Discord" };
 
 export function frameworkMarkdown(): string {
   const l: string[] = [`# ${HERO.title}`, "", `> ${HERO.line}`, ""];
@@ -83,6 +83,6 @@ export function frameworkMarkdown(): string {
   l.push(`## ${WHAT.title}`, "", WHAT.line, "", ...WHAT.outputs.map((o) => `- **${o.t}**: ${o.b}`), "");
   l.push(`## ${WHO.title}`, "", ...WHO.items.map((o) => `- **${o.t}**: ${o.b}`), "");
   l.push(`## Glossary`, "", ...GLOSSARY.items.map((o) => `- **${o.t}**: ${o.b}`), "");
-  l.push("## Next", "", "- [Docs](/docs/)", "- [Playground](/playground/)", "");
+  l.push("## Next", "", "- [Docs](/docs/)", "");
   return l.join("\n");
 }

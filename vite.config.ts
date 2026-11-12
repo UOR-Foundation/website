@@ -7,7 +7,7 @@ import { startCommand } from "./src/docs/vocabulary";
 import { ALL_PAGES, UPSTREAM_CHANGELOG, UPSTREAM_LLMS, UPSTREAM_LLMS_FULL, llmsTxt, llmsFullTxt, pageMarkdown } from "./src/docs/content";
 import { roadmapJson } from "./src/docs/vocabulary";
 import { frameworkMarkdown } from "./src/framework/content";
-import { aboutMarkdown, agentsMarkdown, frontDoor, homeMarkdown, playgroundMarkdown, requestsJson, requestsMarkdown, RETIRED_PATHS, retiredFile, sitemapXml, wellKnownJson } from "./src/agent/site";
+import { aboutMarkdown, agentsMarkdown, frontDoor, homeMarkdown, requestsJson, requestsMarkdown, RETIRED_PATHS, retiredFile, sitemapXml, wellKnownJson } from "./src/agent/site";
 import { shareMarkdown, swarmMarkdown, wallMarkdown } from "./src/agent/share";
 import { discordMarkdown } from "./src/agent/discord";
 import { skillFiles } from "./src/agent/skill";
@@ -63,7 +63,6 @@ function agentDocs(): Plugin {
       "agents/discord.md": discordMarkdown(),
       "index.md": homeMarkdown(),
       "about.md": aboutMarkdown(),
-      "playground.md": playgroundMarkdown(),
       "sitemap.xml": sitemapXml([...BLOG_POSTS.map((p) => `/blog/${p.slug}/`), ...ALL_PAGES.map((p) => `/docs/${p.slug}/`)]),
       "framework.md": frameworkMarkdown(),
        "llms-full.txt": startCommand(`${agentsMarkdown()}\n\n---\n\n${discordMarkdown()}\n\n---\n\n${shareMarkdown()}\n\n---\n\n${swarmMarkdown()}\n\n---\n\n${homeMarkdown()}\n\n---\n\n${frameworkMarkdown()}\n\n---\n\n${llmsFullTxt()}\n\n---\n\n${blogFullTxt()}`),

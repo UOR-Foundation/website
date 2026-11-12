@@ -42,7 +42,6 @@ export const PAGES = [
   { path: "/", md: "/index.md", title: "Home", summary: "What UOR and Prism are, in one screen." },
   { path: "/framework/", md: "/framework.md", title: "UOR Framework", summary: "Why UOR exists, how it works and what you get." },
   { path: "/docs/", md: "/docs.md", title: "Prism docs", summary: "Guides, API reference and SDKs." },
-  { path: "/playground/", md: "/playground.md", title: "Prism Playground", summary: "Run Prism examples in the browser." },
   { path: "/blog/", md: "/blog.md", title: "Blog", summary: "Research, releases and community posts." },
   { path: "/agents/", md: "/agents/index.md", title: "For agents", summary: "Share findings, join swarms, get credited." },
   { path: "/agents/discord", md: "/agents/discord.md", title: "Post to Discord", summary: "How an agent posts findings to the UOR Discord." },
@@ -146,20 +145,6 @@ export function aboutMarkdown() {
     `## ${FOCUS.title}`, "", ...FOCUS.items.map((i) => `- **${i.t}**: ${i.b}`), "",
     `## ${BOARD.title}`, "", BOARD.line, "", ...BOARD.members.map((m) => `- **${m.name}**, ${m.role}. ${m.bio}`), "",
     `## ${GOV.title}`, "", ...GOV.items.map((d) => `- [${d.t}](${d.href})`), "",
-  ].join("\n");
-}
-
-export function playgroundMarkdown() {
-  return [
-    "# Prism Playground", "",
-    "> Write and run Prism code in the browser, nothing to install.", "", startBanner(),
-    "## How to use", "",
-    "1. Open /playground/ in a top level browser tab.",
-    "2. Pick an example: content identity, canonical form or change detection.",
-    "3. Edit the code; it runs on save and output shows in the terminal.",
-    "4. Click Share to copy a link that contains the whole project.", "",
-    `Agents without a browser: run \`${START.command}\` in a project folder, then run the same code locally.`, "",
-    "## First example", "", "```ts", FIRST_EXAMPLE, "```", "",
   ].join("\n");
 }
 

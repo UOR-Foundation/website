@@ -1,6 +1,6 @@
 import { FEEDBACK_URL } from "@/agent/site";
 import { useEffect, useState } from "react";
-import { ArrowRight, BookOpen, Check, Copy, Plus, SquareTerminal, X } from "lucide-react";
+import { ArrowRight, BookOpen, Check, Copy, Plus, X } from "lucide-react";
 import { FD_BODY, FD_CARD, FD_CATEGORY, FD_COLUMN, FD_EYEBROW, FD_HERO, FD_LABEL, FD_LEAD, FD_SECTION } from "./type";
 import "@fontsource/space-grotesk/500.css";
 import "@fontsource/space-grotesk/700.css";
@@ -219,7 +219,6 @@ export default function FoundationHome() {
               </div>
               <div className="mt-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 sm:justify-start">
                 <a href="/docs/" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--fd-dim))] transition-colors hover:text-[hsl(var(--fd-fg,0_0%_100%))]"><BookOpen className="h-4 w-4" /> Read the docs</a>
-                <a href="/playground/" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--fd-dim))] transition-colors hover:text-[hsl(var(--fd-fg,0_0%_100%))]"><SquareTerminal className="h-4 w-4" /> Try playground</a>
               </div>
             </div>
           </div>
