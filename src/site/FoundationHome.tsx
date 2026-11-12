@@ -181,7 +181,7 @@ export default function FoundationHome() {
                 <div className="mt-12 grid gap-8 sm:grid-cols-3">
                   {ABOUT.points.map((p) => (
                     <div key={p.t} className="">
-                      <h3 className={FD_COLUMN}>{p.t}</h3>
+                      <h3 className={`${FD_COLUMN} whitespace-pre-line`}>{p.t}</h3>
                       <ul className="mt-4 space-y-3">
                         {p.b.map((line) => (
                           <li key={line} className="flex gap-2.5 text-base leading-snug text-[hsl(var(--fd-dim))]">

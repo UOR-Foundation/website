@@ -37,15 +37,15 @@ export const ABOUT = {
   body: "Universal Object Reference (UOR) is an open standard for content–addressed decentralized identity of digital objects. Based on formal verification.",
   points: [
     {
-      t: "Open by default",
+      t: "Open by\ndefault",
       b: ["Papers, specs and code are public", "MIT or Apache 2.0, free to use", "Read it, run it, build on it"],
     },
     {
-      t: "Identity from content",
+      t: "Identity from\ncontent",
       b: ["The address comes from the bytes", "Same data, same address, always", "One byte changed, a new address"],
     },
     {
-      t: "No central authority",
+      t: "No central\nauthority",
       b: ["No sign up, no permission needed", "No registry anyone can own", "No one can switch it off"],
     },
   ],
