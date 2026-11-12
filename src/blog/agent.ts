@@ -1,3 +1,4 @@
+import { applyFigures } from "./figures";
 import { POSTS_DATA, type BlogPost } from "./posts.data";
 
 export const BLOG_POSTS = POSTS_DATA;
@@ -6,7 +7,7 @@ export const findPost = (slug: string) => POSTS_DATA.find((p) => p.slug === slug
 export const readingMinutes = (p: BlogPost) => Math.max(1, Math.round(p.body.split(/\s+/).length / 220));
 
 export const postMarkdown = (p: BlogPost) =>
-  `---\ntitle: ${JSON.stringify(p.title)}\ndate: ${p.iso}\ncategory: ${p.category}\nurl: /blog/${p.slug}/\n---\n\n# ${p.title}\n\n> ${p.summary}\n\n${p.body.replace(/<!-- demo:mnist -->/g, "[Try the live digit reader](/blog/lexlean-v0-4/mnist-demo.html)")}`;
+  `---\ntitle: ${JSON.stringify(p.title)}\ndate: ${p.iso}\ncategory: ${p.category}\nurl: /blog/${p.slug}/\n---\n\n# ${p.title}\n\n> ${p.summary}\n\n${applyFigures(p.body, "md").replace(/<!-- demo:mnist -->/g, "[Try the live digit reader](/blog/lexlean-v0-4/mnist-demo.html)")}`;
 
 export const blogLlmsTxt = () =>
   `# UOR Foundation Blog\n\n> Essays, announcements and research notes from the UOR community.\n\n## Posts\n\n` +

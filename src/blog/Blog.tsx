@@ -1,3 +1,4 @@
+import { applyFigures } from "./figures";
 import { FEEDBACK_URL } from "@/agent/site";
 import { useEffect, useMemo, useState } from "react";
 import { marked } from "marked";
@@ -23,7 +24,7 @@ function render(md: string) {
     const ext = /^https?:/.test(href);
     return `<a href="${href}"${ext ? ' target="_blank" rel="noreferrer"' : ""}>${marked.Parser.parseInline(tokens)}</a>`;
   };
-  const html = (marked.parse(md, { renderer, gfm: true, async: false }) as string).replace(/<!-- demo:mnist -->/g,
+  const html = applyFigures(marked.parse(md, { renderer, gfm: true, async: false }) as string, "html").replace(/<!-- demo:mnist -->/g,
     `<figure class="bl-demo"><iframe src="${DEMO_URL}" title="Certified handwritten digit reader" sandbox="allow-scripts" loading="lazy"></iframe><figcaption><span>Draw a digit from 0 to 9</span><a href="${DEMO_URL}" target="_blank" rel="noreferrer">Open full screen</a></figcaption></figure>`);
   return { html, toc };
 }

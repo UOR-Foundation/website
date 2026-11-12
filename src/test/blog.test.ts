@@ -4,8 +4,8 @@ import { COVERS } from "@/blog/covers";
 
 describe("Blog", () => {
   it("ports all posts with unique slugs", () => {
-    expect(BLOG_POSTS).toHaveLength(10);
-    expect(new Set(BLOG_POSTS.map((p) => p.slug)).size).toBe(10);
+    expect(BLOG_POSTS).toHaveLength(11);
+    expect(new Set(BLOG_POSTS.map((p) => p.slug)).size).toBe(11);
   });
   it("gives every post a cover and an agent readable markdown entry", () => {
     for (const p of BLOG_POSTS) {
