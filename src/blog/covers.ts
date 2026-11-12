@@ -7,7 +7,7 @@ import f from "@/assets/blog/uor-framework-launch.png.asset.json";
 import g from "@/assets/blog/universal-mathematical-language.png.asset.json";
 import h from "@/assets/blog/building-the-internets-knowledge-graph.png.asset.json";
 import i from "@/assets/blog/uor-framework-origin.jpg.asset.json";
-import k from "@/assets/foundation-prism-sharp.jpg";
+import k from "@/assets/blog/prism-sdk-v0-4-cover.jpg";
 import j from "@/assets/blog/lexlean-v0-4.jpg.asset.json";
 
 export const COVERS: Record<string, string> = {

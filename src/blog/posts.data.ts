@@ -4,7 +4,7 @@ export type BlogPost = { slug: string; title: string; category: string; date: st
 export const POSTS_DATA: BlogPost[] = [
   {
     "slug": "prism-sdk-v0-4",
-    "title": "Describe It Once. Run It Anywhere.",
+    "title": "Prism SDK v0.4: Describe It Once. Run It Anywhere.",
     "category": "Engineering",
     "date": "November 12, 2026",
     "iso": "2026-11-12",
